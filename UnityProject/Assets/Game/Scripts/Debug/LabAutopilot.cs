@@ -23,11 +23,12 @@ namespace UncleExtraction
         public readonly List<string> Timeline = new List<string>();
 
         // Ruta del TIO hacia la camioneta: barra -> centro -> puerta (centrado) -> vereda -> costado de la zona.
-        static readonly Vector3[] DragPath = { new Vector3(0, 0, 6.0f), new Vector3(0, 0, 3.0f), new Vector3(0, 0, 1.0f), new Vector3(0, 0, -1.0f), new Vector3(0, 0, -3.5f), new Vector3(-1.6f, 0, -6.0f), new Vector3(-1.6f, 0, -7.8f), new Vector3(0.4f, 0, -8.4f) };
-        static readonly Vector3 DragFinalStand = new Vector3(1.8f, 0, -8.45f); // el tio entra de costado, con los pies primero
+        // Ruta del TIO: barra -> centro -> puerta (centrado) -> vereda -> pie de la rampa -> dentro de la camioneta.
+        static readonly Vector3[] DragPath = { new Vector3(0, 0, 6.0f), new Vector3(0, 0, 3.0f), new Vector3(0, 0, 1.0f), new Vector3(0, 0, -1.0f), new Vector3(0, 0, -3.5f), new Vector3(0, 0, -6.5f), new Vector3(0, 0, -8.3f), new Vector3(0, 0, -10.6f) };
+        static readonly Vector3 DragFinalStand = new Vector3(0f, 0, -11.95f); // el jugador entra de espaldas hasta la mampara; el tio, pies primero
         // Ruta del JUGADOR tirando del asa (el carrito va detras): recto por el centro de la puerta y,
         // al final, de costado para que el carrito quede atravesado dentro de la zona.
-        static readonly Vector3[] CartPullPath = { new Vector3(0, 0, 2.8f), new Vector3(0, 0, 1.2f), new Vector3(0, 0, -0.4f), new Vector3(0, 0, -3.5f), new Vector3(-2.2f, 0, -6.0f), new Vector3(-2.6f, 0, -8.45f), new Vector3(2.6f, 0, -8.45f) };
+        static readonly Vector3[] CartPullPath = { new Vector3(0, 0, 2.8f), new Vector3(0, 0, 1.2f), new Vector3(0, 0, -0.4f), new Vector3(0, 0, -3.5f), new Vector3(0, 0, -6.5f), new Vector3(0, 0, -8.2f), new Vector3(0, 0, -11.95f) };
 
         Coroutine routine; HingeJoint door; Vector3 stuckRef; float stuckSince; bool zigLogged, cartClearedDoor;
         NpcState lastNpc; int lastFalls;
@@ -249,7 +250,7 @@ namespace UncleExtraction
 
             // Tramo final con el tio en el piso: Q y volver a agarrar de los tobillos para que el torso quede dentro.
             bool anklesHeld = Held(0)?.socketId.StartsWith("ankle") == true || Held(1)?.socketId.StartsWith("ankle") == true;
-            if (anklesOnLastLeg && wp == path.Length - 1 && body.Posture != NpcPosture.Upright && !anklesHeld && !switchedToAnkles)
+            if (anklesOnLastLeg && wp >= path.Length - 3 && body.Posture != NpcPosture.Upright && !anklesHeld && !switchedToAnkles)
             {
                 switchedToAnkles = true; Log("suelta (Q) para tomarlo de los tobillos");
                 Idle(); yield return Tap(Act.ReleaseAll); yield break;
@@ -257,7 +258,7 @@ namespace UncleExtraction
 
             Vector3 next = path[wp];
             Vector3 goal = wp == path.Length - 1 ? finalStand : next + (next - uFlat).normalized * 1.1f;
-            goal.z = Mathf.Max(goal.z, -8.85f); // la camioneta
+            goal.z = Mathf.Max(goal.z, -12.0f); // mampara de la cabina
             float gap = Vector3.Distance(Me, uFlat);
             LabInput.Simulated[(int)Act.Effort] = gap > 1.5f;
             if (gap > 1.8f || Vector3.Distance(Me, goal) < 0.3f) LabInput.SimulatedMove = Vector2.zero; // dejar que el resorte lo traiga
@@ -270,13 +271,23 @@ namespace UncleExtraction
             yield return null;
         }
 
-        /// Ya esta dentro: soltar (Q) y esperar el conteo de la zona, como haria un jugador.
-        IEnumerator HandsOffInZone()
+        /// Ya esta adentro: soltar (Q), salir por un costado, pararse fuera de la franja de las puertas y mantener E (GDD 03).
+        IEnumerator CloseStep()
         {
-            Status = "esperando en la zona";
-            if ((Holding(0) || Holding(1)) && Time.time >= handsOffUntil) { Log("tio dentro de la zona: suelta (Q) y espera"); handsOffUntil = Time.time + 2.5f; }
-            Idle(); yield return Tap(Act.ReleaseAll);
+            Status = "cerrando la camioneta";
+            if (Holding(0) || Holding(1)) { Log("tio adentro de la camioneta: suelta (Q) y sale a cerrar"); Idle(); yield return Tap(Act.ReleaseAll); yield break; }
+            var van = VanDoors.Instance;
+            float side = body.pelvis.position.x > 0f ? -0.8f : 0.8f;
+            LabInput.Simulated[(int)Act.Crouch] = false;
+            if (Me.z < -9.0f && Mathf.Abs(Me.x - side) > 0.25f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(side, 1.5f, Me.z)); MoveWorld(new Vector3(side, 0, Me.z) - Me); yield return null; yield break; }
+            if (Me.z < -7.45f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(side, 1.5f, -6f)); MoveWorld(new Vector3(side * 0.5f, 0, -7.25f) - Me); yield return null; yield break; }
+            LabInput.SimulatedMove = Vector2.zero;
+            LookAt(van.closePoint);
+            LabInput.Simulated[(int)Act.Interact] = true;
+            if (Time.time >= nextCloseLog) { nextCloseLog = Time.time + 2f; Log($"cierre: '{hands.InteractLabel}' {hands.InteractProgress01 * 100f:0}%"); }
+            yield return null;
         }
+        float nextCloseLog;
 
         /// Carrera por un mismo punto (especificacion 05): dos jugadores apuntan al cinturon y aprietan en el mismo instante
         /// de reloj (-ueRaceAt, ms Unix). El anfitrion debe crear un solo agarre y responder SocketBusy al otro.
@@ -302,7 +313,7 @@ namespace UncleExtraction
             while (!Finished)
             {
                 if (CommonStep()) { yield return null; continue; }
-                if (zone.AllPointsInside || Time.time < handsOffUntil) { yield return HandsOffInZone(); continue; }
+                if (zone.AllPointsInside && !zone.Secured) { yield return CloseStep(); continue; }
                 yield return DragStep(DragPath, DragFinalStand, true);
             }
             Finish();
@@ -315,7 +326,7 @@ namespace UncleExtraction
             while (!Finished)
             {
                 if (CommonStep()) { yield return null; continue; }
-                if (zone.AllPointsInside || Time.time < handsOffUntil) { yield return HandsOffInZone(); continue; }
+                if (zone.AllPointsInside && !zone.Secured) { yield return CloseStep(); continue; }
 
                 if (!cart.IsStrapped && cartNeedsSpace)
                 {   // llevar el carrito vacio a un lugar despejado del bar y volver a intentarlo
@@ -414,11 +425,7 @@ namespace UncleExtraction
                     float gx = cc.z > -0.6f ? Mathf.Clamp(-cc.x, -0.6f, 0.6f) : 0f;
                     goal = new Vector3(gx, 0f, Mathf.Max(Me.z - 1.0f, -6.5f));
                 }
-                else if (cartWp == CartPullPath.Length - 1)
-                {   // tramo final de costado por el frente de la camioneta: avanzar al este hasta que la pelvis pase el centro
-                    Vector3 zc = Flat(zone.transform.position), pel = Flat(body.pelvis.position);
-                    goal = new Vector3(pel.x < zc.x + 0.1f ? 2.6f : Me.x, 0f, zc.z);
-                }
+
                 float gap = Vector3.Distance(Me, Flat(handle.Position));
                 LookAt(handle.Position);
                 LabInput.Simulated[(int)Act.Effort] = gap > 1.1f;

@@ -207,6 +207,17 @@ namespace UncleExtraction
             return true;
         }
 
+        /// Ayuda de un compañero (GDD: reduce el tiempo de levantada; nunca obligatoria). Cada segundo de ayuda
+        /// descuenta un segundo extra de la caida: con ayuda continua se levanta al doble de velocidad.
+        public bool AssistGetUp(float dt)
+        {
+            if (!Auth || state != PlayerState.Fallen) return false;
+            stateUntil -= dt; assistedTime += dt;
+            return true;
+        }
+        float assistedTime;
+        public float AssistedTime => assistedTime;
+
         public void Fall(string source)
         {
             if (!Auth || state == PlayerState.Fallen) return;

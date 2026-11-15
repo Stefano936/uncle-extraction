@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UncleExtraction
 {
-    public enum NpcState { Loiter, Protest, Anchor, Struggle, Windup, Attack, Recover, ForcedRecovery, Escape, Fallen, Carried, Secured }
+    public enum NpcState { Loiter, Protest, Anchor, Struggle, Windup, Attack, Recover, ForcedRecovery, Escape, Fallen, Carried, Secured, Distracted }
 
     /// Cerebro del tio (GDD 06-07). Decide cada 0,2 s; ataques con preparacion visible, ventana activa unica y recuperacion obligatoria.
     [RequireComponent(typeof(NpcBody))]
@@ -119,6 +119,9 @@ namespace UncleExtraction
                 case NpcState.ForcedRecovery:
                     if (Now >= stateUntil) { Budget = BudgetMax * LabBalance.ForcedRecoveryRefill; Enter(NpcState.Loiter, 0f, ""); }
                     break;
+                case NpcState.Distracted:
+                    if (Now >= stateUntil) { Enter(NpcState.Loiter, 0f, ""); currentDecoy = null; }
+                    break;
                 case NpcState.Anchor:
                     if (!IsAnchored || Now - anchorStart > maxAnchorTime) { ReleaseAnchor(IsAnchored ? "tiempo" : "perdido"); }
                     break;
@@ -157,6 +160,12 @@ namespace UncleExtraction
             body.resistForce = (Grabbed || Strapped) && f > 0f ? toHome * (LabBalance.NpcResistanceForceCap * r * f) : Vector3.zero;
             body.desiredWalkVelocity = State == NpcState.Escape ? toHome * 1.4f : Vector3.zero;
             body.desiredFacing = AttackPending ? AttackDirection : (State == NpcState.Escape ? toHome : Vector3.zero);
+            if (State == NpcState.Distracted && currentDecoy)
+            {   // mira el vaso y, si nadie lo sostiene, camina despacio hacia el
+                Vector3 toDecoy = Flat(currentDecoy.Position - transform.position);
+                body.desiredFacing = toDecoy;
+                body.desiredWalkVelocity = !Grabbed && !Strapped && Flat3(currentDecoy.Position - transform.position).magnitude > 0.8f ? toDecoy * 0.8f : Vector3.zero;
+            }
         }
 
         void Decide()
@@ -172,6 +181,10 @@ namespace UncleExtraction
                 return;
             }
             if (State == NpcState.Carried) Enter(NpcState.Loiter, 0f, "");
+
+            // Jerarquia (GDD 06): Secured > ataque iniciado > Recover > distraccion > anclaje > escape > protesta
+            if (State == NpcState.Distracted) return;
+            if (Now >= distractionReadyAt && TryDistract()) return;
 
             if (body.Posture == NpcPosture.Fallen)
             {
@@ -308,6 +321,29 @@ namespace UncleExtraction
             nextAttackAt = Now + interval;
         }
 
+        // ---------- Distraccion (GDD 09; balance.distraction) ----------
+        float distractionReadyAt; int distractionUses; DecoyGlass currentDecoy;
+        public const float DistractionDuration = 2.5f, DistractionCooldown = 12f;
+        public int DistractionUses => distractionUses;
+
+        bool TryDistract()
+        {
+            Vector3 eye = body.head ? body.head.position : transform.position + Vector3.up * 1.7f;
+            foreach (var d in DecoyGlass.All)
+            {
+                if (!d || !d.Resting || !d.VisibleFrom(eye)) continue;
+                float dur = DistractionDuration * (distractionUses >= 2 ? 0.5f : 1f); // desde el tercer uso rinde la mitad
+                distractionUses++;
+                distractionReadyAt = Now + dur + DistractionCooldown;
+                currentDecoy = d;
+                if (IsAnchored) ReleaseAnchor("distraido");
+                Enter(NpcState.Distracted, dur, "¡Uh, una cerveza!");
+                Debug.Log($"[Npc] distraido {dur:0.0}s (uso {distractionUses})");
+                return true;
+            }
+            return false;
+        }
+
         // ---------- Anclaje ----------
         bool TryAnchor()
         {
@@ -389,7 +425,7 @@ namespace UncleExtraction
             anchorJoint = null;
             rng = new System.Random(seed);
             state = NpcState.Loiter; intent = ""; WriggleAttempt = false;
-            Budget = BudgetMax; lastGrabbedAt = -99f; nextDecision = 0f; nextWriggleAt = Now + 4f;
+            Budget = BudgetMax; lastGrabbedAt = -99f; nextDecision = 0f; nextWriggleAt = Now + 4f; distractionReadyAt = 0f; distractionUses = 0; currentDecoy = null;
             hitThisAttack.Clear(); RefreshPlayers(); ScheduleNextAttack();
         }
     }

@@ -37,7 +37,11 @@ namespace UncleExtraction
 
                 Vector3 ownerVel = ownerBody ? ownerBody.linearVelocity : Vector3.zero;
                 Vector3 relVel = l.socket.body.GetPointVelocity(p) - ownerVel;
-                Vector3 f = Vector3.ClampMagnitude(K * err - C * relVel, handMax);
+                // Limite de estabilidad del resorte explicito para objetos livianos (vaso de 0,4 kg): k*dt^2/m <= 0,25 y c*dt/m <= 0,9.
+                // No afecta al tio (110 kg), la silla (6 kg) ni el carrito (30 kg) con los valores actuales.
+                float m = l.socket.body.mass, fdt = Time.fixedDeltaTime;
+                float k = Mathf.Min(K, 0.25f * m / (fdt * fdt)), c = Mathf.Min(C, 0.9f * m / fdt);
+                Vector3 f = Vector3.ClampMagnitude(k * err - c * relVel, handMax);
                 pending.Add(new Pending { link = l, force = f, point = p });
                 sum += f.magnitude;
             }

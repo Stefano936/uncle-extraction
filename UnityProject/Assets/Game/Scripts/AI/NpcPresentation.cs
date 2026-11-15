@@ -49,6 +49,7 @@ namespace UncleExtraction
                 case NpcState.ForcedRecovery: c = new Color(0.6f, 0.9f, 1f); aL = new Vector3(0, 0, -10); aR = new Vector3(0, 0, 10); break;
                 case NpcState.Anchor: c = new Color(0.8f, 0.3f, 0.9f); break;
                 case NpcState.Secured: c = new Color(0.3f, 0.9f, 0.4f); break;
+                case NpcState.Distracted: c = new Color(1f, 0.85f, 0.35f); aR = new Vector3(-40, 0, 20); break; // brazo hacia el vaso
             }
             foreach (var r in bodyRenderers) if (r) r.material.color = c;
             Pose(armL, armL0, aL); Pose(armR, armR0, aR); Pose(legL, legL0, lL); Pose(legR, legR0, lR);

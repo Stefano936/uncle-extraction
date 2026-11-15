@@ -83,6 +83,12 @@ namespace UncleExtraction.EditorTools
             var chairRb = chair.AddComponent<Rigidbody>(); chairRb.mass = 6f;
             Socket(chair.transform, "chair", "silla", Vector3.zero, chairRb, 1);
 
+            // Vaso senuelo sobre la mesa fija (GDD 09): se lleva con una mano y distrae al tio si esta apoyado y a la vista
+            var glass = Prim(PrimitiveType.Cylinder, "Decoy_Glass", env, new Vector3(-3.5f, 0.9f, 4f), new Vector3(0.09f, 0.08f, 0.09f), Mat("Beer", new Color(0.95f, 0.7f, 0.15f)));
+            var glassRb = glass.AddComponent<Rigidbody>(); glassRb.mass = 0.4f; glassRb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            Socket(glass.transform, "glass", "vaso senuelo", Vector3.zero, glassRb, 1);
+            glass.AddComponent<DecoyGlass>();
+
             // Puerta con bisagra (origen en la bisagra, abertura 1,5 m)
             var door = new GameObject("Exit_Door"); door.transform.SetParent(env); door.transform.position = new Vector3(-0.75f, 0, -2);
             var doorRb = door.AddComponent<Rigidbody>(); doorRb.mass = 25f; doorRb.angularDamping = 2f;
@@ -94,10 +100,41 @@ namespace UncleExtraction.EditorTools
             hinge.useSpring = true; hinge.spring = new JointSpring { spring = 15, damper = 4, targetPosition = 0 };
 
             // Camioneta fija y zona de extraccion (detras de las puertas traseras)
-            Box("Passenger_Van", env, new Vector3(0, 1.15f, -11.5f), new Vector3(2.2f, 2.3f, 4.5f), vanM);
-            var zoneGo = new GameObject("Extraction_Zone"); zoneGo.transform.position = new Vector3(0, 1f, -8.45f);
-            var zoneBox = zoneGo.AddComponent<BoxCollider>(); zoneBox.size = new Vector3(2.2f, 2f, 1.6f);
-            NoCollider(Box("Zone_Marker", zoneGo.transform, new Vector3(0, 0.01f, -8.45f), new Vector3(2.2f, 0.02f, 1.6f), zoneM));
+            // Camioneta de pasajeros hueca (kit 3D: 2,52 x 5,38 x 2,33 m). Abertura trasera en z = -9,25 con dos hojas;
+            // piso de carga a 0,45 m con rampa corta (decision de prototipo); mampara de cabina en z = -12,4.
+            var van = new GameObject("Passenger_Van").transform; van.SetParent(env);
+            const float rearZ = -9.25f, frontZ = -14.65f, floorY = 0.30f, roofY = 2.3f, halfW = 1.25f, cabZ = -12.4f;
+            float vanLen = rearZ - frontZ, vanMidZ = (rearZ + frontZ) * 0.5f;
+            Box("Van_Floor", van, new Vector3(0, floorY * 0.5f, vanMidZ), new Vector3(halfW * 2f, floorY, vanLen), vanM);
+            Box("Van_Side_L", van, new Vector3(-halfW + 0.05f, (floorY + roofY) * 0.5f, vanMidZ), new Vector3(0.1f, roofY - floorY, vanLen), vanM);
+            Box("Van_Side_R", van, new Vector3(halfW - 0.05f, (floorY + roofY) * 0.5f, vanMidZ), new Vector3(0.1f, roofY - floorY, vanLen), vanM);
+            Box("Van_Roof", van, new Vector3(0, roofY - 0.05f, vanMidZ), new Vector3(halfW * 2f, 0.1f, vanLen), vanM);
+            Box("Van_Cab_Partition", van, new Vector3(0, (floorY + roofY) * 0.5f, cabZ), new Vector3(halfW * 2f, roofY - floorY, 0.1f), vanM);
+            Box("Van_Front", van, new Vector3(0, (floorY + roofY) * 0.5f, frontZ + 0.05f), new Vector3(halfW * 2f, roofY - floorY, 0.1f), vanM);
+            Box("Van_Rear_Lintel", van, new Vector3(0, roofY - 0.08f, rearZ + 0.05f), new Vector3(halfW * 2f, 0.16f, 0.1f), vanM);
+            // Rampa de 2,4 m (7 grados): subir al tio arrastrando cuesta ~570 N (pendiente + friccion), dentro del tope de un jugador (700 N)
+            const float rampLen = 2.4f;
+            var ramp = Box("Van_Ramp", van, new Vector3(0, floorY * 0.5f - 0.03f, rearZ + rampLen * 0.5f), new Vector3(1.7f, 0.06f, rampLen + 0.06f), metalM);
+            ramp.transform.rotation = Quaternion.Euler(Mathf.Atan2(floorY, rampLen) * Mathf.Rad2Deg, 0, 0); // alto del lado de la camioneta (-z)
+
+            // Puertas traseras (red): las hojas giran hacia afuera; cerradas tapan la abertura.
+            var doorsGo = new GameObject("Van_Rear_Doors"); doorsGo.transform.position = Vector3.zero;
+            var doors = doorsGo.AddComponent<VanDoors>();
+            Transform Leaf(string n, float hingeX, float dir)
+            {
+                var hinge = new GameObject(n).transform; hinge.SetParent(doorsGo.transform, false); hinge.position = new Vector3(hingeX, 0, rearZ + 0.02f);
+                var panel = LocalBox(n + "_Panel", hinge, new Vector3(dir * 0.6f, floorY + 0.9f, 0.03f), new Vector3(1.18f, 1.75f, 0.05f), vanM);
+                return hinge;
+            }
+            doors.leftLeaf = Leaf("Van_Door_L", -halfW + 0.03f, 1f);
+            doors.rightLeaf = Leaf("Van_Door_R", halfW - 0.03f, -1f);
+            doors.closePoint = new Vector3(0, 1.2f, rearZ); doors.doorwayCenter = new Vector3(0, floorY + 0.9f, rearZ + 0.62f);
+            doors.doorwayHalf = new Vector3(halfW - 0.1f, 0.85f, 0.6f);
+
+            // Volumen de carga (interior, entre la abertura y la mampara)
+            var zoneGo = new GameObject("Extraction_Zone"); zoneGo.transform.position = new Vector3(0, floorY + 0.85f, (rearZ + cabZ) * 0.5f);
+            var zoneBox = zoneGo.AddComponent<BoxCollider>(); zoneBox.size = new Vector3(halfW * 2f - 0.25f, 1.7f, (rearZ - cabZ) - 0.1f);
+            NoCollider(Box("Zone_Marker", zoneGo.transform, new Vector3(0, floorY + 0.01f, (rearZ + cabZ) * 0.5f), new Vector3(halfW * 2f - 0.3f, 0.02f, (rearZ - cabZ) - 0.2f), zoneM));
             var zone = zoneGo.AddComponent<ExtractionZone>();
 
             // Carrito
@@ -137,8 +174,8 @@ namespace UncleExtraction.EditorTools
             UnityEngine.Object.DestroyImmediate(playerGo);
 
             // Objetos de escena replicados (fisica del anfitrion; clientes cinematicos e interpolados)
-            Networked(npcGo); Networked(cartGo); Networked(door); Networked(chair);
-            zoneGo.AddComponent<NetworkObject>();
+            Networked(npcGo); Networked(cartGo); Networked(door); Networked(chair); Networked(glass);
+            zoneGo.AddComponent<NetworkObject>(); doorsGo.AddComponent<NetworkObject>();
 
             // Camara general mientras no hay jugador local (conectando)
             var overview = new GameObject("Overview_Camera").AddComponent<Camera>();

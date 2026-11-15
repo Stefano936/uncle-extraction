@@ -87,16 +87,117 @@ namespace UncleExtraction.Tests
             Assert.IsTrue(player.Invulnerable, "invulnerabilidad al levantarse");
         }
 
-        [UnityTest]
-        public IEnumerator Extraction_SecuresWhenRequiredPointsStayInZone()
+        /// Acuesta al tio dentro de la camioneta (prueba de reglas de la zona, no de transporte).
+        void LayUncleInVan(float pelvisZOffset)
         {
             var zone = Object.FindAnyObjectByType<ExtractionZone>();
-            Vector3 p = zone.transform.position; p.y = 0.02f;
-            body.Body.position = p; body.transform.position = p; body.Body.linearVelocity = Vector3.zero;
-            yield return new WaitForSeconds(LabBalance.ExtractionHold + 0.5f);
+            Quaternion lying = Quaternion.LookRotation(Vector3.up, Vector3.back); // cabeza hacia la cabina, boca arriba
+            Vector3 pelvisLocal = body.transform.InverseTransformPoint(body.pelvis.position);
+            Vector3 pel = new Vector3(0f, zone.transform.position.y - 0.85f + 0.36f, zone.transform.position.z + pelvisZOffset); // piso de carga + radio
+            body.Body.rotation = lying; body.Body.position = pel - lying * pelvisLocal;
+            body.transform.SetPositionAndRotation(body.Body.position, body.Body.rotation);
+            body.Body.linearVelocity = Vector3.zero; body.Body.angularVelocity = Vector3.zero;
+            body.SetFallen("prueba");
+        }
+
+        IEnumerator HoldClose(Vector3 standAt, float seconds)
+        {
+            var van = Object.FindAnyObjectByType<VanDoors>();
+            PlacePlayer(standAt, 180f);
+            for (float t = 0; t < seconds; t += Time.deltaTime)
+            {
+                Vector3 to = van.closePoint - hands.cam.transform.position;
+                player.SetYawPitch(Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, -Mathf.Atan2(to.y, new Vector2(to.x, to.z).magnitude) * Mathf.Rad2Deg);
+                LabInput.Simulated[(int)Act.Interact] = true;
+                yield return null;
+            }
+            LabInput.Simulated[(int)Act.Interact] = false;
+        }
+
+        [UnityTest]
+        public IEnumerator Extraction_NeedsPoseInsideVan_ThenDoorClosedFromOutside()
+        {
+            var zone = Object.FindAnyObjectByType<ExtractionZone>();
+            LayUncleInVan(0f);
+            yield return new WaitForSeconds(LabBalance.ExtractionHold + 0.3f);
+            Assert.IsTrue(zone.PoseValid, "pose dentro del volumen y sin solapes");
+            Assert.IsTrue(zone.PoseReady);
+            Assert.AreEqual(RoundState.Running, round.State, "la pose sola no gana: hay que cerrar");
+
+            // Alguien parado en la franja de las puertas: no se puede cerrar
+            yield return HoldClose(new Vector3(0f, 0f, -8.6f), 1.6f);
+            Assert.AreEqual(RoundState.Running, round.State, "con un jugador en la puerta no se cierra");
+
+            // Desde afuera, mantener E 1 s cierra y asegura
+            yield return HoldClose(new Vector3(0.3f, 0f, -7.3f), VanDoors.CloseHold + 0.4f);
             Assert.IsTrue(zone.Secured);
             Assert.AreEqual(RoundState.Success, round.State);
             Assert.AreEqual(NpcState.Secured, npc.State);
+            Assert.AreEqual(0, GrabRegistry.Count);
+            yield return new WaitForSeconds(0.7f);
+            Assert.Greater(Object.FindAnyObjectByType<VanDoors>().Closed01, 0.95f, "las hojas se cierran");
+        }
+
+        [UnityTest]
+        public IEnumerator Extraction_HalfOutside_CannotClose()
+        {
+            var zone = Object.FindAnyObjectByType<ExtractionZone>();
+            LayUncleInVan(1.6f); // pelvis cerca de la abertura: hombros/pelvis afuera
+            yield return new WaitForSeconds(LabBalance.ExtractionHold + 0.3f);
+            Assert.IsFalse(zone.PoseReady, "a medio entrar no hay pose valida");
+            yield return HoldClose(new Vector3(0.3f, 0f, -7.3f), VanDoors.CloseHold + 0.5f);
+            Assert.AreEqual(RoundState.Running, round.State);
+            Assert.IsFalse(zone.Secured);
+        }
+
+        [UnityTest]
+        public IEnumerator Decoy_ReleasesAnchor_DistractsAndHasCooldown()
+        {
+            npc.brainEnabled = true;
+            var glass = Object.FindAnyObjectByType<DecoyGlass>();
+            // Agarrarlo para que proteste y se aferre a la barra
+            PlacePlayer(new Vector3(0, 0, 6.0f), 0f);
+            yield return new WaitForFixedUpdate();
+            hands.DebugHoldLeft = true;
+            Assert.AreEqual(GrabResult.Ok, hands.ForceGrab(0, Sock("belt")));
+            for (float t = 0; t < 4f && !npc.IsAnchored; t += Time.deltaTime) yield return null;
+            Assert.IsTrue(npc.IsAnchored, "el tio deberia aferrarse a la barra al protestar");
+            // Apoyar el vaso a la vista
+            var grb = glass.GetComponent<Rigidbody>();
+            grb.position = new Vector3(1.5f, 0.1f, 5.2f); grb.linearVelocity = Vector3.zero; glass.transform.position = grb.position;
+            for (float t = 0; t < 2.5f && npc.State != NpcState.Distracted; t += Time.deltaTime) yield return null;
+            Assert.AreEqual(NpcState.Distracted, npc.State, "un vaso apoyado y visible distrae");
+            Assert.IsFalse(npc.IsAnchored, "la distraccion suelta el anclaje (GDD 06)");
+            yield return new WaitForSeconds(NpcBrain.DistractionDuration + 0.4f);
+            Assert.AreNotEqual(NpcState.Distracted, npc.State, "la distraccion dura una ventana acotada");
+            // Enfriamiento: el mismo vaso no lo vuelve a distraer enseguida
+            hands.DebugHoldLeft = false;
+            for (float t = 0; t < 4f; t += Time.deltaTime) { Assert.AreNotEqual(NpcState.Distracted, npc.State, "enfriamiento de 12 s"); yield return null; }
+            Assert.AreEqual(1, npc.DistractionUses);
+        }
+
+        [UnityTest]
+        public IEnumerator Teammate_HelpsFallenPlayer_GetUpFaster()
+        {
+            // Segundo jugador local sin red (solo para la prueba): cae y el jugador 1 lo ayuda mirando y manteniendo E
+            var prefab = Object.FindAnyObjectByType<NetSession>().playerPrefab;
+            var other = Object.Instantiate(prefab, new Vector3(-2f, 0f, 0f), Quaternion.identity).GetComponent<PlayerMotor>();
+            yield return new WaitForFixedUpdate();
+            other.Fall("prueba");
+            PlacePlayer(new Vector3(-2f, 0f, 1.0f), 180f);
+            float start = Time.time;
+            while (other.State == PlayerState.Fallen && Time.time - start < 3f)
+            {
+                Vector3 to = other.transform.position + Vector3.up * 0.4f - hands.cam.transform.position;
+                player.SetYawPitch(Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, -Mathf.Atan2(to.y, new Vector2(to.x, to.z).magnitude) * Mathf.Rad2Deg);
+                LabInput.Simulated[(int)Act.Interact] = true;
+                yield return null;
+            }
+            LabInput.Simulated[(int)Act.Interact] = false;
+            float fallen = Time.time - start;
+            Object.Destroy(other.gameObject);
+            Assert.Greater(other.AssistedTime, 0.3f, "la ayuda se aplico");
+            Assert.Less(fallen, LabBalance.FallLockMax * 0.75f, $"con ayuda se levanta antes ({fallen:0.00}s vs {LabBalance.FallLockMax}s)");
         }
     }
 }

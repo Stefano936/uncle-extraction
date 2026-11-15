@@ -183,6 +183,16 @@ namespace UncleExtraction
         {
             interactLabel = "";
             var npc = NpcBrain.Instance; var cart = TransportCart.Instance;
+            // 0) Ayudar a un compañero caido que se mira de cerca: mantener E acelera su levantada
+            foreach (var other in PlayerMotor.All)
+            {
+                if (!other || other == motor || other.State != PlayerState.Fallen) continue;
+                Vector3 to = other.transform.position + Vector3.up * 0.4f - cam.transform.position;
+                if (to.magnitude > 1.9f || Vector3.Angle(cam.transform.forward, to) > 40f) continue;
+                interactLabel = $"Mantener E: ayudar a {other.playerName} a levantarse";
+                if (Ctrl(Act.Interact) && other.AssistGetUp(Time.deltaTime)) interactProgress = Mathf.Clamp01(1f - other.StateTimeLeft / LabBalance.FallLockMax);
+                return;
+            }
             // 1) Desanclar: mantener E sobre la mano anclada del tio 0,9 s
             if (npc && npc.IsAnchored && npc.AnchorHandSocket)
             {
@@ -201,7 +211,20 @@ namespace UncleExtraction
                 }
             }
             interactProgress = 0f;
-            // 2) Carrito: E para asegurar / liberar al tio en la caja
+            // 2) Camioneta: con el tio adentro, mantener E 1 s desde afuera para cerrar las puertas (GDD 03)
+            var van = VanDoors.Instance; var zone = ExtractionZone.Instance;
+            if (van && zone && !zone.Secured && zone.AllPointsInside && van.InRange(transform.position))
+            {
+                string why = van.BlockReason();
+                if (why == "")
+                {
+                    interactLabel = "Mantener E: cerrar la camioneta";
+                    interactProgress = Ctrl(Act.Interact) ? van.HoldClose(this, Time.deltaTime) : 0f;
+                }
+                else interactLabel = why;
+                return;
+            }
+            // 3) Carrito: E para asegurar / liberar al tio en la caja
             if (cart && Vector3.Distance(transform.position, cart.transform.position) < 2.2f)
             {
                 if (cart.IsStrapped) { interactLabel = "E: soltar correa del carrito"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
