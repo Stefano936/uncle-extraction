@@ -25,6 +25,8 @@ namespace UncleExtraction
         public static NetMode Mode = NetMode.Solo;
         public static string Address = "127.0.0.1";
         public static ushort Port = 7777;
+        /// Direccion de escucha del anfitrion: 0.0.0.0 para LAN; 127.0.0.1 para pruebas en la misma PC (sin aviso del firewall).
+        public static string ListenAddress = "0.0.0.0";
         public static string StatusMessage = "";
         public static float StatusUntil;
         public static NetSession Instance { get; private set; }
@@ -37,6 +39,23 @@ namespace UncleExtraction
 
         IEnumerator Start() { if (autoStart) yield return Begin(Mode); }
 
+        float nextDiag; RoundState lastRound = RoundState.Running;
+        void Update()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm == null || !nm.IsListening || Time.unscaledTime < nextDiag) return;
+            nextDiag = Time.unscaledTime + 5f;
+            var utp = nm.GetComponent<UnityTransport>();
+            if (!nm.IsServer && nm.IsConnectedClient)
+                Debug.Log($"[NetDiag] cliente {nm.LocalClientId}: rtt={utp.GetCurrentRtt(NetworkManager.ServerClientId)}ms ronda={(RoundDirector.Instance ? RoundDirector.Instance.State.ToString() : "-")} t={(RoundDirector.Instance ? RoundDirector.Instance.Elapsed : 0f):0.0}");
+            else if (nm.IsServer && Mode != NetMode.Solo)
+            {
+                string rtts = "";
+                foreach (var id in nm.ConnectedClientsIds) if (id != NetworkManager.ServerClientId) rtts += $" c{id}={utp.GetCurrentRtt(id)}ms";
+                Debug.Log($"[NetDiag] anfitrion: jugadores={nm.ConnectedClientsIds.Count}{rtts} agarres={GrabRegistry.Count} ronda={(RoundDirector.Instance ? RoundDirector.Instance.State.ToString() : "-")}");
+            }
+        }
+
         static void ParseArgsOnce()
         {
             if (argsParsed) return; argsParsed = true;
@@ -46,6 +65,7 @@ namespace UncleExtraction
                 if (a[i] == "-ueHost") Mode = NetMode.Host;
                 else if (a[i] == "-ueClient") { Mode = NetMode.Client; if (i + 1 < a.Length && !a[i + 1].StartsWith("-")) Address = a[i + 1]; }
                 else if (a[i] == "-uePort" && i + 1 < a.Length && ushort.TryParse(a[i + 1], out var p)) Port = p;
+                else if (a[i] == "-ueListen" && i + 1 < a.Length) ListenAddress = a[i + 1];
             }
         }
 
@@ -63,7 +83,7 @@ namespace UncleExtraction
                 {
                     NetworkTransport = utp,
                     PlayerPrefab = playerPrefab,
-                    EnableSceneManagement = false,   // todos cargan PhysicsLab; objetos de escena por GlobalObjectIdHash
+                    EnableSceneManagement = true,    // sin esto NGO borra en el cliente los objetos de escena (tio, carrito, sistemas)
                     ConnectionApproval = true,
                     ProtocolVersion = ProtocolVersion,
                     TickRate = 30,
@@ -95,6 +115,7 @@ namespace UncleExtraction
             if (nm.IsServer) { if (id != NetworkManager.ServerClientId) Say($"Se fue el jugador {id + 1}: sus agarres se liberaron"); return; }
             if (id == nm.LocalClientId)
             {
+                NetAuth.Frozen = true;
                 string reason = string.IsNullOrEmpty(nm.DisconnectReason) ? "Se perdio la conexion con el anfitrion" : nm.DisconnectReason;
                 Say(reason + ". Volviendo a jugar solo.", 6f);
             }
@@ -103,6 +124,7 @@ namespace UncleExtraction
         static void OnClientStopped(bool wasHost)
         {
             if (wasHost || !Application.isPlaying || Instance == null || Mode != NetMode.Client) return;
+            NetAuth.Frozen = true;
             // Sin migracion de anfitrion (especificacion 07): la partida termina y se vuelve a un estado seguro.
             Mode = NetMode.Solo;
             Instance.StartCoroutine(Instance.BackToSolo());
@@ -117,6 +139,11 @@ namespace UncleExtraction
         public IEnumerator Begin(NetMode mode)
         {
             var nm = EnsureManager();
+            if (nm.IsListening && nm.IsClient && !nm.IsServer && mode == NetMode.Client)
+            {   // la escena la recargo la sincronizacion de NGO al conectarse: la sesion sigue viva
+                Debug.Log("[Net] escena sincronizada por el anfitrion; se mantiene la conexion");
+                yield break;
+            }
             if (nm.IsListening || nm.ShutdownInProgress)
             {   // escena recargada (reinicio de prueba o volver a solo): cerrar la sesion anterior antes de abrir otra
                 nm.Shutdown();
@@ -124,7 +151,7 @@ namespace UncleExtraction
                 yield return null;
             }
             var utp = nm.GetComponent<UnityTransport>();
-            Mode = mode;
+            Mode = mode; NetAuth.Frozen = false;
             bool ok = false;
             switch (mode)
             {
@@ -137,7 +164,7 @@ namespace UncleExtraction
                     }
                     break;
                 case NetMode.Host:
-                    utp.SetConnectionData("0.0.0.0", Port, "0.0.0.0");
+                    utp.SetConnectionData(ListenAddress, Port, ListenAddress);
                     ok = nm.StartHost();
                     if (ok) Say($"Anfitrion en el puerto {Port} (conexion directa LAN/localhost)");
                     break;

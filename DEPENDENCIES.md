@@ -36,4 +36,6 @@ Versionar `UnityProject/ProjectSettings/ProjectVersion.txt`, `UnityProject/Packa
 | Test Framework | 1.6.0 (NUnit 2.0.5) | Ídem. |
 | uGUI | 2.0.0 | Ídem. |
 | Render | Built-in (URP pendiente) | Decisión M1. |
-| Red | Sin instalar (M2) | — |
+| Netcode for GameObjects | 2.14.0 | `Packages/manifest.json` (M2, 2026-11-15). |
+| Unity Transport | 2.7.5 | Ídem. |
+| Multiplayer Services (Sessions/Relay) | Sin instalar (M4) | Requiere proyecto de Unity Cloud. |

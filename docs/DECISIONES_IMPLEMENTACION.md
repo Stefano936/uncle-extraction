@@ -46,6 +46,22 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Pruebas de intento completo en tiempo real: con `timeScale` 4 el carrito pasaba 3/3, pero en la build fallaba 0/9 (el bot decide por frame y a 4x controla más grueso). Se usa `timeScale` 1 (con `[Timeout(330000)]`). La prueba del carrito estuvo `[Ignore]` hasta corregir el bot (histéresis al cruzar la puerta); hoy pasa.
 - `runInBackground = true`: sin foco, la build se pausaba (una prueba de humo se congeló a los 2,8 s). También es necesario para el anfitrión de M2.
 
+## 2026-11-15 — M2: red temprana
+
+- Topología: listen server con NGO 2.14.0 + UTP 2.7.5 (especificación 07). El modo individual es un anfitrión en loopback (127.0.0.1), así individual y cooperativo comparten el mismo camino de autoridad. Alternativa descartada: un modo offline separado (duplica lógica y oculta errores de red).
+- NetworkManager creado en tiempo de ejecución por `NetSession` (NGO lo hace DontDestroyOnLoad): al recargar la escena (reintento, pruebas) se cierra la sesión y se abre otra; un cliente cuya escena recarga la sincronización de NGO conserva la conexión.
+- Gestión de escenas de NGO **activada**. Sin ella, los clientes borran los NetworkObjects colocados en la escena y esperan prefabs registrados (verificado en el código de NGO 2.14 y en una prueba: el cliente perdía el tío, el carrito y los sistemas).
+- Entrada: los clientes envían intenciones secuenciadas (botones, movimiento, mirada) por RPC no fiable; el anfitrión recalcula el punto apuntado con la mirada recibida (no confía en un socket elegido por el cliente). Sin predicción del jugador en esta etapa: con 5–7 ms en localhost no hace falta; reevaluar con latencia simulada y en LAN.
+- Clientes desconectados: congelados (`NetAuth.Frozen`) hasta volver a jugar solo. Sin esto, la copia local pasaba a simular sola y llegó a «ganar» una ronda inexistente.
+- Laboratorio: se admite unirse con la ronda en curso y el escalado se recalcula. El lobby de M4 bloqueará incorporaciones durante la ronda (especificación 07).
+- Sin migración de anfitrión (especificación 07).
+
+## 2026-11-15 — Carga del carrito válida
+
+- Antes: `Strap` recolocaba y rotaba al tío al instante sobre el carrito. Con un jugador o una pared en ese volumen, la física despedía al carrito o al jugador (incluso a través de la pared).
+- Ahora: valida el volumen del tío acostado (`OverlapCapsule`, ignorando al tío y al carrito) y, si está ocupado, no carga y avisa por qué. La subida dura 0,45 s y es cinemática, con un arco corto; el destino sigue al carrito. Las colisiones tío-carrito se ignoran mientras sube y está asegurado, y se restauran al soltarlo o reiniciar. Se conserva la ayuda para jugar solo: E carga y asegura en un paso.
+- Pendiente: animación del tío; ragdoll reducido.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.

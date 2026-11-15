@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace UncleExtraction
 {
-    public enum AutopilotMode { Drag, Cart }
+    public enum AutopilotMode { Drag, Cart, Race }
 
     /// Jugador automatico de PhysicsLab para pruebas y demostraciones. Usa solo las entradas de un jugador real:
     /// mirar (yaw/pitch), moverse, mantener clic izquierdo/derecho, E, Q, Espacio y agacharse (via LabInput.Simulated).
@@ -46,7 +46,7 @@ namespace UncleExtraction
             door = FindAnyObjectByType<HingeJoint>();
         }
 
-        bool quitOnEnd; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
+        long raceAtUnixMs; bool quitOnEnd; float quitAt = -1f; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
         static readonly Vector3 OpenSpot = new Vector3(1.5f, 0f, 2.6f);
 
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
@@ -57,7 +57,9 @@ namespace UncleExtraction
             {
                 if (args[i] == "-ueQuitOnEnd") quitOnEnd = true;
                 if (args[i] == "-ueAutopilot" && i + 1 < args.Length)
-                    pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart : AutopilotMode.Drag;
+                    pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart
+                                : args[i + 1].Equals("race", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Race : AutopilotMode.Drag;
+                if (args[i] == "-ueRaceAt" && i + 1 < args.Length) long.TryParse(args[i + 1], out raceAtUnixMs);
                 if (args[i] == "-ueAutopilotDelay" && i + 1 < args.Length) float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out pendingDelay);
             }
         }
@@ -67,9 +69,9 @@ namespace UncleExtraction
             // El jugador local aparece cuando la red lo genera (en un cliente, al conectarse).
             if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay) { var m = pendingMode.Value; pendingMode = null; StartRun(m); }
             if (quitOnEnd && round && round.State != RoundState.Running)
-            {
-                Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; saliendo");
-                quitOnEnd = false; Application.Quit(round.State == RoundState.Success ? 0 : 3);
+            {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre
+                if (quitAt < 0f) { quitAt = Time.unscaledTime + 3f; Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; saliendo en 3 s"); }
+                else if (Time.unscaledTime >= quitAt) { quitOnEnd = false; Application.Quit(round.State == RoundState.Success ? 0 : 3); }
             }
         }
 
@@ -82,7 +84,7 @@ namespace UncleExtraction
             lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
             aimSince = Time.time; nextReport = Time.time + 10f;
             Log($"inicio modo {mode}: tio en {body.Body.position}, jugador en {player.transform.position}");
-            routine = StartCoroutine(mode == AutopilotMode.Drag ? DragRun() : CartRun());
+            routine = StartCoroutine(mode == AutopilotMode.Drag ? DragRun() : mode == AutopilotMode.Cart ? CartRun() : RaceRun());
         }
 
         public void StopRun()
@@ -166,6 +168,7 @@ namespace UncleExtraction
         /// Pasos comunes de cada frame. Devuelve true si consumio el frame (caido, desanclando).
         bool CommonStep()
         {
+            if (!player || !hands) { Log("sin jugador local (desconexion o reinicio): se detiene"); StopRun(); return true; }
             Observe();
             if (player.State != PlayerState.Active)
             {   // caido o levantandose: soltar botones y esperar
@@ -271,8 +274,26 @@ namespace UncleExtraction
         IEnumerator HandsOffInZone()
         {
             Status = "esperando en la zona";
-            if (Holding(0) || Holding(1)) { Log("tio dentro de la zona: suelta (Q) y espera"); handsOffUntil = Time.time + 2.5f; }
+            if ((Holding(0) || Holding(1)) && Time.time >= handsOffUntil) { Log("tio dentro de la zona: suelta (Q) y espera"); handsOffUntil = Time.time + 2.5f; }
             Idle(); yield return Tap(Act.ReleaseAll);
+        }
+
+        /// Carrera por un mismo punto (especificacion 05): dos jugadores apuntan al cinturon y aprietan en el mismo instante
+        /// de reloj (-ueRaceAt, ms Unix). El anfitrion debe crear un solo agarre y responder SocketBusy al otro.
+        IEnumerator RaceRun()
+        {
+            var belt = GrabSocket.ById("belt");
+            bool second = player.Controls && player.Controls.IsSpawned && player.Controls.OwnerClientId % 2 == 1;
+            Vector3 stand = new Vector3(second ? 0.35f : -0.35f, 0f, 5.85f);
+            while (Vector3.Distance(Me, stand) > 0.15f) { Status = "yendo al punto de carrera"; MoveWorld(stand - Me); LookAt(belt.Position); yield return null; }
+            LabInput.SimulatedMove = Vector2.zero;
+            long now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            while (now() < raceAtUnixMs) { LookAt(belt.Position); Status = "esperando la senal"; yield return null; }
+            Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")}");
+            for (float t = 0; t < 2f; t += Time.deltaTime) { LookAt(belt.Position); SetHold(0, true); yield return null; }
+            Log($"resultado carrera: mano izq = '{hands.HeldSocketId(0)}' aviso='{hands.LastFeedback}'");
+            SetHold(0, false); yield return null;
+            StopRun();
         }
 
         IEnumerator DragRun()

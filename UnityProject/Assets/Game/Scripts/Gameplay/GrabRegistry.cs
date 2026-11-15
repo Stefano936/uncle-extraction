@@ -41,6 +41,7 @@ namespace UncleExtraction
         public static event Action<GrabLink, ReleaseReason> OnReleased;
         public static event Action<GrabLink> OnCreated;
         public static bool Verbose = true;
+        static float lastBusyLog = -99f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void ResetStatic()
@@ -73,7 +74,11 @@ namespace UncleExtraction
             if (owner == null || !owner.CanGrab) return GrabResult.OwnerInactive;
             if (socket == null || socket.body == null) return GrabResult.NoTarget;
             if (Find(owner, hand) != null) return GrabResult.HandBusy;
-            if (OccupancyOf(socket) >= socket.capacity) return GrabResult.SocketBusy;
+            if (OccupancyOf(socket) >= socket.capacity)
+            {   // carrera por el mismo punto: gana el primero en el orden autoritativo del anfitrion; el otro recibe SocketBusy
+                if (Verbose && Time.time - lastBusyLog > 0.5f) { lastBusyLog = Time.time; Debug.Log($"[Grab] reject {owner.OwnerName} hand={hand} socket={socket.socketId}: SocketBusy"); }
+                return GrabResult.SocketBusy;
+            }
             if (links.Count >= LabBalance.MaxPlayerGrabs) return GrabResult.GlobalLimit;
             float d = Vector3.Distance(owner.HandOrigin(hand), socket.Position);
             if (d > LabBalance.GrabReach + 0.25f) return GrabResult.OutOfReach; // tolerancia pequena: el origen es la mano virtual

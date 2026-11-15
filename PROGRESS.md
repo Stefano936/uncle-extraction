@@ -1,100 +1,89 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-15 (Claude Code local, sesión 3: integración Git, M0/M1 compilado, autopiloto e intentos individuales automáticos).
+Última actualización: 2026-11-15 (Claude Code local, sesión 4: M2 red temprana).
 
 ## Hito actual
 
-M0 + M1 — PhysicsLab **compila y pasa las pruebas automáticas, incluidos intentos individuales completos (arrastre en Normal y Difícil, y carrito en Normal), en tiempo real y con el cerebro del tío encendido. La build de Windows completa sola los dos modos con el autopiloto.** Falta jugarlo a mano: no hubo control de pantalla en la sesión.
+**M2 — red temprana: núcleo implementado y verificado con dos procesos en localhost.** Host autoritativo con Netcode for GameObjects 2.14.0 + Unity Transport 2.7.5. El modo individual es un anfitrión en loopback (mismo camino de autoridad). Pendiente de M2: prueba en LAN real y medición con latencia simulada. Internet (Relay) es M4.
 
-## Niveles de verificación (2026-11-15, sesión 3)
+Siguiente hito en curso: interacciones y recorrido (M1/M3 pendientes) — ver «Próxima acción exacta».
 
-| Nivel | Estado | Evidencia |
-| --- | --- | --- |
-| Código escrito | OK | `UnityProject/Assets/Game/`. Cambios de C# en esta sesión: `LabInput.Simulated`, `LabAutopilot` (nuevo), levantada del tío en `NpcBrain`, correa en `TransportCart`, panel del HUD, `BuildTools` (`runInBackground`) y `SoloAttemptTests`. |
-| Compilación C# | OK, 0 errores, 0 warnings | Unity 6000.3.28f1 batch; `.local-setup/logs/unity/01b_bootstrap.log` (local, no versionado). |
-| Escena PhysicsLab | Generada | `PhysicsLabBuilder.BuildFromCommandLine` → `Assets/Game/Scenes/PhysicsLab.unity`, 10 sockets. |
-| Pruebas EditMode | 9/9 PASS | `23_editmode.xml`. |
-| Pruebas PlayMode | 7/7 PASS, 2 corridas | `30_playmode_{1,2}.xml`. Las 4 originales (cerebro apagado, extracción con teletransporte) + 3 de `SoloAttemptTests` en **tiempo real** (`timeScale` 1, límite de 330 s). |
-| Intento individual de arrastre (automático) | PASS: Normal 59,5 y 61,5 s; Difícil 55,5 y 37,0 s | `LabAutopilot` juega solo con entradas de jugador (mirar, moverse, clics, E, Q, Espacio, agacharse; sin `Strap()`, `Secure()` ni teletransportes). El tío se aferra, forcejea, ataca, derriba, cae y se agota; el bot lo saca por la puerta y lo entra de costado, tomado de los tobillos. Varianza alta: en Normal hubo corridas de 14 s y otras de más de 180 s con 4 derribos. |
-| Intento individual con carrito (automático) | PASS: 28,0 y 28,2 s | Lleva al tío junto al carrito, lo asegura con E y tira del asa por la puerta hasta la zona. El atasco anterior en la puerta era del bot: alternaba entre tirar recto y doblar justo en su umbral, y el tío chocaba con la hoja abierta. Se resolvió con histéresis: tirar recto hasta que el carrito esté del todo afuera (z < -4). |
-| Build Windows (Mono, x64) | OK | `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (~92 MB, no versionado), 0 errores (`24_build.log`). `runInBackground` activado. |
-| Build: intentos automáticos | Arrastre PASS 4/4 (13,7, 87,8, 104,7 y 29,8 s); carrito PASS 3/3 (27,9, 23,3 y 23,6 s) | `UncleExtraction_PhysicsLab.exe -ueAutopilot drag|cart -ueQuitOnEnd` en ventana de 1280×720; sale con código 0 si la ronda termina en éxito (`25_*`, `28_build_autopilot_*.log`). Antes, 1 de 5 corridas se quedó congelada: sin foco, Unity pausaba el juego. |
-| Arranque de la build | OK | 20 s en ventana 1280×720: D3D11 (RTX 3070 Ti), PhysX 4.1.2, Input System inicializado, sin excepciones (`06_build_smoke.log`). |
-| Jugado a mano | NOT_RUN | Sin herramientas de control de pantalla en la sesión. Sensación, legibilidad de ataques y diversión sin comprobar. |
-| IL2CPP | NOT_RUN | Módulo instalado; falta Visual Studio con C++. |
-| Red | NOT_RUN | M2. |
+## Verificación M2 (2026-11-15)
 
-## Comandos verificados (Git Bash, desde `UnityProject/`)
+| Prueba | Condición | Resultado | Evidencia |
+| --- | --- | --- | --- |
+| Compilación | Unity 6000.3.28f1 | PASS, 0 errores | build `51_build.log` (1 warning de Unity, no de código del juego) |
+| EditMode | — | PASS 9/9 | `47_editmode.xml` |
+| PlayMode (modo individual = anfitrión loopback) | tiempo real | PASS 7/7 | `50_playmode.xml`: 4 de laboratorio + arrastre Normal 55,8 s, Difícil 42,8 s, carrito Normal 25,8 s |
+| Cooperativo 2 jugadores reales (anfitrión + cliente, cada uno con autopiloto) | **localhost**, 2 procesos | PASS 2/3; 1 BLOCKED (crash del driver NVIDIA al crear D3D11 en el arranque simultáneo, antes de cargar el juego) | `net_smoke.ps1`: éxito en anfitrión 21,5 s / cliente 21,4 s; 15,6 / 15,6 s; RTT anfitrión→cliente 5–7 ms. Antes: 16,4 s (`64_*`) |
+| Carrera por el mismo socket (cinturón) en el mismo instante de reloj | localhost | PASS 2/2 | nunca dos agarres vivos sobre `belt`; gana uno (anfitrión), el otro recibe `SocketBusy` / «Ocupado» |
+| Desconexión del cliente mientras agarra | localhost (proceso matado) | PASS 2/2 | el anfitrión detecta la salida y queda en 0 agarres |
+| Salida del anfitrión a mitad de ronda | localhost | PASS 2/2 | el cliente recibe la desconexión, no simula por su cuenta ni «gana», vuelve a jugar solo |
+| Cliente solo contra tío escalado a 2 jugadores (anfitrión quieto) | localhost | NO TERMINA en 280 s | esperable: N=2 → resistencia ×1,55; el bot avanza lento en la puerta (`63_*`). No es fallo de red |
+| Golpes, caída y liberación vistos desde un cliente | localhost | PASS parcial | el cliente ve preparación/ataque replicados (`62_client.log`: MANOTAZO); impactos y caída se resuelven en el anfitrión. Sin verificación visual humana |
+| LAN (dos PCs) | — | NOT_RUN | requiere otra PC; usar `-ueHost` (escucha 0.0.0.0, aviso del firewall de Windows) y `-ueClient <IP>` |
+| Latencia simulada | — | NOT_RUN | pendiente: simulador de red de UTP |
+| Internet (Sessions/Relay) | — | NOT_RUN (M4) | requiere proyecto de Unity Cloud vinculado (cuenta de Stefano) |
+| Jugado a mano | — | NOT_RUN | sin control de pantalla en la sesión |
 
-```
-U="C:/Program Files/Unity/Hub/Editor/6000.3.28f1/Editor/Unity.exe"
-"$U" -batchmode -nographics -projectPath . -logFile <log> -executeMethod UncleExtraction.EditorTools.ProjectBootstrap.Run
-"$U" -batchmode -nographics -quit -projectPath . -logFile <log> -executeMethod UncleExtraction.EditorTools.PhysicsLabBuilder.BuildFromCommandLine
-"$U" -batchmode -nographics -projectPath . -logFile <log> -runTests -testPlatform EditMode -testResults <xml>
-"$U" -batchmode -nographics -projectPath . -logFile <log> -runTests -testPlatform PlayMode -testResults <xml>
-"$U" -batchmode -nographics -quit -projectPath . -logFile <log> -executeMethod UncleExtraction.EditorTools.BuildTools.BuildWindows -ueBackend Mono -ueOut ../Builds/PhysicsLab
-```
+Comando de las pruebas de red: `powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 -Scenario all -Runs 2` → `.local-setup/logs/net/net_smoke_results.csv`.
 
-`tools/windows/unity_m0_m1.cmd` hace lo mismo (busca `6000.3.*`).
+## Arquitectura de red implementada (M2)
 
-## Cambios de esta sesión
+- `Scripts/Net/NetSession.cs`: crea y reutiliza el NetworkManager en tiempo de ejecución. Modos: Solo (host 127.0.0.1, puertos 7790+), Host (`-ueHost`, `-ueListen`, `-uePort`), Client (`-ueClient <ip>`). Aprobación con tope de 4 y `ProtocolVersion` (compatibilidad de versión). Gestión de escenas de NGO activada. Si se va el anfitrión: aviso, el cliente queda congelado (`NetAuth.Frozen`) y vuelve a jugar solo. Diagnóstico `[NetDiag]` cada 5 s (RTT, jugadores, agarres, ronda).
+- `Scripts/Net/PlayerControls.cs`: separa la entrada del jugador local (dueño) de los personajes remotos. El dueño envía intenciones secuenciadas (RPC no fiable, la identidad sale del canal); el anfitrión las aplica; sin intención 0,5 s cancela esfuerzo y 1 s suelta las manos.
+- `NetAuth`: el anfitrión simula; los clientes leen estado replicado. `PlayerMotor`, `PlayerHands`, `NpcBrain`, `NpcBody`, `TransportCart`, `ExtractionZone` y `RoundDirector` son NetworkBehaviours con NetworkVariables (estados, finales de estados en tiempo de servidor, sockets por mano, tensión, textos de interacción, ronda, dificultad y N).
+- Jugador = prefab de red (`Assets/Game/Prefabs/Player.prefab`) generado por conexión; cámara y oído solo del dueño. Tío, carrito, puerta y silla: NetworkObjects de escena con NetworkTransform (servidor) + NetworkRigidbody (cinemáticos en clientes).
+- Escalado por número efectivo de jugadores conectados (`autoPartySize`; el panel puede fijarlo). Un cliente pide reiniciar con R y decide el anfitrión. En el laboratorio se admite unirse con la ronda en curso (el lobby de M4 lo bloqueará).
 
-- Historias unidas: los 4 commits de Cowork (Descargas) + commit inicial de GitHub, merge `21021fc` (único conflicto `README.md`: se conservó el ampliado). Sin force push; la carpeta de Descargas queda intacta como respaldo.
-- Herramientas instaladas (winget oficial): Unity Hub 3.22.6, Unity CLI 1.0.0, editor 6000.3.28f1 + Windows Build Support (IL2CPP). Licencia Unity Personal activa (la activó Stefano). `gh` ya estaba autenticado.
-- Corrección: `ProjectBootstrap` no podía correr porque los asmdef de pruebas no compilaban sin Test Framework (huevo y gallina). Se fijaron los paquetes directamente en `Packages/manifest.json`. Se quitaron paquetes por defecto no usados (purchasing, analytics, collab-proxy, 2D, XR helpers) y el `Assets/Resources/BillingMode.json` que dejó purchasing.
-- `.gitattributes`: LF para json/asmdef/physicMaterial/ProjectVersion de Unity.
-- Commit `bcc8f9b` (proyecto Unity, escena, settings, .meta).
-- Intento individual automático (`Tests/PlayMode/SoloAttemptTests.cs`) y `LabInput.Simulated` (botones simulados que se suman a la entrada real, para pruebas y un futuro autopiloto).
-- `LabAutopilot` (`Scripts/Debug/`): jugador automático para pruebas y demostraciones. En la build: Tab → panel → «Autopiloto: Arrastrar / Carrito / Parar», o por línea de comandos `-ueAutopilot drag|cart [-ueQuitOnEnd]`.
-- Ajuste de juego: al asegurar con E, la correa acuesta al tío a lo largo del carrito y bloquea su rotación (antes giraba libre, quedaba atravesado y no pasaba la puerta).
-- `PlayerSettings.runInBackground = true` (en `BuildTools`).
-- Ajuste de juego: el tío caído necesita 2,5 s sin agarres para levantarse (antes se levantaba al instante al soltarlo y se iba de la zona antes del conteo de 1,5 s). Ver `docs/DECISIONES_IMPLEMENTACION.md`.
+## Correcciones de juego encontradas en M2
 
-## Hallazgos del intento automático (para el playtest)
+- El tío cacheaba la lista de jugadores en `Start`, antes de que la red los genere, y los ataques directos no tenían objetivo. Ahora usa un registro vivo (`PlayerMotor.All`).
+- Carga del carrito: `Strap` ya no recoloca a ciegas. Valida el volumen del tío acostado contra paredes, jugadores y objetos («No hay lugar para acostarlo (…)»). Lo sube en 0,45 s (cinemático, el destino sigue al carrito) y, mientras sube y está asegurado, ignora las colisiones tío-carrito. Antes, con alguien o una pared en el volumen, la física despedía al carrito o al jugador a través de la pared.
+- El autopiloto maneja al jugador local con entrada simulada, así que sirve igual en el anfitrión que en un cliente. Modos `drag`, `cart` y `race`. En modo carrito, si no hay lugar, lleva el carrito a un espacio abierto.
 
-- Con una mano (420 N) no se puede arrastrar al tío caído: la fricción ronda los 460 N. Con dos manos (tope 700 N) sí. Puede ser intencional (incentiva usar las dos manos o el carrito), pero hay que comunicarlo.
-- La puerta de 1,5 m es un cuello de botella real: el tío acostado se engancha en el marco si entra en diagonal (GDD: «orientar el cuerpo en el umbral»).
-- Si se lo arrastra de los hombros contra la camioneta, el torso queda bajo el jugador y fuera de la zona. Funciona entrarlo de costado, tomado de los tobillos. La zona (2,2 × 1,6 m) delante de una camioneta sólida es exigente; en el juego final el tío va **dentro** de la camioneta (GDD).
-- En tiempo real, el bot gana arrastrando en 14–105 s (Normal) y 30–64 s (Difícil), con 1 a 12 ataques. La varianza es alta y podría ser fácil para un jugador hábil: medirlo a mano antes de tocar el balance.
-- Carrito + puerta: la hoja de la puerta vuelve a cerrarse con su resorte y ocupa media salida. Si el carrito dobla antes de estar del todo afuera, el tío (que sobresale 0,25 m de la caja) choca con la hoja. Un jugador probablemente lo resuelva sin problemas, pero hay que ver en el playtest si resulta frustrante (resorte más débil o puerta que quede abierta).
-- El carrito es la vía más rápida y estable para un jugador solo (~23–28 s y un solo ataque, porque con la correa el tío no ataca si nadie lo agarra). Puede ser demasiado fácil: revisar los intentos de soltarse en el playtest.
+## Estado de M0/M1 (sesión 3, sigue vigente)
 
-## Código M1 implementado
+- Laboratorio completo: jugador de dos manos, agarre con resorte limitado, tío de cuerpo central con 4 ataques anunciados, anclaje a la barra, fatiga y apertura, carrito con correa, zona de extracción provisional, HUD de depuración, 10 reinicios sin huérfanos.
+- Build Windows Mono: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe`. Con autopiloto, completa arrastre y carrito sola (sesión 3: arrastre 4/4, carrito 3/3).
+- Hallazgos para el playtest: una mano no alcanza para arrastrar al tío caído (fricción ~460 N > 420 N); la puerta de 1,5 m es un cuello de botella; hay que entrarlo de costado a la zona; el carrito podría ser demasiado fácil en solitario; la varianza del arrastre es alta.
 
-`UnityProject/Assets/Game/` (asmdefs Runtime, Editor, Tests):
+## Pendientes (trabajo propio, en orden)
 
-- Jugador: `PlayerMotor` (cápsula dinámica 80 kg, 4,2/2,8/2 m/s, paso evasivo con barrido, agacharse con chequeo de espacio, compostura, energía, tropiezo, caída 2,2 s, levantada con búsqueda de lugar libre, invulnerabilidad 1,5 s) y `PlayerHands` (dos manos independientes, alcance 1,4 m con línea de visión, esfuerzo, Q suelta todo, E interactúa).
-- Agarre: `GrabRegistry` (único registro; ocupación por socket; límite global 8; liberación idempotente con motivo) y `GrabSpring` (una sola fuerza `clamp(k·e − c·v, Fmax)`, 420/560 N por mano, 700/950 N por jugador, aviso 1,6 m, corte a 2,2 m tras 0,15 s).
-- Tío: `NpcBody` (cuerpo central de 110 kg, equilibrio con torque limitado, cae si se inclina >45°, se levanta si nadie lo agarra), `NpcBrain` (Loiter/Protest/Anchor/Struggle/Windup/Attack/Recover/ForcedRecovery/Escape/Carried/Secured; 4 ataques con preparación ≥0,8 s, dirección bloqueada, un impacto por objetivo; anclaje a la barra liberable manteniendo E 0,9 s; presupuesto de resistencia y apertura forzada) y `NpcPresentation` (color, pose e indicador de cada ataque).
-- Carrito con asa para dos manos y correa (E); el tío puede intentar soltarse tras una señal. `ExtractionZone` (torso, pelvis y hombros dentro durante 1,5 s). `RoundDirector` (dificultad, N, temporizador, reinicio limpio, prueba de 10 reinicios).
-- Depuración: HUD IMGUI (Tab), ataques forzados, 0/1/2/4 jugadores virtuales que tiran, sliders k/c/equilibrio, derribarse, simular desconexión.
-- Editor: `ProjectBootstrap` (instala Input System, Test Framework y uGUI con la versión que elija Unity), `PhysicsLabBuilder` (genera la escena), `BuildTools` (build Windows; Mono por defecto).
-- Pruebas: 9 EditMode (registro y balance) y 4 PlayMode (8 agarres + 10 reinicios sin huérfanos, arrastre, empujón que derriba y recuperación, extracción).
+1. Extracción real: el tío **dentro** de la camioneta (volumen interior, pose válida, sin solapes con sólidos, puertas traseras que se cierran con progreso). Reemplaza a la zona provisional delante del vehículo.
+2. Interacciones: vaso señuelo y distracciones (`DistractionService`), ayuda de un compañero para levantarse, derrota y reintento completos, fuga mejorada.
+3. Ragdoll reducido del tío (11 cuerpos), verificando estabilidad y replicación antes de reemplazar el cuerpo central.
+4. Flujo completo: escena Frontend (menú, individual, cooperativo directo, dificultad, opciones, pausa, resultados, volver) y escena Bar_LastRound con el kit 3D.
+5. Presentación: URP, kits de modelos/materiales/UI, señales de ataque, feedback de agarre/golpe, audio, EN/es_UY, controles remapeables (InputActionAsset).
+6. M2 restante: latencia simulada; prueba LAN cuando haya otra PC.
+7. M4 internet (Sessions/Relay), M5–M8 QA, rendimiento, Steam, build reproducible.
 
-Decisiones y simplificaciones: ver `docs/DECISIONES_IMPLEMENTACION.md` (2026-11-15, M1).
+## Bloqueos externos
 
-## Faltantes y contradicciones detectadas
+- **Unity Cloud (Relay/Sessions):** requiere vincular el proyecto a una organización de Unity Cloud con la cuenta de Stefano (dashboard de Unity). Bloquea M4 internet.
+- **LAN real:** requiere una segunda PC en la misma red.
+- **Steam:** requiere cuenta Steamworks (pago de Steam Direct) y App ID.
+- **IL2CPP:** requiere Visual Studio 2022 con «Desarrollo de juegos con C++».
+- **Prueba manual:** la hace Stefano; no bloquea la implementación.
+- **Entorno:** crash ocasional del driver NVIDIA (`nvwgf2umx`) al arrancar dos instancias a la vez; no involucra código del juego.
 
-- `preproduction/uncle_extraction/data/asset_manifest.csv` marca todos los modelos como `pending/TBD`, pero el kit 3D entregó prototipos de 8 de ellos (bar shell, barra, puerta, camioneta, banqueta, mesa, carrito, tío). El README del kit pide registrar «prototipo entregado / producción pendiente». No se editó la fuente original; actualizar el estado al importar en Unity.
-- Sin modelo todavía (usar primitivas en PhysicsLab): cuerpo compartido del jugador, brazos en primera persona, marco de puerta, vaso señuelo, vereda. Audio: todo pendiente (P1, no bloquea M1).
-- Texturas: solo Base Color, 1254 px (los prompts pedían 2048). Sin normal/roughness/AO.
-- Todo el arte entregado es **prototipo/placeholder**; el arte conceptual (`preproduction/uncle_extraction/art/`) es solo referencia de dirección final. Los GLB no son importables por Unity sin paquete extra: usar FBX.
-- El kit no trae ragdoll funcional ni triggers: `Extraction_Volume` y sockets son marcadores.
-- `ENTREGA_SHA256.json` es una foto del empaquetado: `.gitignore`, `.gitattributes`, `PROGRESS.md`, `DEPENDENCIES.md` y `docs/DECISIONES_IMPLEMENTACION.md` cambiaron después a propósito.
-- `00_EMPEZAR_AQUI.md` y `docs/GUIA_GITHUB.md` describen la vinculación con GitHub, ya realizada (merge `21021fc`); quedan como historia.
+## Faltantes y contradicciones de la preproducción
+
+- `preproduction/uncle_extraction/data/asset_manifest.csv` marca los modelos como `pending/TBD`, pero el kit 3D entregó prototipos de 8 (bar, barra, puerta, camioneta, banqueta, mesa, carrito, tío). Actualizar al importarlos.
+- Sin modelo: cuerpo/brazos del jugador, marco de puerta, vaso señuelo, vereda. Audio pendiente. Texturas solo Base Color 1254 px. Arte entregado = prototipo; los GLB no importan sin paquete extra (usar FBX). El kit no trae ragdoll ni triggers.
+- `ENTREGA_SHA256.json` es una foto del empaquetado. `00_EMPEZAR_AQUI.md` y `docs/GUIA_GITHUB.md` describen la vinculación con GitHub ya realizada.
 
 ## Ubicación y versionado
 
-- Carpeta principal: `C:\Users\stuff\OneDrive\Escritorio\uncle-extraction`; `origin` = `Stefano936/uncle-extraction` (privado), rama `main`.
-- OneDrive sincroniza `UnityProject/Library` (ignorado por Git, pero pesado). Recomendado excluirlo de OneDrive, o mover el clon fuera de OneDrive si aparecen bloqueos de archivos.
-- Sin Git LFS (ver `docs/DECISIONES_IMPLEMENTACION.md`).
+- Carpeta principal `C:\Users\stuff\OneDrive\Escritorio\uncle-extraction`; `origin` = `Stefano936/uncle-extraction` (privado), rama `main`.
+- OneDrive sincroniza `UnityProject/Library` (ignorado por Git, pesado): conviene excluirlo de OneDrive.
+- Builds locales (no versionadas): `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe`.
 
 ## Próxima acción exacta
 
-1. Stefano (o Claude con control de pantalla): abrir `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe`. Se puede mirar primero al autopiloto (Tab → «Arrastrar») y después jugar un intento completo: agarrar con clic izquierdo/derecho, arrastrar al tío, esquivar un ataque anunciado, caer y levantarse, cargarlo en el carrito (E para la correa) y llevarlo a la zona verde. Anotar qué no funciona o no se siente bien.
-2. Claude: con lo que salga del playtest, ajustar el balance (carrito posiblemente fácil, varianza del arrastre) y atacar los pendientes de M1; después, M2 (red temprana).
-3. Pendientes de M1 según decisiones: vaso señuelo, ayuda de compañero, superposición con sólidos y puerta en la extracción; URP.
-4. Instalar Visual Studio 2022 con «Desarrollo de juegos con C++» y probar la build IL2CPP.
+1. Claude: extracción real dentro de la camioneta (pendiente 1). Construir la camioneta con interior hueco y puertas traseras con bisagra en `PhysicsLabBuilder`, una `ExtractionZone` interior con pose y solapes, y el cierre de puertas con progreso. Adaptar el autopiloto y las pruebas sin debilitar las condiciones.
+2. Después, pendientes 2 → 4 en orden. Repetir `net_smoke.ps1` tras cada cambio de red o de autoridad.
+3. Stefano, cuando pueda: jugar la build (`-ueHost -ueListen 127.0.0.1` en una ventana y `-ueClient 127.0.0.1` en otra para probar el cooperativo en la misma PC) y anotar sensaciones.
 
 ## Al cerrar una sesión
 
