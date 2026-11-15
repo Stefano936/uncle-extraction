@@ -1,0 +1,43 @@
+using UnityEngine;
+
+namespace UncleExtraction
+{
+    /// Zona de la camioneta: los puntos requeridos (torso, pelvis, hombros) deben estar dentro 1,5 s seguidos.
+    /// Pendiente: comprobacion de solapamiento con solidos y cierre de puerta (balance.extraction).
+    [RequireComponent(typeof(BoxCollider))]
+    public class ExtractionZone : MonoBehaviour, IResettable
+    {
+        public NpcBody npc;
+        public float Progress01 => Mathf.Clamp01(held / LabBalance.ExtractionHold);
+        public bool Secured { get; private set; }
+        BoxCollider box; float held;
+
+        void Awake() { box = GetComponent<BoxCollider>(); box.isTrigger = true; }
+
+        bool Inside(Transform t)
+        {
+            if (!t) return false;
+            Vector3 local = transform.InverseTransformPoint(t.position) - box.center;
+            Vector3 h = box.size * 0.5f;
+            return Mathf.Abs(local.x) <= h.x && Mathf.Abs(local.y) <= h.y && Mathf.Abs(local.z) <= h.z;
+        }
+
+        public bool AllPointsInside => npc && Inside(npc.torso) && Inside(npc.pelvis) && Inside(npc.shoulderL) && Inside(npc.shoulderR);
+
+        void FixedUpdate()
+        {
+            if (Secured || !npc) return;
+            held = AllPointsInside ? held + Time.fixedDeltaTime : 0f;
+            if (held >= LabBalance.ExtractionHold)
+            {
+                Secured = true;
+                GrabRegistry.ReleaseAllOnBody(npc.Body, ReleaseReason.Secured);
+                if (NpcBrain.Instance) NpcBrain.Instance.Secure();
+                if (RoundDirector.Instance) RoundDirector.Instance.OnExtracted();
+                Debug.Log("[Extraction] SECURED");
+            }
+        }
+
+        public void ResetState() { Secured = false; held = 0f; }
+    }
+}
