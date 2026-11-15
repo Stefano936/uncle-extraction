@@ -64,3 +64,6 @@ __pycache__/
 /UNCLE_EXTRACTION_*.zip
 
 # Conservar Assets, Packages, ProjectSettings y todos los .meta de Unity.
+
+# Registros locales de los scripts de Windows.
+.local-setup/
