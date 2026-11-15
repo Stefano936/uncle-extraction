@@ -1,0 +1,192 @@
+{
+  "version": "1.0",
+  "date": "2026-11-15",
+  "self_excluded": true,
+  "files": [
+    {
+      "path": "DECISIONES.md",
+      "size_bytes": 2667,
+      "sha256": "83884b6ab459dcaba872478122ca397061cbe82957be1da500fb38b4905e5aab"
+    },
+    {
+      "path": "FUENTES.md",
+      "size_bytes": 3892,
+      "sha256": "77010570235d71159124b8d7957cf3056666f45422ee0a65cc6f1f842e6c4908"
+    },
+    {
+      "path": "PLAYTEST.md",
+      "size_bytes": 2548,
+      "sha256": "a20e65e041c9291da1355c0e835d355aa2f206bdf1efe680f8c897de688633cc"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 2556,
+      "sha256": "8a139c536a94b6b91574c5e7c5c02541335b5f0f912d33fdf9eea939707efafa"
+    },
+    {
+      "path": "VALIDACION_DOCUMENTAL.json",
+      "size_bytes": 1338,
+      "sha256": "b035289ad97f81158561060d3ae4d87e4debeb86498564aaa40b665d05e46398"
+    },
+    {
+      "path": "art/01_key_art_concept.png",
+      "size_bytes": 1938600,
+      "sha256": "7430f6223ef696c29c0c97c3f16e7e7a052f0adfe93289247c39cd0b539a4693"
+    },
+    {
+      "path": "art/02_uncle_character_reference.png",
+      "size_bytes": 1693581,
+      "sha256": "105c38d36e44c8f4087c17f0600adc5ce8a3db45c01c38e4fd443d94ed96c0ab"
+    },
+    {
+      "path": "art/03_bar_layout.png",
+      "size_bytes": 105701,
+      "sha256": "0231ba1a462cb37758d19a15535e096588db207640abfb5f3be4a7e28136d68f"
+    },
+    {
+      "path": "art/04_hud_wireframe.png",
+      "size_bytes": 70659,
+      "sha256": "8f6cc4eda65ac90016ec6a7d44dad9d307cd12d861a4359becd75a5062730011"
+    },
+    {
+      "path": "art/05_npc_state_flow.png",
+      "size_bytes": 77960,
+      "sha256": "ed004d43d9873926436db9adc8799cbe1a18207fdb1428203c8d3ea991cedfd8"
+    },
+    {
+      "path": "art/PROMPTS_IMAGENES.md",
+      "size_bytes": 4564,
+      "sha256": "df9e795e07f4daf1cd3b9127724139bdf78eddce81c06159cd739f037411e0dd"
+    },
+    {
+      "path": "claude/00_PROMPT_MAESTRO.md",
+      "size_bytes": 4565,
+      "sha256": "c52c7aaeffab00e6f0ed6918f5fb76df9a997704b7a8db41325512fbe6a0c619"
+    },
+    {
+      "path": "claude/01_M0_M1_laboratorio.md",
+      "size_bytes": 1109,
+      "sha256": "af4bd8edf8528fbb49b3f3602f2ad33b0b0ae3f9f2acefd2c028367db4eb14e8"
+    },
+    {
+      "path": "claude/02_M2_red_temprana.md",
+      "size_bytes": 1093,
+      "sha256": "4270713ee2d9ca6258d53663720c4f31085ec973ae635437738e569801cc42d0"
+    },
+    {
+      "path": "claude/03_M3_bar_y_bot.md",
+      "size_bytes": 1032,
+      "sha256": "2fe2abe1a8d6fb18e603042712d1c5c66c0a8f133595503b7e6f908bcf79945f"
+    },
+    {
+      "path": "claude/04_M4_internet.md",
+      "size_bytes": 1075,
+      "sha256": "26e12b52857f467338b3c96549142135833b745914259888f62df23d49d47e0f"
+    },
+    {
+      "path": "claude/05_M5_playtest_y_balance.md",
+      "size_bytes": 1045,
+      "sha256": "a2a724d511093c6a465b1f4f8c6d04e576947c0025f6e766435ec645ddd556b2"
+    },
+    {
+      "path": "claude/06_M6_arte_audio_UI.md",
+      "size_bytes": 1087,
+      "sha256": "fea67a71940bb2e71112f62430c17e67dc3c228a5a30b2a6b6f1c89a3c679be7"
+    },
+    {
+      "path": "claude/07_M7_Steam.md",
+      "size_bytes": 1075,
+      "sha256": "4b7d45b0d8591ef32a79cef5e326ed4860207fd0eae70a3da0dfa2cf22d33cfd"
+    },
+    {
+      "path": "claude/08_M8_QA_y_candidato.md",
+      "size_bytes": 1049,
+      "sha256": "eda03808835ff20adb53b3424b99333d607b076d4818bdaa973269adf8620e93"
+    },
+    {
+      "path": "claude/PROGRESS_template.md",
+      "size_bytes": 589,
+      "sha256": "258c4f949958e86dc0788669dbe165cb4449a21133bf5e95de69853e5948ddbd"
+    },
+    {
+      "path": "data/LEEME_DATOS.md",
+      "size_bytes": 1163,
+      "sha256": "5ab201aa8a20b7faa1797b2e4b9e6e118567ed04b6adbd9ae99061e072699b34"
+    },
+    {
+      "path": "data/asset_manifest.csv",
+      "size_bytes": 7486,
+      "sha256": "73acd8442add5b36dad37b5b3ed729e576b2c2ac8c33c3553c8ba9415b801423"
+    },
+    {
+      "path": "data/backlog.csv",
+      "size_bytes": 4893,
+      "sha256": "b1d976dcff7e4a6b3a4a237d82ceab4afea41c520157fc03c49efa62042db70a"
+    },
+    {
+      "path": "data/dialogue_en_es.csv",
+      "size_bytes": 12494,
+      "sha256": "fc75b45990dc5853f9f60a4497190293bff6752e6f5b6d813fa024b21dc0487b"
+    },
+    {
+      "path": "data/game_balance.json",
+      "size_bytes": 7365,
+      "sha256": "ca4371e4a958b66a7ac169eb87b48cedf26ab00fb20a92d1faeb4375a73175cc"
+    },
+    {
+      "path": "data/npc_states.csv",
+      "size_bytes": 1721,
+      "sha256": "f2aa315c16e12f59a5327c87ea7fa4079fe96cdd6fe2912ccd64bb57e546dc9e"
+    },
+    {
+      "path": "data/qa_matrix.csv",
+      "size_bytes": 9127,
+      "sha256": "9f29b1a8b193d472b5bbb22371313fd1f74a37e0e659ebd704efaaeb0c585ef5"
+    },
+    {
+      "path": "docs/01_GDD_diseno_del_juego.md",
+      "size_bytes": 39618,
+      "sha256": "eab4fa8b773425b143b92836b720c782fee4387404b83ef6b39ef517d5826dbb"
+    },
+    {
+      "path": "docs/02_especificacion_tecnica.md",
+      "size_bytes": 33603,
+      "sha256": "a219022eb692a23e295e478d547188e3e6b9bc8dd916787b578f27efaa491a8f"
+    },
+    {
+      "path": "docs/03_biblia_visual_y_sonora.md",
+      "size_bytes": 17466,
+      "sha256": "0c69ca50cf0e6bbe8da01c6e81a92253e25a2186505d5e6156f479a883003221"
+    },
+    {
+      "path": "docs/04_plan_de_produccion_y_handoff.md",
+      "size_bytes": 19294,
+      "sha256": "818520b473a912a41ed7e3756c434f87c65103f8d3690782b6d131963cc2a011"
+    },
+    {
+      "path": "pdf/01_GDD_diseno_del_juego.pdf",
+      "size_bytes": 3974400,
+      "sha256": "937c0a1bf042a5e54ec55eb665927198b3cbd5a73a6c709d157f34e48f2fd7ee"
+    },
+    {
+      "path": "pdf/02_especificacion_tecnica.pdf",
+      "size_bytes": 3965430,
+      "sha256": "505fb472fdba96cd2f7c3d6c5a48a5b09e2270f2b9dc5e3c806662ea782af218"
+    },
+    {
+      "path": "pdf/03_biblia_visual_y_sonora.pdf",
+      "size_bytes": 6856402,
+      "sha256": "5f945f3ffbfe759aa064704e6e254f218f8ca61aeefb94a2546ddf1ed9356f7d"
+    },
+    {
+      "path": "pdf/04_plan_de_produccion_y_Claude.pdf",
+      "size_bytes": 3950287,
+      "sha256": "48dfea421c95b51ac4728f3e0f6bc1c8a66ddcf46788e3708de53ef811d8c70e"
+    },
+    {
+      "path": "tools/validate_spec.py",
+      "size_bytes": 3325,
+      "sha256": "34fce659b97349ff485cc117ea44753642b2b8bd311e91c5c606e458cebe5c06"
+    }
+  ]
+}

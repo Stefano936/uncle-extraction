@@ -1,0 +1,66 @@
+# Unity: el proyecto vivirá en UnityProject/.
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Bb]uild/
+[Bb]uilds/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Ll]ogs/
+**/[Uu]ser[Ss]ettings/
+**/[Bb]uild/
+**/[Bb]uilds/
+**/[Mm]emoryCaptures/
+**/[Rr]ecordings/
+
+# Unity: otros generados (añadido 2026-11-15).
+**/[Aa]ssets/[Ss]treamingAssets/aa/
+**/[Aa]ssets/[Ss]treamingAssets/aa.meta
+.utmp/
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.unitypackage
+*.apk
+*.aab
+*.app
+sysinfo.txt
+crashlytics-build.properties
+.vscode/
+.consulo/
+ExportedObj/
+
+# Archivos generados de IDE y sistema.
+.vs/
+.idea/
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+.DS_Store
+Thumbs.db
+*.blend1
+*.blend2
+__pycache__/
+*.py[cod]
+
+# Configuración y credenciales locales.
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Paquetes de transporte: el repositorio contiene sus archivos extraídos.
+/UNCLE_EXTRACTION_*.zip
+
+# Conservar Assets, Packages, ProjectSettings y todos los .meta de Unity.

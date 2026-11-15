@@ -1,0 +1,1230 @@
+{
+  "schema": "ui.localization.v0.1",
+  "locale_notes": "English mockups; es_UY strings provided. Runtime layout in both languages must still be verified in Unity. Tokens in braces are runtime values, not C# interpolation instructions.",
+  "strings": [
+    {
+      "key": "button.play_solo",
+      "en": "PLAY SOLO",
+      "es_UY": "JUGAR SOLO",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.play_friends",
+      "en": "PLAY WITH FRIENDS",
+      "es_UY": "JUGAR CON AMIGOS",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.how_to",
+      "en": "HOW TO PLAY",
+      "es_UY": "CÓMO JUGAR",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.settings",
+      "en": "SETTINGS",
+      "es_UY": "OPCIONES",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.quit",
+      "en": "QUIT",
+      "es_UY": "SALIR",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.back",
+      "en": "BACK",
+      "es_UY": "VOLVER",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.resume",
+      "en": "RESUME",
+      "es_UY": "CONTINUAR",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.cancel",
+      "en": "CANCEL",
+      "es_UY": "CANCELAR",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.apply",
+      "en": "APPLY CHANGES",
+      "es_UY": "APLICAR CAMBIOS",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.leave_match",
+      "en": "LEAVE MATCH",
+      "es_UY": "SALIR DE LA PARTIDA",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.leave_lobby",
+      "en": "LEAVE LOBBY",
+      "es_UY": "SALIR DEL LOBBY",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.back_menu",
+      "en": "BACK TO MENU",
+      "es_UY": "VOLVER AL MENÚ",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.retry_same",
+      "en": "RETRY SAME SETUP",
+      "es_UY": "REPETIR CONFIGURACIÓN",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.new_setup",
+      "en": "NEW SETUP",
+      "es_UY": "NUEVA CONFIGURACIÓN",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.back_lobby",
+      "en": "BACK TO LOBBY",
+      "es_UY": "VOLVER AL LOBBY",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.start",
+      "en": "START EXTRACTION",
+      "es_UY": "INICIAR EXTRACCIÓN",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.copy_code",
+      "en": "COPY INVITE CODE",
+      "es_UY": "COPIAR CÓDIGO",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.create",
+      "en": "CREATE ROOM",
+      "es_UY": "CREAR SALA",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.join",
+      "en": "JOIN BY CODE",
+      "es_UY": "UNIRSE CON CÓDIGO",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.ready",
+      "en": "READY",
+      "es_UY": "LISTO",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.not_ready",
+      "en": "NOT READY",
+      "es_UY": "SIN CONFIRMAR",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "button.wait_host",
+      "en": "WAITING FOR HOST",
+      "es_UY": "ESPERANDO AL ANFITRIÓN",
+      "scope": "common",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "lobby.tagline",
+      "en": "The party is over. He disagrees.",
+      "es_UY": "La fiesta terminó. Él no está de acuerdo.",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.crew",
+      "en": "GET THE CREW TOGETHER",
+      "es_UY": "JUNTÁ AL GRUPO",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.your_crew",
+      "en": "YOUR CREW",
+      "es_UY": "TU GRUPO",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.private",
+      "en": "PRIVATE",
+      "es_UY": "PRIVADA",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.host",
+      "en": "Host",
+      "es_UY": "Anfitrión",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.joined",
+      "en": "Joined",
+      "es_UY": "Conectado",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.you",
+      "en": "YOU",
+      "es_UY": "VOS",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.difficulty",
+      "en": "DIFFICULTY",
+      "es_UY": "DIFICULTAD",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.relaxed",
+      "en": "RELAXED",
+      "es_UY": "RELAJADO",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.normal",
+      "en": "NORMAL",
+      "es_UY": "NORMAL",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.hard",
+      "en": "HARD",
+      "es_UY": "DIFÍCIL",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.variant",
+      "en": "Mode: Alcohol / Partygoer",
+      "es_UY": "Modo: Alcohol / Fiestero",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.mode_hint",
+      "en": "He fights to stay. Work together to get him out.",
+      "es_UY": "Se resiste a irse. Coordínense para sacarlo.",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.waiting_player",
+      "en": "Waiting for {player} to get ready.",
+      "es_UY": "Esperando que {player} confirme.",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.players_one",
+      "en": "{count} PLAYER",
+      "es_UY": "{count} JUGADOR",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.players_other",
+      "en": "{count} PLAYERS",
+      "es_UY": "{count} JUGADORES",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.minutes",
+      "en": "{minutes} MIN",
+      "es_UY": "{minutes} MIN",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.untimed",
+      "en": "NO TIMER",
+      "es_UY": "SIN RELOJ",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.code",
+      "en": "INVITE CODE",
+      "es_UY": "CÓDIGO DE SALA",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.copied",
+      "en": "Invite code copied.",
+      "es_UY": "Código copiado.",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.connecting",
+      "en": "Connecting...",
+      "es_UY": "Conectando...",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.creating",
+      "en": "Creating room...",
+      "es_UY": "Creando sala...",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "lobby.loading",
+      "en": "Loading the bar...",
+      "es_UY": "Cargando el bar...",
+      "scope": "lobby",
+      "max_width_reference_px": 570,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.audio_language",
+      "en": "AUDIO & LANGUAGE",
+      "es_UY": "AUDIO E IDIOMA",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.master",
+      "en": "Master volume",
+      "es_UY": "Volumen general",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.music",
+      "en": "Music",
+      "es_UY": "Música",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.voice",
+      "en": "NPC voice",
+      "es_UY": "Voz del personaje",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.cues",
+      "en": "Gameplay cues",
+      "es_UY": "Señales de juego",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.language",
+      "en": "Language",
+      "es_UY": "Idioma",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.english",
+      "en": "ENGLISH",
+      "es_UY": "INGLÉS",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.spanish",
+      "en": "SPANISH",
+      "es_UY": "ESPAÑOL",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.comfort",
+      "en": "COMFORT & ACCESSIBILITY",
+      "es_UY": "COMODIDAD Y ACCESIBILIDAD",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.attack_subtitles",
+      "en": "Descriptive attack subtitles",
+      "es_UY": "Subtítulos de ataques",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.shake",
+      "en": "Camera shake",
+      "es_UY": "Sacudida de cámara",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.head_bob",
+      "en": "Head bob",
+      "es_UY": "Balanceo al caminar",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.toggle_grab",
+      "en": "Toggle grab",
+      "es_UY": "Alternar agarre",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.profanity",
+      "en": "Profanity filter",
+      "es_UY": "Suavizar insultos",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.text_size",
+      "en": "Text size: {percent}%",
+      "es_UY": "Texto: {percent}%",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.on",
+      "en": "ON",
+      "es_UY": "SÍ",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.off",
+      "en": "OFF",
+      "es_UY": "NO",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.unsaved",
+      "en": "Apply your changes before leaving?",
+      "es_UY": "¿Aplicar los cambios antes de salir?",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "settings.discard",
+      "en": "DISCARD CHANGES",
+      "es_UY": "DESCARTAR CAMBIOS",
+      "scope": "settings",
+      "max_width_reference_px": 680,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.objective",
+      "en": "GET HIM OUT",
+      "es_UY": "SACALO DEL BAR",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.objective_detail",
+      "en": "Get him into the van.",
+      "es_UY": "Subilo a la camioneta.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.left",
+      "en": "LEFT HAND",
+      "es_UY": "MANO IZQ.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.right",
+      "en": "RIGHT HAND",
+      "es_UY": "MANO DER.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.free",
+      "en": "FREE",
+      "es_UY": "LIBRE",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.pending",
+      "en": "REQUESTING",
+      "es_UY": "PIDIENDO",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.holding",
+      "en": "HOLDING",
+      "es_UY": "SUJETANDO",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.strained",
+      "en": "STRAINED",
+      "es_UY": "EN TENSIÓN",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.released",
+      "en": "RELEASED",
+      "es_UY": "SOLTÓ",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.unavailable",
+      "en": "UNAVAILABLE",
+      "es_UY": "NO DISPONIBLE",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.hold_grab",
+      "en": "Hold to grab",
+      "es_UY": "Mantené para agarrar",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.press_grab",
+      "en": "Press to grab",
+      "es_UY": "Pulsá para agarrar",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.press_release",
+      "en": "Press to release",
+      "es_UY": "Pulsá para soltar",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.aim",
+      "en": "Aim at a handle",
+      "es_UY": "Apuntá a un agarre",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.forearm_left",
+      "en": "Left forearm",
+      "es_UY": "Antebrazo izquierdo",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.grip_first",
+      "en": "Grip first",
+      "es_UY": "Agarrá primero",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.energy",
+      "en": "ENERGY",
+      "es_UY": "ENERGÍA",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.composure",
+      "en": "COMPOSURE",
+      "es_UY": "COMPOSTURA",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.effort",
+      "en": "Effort",
+      "es_UY": "Esfuerzo",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.pull",
+      "en": "PULL TOGETHER",
+      "es_UY": "TIREN JUNTOS",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.release_tip",
+      "en": "{release} release all · Watch his free hand.",
+      "es_UY": "{release} soltá todo · Ojo con su mano libre.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.push",
+      "en": "PUSH INCOMING",
+      "es_UY": "VA A EMPUJAR",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.slap",
+      "en": "SLAP INCOMING",
+      "es_UY": "VA A DAR UN MANOTAZO",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.kick",
+      "en": "KICK INCOMING",
+      "es_UY": "VA A PATEAR",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.shake",
+      "en": "HE IS ABOUT TO SHAKE",
+      "es_UY": "VA A SACUDIRSE",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.evade",
+      "en": "Step aside or let go.",
+      "es_UY": "Hacete a un lado o soltalo.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.preparing_push",
+      "en": "[preparing a push]",
+      "es_UY": "[prepara un empujón]",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.preparing_slap",
+      "en": "[preparing a slap]",
+      "es_UY": "[prepara un manotazo]",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.preparing_kick",
+      "en": "[preparing a kick]",
+      "es_UY": "[prepara una patada]",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.preparing_shake",
+      "en": "[preparing a shake]",
+      "es_UY": "[prepara una sacudida]",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.fall_title",
+      "en": "FLOOR INSPECTION",
+      "es_UY": "INSPECCIÓN DEL PISO",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.getting_up",
+      "en": "Getting up automatically...",
+      "es_UY": "Te estás levantando...",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.control_return",
+      "en": "You will regain control shortly.",
+      "es_UY": "Vas a recuperar el control en breve.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.recovering",
+      "en": "RECOVERING",
+      "es_UY": "RECUPERANDO",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.grip_busy",
+      "en": "That grip is already taken.",
+      "es_UY": "Ese agarre está ocupado.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.too_far",
+      "en": "Move closer to grab.",
+      "es_UY": "Acercate para agarrar.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.exhausted",
+      "en": "He is catching his breath. Move now!",
+      "es_UY": "Está recuperando el aire. ¡Muevan ahora!",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "hud.door_blocked",
+      "en": "Clear the van door.",
+      "es_UY": "Despejá la puerta de la camioneta.",
+      "scope": "hud",
+      "max_width_reference_px": 650,
+      "font_reference_px": 27,
+      "max_lines": 2
+    },
+    {
+      "key": "round.pause",
+      "en": "TAKE A BREATHER",
+      "es_UY": "TOMATE UN RESPIRO",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.online_continues",
+      "en": "ONLINE MATCH CONTINUES",
+      "es_UY": "LA PARTIDA ONLINE CONTINÚA",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.online_detail",
+      "en": "Your friends and the uncle are still moving.",
+      "es_UY": "Tus amigos y el tío siguen moviéndose.",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.host_leave",
+      "en": "Leaving ends the match for everyone.",
+      "es_UY": "Si salís, termina la partida para todos.",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.client_leave",
+      "en": "Leave this match and return to the menu?",
+      "es_UY": "¿Salir de esta partida y volver al menú?",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.success",
+      "en": "UNCLE EXTRACTED",
+      "es_UY": "TÍO EXTRAÍDO",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.success_detail",
+      "en": "He is in the van. Somehow.",
+      "es_UY": "Está en la camioneta. De alguna manera.",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.timeout",
+      "en": "CLOSING TIME",
+      "es_UY": "HORA DE CERRAR",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.timeout_detail",
+      "en": "The ride left. He did not.",
+      "es_UY": "La camioneta se fue. Él no.",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.time",
+      "en": "EXTRACTION TIME",
+      "es_UY": "TIEMPO DE EXTRACCIÓN",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.falls",
+      "en": "TEAM FALLS",
+      "es_UY": "CAÍDAS DEL GRUPO",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.escapes",
+      "en": "ESCAPES",
+      "es_UY": "FUGAS",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.award",
+      "en": "HUMAN DOORSTOP",
+      "es_UY": "TOPE DE PUERTA HUMANO",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.award_detail",
+      "en": "Kept the exit open for the crew.",
+      "es_UY": "Mantuvo la salida abierta para el grupo.",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.next_try",
+      "en": "NEXT TRY",
+      "es_UY": "PRÓXIMO INTENTO",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "round.hint",
+      "en": "Wait for his recovery, clear the route and pull together.",
+      "es_UY": "Esperen su recuperación, despejen la ruta y tiren juntos.",
+      "scope": "round",
+      "max_width_reference_px": 1580,
+      "font_reference_px": 29,
+      "max_lines": 2
+    },
+    {
+      "key": "error.host_left",
+      "en": "THE HOST LEFT",
+      "es_UY": "EL ANFITRIÓN SALIÓ",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.host_left_detail",
+      "en": "This match has ended. You can return to the menu and start another one.",
+      "es_UY": "La partida terminó. Podés volver al menú y empezar otra.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.invalid",
+      "en": "That invite code is not valid.",
+      "es_UY": "Ese código de sala no es válido.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.full",
+      "en": "This room is full.",
+      "es_UY": "La sala está llena.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.version",
+      "en": "Your game versions do not match.",
+      "es_UY": "Las versiones del juego no coinciden.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.timeout",
+      "en": "The connection timed out. Try joining again.",
+      "es_UY": "La conexión tardó demasiado. Intentá unirte de nuevo.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.service",
+      "en": "Online is unavailable right now. You can still play solo.",
+      "es_UY": "El modo online no está disponible ahora. Podés jugar solo.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.not_started",
+      "en": "No online match was started.",
+      "es_UY": "No se inició ninguna partida online.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.already_started",
+      "en": "That match has already started. Join the next round.",
+      "es_UY": "Esa partida ya empezó. Unite en la próxima ronda.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "error.copy_failed",
+      "en": "Could not copy the code. You can select it manually.",
+      "es_UY": "No se pudo copiar. Podés seleccionar el código manualmente.",
+      "scope": "connection",
+      "max_width_reference_px": 810,
+      "font_reference_px": 29,
+      "max_lines": 3
+    },
+    {
+      "key": "tutorial.title",
+      "en": "GET HIM OUT. TOGETHER.",
+      "es_UY": "SÁQUENLO. JUNTOS.",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    },
+    {
+      "key": "tutorial.grab",
+      "en": "01 / GRAB",
+      "es_UY": "01 / AGARRÁ",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    },
+    {
+      "key": "tutorial.watch",
+      "en": "02 / WATCH",
+      "es_UY": "02 / OBSERVÁ",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    },
+    {
+      "key": "tutorial.move",
+      "en": "03 / MOVE",
+      "es_UY": "03 / MOVÉ",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    },
+    {
+      "key": "tutorial.grab_detail",
+      "en": "Use either hand to grab a forearm, ankle or clothing handle.",
+      "es_UY": "Usá cualquier mano para agarrar antebrazo, tobillo o ropa.",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    },
+    {
+      "key": "tutorial.watch_detail",
+      "en": "He telegraphs every attack. Step aside or release before he hits.",
+      "es_UY": "Avisa antes de atacar. Hacete a un lado o soltá antes del golpe.",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    },
+    {
+      "key": "tutorial.move_detail",
+      "en": "Pull during recovery. Use the cart and clear a route to the van.",
+      "es_UY": "Tiren durante su recuperación. Usen el carrito y despejen la ruta.",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    },
+    {
+      "key": "tutorial.practice",
+      "en": "Practice solo before joining your crew.",
+      "es_UY": "Practicá solo antes de sumarte al grupo.",
+      "scope": "tutorial",
+      "max_width_reference_px": 490,
+      "font_reference_px": 30,
+      "max_lines": 5
+    }
+  ]
+}

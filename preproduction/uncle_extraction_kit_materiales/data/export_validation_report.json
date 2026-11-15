@@ -1,0 +1,177 @@
+{
+  "status": "BLENDER_ART_EXPORT_CHECKS_PASSED",
+  "blender_version": "4.3.2",
+  "source_blend_image_checks": [
+    {
+      "material": "MAT_Wood_Boards",
+      "image_resolves": true,
+      "relative_path": "//../textures/01_wood_basecolor.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "wrap": "MIRROR"
+    },
+    {
+      "material": "MAT_Floor_Tiles",
+      "image_resolves": true,
+      "relative_path": "//../textures/02_floor_basecolor.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "wrap": "REPEAT"
+    },
+    {
+      "material": "MAT_Wall_Taupe",
+      "image_resolves": true,
+      "relative_path": "//../textures/03_wall_basecolor.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "wrap": "MIRROR"
+    },
+    {
+      "material": "MAT_Shirt_Fabric",
+      "image_resolves": true,
+      "relative_path": "//../textures/04_fabric_basecolor.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "wrap": "MIRROR"
+    }
+  ],
+  "fbx_reimport_results": [
+    {
+      "asset": "uncle_prototype",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        -1.159031629562378,
+        3.0
+      ],
+      "texture_references_found": [
+        "04_fabric_basecolor.png"
+      ],
+      "bones": 12,
+      "clips": [
+        "Uncle_Prototype_Rig|Uncle_Prototype_Rig|Idle_Prototype",
+        "Uncle_Prototype_Rig|Uncle_Prototype_Rig|Kick_Prototype",
+        "Uncle_Prototype_Rig|Uncle_Prototype_Rig|Push_Prototype"
+      ]
+    },
+    {
+      "asset": "stool",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        0.0,
+        1.0
+      ],
+      "texture_references_found": [],
+      "bones": 0,
+      "clips": []
+    },
+    {
+      "asset": "table",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        -0.675000011920929,
+        1.0
+      ],
+      "texture_references_found": [
+        "01_wood_basecolor.png"
+      ],
+      "bones": 0,
+      "clips": []
+    },
+    {
+      "asset": "bar_counter",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        -2.059999942779541,
+        2.059999942779541
+      ],
+      "texture_references_found": [
+        "01_wood_basecolor.png"
+      ],
+      "bones": 0,
+      "clips": []
+    },
+    {
+      "asset": "transport_cart",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        0.0,
+        1.0
+      ],
+      "texture_references_found": [],
+      "bones": 0,
+      "clips": []
+    },
+    {
+      "asset": "exit_door",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        0.0,
+        1.0
+      ],
+      "texture_references_found": [],
+      "bones": 0,
+      "clips": []
+    },
+    {
+      "asset": "passenger_van",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        0.0,
+        1.0
+      ],
+      "texture_references_found": [],
+      "bones": 0,
+      "clips": []
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "status": "PASS",
+      "primary_uv_layers": 1,
+      "uv_range": [
+        -4.550000190734863,
+        4.550000190734863
+      ],
+      "texture_references_found": [
+        "02_floor_basecolor.png",
+        "03_wall_basecolor.png"
+      ],
+      "bones": 0,
+      "clips": []
+    }
+  ],
+  "glb_review": {
+    "header": "PASS",
+    "embedded_images": 4,
+    "animations_exported": false
+  },
+  "checked": [
+    "Four relative image links in saved blend",
+    "Eight actual FBX reimports",
+    "Single UV0 layer with finite coordinates",
+    "Expected image references",
+    "NPC rig, weights, sockets and three actions"
+  ],
+  "not_checked": [
+    "Unity material import",
+    "Physics or interactions",
+    "Network or Steam",
+    "Runtime performance",
+    "Final artistic approval"
+  ],
+  "gameplay_qa_executed": false
+}

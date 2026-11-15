@@ -1,0 +1,172 @@
+{
+  "version": "0.1",
+  "purpose": "Material/interaction supplement to unified delivery",
+  "self_excluded": true,
+  "files": [
+    {
+      "path": "GUIA_MATERIALES_E_INTERACCION.pdf",
+      "bytes": 15492737,
+      "sha256": "fd39cf8a2a84c316ff4c4d005a0ba32628a9b966237be9c7ef5c20426e234a4a"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3650,
+      "sha256": "e959acb908c69ffc3e6f888c6bded9471ea75978fe0804cb74be798eb04c6fea"
+    },
+    {
+      "path": "claude/INTEGRAR_MATERIALES.md",
+      "bytes": 2138,
+      "sha256": "ac33934dd572814391a51257705c85529f7c60e4fc36be0176b67e0c00ece01b"
+    },
+    {
+      "path": "data/export_validation_report.json",
+      "bytes": 3843,
+      "sha256": "d67af9eb4bee840dff6c60a7fb9e20f16c1b6b4a37a5757bd02d5792f32ee1e9"
+    },
+    {
+      "path": "data/interaction_manifest.json",
+      "bytes": 6979,
+      "sha256": "ed38d8b98dafa29fd57375ff7d0a8f06f51b8641b686032971a0d94c3149f54d"
+    },
+    {
+      "path": "data/material_application.json",
+      "bytes": 14000,
+      "sha256": "32330e60a6c9ac53b702bd44650969af46133da999d2979c26053ad5e3f82124"
+    },
+    {
+      "path": "data/materials_qa.csv",
+      "bytes": 2175,
+      "sha256": "ea8a52c841a4547db85d6fc0250941119ef5510f94e6edc69e377c87b9278db1"
+    },
+    {
+      "path": "data/texture_import.json",
+      "bytes": 5470,
+      "sha256": "32a15b38549b2b06b6c838626e36de66aeec25ca5f874667e2868765f4a629ae"
+    },
+    {
+      "path": "data/validation_summary.json",
+      "bytes": 477,
+      "sha256": "89a61f008bee3d1503ddd188dd9571717dc009aecfe68e115c0d17a5866b2cab"
+    },
+    {
+      "path": "data/visual_interaction_rules.csv",
+      "bytes": 814,
+      "sha256": "0a4572afb4c571af7a033f8bca40db48a3f51cbc7f20a3f302e2ea9ba7c90345"
+    },
+    {
+      "path": "docs/ESPECIFICACION_MATERIALES.md",
+      "bytes": 9478,
+      "sha256": "f9ff4f54ba16b5ce4ede181c2fb02363d43b6783bea05f929e7e7617d933d617"
+    },
+    {
+      "path": "docs/PROMPTS_TEXTURAS.md",
+      "bytes": 4564,
+      "sha256": "76de5be18ad52fd954dc0013e3bbf99203abeb46a3b7c9aa7e87ff9722cbdbdd"
+    },
+    {
+      "path": "models/bar_blockout_shell_material_variant.fbx",
+      "bytes": 40316,
+      "sha256": "3cacaff97e18a3c7319ca5cf4436d8f78a0fb303e5c568c692ed87c43e93ccd9"
+    },
+    {
+      "path": "models/bar_counter_material_variant.fbx",
+      "bytes": 24748,
+      "sha256": "feb86e44b5c75006da542c9342e07ef55d533eed0b4ed0fdde0351a301d2e7fb"
+    },
+    {
+      "path": "models/exit_door_material_variant.fbx",
+      "bytes": 24012,
+      "sha256": "b502abcad05ddebfbf9d22fe0083e7f46e5ec9d6a68c7bcb0627350220afafd4"
+    },
+    {
+      "path": "models/passenger_van_material_variant.fbx",
+      "bytes": 62460,
+      "sha256": "e9e83ae8fec658339ff2d3f840487c696a14a0dcc429e4cc10f4f027c433db4c"
+    },
+    {
+      "path": "models/scene_material_review.glb",
+      "bytes": 7868060,
+      "sha256": "bd71c87124f057b8af9d1308baa0cf96de98ee7bcb90ede7c2fe4732018e36de"
+    },
+    {
+      "path": "models/stool_material_variant.fbx",
+      "bytes": 31596,
+      "sha256": "1c3afaca68b7e28a17ee82a258feb2958752d4399113bc6f374b443502e23320"
+    },
+    {
+      "path": "models/table_material_variant.fbx",
+      "bytes": 31340,
+      "sha256": "7bc7f56b92e4d8d697423c14a6419f4135b360a6ba934b84480bd77b30b22ab9"
+    },
+    {
+      "path": "models/transport_cart_material_variant.fbx",
+      "bytes": 40780,
+      "sha256": "dcf3d550c7d62a74ef28091f1bb0be3e15cfbb679e7e97ae086d52d06fb95230"
+    },
+    {
+      "path": "models/uncle_prototype_material_variant.fbx",
+      "bytes": 495324,
+      "sha256": "f64166e2357cd28a526322570af1f9f6d019b308fbeef3f7e3a5ea43a27d4d47"
+    },
+    {
+      "path": "previews/01_bar_materials.png",
+      "bytes": 2467066,
+      "sha256": "2ca5c17fc14971f6029f366b7516fbab9b06d33cb547f01ae1f458b2acab6294"
+    },
+    {
+      "path": "previews/02_uncle_fabric.png",
+      "bytes": 1470555,
+      "sha256": "21042dee7b3684c6c8c2356a1fde4ab08c03a15aaf5160be02b61e3f382f2e76"
+    },
+    {
+      "path": "previews/03_material_repeat_review.png",
+      "bytes": 2462466,
+      "sha256": "259b9240f7654fae3316228b6240ffa27f434e3903110e39115c74be32bb0234"
+    },
+    {
+      "path": "source/Material_Lookdev.blend",
+      "bytes": 1768564,
+      "sha256": "d127f66e87c29cae1238c2d30ee7732341211810afb95dec5ecb6e69ddd8464b"
+    },
+    {
+      "path": "source/apply_materials.py",
+      "bytes": 10152,
+      "sha256": "192a0751235ad3cb08e2cb85f96085bc0c510085224ef7bc00e4b6088e612250"
+    },
+    {
+      "path": "source/build_guide.py",
+      "bytes": 10203,
+      "sha256": "620429e886e5f50504c3a5c69fd5cccc9da8c68fe3423e74a60a0ceaaa8d9ea8"
+    },
+    {
+      "path": "source/build_material_data.py",
+      "bytes": 10185,
+      "sha256": "3358dbbfcd7c11aa770360fb811c575255d8444e43d00280cc7a76bcdb3fa492"
+    },
+    {
+      "path": "source/validate_material_exports.py",
+      "bytes": 3995,
+      "sha256": "4f69821e4f10e351475dfae2f28b0100dd07231df10939177d43d3b641e80930"
+    },
+    {
+      "path": "textures/01_wood_basecolor.png",
+      "bytes": 1661184,
+      "sha256": "4ec84be260af3d3198076acf1c4743b1f893c58682845b82b5415dd29ea4cb72"
+    },
+    {
+      "path": "textures/02_floor_basecolor.png",
+      "bytes": 1722111,
+      "sha256": "61548b37cf8e40d65687c251d2bdb5cb7b9f90fac3c9936b4a70352677374ebc"
+    },
+    {
+      "path": "textures/03_wall_basecolor.png",
+      "bytes": 1633143,
+      "sha256": "79afcec2e6b898b744f5b883745d7d1c85f9d94576c127848146f3d42656f492"
+    },
+    {
+      "path": "textures/04_fabric_basecolor.png",
+      "bytes": 2246298,
+      "sha256": "26c34c8ed3ab5a00ab4c9a85fca9819b55dfbc6e4d69219ce7ec6565588a5fbc"
+    }
+  ]
+}

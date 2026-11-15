@@ -1,0 +1,49 @@
+﻿milestone,id,task,size_relative,dependencies,acceptance
+M0,inventory,Inspect environment and installed tools,S,,Environment report; no invented execution
+M0,unity_lock,Create Universal 3D and lock versions,M,inventory,Clean project opens and dependencies recorded
+M0,build_bootstrap,Bootstrap scene and Windows build,M,unity_lock,Executable starts outside editor
+M1,player_motor,Capsule movement and stable camera,M,build_bootstrap,Movement; dodge; crouch; focus loss
+M1,grab_protocol,Two-hand validated grab registry,L,player_motor,Acquire; release; duplicate requests; cleanup
+M1,npc_body,Reduced physical NPC,L,grab_protocol,Bounded forces; eight handles test
+M1,attack_push,Windup; single-hit push; recover,M,npc_body,Readable cue; impulse; no repeated hit
+M1,player_fall,Composure and controlled fall recovery,M,attack_push,Solo recovery; grace; no camera spinning
+M1,cart,Functional transport cart,M,npc_body,Solo can load and move subject
+M1,lab_finish,Extraction test and ten resets,M,player_fall|cart,No orphan joints; repeatable success
+M2,net_bootstrap,NGO host and direct client,M,lab_finish,Two standalone instances connect
+M2,net_grabs,Host authority over all grabs,L,net_bootstrap,Concurrent claims; reliable final state
+M2,net_puppet,Root and reduced bone snapshots,L,net_grabs,Client does not resimulate NPC joints
+M2,net_attacks,Replicate cues; impacts and recovery,M,net_puppet,One hit and same round result on both
+M2,net_cleanup,Disconnect and scene cleanup,M,net_attacks,No ghost constraints or duplicate objects
+M3,bar_blockout,Build bar; sidewalk; stationary van,M,net_cleanup,Navigable route and valid door width
+M3,brain_states,Intent selector and state machine,L,bar_blockout,All state exit paths and max durations
+M3,attack_set,Slap; kick and shake complete set,M,brain_states,Four telegraphs and counterplay
+M3,anchor,World anchors and hand release,M,attack_set,Fixed and movable object cases
+M3,lure,One distraction with cooldown,S,anchor,Cannot lock NPC forever by repeating lure
+M3,fatigue,Resistance budget and forced recovery,M,lure,Guaranteed movement windows
+M3,party_scale,Player count and difficulty config,M,fatigue,All 12 combinations; mass unchanged
+M3,round_flow,Timer; win; loss; retry; results,M,party_scale,No editor required for complete loop
+M3,disconnect_scale,Graceful party reduction,M,round_flow,No lost clock; tool provided to last player
+M4,ugs_config,Owner service setup and credential plan,M,disconnect_scale,Real configuration; secrets excluded
+M4,relay_sessions,MPS Sessions and Relay connection,L,ugs_config,Two networks connect without port forwarding
+M4,lobby,Ready; version checks and loading,M,relay_sessions,Full; invalid; incompatible; timeout handled
+M4,host_loss,Host closure and clear return path,S,lobby,No false claim of host migration
+M4,net_perf,Latency; loss and traffic measurement,M,host_loss,Recorded host and client behavior
+M5,playtest,External exploratory playtests,M,net_perf,Observation forms and actual evidence
+M5,tune,Tune fairness; response and pacing,L,playtest,Repeat test on changed mechanics
+M6,uncle_rig,Final model and tested rig pipeline,L,tune,One production attack works with physical body
+M6,art_bar,Replace essential environment assets,L,uncle_rig,Scale; pivots; collisions; frame cost checked
+M6,hud,Accessible HUD; menus and localization,M,art_bar,English; Spanish; large text; keyboard and pad
+M6,audio,Cues; selected voices and mixer,M,hud,No repeated spam; cues audible without voices
+M6,save,Versioned local options and cosmetics,M,hud,Atomic write; corrupted save fallback
+M6,controller,Complete gamepad navigation,M,hud,Menus; gameplay; results; remapping
+M6,cannabis_profile,Optional philosopher profile,L,audio|tune,Separate test matrix; cut if core quality suffers
+M7,steam_setup,Owner app registration and private branch,M,save|controller,Real app and access; no public publish yet
+M7,steam_adapter,Overlay; achievements and invites,L,steam_setup,Actual Steam accounts and builds tested
+M7,store_assets,Real gameplay captures and capsule exports,M,steam_adapter,Current templates; no concept as screenshot
+M7,content_survey,Content and shipped AI inventory,S,store_assets,Accurate to final build and assets
+M8,qa_full,Functional and network QA matrix,L,content_survey,Blockers fixed; results documented
+M8,profile_build,Performance; memory and long session,M,qa_full,Recorded hardware; minimums derived
+M8,release_candidate,Build reproducibility and review package,M,profile_build,Clean build; licenses; rollback plan
+M8,launch_owner,Owner reviews and publishes,S,release_candidate,Explicit owner action; platform conditions met
+P2,mixed_profile,Mixed profile after two bases,L,cannabis_profile,Signals and recovery remain legible
+P2,proximity_voice,Optional proximity voice,L,steam_adapter,Mute; push-to-talk; no microphone required

@@ -1,0 +1,22 @@
+﻿control_id,source,authority,value,rule
+hud.left_hand,GrabRegistry.left,host confirmed,enum Free/Pending/Holding/Strained,No confirmation by animation alone
+hud.right_hand,GrabRegistry.right,host confirmed,same,Independent hand state and socket label
+hud.energy,Player.energy,host with optional visual prediction,0..100,Smooth bar; never drives game force
+hud.composure,Player.composure,host,0..100,Show when hit or low; no medical health label
+hud.timer,Round.remainingSeconds,host tick,mm:ss or hidden when untimed,Client cannot extend round by UI clock
+hud.telegraph,Attack.instanceId/type/timing,host event,overlay,Cancel old instance; critical subtitle priority
+hud.fall,Player.controlState,host,fallen/recovering/up,Hide grab hints while unavailable
+hud.effort,hands + Player.controlState,local visual and host state,enabled only when holding and able,No effort hint while fallen or free
+hud.world_marker,projected socket or attacking limb,local projection of host actor,screen position or edge indication,"Mockup coordinates are illustrative, not fixed runtime positions"
+lobby.start,allReady + isLocalHost + validSetup,host,enabled/disabled,Disabled reason text; no start while loading
+lobby.difficulty,Session.setup.difficulty,host,relaxed/normal/hard,Read-only for guests
+lobby.ready,Local readiness then host confirmation,local request + host state,ready/not ready,Reset after setup change or completed round
+lobby.copy,Session.inviteCode,session provider,string,Copy local clipboard; provide visible fallback on error
+result.stats,Round.finalStats,host terminal snapshot,time/falls/escapes,No invented awards; dash when no extraction time
+result.retry,isLocalHost and sessionAlive,host,enabled/disabled,Guests wait or leave; host cannot force an unready load
+pause.context,Session.mode,local+session,solo/online,Message describes real behavior
+settings.audio,ProfileStore draft,local,0..100,Preview safely; Apply persists; Cancel restores
+settings.language,ProfileStore locale,local,en/es_UY,Use keys and binding glyphs; no literal LMB in translated sentence
+settings.profanity,ProfileStore filter,local,on/off,"Use dialogue clean columns, not substring replacement"
+connection.error,Session error reason,session,enum/message key,Do not report every problem as internet failure
+menu.play_solo,LocalBootstrap,local,command,Does not require Steam/Relay for development local provider

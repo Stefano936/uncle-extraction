@@ -1,0 +1,20 @@
+{
+  "source_textures_unmodified": "PASS",
+  "actual_resolution": [
+    1254,
+    1254
+  ],
+  "basecolor_textures": 4,
+  "fbx_reimports_passed": 8,
+  "primary_uv_channel": "PASS",
+  "relative_blend_links": "PASS",
+  "original_3d_scene_unchanged": "PASS",
+  "pdf_pages": 7,
+  "object_cards": 11,
+  "objects_with_existing_models": 8,
+  "objects_pending_models": 3,
+  "gameplay_cases_not_run": 20,
+  "unity_executed": false,
+  "physics_tested": false,
+  "gameplay_tested": false
+}

@@ -1,0 +1,12 @@
+﻿state,entry,action,exit_condition,next_states,max_duration_s,interruptions
+Loiter,no active player grabs,seek seat or bar; low movement,grab accepted,Protest,none,round_end
+Protest,first grab or renewed resistance,bark and assess free limbs,eligible intention selected,Anchor|Struggle|Windup|Distracted,2.0,round_end
+Anchor,valid world anchor within reach,bounded hand constraint and budget drain,hand released; distraction; budget low,Struggle|Distracted|Recover,5.0,round_end|technical_rescue
+Struggle,being moved; no locked attack,bounded resistance and posture changes,time or budget threshold,Windup|Recover|Anchor,3.5,round_end|technical_rescue
+Windup,eligible attack; cooldown satisfied,publish attack id and telegraph; lock direction,authoritative start tick,Attack,per_attack,round_end|technical_rescue
+Attack,windup elapsed,swept contact once per target; spend budget,active window elapsed,Recover,per_attack,round_end|technical_rescue
+Recover,attack ended or budget low,low resistance; guaranteed safe interval,recovery elapsed,Protest|Escape|Loiter,per_attack_or_difficulty,round_end|technical_rescue
+Distracted,valid preferred lure and no locked attack,look or reach at lure; lower resistance,duration elapsed; lure invalid,Protest|Loiter,2.5,round_end|technical_rescue
+Escape,no player grabs and safe floor,walk toward favorite zone,grabbed or reached destination,Protest|Loiter,8.0,round_end|technical_rescue
+Stumble,body loses stable support,damped physical posture; no instant attack,stable floor and control recovered,Recover,3.0,round_end|technical_rescue
+Secured,extraction validated and door action done,cancel AI; release constraints; terminal,round reset,Loiter,terminal,round_reset

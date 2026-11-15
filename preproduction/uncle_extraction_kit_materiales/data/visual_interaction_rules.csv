@@ -1,0 +1,6 @@
+﻿class,visual,condition,player_message,constraint
+PLAYER_GRAB,Thin cream contour plus hand icon on focus,Only a valid reachable socket,Show action binding and object/limb label,Never outline all decoration permanently
+NPC_ANCHOR,Show NPC hand and tension; local icon if needed,When NPC actually anchors,Release the hand or distract,An anchor label does not make an object movable
+WORLD_STATIC,No grab marker,Always static geometry,No action prompt,Material color is not a gameplay permission
+DISTRACTION,Small contextual interest indicator,When lure is available and visible,Offer/activate according to profile,Cooldown and repeated-use rules still apply
+EXTRACTION,Door/van outline and hold feedback,Valid pose and clear close volume,Load; align; close,Do not show success before authoritative validation

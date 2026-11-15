@@ -1,0 +1,219 @@
+{
+  "blender_version": "4.3.2",
+  "checks": "Actual FBX and GLB reimports; bounds; named sockets; weighted vertices; animation presence and pose change",
+  "unity_import_tested": false,
+  "physics_tested": false,
+  "gameplay_tested": false,
+  "results": [
+    {
+      "asset": "uncle_prototype",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.71,
+        0.62,
+        1.9325
+      ],
+      "mesh_count": 1,
+      "materials": 8,
+      "bones": 12,
+      "weighted_vertices": 2086,
+      "vertices": 2086,
+      "clips": [
+        "Uncle_Prototype_Rig|Uncle_Prototype_Rig|Idle_Prototype",
+        "Uncle_Prototype_Rig|Uncle_Prototype_Rig|Kick_Prototype",
+        "Uncle_Prototype_Rig|Uncle_Prototype_Rig|Push_Prototype"
+      ],
+      "push_pose_matrix_delta": 0.93021
+    },
+    {
+      "asset": "uncle_prototype",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.71,
+        0.62,
+        1.9325
+      ],
+      "mesh_count": 1,
+      "materials": 8,
+      "bones": 12,
+      "weighted_vertices": 8280,
+      "vertices": 8280,
+      "clips": [
+        "Idle_Prototype_Uncle_Prototype_Rig",
+        "Kick_Prototype_Uncle_Prototype_Rig",
+        "Push_Prototype_Uncle_Prototype_Rig"
+      ],
+      "push_pose_matrix_delta": 0.93021
+    },
+    {
+      "asset": "stool",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        0.54,
+        0.54,
+        0.83
+      ],
+      "mesh_count": 6,
+      "materials": 3
+    },
+    {
+      "asset": "stool",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        0.54,
+        0.54,
+        0.83
+      ],
+      "mesh_count": 6,
+      "materials": 3
+    },
+    {
+      "asset": "table",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.4,
+        0.9,
+        0.82
+      ],
+      "mesh_count": 5,
+      "materials": 2
+    },
+    {
+      "asset": "table",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.4,
+        0.9,
+        0.82
+      ],
+      "mesh_count": 5,
+      "materials": 2
+    },
+    {
+      "asset": "bar_counter",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        4.12,
+        0.9,
+        1.08
+      ],
+      "mesh_count": 2,
+      "materials": 2
+    },
+    {
+      "asset": "bar_counter",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        4.12,
+        0.9,
+        1.08
+      ],
+      "mesh_count": 2,
+      "materials": 2
+    },
+    {
+      "asset": "transport_cart",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.2,
+        0.86,
+        0.95
+      ],
+      "mesh_count": 8,
+      "materials": 3
+    },
+    {
+      "asset": "transport_cart",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.2,
+        0.86,
+        0.95
+      ],
+      "mesh_count": 8,
+      "materials": 3
+    },
+    {
+      "asset": "exit_door",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.5,
+        0.1675,
+        2.2
+      ],
+      "mesh_count": 2,
+      "materials": 2
+    },
+    {
+      "asset": "exit_door",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        1.5,
+        0.1675,
+        2.2
+      ],
+      "mesh_count": 2,
+      "materials": 2
+    },
+    {
+      "asset": "passenger_van",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        2.51997,
+        5.38115,
+        2.33
+      ],
+      "mesh_count": 14,
+      "materials": 6
+    },
+    {
+      "asset": "passenger_van",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        2.51997,
+        5.38115,
+        2.33
+      ],
+      "mesh_count": 14,
+      "materials": 6
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "format": "fbx",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        18.2,
+        17.1,
+        2.64
+      ],
+      "mesh_count": 7,
+      "materials": 3
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "format": "glb",
+      "status": "PASS",
+      "bounds_blender_xyz_m": [
+        18.2,
+        17.1,
+        2.64
+      ],
+      "mesh_count": 7,
+      "materials": 3
+    }
+  ]
+}

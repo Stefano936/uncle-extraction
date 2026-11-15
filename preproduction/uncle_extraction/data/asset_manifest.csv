@@ -1,0 +1,80 @@
+﻿id,type,name,priority,status,path,requirements
+ART_001,concept,key_art,P0,delivered,art/01_key_art_concept.png,reference only; generated raster; not gameplay
+ART_002,concept,uncle_reference,P0,delivered,art/02_uncle_character_reference.png,reference only; approximate views; no mesh
+ART_003,diagram,bar_layout,P0,delivered,art/03_bar_layout.png,blockout intent; dimensions proposed
+ART_004,diagram,hud_wireframe,P0,delivered,art/04_hud_wireframe.png,schematic UI; not implemented
+ART_005,diagram,npc_flow,P0,delivered,art/05_npc_state_flow.png,partial state diagram; CSV is full state list
+MDL_005,model,uncle_body,P0,pending,TBD,NPC rig with 11 physical bodies; 12k-20k tris target
+MDL_006,model,player_shared_body,P0,pending,TBD,shared compatible rig; 8k-12k tris target
+MDL_007,model,player_fp_arms,P0,pending,TBD,visible forearms; sockets agree with gameplay
+MDL_008,model,bar_counter,P0,pending,TBD,static collider and anchor sockets
+MDL_009,model,stool,P0,pending,TBD,dynamic low complexity; primitive colliders
+MDL_010,model,table,P0,pending,TBD,static obstacle initially
+MDL_011,model,exit_door,P0,pending,TBD,correct hinge pivot and limits
+MDL_012,model,door_frame,P0,pending,TBD,simple bevel-friendly collision
+MDL_013,model,transport_cart,P0,pending,TBD,stable body and handle
+MDL_014,model,passenger_van,P0,pending,TBD,stationary interior; extraction volume
+MDL_015,model,lure_cup,P0,pending,TBD,distraction ID and socket
+MDL_016,model,bar_shell,P0,pending,TBD,18m x12m initial blockout
+MDL_017,model,sidewalk,P0,pending,TBD,14m x5m initial blockout
+MDL_018,model,karaoke_station,P1,pending,TBD,P1 lure and set dressing
+MDL_019,model,snack_box,P1,pending,TBD,P1 cannabis lure
+MDL_020,model,favorite_couch,P1,pending,TBD,P1 anchor for cannabis profile
+ANM_021,animation,idle_stand,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_022,animation,idle_seated,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_023,animation,walk_escape,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_024,animation,protest,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_025,animation,anchor_left,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_026,animation,anchor_right,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_027,animation,carried_pose,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_028,animation,dragged_pose,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_029,animation,slap_windup,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_030,animation,slap_active,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_031,animation,slap_recover,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_032,animation,push_windup,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_033,animation,push_active,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_034,animation,push_recover,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_035,animation,kick_windup,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_036,animation,kick_active,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_037,animation,kick_recover,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_038,animation,shake_windup,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_039,animation,shake_active,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_040,animation,shake_recover,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_041,animation,exhausted,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_042,animation,fake_cooperate,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_043,animation,stumble,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_044,animation,secured,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_045,animation,player_pull,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_046,animation,player_push,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_047,animation,player_fall,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_048,animation,player_standup,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+ANM_049,animation,player_help,P0,pending,TBD,placeholder allowed before M6; host owns action timing
+VIS_050,visual,master_material_palette,P1,pending,TBD,consistent URP style; accessibility review
+VIS_051,visual,uncle_textures,P1,pending,TBD,consistent URP style; accessibility review
+VIS_052,visual,player_palette,P1,pending,TBD,consistent URP style; accessibility review
+VIS_053,visual,wood_atlas,P1,pending,TBD,consistent URP style; accessibility review
+VIS_054,visual,metal_atlas,P1,pending,TBD,consistent URP style; accessibility review
+VIS_055,visual,floor_tiles,P1,pending,TBD,consistent URP style; accessibility review
+VIS_056,visual,interact_outline,P1,pending,TBD,consistent URP style; accessibility review
+VIS_057,visual,windup_shape,P1,pending,TBD,consistent URP style; accessibility review
+VIS_058,visual,recovery_shape,P1,pending,TBD,consistent URP style; accessibility review
+VIS_059,visual,hud_hands,P1,pending,TBD,consistent URP style; accessibility review
+VIS_060,visual,hud_energy,P1,pending,TBD,consistent URP style; accessibility review
+VIS_061,visual,hud_composure,P1,pending,TBD,consistent URP style; accessibility review
+VIS_062,visual,lobby_panels,P1,pending,TBD,consistent URP style; accessibility review
+VIS_063,visual,results_panel,P1,pending,TBD,consistent URP style; accessibility review
+VIS_064,visual,menu_font,P1,pending,TBD,consistent URP style; accessibility review
+AUD_065,audio,attack_cues_4,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_066,audio,footsteps,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_067,audio,body_impacts,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_068,audio,wood_impacts,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_069,audio,metal_impacts,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_070,audio,fabric_tension,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_071,audio,door_hinge,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_072,audio,door_close,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_073,audio,cart_wheels,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_074,audio,bar_ambience,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_075,audio,music_loop,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_076,audio,uncle_voice_selected_lines,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_077,audio,bartender_voice,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
+AUD_078,audio,ui_feedback,P1,pending,TBD,commercial rights required; mixer priorities; not delivered
