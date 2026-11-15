@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-15",
+  "kind": "Documentation quality checks only",
+  "pdfs": [
+    {
+      "file": "pdf/01_GDD_diseno_del_juego.pdf",
+      "pages": 18
+    },
+    {
+      "file": "pdf/02_especificacion_tecnica.pdf",
+      "pages": 15
+    },
+    {
+      "file": "pdf/03_biblia_visual_y_sonora.pdf",
+      "pages": 12
+    },
+    {
+      "file": "pdf/04_plan_de_produccion_y_Claude.pdf",
+      "pages": 12
+    }
+  ],
+  "total_pdf_pages": 57,
+  "checks": [
+    "All final PDF pages rendered and inspected in contact sheets; dense pages and diagrams inspected at full size",
+    "No text outside configured PDF margins in automated bounding checks",
+    "No empty pages or unresolved table-of-contents placeholders",
+    "Catalog IDs, CSV parsing, task dependency references and acyclic order checked",
+    "Balance units, twelve derived configurations and attack timing constraints checked",
+    "Delivered asset paths and Markdown image references checked"
+  ],
+  "not_executed": [
+    "Unity import or compilation",
+    "Gameplay or physics tests",
+    "Online connection or Steam tests",
+    "Human playtests"
+  ],
+  "game_qa_status": "72 cases defined; NOT_RUN",
+  "remaining_production": "Models, rigs, animations, audio, Unity project and executable are future implementation work, not delivered in this documentation package."
+}

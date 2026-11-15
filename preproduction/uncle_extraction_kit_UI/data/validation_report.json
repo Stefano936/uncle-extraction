@@ -1,0 +1,28 @@
+{
+  "status": "RESOURCE_CHECKS_PASSED",
+  "screens": 12,
+  "icons": 20,
+  "sprites": 11,
+  "localized_keys": 136,
+  "nominal_text_fits_checked": 272,
+  "svg_xml_and_linked_assets": "PASS",
+  "transparent_assets": "PASS",
+  "text_bounds_reference_only": "PASS",
+  "color_pair_nominal_contrast": {
+    "text/primary": 6.0,
+    "text/panel": 12.76,
+    "muted_text/panel": 8.6,
+    "focus/ink": 8.75,
+    "danger_text/danger_panel": 4.79
+  },
+  "font_notice_present": true,
+  "not_tested": [
+    "Unity import and SDF font generation",
+    "Runtime UI, controller navigation and accessibility",
+    "Network state handling in the real game",
+    "Actual text layout at 720p/ultrawide/150%",
+    "Gameplay or playtests"
+  ],
+  "acceptance_cases_not_run": 36,
+  "note": "Nominal fit uses provided sample values and reference budgets. This is not proof of final runtime layout or WCAG compliance."
+}

@@ -1,0 +1,256 @@
+{
+  "schema_version": "1.0.0",
+  "status": "PREPRODUCTION_UNTESTED",
+  "units": {
+    "distance": "m",
+    "time": "s",
+    "mass": "kg",
+    "force": "N",
+    "angular_velocity": "rad/s"
+  },
+  "simulation": {
+    "fixed_hz": 60,
+    "input_hz": 30,
+    "critical_snapshot_hz": 20,
+    "npc_decision_hz": 5,
+    "prop_snapshot_hz_active": 10
+  },
+  "player": {
+    "walk_speed_mps": 4.2,
+    "loaded_speed_mps": 2.8,
+    "crouch_speed_mps": 2.0,
+    "mass_kg": 80,
+    "capsule_height_m": 1.8,
+    "capsule_radius_m": 0.32,
+    "hands": 2,
+    "grab_reach_m": 1.4,
+    "grab_warn_error_m": 1.6,
+    "grab_break_error_m": 2.2,
+    "grab_break_grace_s": 0.15,
+    "hand_force_n": 420,
+    "hand_effort_force_n": 560,
+    "player_force_cap_n": 700,
+    "player_effort_force_cap_n": 950,
+    "effort_max_s": 1.25,
+    "energy_max": 100,
+    "effort_energy_per_s": 35,
+    "energy_regen_per_s": 22,
+    "energy_regen_delay_s": 1.0,
+    "composure_max": 100,
+    "composure_regen_delay_s": 2.5,
+    "composure_regen_per_s": 20,
+    "fall_control_lock_max_s": 2.2,
+    "standup_invulnerability_s": 1.5,
+    "dodge_distance_m": 1.1,
+    "dodge_cooldown_s": 1.2,
+    "minor_stumble_control_lock_s": 0.6
+  },
+  "npc": {
+    "mass_kg": 110,
+    "physics_bodies": 11,
+    "max_player_grabs": 8,
+    "base_active_resistance_force_cap_n": 280,
+    "base_resistance_budget": 100,
+    "forced_recovery_threshold_fraction": 0.15,
+    "forced_recovery_refill_fraction": 0.7,
+    "forced_recovery_resistance_fraction": 0.2,
+    "anchor_budget_per_s_base": 8,
+    "attack_cost_scales_with_effective_resistance": true,
+    "max_linear_velocity_mps": 8,
+    "max_angular_velocity_radps": 12,
+    "anchor_release_hold_s": 0.9,
+    "escape_speed_cap_mps": 2.2,
+    "ordinary_bark_gap_s": 4,
+    "recent_bark_memory": 5
+  },
+  "party_scaling": [
+    {
+      "players": 1,
+      "resistance_factor": 1.0,
+      "attack_interval_s": 7.0,
+      "time_assist_s": 45,
+      "solo_cart": true
+    },
+    {
+      "players": 2,
+      "resistance_factor": 1.55,
+      "attack_interval_s": 6.2,
+      "time_assist_s": 20,
+      "solo_cart": false
+    },
+    {
+      "players": 3,
+      "resistance_factor": 2.0,
+      "attack_interval_s": 5.6,
+      "time_assist_s": 0,
+      "solo_cart": false
+    },
+    {
+      "players": 4,
+      "resistance_factor": 2.4,
+      "attack_interval_s": 5.0,
+      "time_assist_s": 0,
+      "solo_cart": false
+    }
+  ],
+  "difficulties": [
+    {
+      "id": "relaxed",
+      "resistance_multiplier": 0.75,
+      "attack_interval_multiplier": 1.25,
+      "attack_impact_multiplier": 0.8,
+      "telegraph_multiplier": 1.25,
+      "timer_enabled": false,
+      "base_round_time_s": null,
+      "forced_recovery_s": 4.5,
+      "shake_max_targets": 2,
+      "pause_on_team_fall": true
+    },
+    {
+      "id": "normal",
+      "resistance_multiplier": 1.0,
+      "attack_interval_multiplier": 1.0,
+      "attack_impact_multiplier": 1.0,
+      "telegraph_multiplier": 1.0,
+      "timer_enabled": true,
+      "base_round_time_s": 600,
+      "forced_recovery_s": 3.5,
+      "shake_max_targets": 2,
+      "pause_on_team_fall": false
+    },
+    {
+      "id": "hard",
+      "resistance_multiplier": 1.2,
+      "attack_interval_multiplier": 0.9,
+      "attack_impact_multiplier": 1.1,
+      "telegraph_multiplier": 0.9,
+      "timer_enabled": true,
+      "base_round_time_s": 480,
+      "forced_recovery_s": 3.0,
+      "shake_max_targets": 4,
+      "pause_on_team_fall": false
+    }
+  ],
+  "attacks": [
+    {
+      "id": "slap",
+      "windup_s": 0.9,
+      "active_s": 0.18,
+      "recovery_s": 1.5,
+      "composure_loss": 35,
+      "budget_cost_base": 20,
+      "delta_v_mps": 2.0,
+      "shape": "swept_arc",
+      "range_m": 1.2,
+      "arc_deg": 100,
+      "max_targets": 1,
+      "requires": "one_available_arm"
+    },
+    {
+      "id": "push",
+      "windup_s": 1.1,
+      "active_s": 0.22,
+      "recovery_s": 1.8,
+      "composure_loss": 50,
+      "budget_cost_base": 25,
+      "delta_v_mps": 2.8,
+      "shape": "cone",
+      "range_m": 1.35,
+      "arc_deg": 80,
+      "max_targets": 2,
+      "requires": "supported_upright_posture"
+    },
+    {
+      "id": "kick",
+      "windup_s": 1.2,
+      "active_s": 0.2,
+      "recovery_s": 2.0,
+      "composure_loss": 60,
+      "budget_cost_base": 30,
+      "delta_v_mps": 3.2,
+      "shape": "swept_capsule",
+      "range_m": 1.45,
+      "arc_deg": 40,
+      "max_targets": 1,
+      "requires": "usable_leg_and_clearance"
+    },
+    {
+      "id": "shake",
+      "windup_s": 1.4,
+      "active_s": 0.3,
+      "recovery_s": 2.3,
+      "composure_loss": 45,
+      "budget_cost_base": 35,
+      "delta_v_mps": 2.4,
+      "shape": "attached_grabbers",
+      "range_m": 0,
+      "arc_deg": 360,
+      "max_targets": "difficulty",
+      "requires": "at_least_one_active_grab"
+    }
+  ],
+  "attack_rules": {
+    "minimum_telegraph_s": 0.8,
+    "one_hit_per_target_per_attack": true,
+    "must_finish_recovery": true,
+    "direction_lock_before_active_s": 0.2,
+    "max_turn_during_windup_deg": 35,
+    "team_fall_grace_s": 2.0,
+    "direct_knockdown_delta_v_threshold_mps": 2.5
+  },
+  "distraction": {
+    "duration_s": 2.5,
+    "type_cooldown_s": 12,
+    "repeated_use_threshold": 3,
+    "repeated_duration_multiplier": 0.5
+  },
+  "extraction": {
+    "pose_valid_hold_s": 1.5,
+    "door_close_hold_s": 1.0,
+    "required_points": [
+      "torso",
+      "pelvis",
+      "left_shoulder",
+      "right_shoulder"
+    ],
+    "solid_overlap_forbidden": true,
+    "stationary_vehicle": true
+  },
+  "network": {
+    "host_authoritative": true,
+    "host_migration": false,
+    "join_in_progress": false,
+    "disconnect_rebalance_delay_s": 5,
+    "stale_input_cancel_effort_s": 0.5,
+    "stale_input_release_grabs_s": 1.0,
+    "snapshot_budget_per_client_kbps_target": 320,
+    "protocol_version": "0.1-proposed"
+  },
+  "content": {
+    "initial_profile": "alcohol_party",
+    "later_profiles": [
+      "cannabis_philosopher",
+      "mixed_night"
+    ],
+    "first_map": "bar_last_round",
+    "max_dynamic_props": 50
+  },
+  "formulas": {
+    "effective_resistance": "party.resistance_factor * difficulty.resistance_multiplier",
+    "active_resistance_force_cap_n": "npc.base_active_resistance_force_cap_n * effective_resistance",
+    "max_resistance_budget": "npc.base_resistance_budget * effective_resistance",
+    "attack_budget_cost": "attack.budget_cost_base * effective_resistance",
+    "anchor_budget_cost_per_s": "npc.anchor_budget_per_s_base * effective_resistance",
+    "attack_interval_s": "party.attack_interval_s * difficulty.attack_interval_multiplier; also require finished recovery",
+    "attack_composure_loss": "attack.composure_loss * difficulty.attack_impact_multiplier",
+    "attack_delta_v_mps": "attack.delta_v_mps * difficulty.attack_impact_multiplier",
+    "windup_s": "max(attack_rules.minimum_telegraph_s, attack.windup_s * difficulty.telegraph_multiplier)",
+    "round_time_s": "null if not timer_enabled else base_round_time_s + party.time_assist_s"
+  },
+  "notes": [
+    "Initial design values only; no gameplay validation has been performed.",
+    "R never scales mass, attack impact, or attack frequency a second time.",
+    "Bandwidth value is a planning alarm, not a measured requirement.",
+    "On disconnect, grant only any additional unused party time assistance; never reduce remaining time."
+  ]
+}

@@ -1,0 +1,1079 @@
+{
+  "delivery": "UNCLE_EXTRACTION_REPOSITORIO_Y_CLAUDE_v1",
+  "date": "2026-11-15",
+  "source_files_preserved": 204,
+  "game_status": "PREPRODUCTION_NO_UNITY_PROJECT",
+  "note": "Snapshot at packaging time. Excludes this manifest itself. Source files preserved byte for byte; original package reports are not new Unity verification.",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "size_bytes": 623,
+      "sha256": "52d0eeb09a1b94b9b6b364a3aae53634e84ce00594af7e57fb3b9b1adca48edd"
+    },
+    {
+      "path": ".gitignore",
+      "size_bytes": 748,
+      "sha256": "04563752afbae6ff109afcf0cd74105e55cec5a747351caff40385f207fd11d9"
+    },
+    {
+      "path": "00_EMPEZAR_AQUI.md",
+      "size_bytes": 3444,
+      "sha256": "4531436ef3824d9b673417c17db40c8d65e83f68bd9e9a7f9a40683fef58f1ae"
+    },
+    {
+      "path": "CLAUDE.md",
+      "size_bytes": 3379,
+      "sha256": "0876e2572f581a6fe7a2123f04c0d07f1cc0e53cef89f7bf6fdae3fe60af9cb5"
+    },
+    {
+      "path": "DEPENDENCIES.md",
+      "size_bytes": 1235,
+      "sha256": "defde5bb678b417059bca55baa144fb7d85611166a06b845c3bb8238d2b551f9"
+    },
+    {
+      "path": "PROGRESS.md",
+      "size_bytes": 2144,
+      "sha256": "16e002062d50a7a73e8a57ddb4d36c2d37cef34c2e22ed34c93b17b02eaf6e78"
+    },
+    {
+      "path": "PROMPT_MAESTRO_CLAUDE_UNCLE_EXTRACTION.md",
+      "size_bytes": 22267,
+      "sha256": "80d20444ca7f35c2bd25ab57f7bc152b5124185dc13ceb7af598bf297aef2093"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 2463,
+      "sha256": "88cef2b557901cc7a79536e61d8b55e86c9a1a149cad7a4d12c0d510969a48eb"
+    },
+    {
+      "path": "docs/DECISIONES_IMPLEMENTACION.md",
+      "size_bytes": 1200,
+      "sha256": "2012d180314bf051026cf5221a3c4f973a55f1b1621c303acce467540e11bd63"
+    },
+    {
+      "path": "docs/GUIA_GITHUB.md",
+      "size_bytes": 3820,
+      "sha256": "e5ba99cf834354ead7420a2ea01ab8000859f834dd1878d0dc8bc9cde9e69e50"
+    },
+    {
+      "path": "preproduction/00_EMPEZAR_AQUI.md",
+      "size_bytes": 4519,
+      "sha256": "ddb85be635631ce4d96561ec42fbb5855c878b0431331dec8f3f0e8f84587d55"
+    },
+    {
+      "path": "preproduction/ENTREGA_MANIFEST.json",
+      "size_bytes": 31034,
+      "sha256": "145c17a5dbcbab3b20a124f6a805d99ccdf1c4622c8990506f8c089ea640dcc3"
+    },
+    {
+      "path": "preproduction/uncle_extraction/DECISIONES.md",
+      "size_bytes": 2667,
+      "sha256": "83884b6ab459dcaba872478122ca397061cbe82957be1da500fb38b4905e5aab"
+    },
+    {
+      "path": "preproduction/uncle_extraction/FUENTES.md",
+      "size_bytes": 3892,
+      "sha256": "77010570235d71159124b8d7957cf3056666f45422ee0a65cc6f1f842e6c4908"
+    },
+    {
+      "path": "preproduction/uncle_extraction/MANIFEST.json",
+      "size_bytes": 6227,
+      "sha256": "c9575cf48aed21dd231a2b4bb7049def9698fefec242e7959677248ded95bcaa"
+    },
+    {
+      "path": "preproduction/uncle_extraction/PLAYTEST.md",
+      "size_bytes": 2548,
+      "sha256": "a20e65e041c9291da1355c0e835d355aa2f206bdf1efe680f8c897de688633cc"
+    },
+    {
+      "path": "preproduction/uncle_extraction/README.md",
+      "size_bytes": 2556,
+      "sha256": "8a139c536a94b6b91574c5e7c5c02541335b5f0f912d33fdf9eea939707efafa"
+    },
+    {
+      "path": "preproduction/uncle_extraction/VALIDACION_DOCUMENTAL.json",
+      "size_bytes": 1338,
+      "sha256": "b035289ad97f81158561060d3ae4d87e4debeb86498564aaa40b665d05e46398"
+    },
+    {
+      "path": "preproduction/uncle_extraction/art/01_key_art_concept.png",
+      "size_bytes": 1938600,
+      "sha256": "7430f6223ef696c29c0c97c3f16e7e7a052f0adfe93289247c39cd0b539a4693"
+    },
+    {
+      "path": "preproduction/uncle_extraction/art/02_uncle_character_reference.png",
+      "size_bytes": 1693581,
+      "sha256": "105c38d36e44c8f4087c17f0600adc5ce8a3db45c01c38e4fd443d94ed96c0ab"
+    },
+    {
+      "path": "preproduction/uncle_extraction/art/03_bar_layout.png",
+      "size_bytes": 105701,
+      "sha256": "0231ba1a462cb37758d19a15535e096588db207640abfb5f3be4a7e28136d68f"
+    },
+    {
+      "path": "preproduction/uncle_extraction/art/04_hud_wireframe.png",
+      "size_bytes": 70659,
+      "sha256": "8f6cc4eda65ac90016ec6a7d44dad9d307cd12d861a4359becd75a5062730011"
+    },
+    {
+      "path": "preproduction/uncle_extraction/art/05_npc_state_flow.png",
+      "size_bytes": 77960,
+      "sha256": "ed004d43d9873926436db9adc8799cbe1a18207fdb1428203c8d3ea991cedfd8"
+    },
+    {
+      "path": "preproduction/uncle_extraction/art/PROMPTS_IMAGENES.md",
+      "size_bytes": 4564,
+      "sha256": "df9e795e07f4daf1cd3b9127724139bdf78eddce81c06159cd739f037411e0dd"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/00_PROMPT_MAESTRO.md",
+      "size_bytes": 4565,
+      "sha256": "c52c7aaeffab00e6f0ed6918f5fb76df9a997704b7a8db41325512fbe6a0c619"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/01_M0_M1_laboratorio.md",
+      "size_bytes": 1109,
+      "sha256": "af4bd8edf8528fbb49b3f3602f2ad33b0b0ae3f9f2acefd2c028367db4eb14e8"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/02_M2_red_temprana.md",
+      "size_bytes": 1093,
+      "sha256": "4270713ee2d9ca6258d53663720c4f31085ec973ae635437738e569801cc42d0"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/03_M3_bar_y_bot.md",
+      "size_bytes": 1032,
+      "sha256": "2fe2abe1a8d6fb18e603042712d1c5c66c0a8f133595503b7e6f908bcf79945f"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/04_M4_internet.md",
+      "size_bytes": 1075,
+      "sha256": "26e12b52857f467338b3c96549142135833b745914259888f62df23d49d47e0f"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/05_M5_playtest_y_balance.md",
+      "size_bytes": 1045,
+      "sha256": "a2a724d511093c6a465b1f4f8c6d04e576947c0025f6e766435ec645ddd556b2"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/06_M6_arte_audio_UI.md",
+      "size_bytes": 1087,
+      "sha256": "fea67a71940bb2e71112f62430c17e67dc3c228a5a30b2a6b6f1c89a3c679be7"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/07_M7_Steam.md",
+      "size_bytes": 1075,
+      "sha256": "4b7d45b0d8591ef32a79cef5e326ed4860207fd0eae70a3da0dfa2cf22d33cfd"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/08_M8_QA_y_candidato.md",
+      "size_bytes": 1049,
+      "sha256": "eda03808835ff20adb53b3424b99333d607b076d4818bdaa973269adf8620e93"
+    },
+    {
+      "path": "preproduction/uncle_extraction/claude/PROGRESS_template.md",
+      "size_bytes": 589,
+      "sha256": "258c4f949958e86dc0788669dbe165cb4449a21133bf5e95de69853e5948ddbd"
+    },
+    {
+      "path": "preproduction/uncle_extraction/data/LEEME_DATOS.md",
+      "size_bytes": 1163,
+      "sha256": "5ab201aa8a20b7faa1797b2e4b9e6e118567ed04b6adbd9ae99061e072699b34"
+    },
+    {
+      "path": "preproduction/uncle_extraction/data/asset_manifest.csv",
+      "size_bytes": 7486,
+      "sha256": "73acd8442add5b36dad37b5b3ed729e576b2c2ac8c33c3553c8ba9415b801423"
+    },
+    {
+      "path": "preproduction/uncle_extraction/data/backlog.csv",
+      "size_bytes": 4893,
+      "sha256": "b1d976dcff7e4a6b3a4a237d82ceab4afea41c520157fc03c49efa62042db70a"
+    },
+    {
+      "path": "preproduction/uncle_extraction/data/dialogue_en_es.csv",
+      "size_bytes": 12494,
+      "sha256": "fc75b45990dc5853f9f60a4497190293bff6752e6f5b6d813fa024b21dc0487b"
+    },
+    {
+      "path": "preproduction/uncle_extraction/data/game_balance.json",
+      "size_bytes": 7365,
+      "sha256": "ca4371e4a958b66a7ac169eb87b48cedf26ab00fb20a92d1faeb4375a73175cc"
+    },
+    {
+      "path": "preproduction/uncle_extraction/data/npc_states.csv",
+      "size_bytes": 1721,
+      "sha256": "f2aa315c16e12f59a5327c87ea7fa4079fe96cdd6fe2912ccd64bb57e546dc9e"
+    },
+    {
+      "path": "preproduction/uncle_extraction/data/qa_matrix.csv",
+      "size_bytes": 9127,
+      "sha256": "9f29b1a8b193d472b5bbb22371313fd1f74a37e0e659ebd704efaaeb0c585ef5"
+    },
+    {
+      "path": "preproduction/uncle_extraction/docs/01_GDD_diseno_del_juego.md",
+      "size_bytes": 39618,
+      "sha256": "eab4fa8b773425b143b92836b720c782fee4387404b83ef6b39ef517d5826dbb"
+    },
+    {
+      "path": "preproduction/uncle_extraction/docs/02_especificacion_tecnica.md",
+      "size_bytes": 33603,
+      "sha256": "a219022eb692a23e295e478d547188e3e6b9bc8dd916787b578f27efaa491a8f"
+    },
+    {
+      "path": "preproduction/uncle_extraction/docs/03_biblia_visual_y_sonora.md",
+      "size_bytes": 17466,
+      "sha256": "0c69ca50cf0e6bbe8da01c6e81a92253e25a2186505d5e6156f479a883003221"
+    },
+    {
+      "path": "preproduction/uncle_extraction/docs/04_plan_de_produccion_y_handoff.md",
+      "size_bytes": 19294,
+      "sha256": "818520b473a912a41ed7e3756c434f87c65103f8d3690782b6d131963cc2a011"
+    },
+    {
+      "path": "preproduction/uncle_extraction/pdf/01_GDD_diseno_del_juego.pdf",
+      "size_bytes": 3974400,
+      "sha256": "937c0a1bf042a5e54ec55eb665927198b3cbd5a73a6c709d157f34e48f2fd7ee"
+    },
+    {
+      "path": "preproduction/uncle_extraction/pdf/02_especificacion_tecnica.pdf",
+      "size_bytes": 3965430,
+      "sha256": "505fb472fdba96cd2f7c3d6c5a48a5b09e2270f2b9dc5e3c806662ea782af218"
+    },
+    {
+      "path": "preproduction/uncle_extraction/pdf/03_biblia_visual_y_sonora.pdf",
+      "size_bytes": 6856402,
+      "sha256": "5f945f3ffbfe759aa064704e6e254f218f8ca61aeefb94a2546ddf1ed9356f7d"
+    },
+    {
+      "path": "preproduction/uncle_extraction/pdf/04_plan_de_produccion_y_Claude.pdf",
+      "size_bytes": 3950287,
+      "sha256": "48dfea421c95b51ac4728f3e0f6bc1c8a66ddcf46788e3708de53ef811d8c70e"
+    },
+    {
+      "path": "preproduction/uncle_extraction/tools/validate_spec.py",
+      "size_bytes": 3325,
+      "sha256": "34fce659b97349ff485cc117ea44753642b2b8bd311e91c5c606e458cebe5c06"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/GUIA_DEL_KIT_3D.pdf",
+      "size_bytes": 3517210,
+      "sha256": "5c55e37a1f3d5d7305d35ee52692fb4a01cdcd2e21dd37b9df03da4c11b84cc1"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/MANIFEST.json",
+      "size_bytes": 4644,
+      "sha256": "1b6f2b693eb3fb01be96a296e054a53b915938b1fdfe7d5799a4524db38df080"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/README.md",
+      "size_bytes": 4887,
+      "sha256": "ac334499f04fb7f56e33c044c52e2fea4ee0f65cfcb906f8a1e2399e7ce6701b"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/claude/INTEGRAR_KIT.md",
+      "size_bytes": 3643,
+      "sha256": "d66ead212c3fd5a2b4c348d220cd91861469c7c8059219e2aca442e703f4e6d4"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/data/asset_metadata.json",
+      "size_bytes": 5499,
+      "sha256": "ee79351821a2c2f791a179e9eb4d770fe6433ad6c4d2d01330cdce53c505280f"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/data/validation_report.json",
+      "size_bytes": 4351,
+      "sha256": "19be2accc02f682703ff4b3c3d4ec6c22f1a5d9336e7283b7e8e09a562f03076"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/bar_blockout_shell.fbx",
+      "size_bytes": 35244,
+      "sha256": "4ace2a6fb76c1825a6954e0be58e3a637d3735bd81922fb227733b61af5c9656"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/bar_blockout_shell.glb",
+      "size_bytes": 11312,
+      "sha256": "867192d06e9f2152fd94eec54f5b361de1c28e885618e6ada72ad317e45a04ac"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/bar_counter.fbx",
+      "size_bytes": 22252,
+      "sha256": "28c9b40f5eef69303747475c7118083364f9ff7158b114a3d3b5398756da6b94"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/bar_counter.glb",
+      "size_bytes": 8760,
+      "sha256": "a96d208f7b093aa6af3cd6c7b8336efb7640196afac8afdeff252dead4636874"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/exit_door.fbx",
+      "size_bytes": 23900,
+      "sha256": "024732dd2028dac56decec94109e2600b2ffad60f895025f9a7d0e15814ab774"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/exit_door.glb",
+      "size_bytes": 18336,
+      "sha256": "569f288f46c59866a3f003fc2401d4948a4086f134438c45b1fc51f92ebb0902"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/passenger_van.fbx",
+      "size_bytes": 62300,
+      "sha256": "272c4b88db5eab05a7828e0911039886ae61b3fb6270df7ad754a2fbd2a17257"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/passenger_van.glb",
+      "size_bytes": 46104,
+      "sha256": "c4b83777e066db28a64416d20c4f9f4ff5463b7ad09b4f7876076fee36d29b47"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/stool.fbx",
+      "size_bytes": 31468,
+      "sha256": "f7bfd178ffe7463c564729cb71bf4ec11882a1a27cb9b252789c10031ec2fbd4"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/stool.glb",
+      "size_bytes": 13552,
+      "sha256": "a413e37d5718ce804a2ff7d0316a1a3e108451b6383c0978a77b1d452f916ce0"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/table.fbx",
+      "size_bytes": 27724,
+      "sha256": "2e40983922fe9e4b98b71c42389b2e59c01c18506b297b5f6a32cb34f69857d6"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/table.glb",
+      "size_bytes": 11096,
+      "sha256": "bdf6398b8b49b31ca96392ccf08f9416e871e43dcbe782b4711babdd6b9f995d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/transport_cart.fbx",
+      "size_bytes": 40636,
+      "sha256": "9a9dccb10b8e0dc028f1d4757db353c32e21dfd7c14f8af03e5ffbb99a612221"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/transport_cart.glb",
+      "size_bytes": 27332,
+      "sha256": "bc2b58243238ce94b72fe2d007fafcfde806492e9d72ffefd4ebdd662bf47891"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/uncle_prototype.fbx",
+      "size_bytes": 491116,
+      "sha256": "2bfd679c53610d6a37ad0f203631d0a38d59398a0766b07924ec1c8a6fe45cad"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/models/uncle_prototype.glb",
+      "size_bytes": 506220,
+      "sha256": "e21f185caf3ef5f9ef9ca6ca9b9b2b70cb6dd933c7b84793ec59e2567d33e9e3"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/previews/01_uncle_actual_mesh.png",
+      "size_bytes": 1457945,
+      "sha256": "84932ed12e5268e1c97dc3861d804e9c16e94c68c6a15d3917d6525b4b91a6d0"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/previews/02_bar_actual_assembly.png",
+      "size_bytes": 2128878,
+      "sha256": "44c767d7dcc029b8708c5e81f1e76236963eca708063ea531f2b7bd87d6e9d07"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/previews/03_actual_animation_poses.png",
+      "size_bytes": 1767182,
+      "sha256": "b3100b31532bdebc41b097e48f3f54d8b01d2d288be8696bf9395fe2223d3b8a"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/source/Uncle_Extraction_Blockout.blend",
+      "size_bytes": 1669104,
+      "sha256": "b7bbf11e48f69e75a47333eefa61b13cb6bb2e77bea48852b7f3139c640b14ac"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/source/generate_kit.py",
+      "size_bytes": 19702,
+      "sha256": "86cc41d5ff45053b0bfd03451385e716bc922aa36516acb1e68328d83742c6a5"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/source/render_pose_preview.py",
+      "size_bytes": 1613,
+      "sha256": "15c73b2f936ebe0e848556f833625e92ea1398fe8c6186288826ffdb3ccc29b9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_3D/source/validate_exports.py",
+      "size_bytes": 4354,
+      "sha256": "5e7344c19f2cb768de2a4407623b38e3ee0d01f63eea849209c4084e823bd5a5"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/ATLAS_INTERFAZ.pdf",
+      "size_bytes": 19341026,
+      "sha256": "2d0ab3bdfacf6fd7e0c6715e67455c5ddbab7f052f1430d32937b7343f4852b1"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/MANIFEST.json",
+      "size_bytes": 16270,
+      "sha256": "053ad01684cb669865e3e652bfb3a962651f0303a8be1ea18c36cff681dfb080"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/README.md",
+      "size_bytes": 2530,
+      "sha256": "7bc170c3a32bbded5373100cfbf21d45f3531375e1363a266cd64920b206cf6c"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/UI_SPEC.md",
+      "size_bytes": 12938,
+      "sha256": "11540cf5587a85aab622ab263a9cc442867b3f4794447a68c196f5d3dd38f9ad"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/backgrounds/bar_idle.png",
+      "size_bytes": 3373913,
+      "sha256": "df9e41ca9a5144c05015b831d632e018ea21895f7936ad64a4e0ca6edeef5ae2"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/backgrounds/bar_windup.png",
+      "size_bytes": 3379377,
+      "sha256": "d5021379e755a1475830935ac522e71ce1dab72216799a01bc52be247cf65a83"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/component_board.png",
+      "size_bytes": 79542,
+      "sha256": "c102438293fbedba20b744f1a451763167df54049f2e13f91acc78481045a9cf"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/fonts/DejaVuSans-Bold.ttf",
+      "size_bytes": 708920,
+      "sha256": "a4c5bc453ca281d90ea079e596da7ae0dfeb5777497c29ec254e76d97ff6f890"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/fonts/DejaVuSans.ttf",
+      "size_bytes": 759720,
+      "sha256": "57f73e11f51999432bf7ab22ce55b6f945d5eca1bf824404cfa9ec2e3718c84e"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/fonts/FONT_LICENSE.txt",
+      "size_bytes": 3859,
+      "sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/cart.png",
+      "size_bytes": 385,
+      "sha256": "845092c02703d9e278ec82485e8c93376505d5706c5fb40713f7cd6124cfc67b"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/clock.png",
+      "size_bytes": 468,
+      "sha256": "8d28988236b40b09d1634925aaeffb58ee1b2a4866b8e828544b498051c53602"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/composure.png",
+      "size_bytes": 533,
+      "sha256": "445749e5d3cf9e0ea82b8588171dbd86c673b07803ef3190e3172f864c4a9bf6"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/disconnect.png",
+      "size_bytes": 499,
+      "sha256": "320022d7b35376c13c87e8d8d2be3b3fd4020168d280ddc33fdb0918e6869e3f"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/door.png",
+      "size_bytes": 331,
+      "sha256": "ca61eca2c07093634247e8b321898180f55a7e1cda2c99c7853ea0c12c39485e"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/energy.png",
+      "size_bytes": 394,
+      "sha256": "aedcbed87faef7df5fb44603066529a74e19417c8e61e87597375f2e16d5c3fe"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/grip.png",
+      "size_bytes": 490,
+      "sha256": "8ccc63253fe38a8121fc5c4f1dda65c238890fbf485bb144e1cec51b0c47053d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/hand_left.png",
+      "size_bytes": 433,
+      "sha256": "1be6dfa447299d0c5c3a66b7244af96c9238ed7692c7c1afdee3df4146941bb7"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/hand_right.png",
+      "size_bytes": 433,
+      "sha256": "a4ac79bf221077e2bce31b115eb323acdf33f0d401629ce0a9f44cdf2f5dd89c"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/help.png",
+      "size_bytes": 519,
+      "sha256": "7fa44dd16be9a6815ccc7f62775c7dcd57b17c3beb55ee66bacfcf28898aa17a"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/kick.png",
+      "size_bytes": 476,
+      "sha256": "14162b6f08b495dbe199e13196c3ae35e0dc0f28f6a155571ad60cd5bad82a33"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/push.png",
+      "size_bytes": 380,
+      "sha256": "8ff891c33de532a5fa3a516947049f298244771c7ebc3b524a16cec187482e16"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/ready.png",
+      "size_bytes": 406,
+      "sha256": "69cdbffd0a1b032760556aa296b9aba8b886e762b1b1da0c33621857f15b1796"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/release.png",
+      "size_bytes": 448,
+      "sha256": "3407dde077fe8435b23a745a9b3f52e2a5d13534c58384499475108d9b9de647"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/retry.png",
+      "size_bytes": 469,
+      "sha256": "aa4b2311e6f02800072219f5e86b323c4ad54b4de87fd4e812d9b4f7ec14d68c"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/settings.png",
+      "size_bytes": 527,
+      "sha256": "9af46c56d20d3943ac95c13e6ef7d1331714aebbba968fbddee39ee6cbedaf11"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/shake.png",
+      "size_bytes": 425,
+      "sha256": "c4606d0d9c92c36bae4e56e65cbedc0abb14811abe18bc1172ad6065ea377cae"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/speaker.png",
+      "size_bytes": 445,
+      "sha256": "04f3e1aa3d9c6cea252c5839caf870de78d9da4fa1701bd2baf4144976d8986d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/van.png",
+      "size_bytes": 359,
+      "sha256": "0862d4a557347daf43bc1290ae1814cb2367cd48528f4dcdf7e5d5e222db4287"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_png/warning.png",
+      "size_bytes": 518,
+      "sha256": "891091018c160c8858f2da19c71d342e8cf2a646ac4edfc771517a460f87e498"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/cart.svg",
+      "size_bytes": 449,
+      "sha256": "128bc2e9099025ddfab7abfaa0f671ee49a06f38397c4d93f275d94b41fc0030"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/clock.svg",
+      "size_bytes": 356,
+      "sha256": "72ab5cf046252def717550048fa45a96106991ab0762b7406dbd5907a7bf52af"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/composure.svg",
+      "size_bytes": 377,
+      "sha256": "3143aa931e6ecaf461eebeb8cc32d2590bfeb7a79be8512dc90fe76ae3e5b320"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/disconnect.svg",
+      "size_bytes": 554,
+      "sha256": "7d09bdc8c48122810c767446664eefa5ecc6cfd6f6bebcde85f9832f7ec8def2"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/door.svg",
+      "size_bytes": 470,
+      "sha256": "78ea544beb79424f1f2828607041f12df450aff3643c11c77f304bdae894fd00"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/energy.svg",
+      "size_bytes": 247,
+      "sha256": "11fc8faf0a9237ccaa2b559a47a59db92414c4f439040c750a640ca79faf7ba5"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/grip.svg",
+      "size_bytes": 490,
+      "sha256": "eb9a3e375588657fe21a922bceabb78c50107dc7074b48e27152d76d0b69f832"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/hand_left.svg",
+      "size_bytes": 371,
+      "sha256": "e69f995f1905a32888fde2160bcc32829a0039399515d290fe2d53ac8d98e07e"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/hand_right.svg",
+      "size_bytes": 418,
+      "sha256": "87883b3f3706e3c210d9a0c13875abc5199ac2e466612ed76c515e10377e6235"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/help.svg",
+      "size_bytes": 457,
+      "sha256": "e02622a6cb24505503b189f0bf90e22892c1f6bef67eb2a740cfa8e3adf5d646"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/kick.svg",
+      "size_bytes": 318,
+      "sha256": "ca68df845189113a562b805b8dfd53e6e2864b7b8766367f0e9594e4ec01d579"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/push.svg",
+      "size_bytes": 757,
+      "sha256": "48f76c317e364e901ba90c4a7b08da43d87eba3e9ee5d6a8958a7558d42a7bf9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/ready.svg",
+      "size_bytes": 278,
+      "sha256": "e4f975a2f8638c1e1beeaf20fe339c1b8cc22894431c91e6ce86c7d771c13e33"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/release.svg",
+      "size_bytes": 500,
+      "sha256": "b132ae9f5b8afe17843a4dbb375fee6804ded0d213c87767f24ecd3b1aa3da63"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/retry.svg",
+      "size_bytes": 324,
+      "sha256": "2d801676e9ad8b607392615ee0b2f52ade9ce5d1479d0fb0f3346367a0ed574b"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/settings.svg",
+      "size_bytes": 1603,
+      "sha256": "7fb6965b8d814a72cfd91876e3ac688e2bb4703b941a5117edc0f7e231208ac1"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/shake.svg",
+      "size_bytes": 745,
+      "sha256": "64dc3005eabb0f058a58c5c312e63351854eb3eaa8de1247f4d7156d64ca3e4d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/speaker.svg",
+      "size_bytes": 383,
+      "sha256": "199b3fdec04881bc99cc0178e9611cff24f67e189ccdcb985c57fb35a562b70e"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/van.svg",
+      "size_bytes": 547,
+      "sha256": "4a2d8208b1999354b7935489bd5e28272a9c6dc41e798ff3da18753fbae8f398"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/icons_svg/warning.svg",
+      "size_bytes": 430,
+      "sha256": "4e91e34be0a65c83a8ac5d7ed30e73b0c4acd547935b4f940e8844ec817f16ae"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/bar_fill_amber.png",
+      "size_bytes": 280,
+      "sha256": "1458b3b2ed35d8f2528ca86ab00bcbb39b037e1bbe6e98769dcf04bb1c61648d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/bar_fill_teal.png",
+      "size_bytes": 279,
+      "sha256": "04ce902ffb898efc88f26de6dbace3249c1446a1f3d96b6ee618aaeecc8df22d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/bar_track.png",
+      "size_bytes": 279,
+      "sha256": "ee7142217dcaebd2ee048eab9d00345864a290e07ba752b7d61167cd89053860"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/button_disabled.png",
+      "size_bytes": 488,
+      "sha256": "b5fcf14d1971d0a7e490103fd5d29425d92804b298bb865765f313d6c09b3285"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/button_hover.png",
+      "size_bytes": 582,
+      "sha256": "9861dbba1a5693ba3ff0fee27e68ca55fa801a776a165659d659057aa2c93e08"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/button_pressed.png",
+      "size_bytes": 585,
+      "sha256": "5cdd73c2b0dab85a944fd6268d166031c33492e4c5f4b038d49caf6e864ccc57"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/button_primary.png",
+      "size_bytes": 488,
+      "sha256": "579ec70490418a15bc064ddd8a47f1653ea023a975e7b3b9d8b014eb72cb3d7d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/focus_ring.png",
+      "size_bytes": 543,
+      "sha256": "f20629b0a69576db278c4930aa1c1967d527cb2d01a4657465363808f6b71387"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/keycap.png",
+      "size_bytes": 466,
+      "sha256": "fd280114539d8552955f594ed44e9f19743fab8bd5ac59ba7ba6c323988da7a3"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/panel_danger.png",
+      "size_bytes": 711,
+      "sha256": "cabc01cd8d48898348c437f018e9b6bbcd6c4080873dc110bcec74c25ee21579"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/assets/sprites/panel_dark.png",
+      "size_bytes": 1169,
+      "sha256": "b13c69f5f9ed41c8c3935e36014387988aa65f6c8f489f1a01db973d0fe71072"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/claude/INTEGRAR_UI.md",
+      "size_bytes": 2291,
+      "sha256": "5b44460b29e415385aab87dae633dd40b67e08aa9033ba72254d4478b2bb1101"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/design_tokens.json",
+      "size_bytes": 1994,
+      "sha256": "a7b6e5559d0c6b101f02efb85e32ef464029e4f0d9e8835bff0eb51c87120551"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/input_and_focus.json",
+      "size_bytes": 3827,
+      "sha256": "1f23a9749770a7a6613b9ad05e4fec8e56d9f2a22b453ae2aab0d1b34faaa26b"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/localization_en_es.json",
+      "size_bytes": 31772,
+      "sha256": "49672412842efe6f3c30cc4964a554604c9c85253721be5f3731277126fe32e3"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/screen_manifest.json",
+      "size_bytes": 34254,
+      "sha256": "90dcf1d5e882e89badfeb70194613ed6d3a614959599fc936a32865624887850"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/sprite_import.json",
+      "size_bytes": 6477,
+      "sha256": "18132ca24d99ce5b67ca9afd75f068c58590949fcebb4c6cd1b7d43ca61ade6c"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/ui_acceptance.csv",
+      "size_bytes": 3252,
+      "sha256": "5577c37219ee28cae11c11d6c0dba927d26ca91063f451b6a81e75f13a7246a9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/ui_bindings.csv",
+      "size_bytes": 2418,
+      "sha256": "579a8ecee26f084c7ccc3a68e3a91d766eb657b3f28324556cfb33279fb51d89"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/ui_state_flow.csv",
+      "size_bytes": 2943,
+      "sha256": "828aa81cd89ad39d77c7ef593b449d843628cfdd3ad931963aef3905f61aafe1"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/data/validation_report.json",
+      "size_bytes": 894,
+      "sha256": "12c5d48069b3a476d0c8cfdf407e2d0a9aa516fc0b9ffb4b0fafa5b29826b1ac"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/00_contact_sheet.png",
+      "size_bytes": 838814,
+      "sha256": "d55929207d4af2a61d014c6ed5fab92cdf4b52feabf76e3b8c91553353b3a07e"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/01_main_menu.png",
+      "size_bytes": 1896404,
+      "sha256": "deaaee6e3b8848fa0a0b7ab06c65582597bc5d2a1304da326f5e994880c10b1a"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/01_main_menu.svg",
+      "size_bytes": 3282,
+      "sha256": "4268bec437e26c003d40e06827b0ca85f2b0a9f0b63172ef30f608d3b8d59bdb"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/02_private_lobby.png",
+      "size_bytes": 409453,
+      "sha256": "d4cf323ccc12f50c4caac7a68ae7fa392ed3841c41570114bd0f91d79cd3cc97"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/02_private_lobby.svg",
+      "size_bytes": 6985,
+      "sha256": "99c0442b6aaf8aaf4d493b38367f2a6c69f49b0691011a125ada532d1a05dd81"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/03_settings.png",
+      "size_bytes": 494606,
+      "sha256": "82e6edb5fedfe1d08ac69f6137516fdbf4787e6623cb389609f6e42d679834df"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/03_settings.svg",
+      "size_bytes": 6620,
+      "sha256": "41c4fd3a6f10bb736af3ce1346af2bf6b6968ceb7fb9b148bb08dd4fafb74e13"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/04_hud_free.png",
+      "size_bytes": 2658821,
+      "sha256": "5f1a8046115ed9689c702664882a637e69abf24d205b834d7930d4a3202dea2b"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/04_hud_free.svg",
+      "size_bytes": 4955,
+      "sha256": "de64323b9c0a49727acdecedf0af550ca5d30cbc0423559edec1d9eefa40591c"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/05_hud_grab.png",
+      "size_bytes": 2597237,
+      "sha256": "8be1f6e838fad0b6f47e2f6832652e767defe6b88e45f1a764ff220e15e76505"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/05_hud_grab.svg",
+      "size_bytes": 5114,
+      "sha256": "b431f868b1a49b5c8e9ebc57ac197cba7f03c1f293dd41564b023af0b46801f5"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/06_hud_windup.png",
+      "size_bytes": 2544664,
+      "sha256": "a5fd381d542f972c8b8f05379bb6f92823f0a8e395586ca141028d9a660d9ecb"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/06_hud_windup.svg",
+      "size_bytes": 5549,
+      "sha256": "3d7c81af64b6e0fe43337546ad200a6e8d26d339a1dfea21964e81f97c2a52e9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/07_hud_fallen.png",
+      "size_bytes": 2445441,
+      "sha256": "bd668d3994726dc0f076bb1038fd01e6ed2dc1a9a716d8f1c85690c81dcb03e5"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/07_hud_fallen.svg",
+      "size_bytes": 5344,
+      "sha256": "4ff9f40de96efb97ef5bc93888024a38a9a8e485286f4028a2171b55c2b12481"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/08_pause_online.png",
+      "size_bytes": 1149911,
+      "sha256": "5453d96ca31b557ca52eb720b45db33d202013ae3a5279f5b1842208fae178f3"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/08_pause_online.svg",
+      "size_bytes": 2567,
+      "sha256": "2653e4c46746bda98258893cb20f5c529418d40a91c8d188dbf293dfe86f2ba9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/09_result_success.png",
+      "size_bytes": 633090,
+      "sha256": "2e4e36dfd974a6b7c85b509b7253777038360d59b2591d35c9e1ab93fc328363"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/09_result_success.svg",
+      "size_bytes": 3326,
+      "sha256": "c2f16d5c2b6f34ae265f90bd83c0a686f63d410d56ac5fdd2803c88b231ed10a"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/10_result_timeout.png",
+      "size_bytes": 623319,
+      "sha256": "f77691eabca6735203b34186150d0fdc0261c14aa841c44f2d8c7b9c50267af9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/10_result_timeout.svg",
+      "size_bytes": 3343,
+      "sha256": "e1d5c6464ee245d5744f4d3b30cc63b4cb8818b539974ff89627af2c669fa36d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/11_host_disconnected.png",
+      "size_bytes": 880303,
+      "sha256": "b09af1257f1d18c1dfefa85be47b85e4ce52f3ab2be676105c555ea083eddda7"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/11_host_disconnected.svg",
+      "size_bytes": 2054,
+      "sha256": "b27bb2c7a417da47c79cbfa186038a5cfd88561f638b5ca1f287f7bb1f8ef86d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/12_tutorial.png",
+      "size_bytes": 595720,
+      "sha256": "d3285379ce0b533874caba7f84a5242f31b16204a821050fcbf0a3ca42ee1c2d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/screens/12_tutorial.svg",
+      "size_bytes": 4703,
+      "sha256": "d8edc14d96e52e2cd6f5c3bf63fc53302b418b20bf1326247d00ade2ae77a0e6"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/source/build_atlas.py",
+      "size_bytes": 8121,
+      "sha256": "602f9133fe3a447d1d125430510c7221e09319796c1b7c71ddc496b68ad40f41"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/source/build_ui_assets.py",
+      "size_bytes": 18909,
+      "sha256": "4084cfe9decc3a4f309b0d834096c3077d7d745d11c8e9addbd220d139453699"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/source/build_ui_data.py",
+      "size_bytes": 24866,
+      "sha256": "9c89676c11606e65e12f7f34cbc981dae3bd66e4a714e89c5fd2d6a7380eabbd"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/source/render_backgrounds.py",
+      "size_bytes": 1693,
+      "sha256": "e620041bbde1ab005afba39035df39124e080bb3be59e6dcd465aa0bd7b5064e"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_UI/source/validate_design.py",
+      "size_bytes": 3960,
+      "sha256": "4194516baabaa4504162469bc51a6af7b79b221be62e3bff60a9eb8815c50901"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/GUIA_MATERIALES_E_INTERACCION.pdf",
+      "size_bytes": 15492737,
+      "sha256": "fd39cf8a2a84c316ff4c4d005a0ba32628a9b966237be9c7ef5c20426e234a4a"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/MANIFEST.json",
+      "size_bytes": 5661,
+      "sha256": "c317ae1efde6e744fe4c43bb124985d533cbb16bb5c86290163278707169e8fb"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/README.md",
+      "size_bytes": 3650,
+      "sha256": "e959acb908c69ffc3e6f888c6bded9471ea75978fe0804cb74be798eb04c6fea"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/claude/INTEGRAR_MATERIALES.md",
+      "size_bytes": 2138,
+      "sha256": "ac33934dd572814391a51257705c85529f7c60e4fc36be0176b67e0c00ece01b"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/data/export_validation_report.json",
+      "size_bytes": 3843,
+      "sha256": "d67af9eb4bee840dff6c60a7fb9e20f16c1b6b4a37a5757bd02d5792f32ee1e9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/data/interaction_manifest.json",
+      "size_bytes": 6979,
+      "sha256": "ed38d8b98dafa29fd57375ff7d0a8f06f51b8641b686032971a0d94c3149f54d"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/data/material_application.json",
+      "size_bytes": 14000,
+      "sha256": "32330e60a6c9ac53b702bd44650969af46133da999d2979c26053ad5e3f82124"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/data/materials_qa.csv",
+      "size_bytes": 2175,
+      "sha256": "ea8a52c841a4547db85d6fc0250941119ef5510f94e6edc69e377c87b9278db1"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/data/texture_import.json",
+      "size_bytes": 5470,
+      "sha256": "32a15b38549b2b06b6c838626e36de66aeec25ca5f874667e2868765f4a629ae"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/data/validation_summary.json",
+      "size_bytes": 477,
+      "sha256": "89a61f008bee3d1503ddd188dd9571717dc009aecfe68e115c0d17a5866b2cab"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/data/visual_interaction_rules.csv",
+      "size_bytes": 814,
+      "sha256": "0a4572afb4c571af7a033f8bca40db48a3f51cbc7f20a3f302e2ea9ba7c90345"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/docs/ESPECIFICACION_MATERIALES.md",
+      "size_bytes": 9478,
+      "sha256": "f9ff4f54ba16b5ce4ede181c2fb02363d43b6783bea05f929e7e7617d933d617"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/docs/PROMPTS_TEXTURAS.md",
+      "size_bytes": 4564,
+      "sha256": "76de5be18ad52fd954dc0013e3bbf99203abeb46a3b7c9aa7e87ff9722cbdbdd"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/bar_blockout_shell_material_variant.fbx",
+      "size_bytes": 40316,
+      "sha256": "3cacaff97e18a3c7319ca5cf4436d8f78a0fb303e5c568c692ed87c43e93ccd9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/bar_counter_material_variant.fbx",
+      "size_bytes": 24748,
+      "sha256": "feb86e44b5c75006da542c9342e07ef55d533eed0b4ed0fdde0351a301d2e7fb"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/exit_door_material_variant.fbx",
+      "size_bytes": 24012,
+      "sha256": "b502abcad05ddebfbf9d22fe0083e7f46e5ec9d6a68c7bcb0627350220afafd4"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/passenger_van_material_variant.fbx",
+      "size_bytes": 62460,
+      "sha256": "e9e83ae8fec658339ff2d3f840487c696a14a0dcc429e4cc10f4f027c433db4c"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/scene_material_review.glb",
+      "size_bytes": 7868060,
+      "sha256": "bd71c87124f057b8af9d1308baa0cf96de98ee7bcb90ede7c2fe4732018e36de"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/stool_material_variant.fbx",
+      "size_bytes": 31596,
+      "sha256": "1c3afaca68b7e28a17ee82a258feb2958752d4399113bc6f374b443502e23320"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/table_material_variant.fbx",
+      "size_bytes": 31340,
+      "sha256": "7bc7f56b92e4d8d697423c14a6419f4135b360a6ba934b84480bd77b30b22ab9"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/transport_cart_material_variant.fbx",
+      "size_bytes": 40780,
+      "sha256": "dcf3d550c7d62a74ef28091f1bb0be3e15cfbb679e7e97ae086d52d06fb95230"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/models/uncle_prototype_material_variant.fbx",
+      "size_bytes": 495324,
+      "sha256": "f64166e2357cd28a526322570af1f9f6d019b308fbeef3f7e3a5ea43a27d4d47"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/previews/01_bar_materials.png",
+      "size_bytes": 2467066,
+      "sha256": "2ca5c17fc14971f6029f366b7516fbab9b06d33cb547f01ae1f458b2acab6294"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/previews/02_uncle_fabric.png",
+      "size_bytes": 1470555,
+      "sha256": "21042dee7b3684c6c8c2356a1fde4ab08c03a15aaf5160be02b61e3f382f2e76"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/previews/03_material_repeat_review.png",
+      "size_bytes": 2462466,
+      "sha256": "259b9240f7654fae3316228b6240ffa27f434e3903110e39115c74be32bb0234"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/source/Material_Lookdev.blend",
+      "size_bytes": 1768564,
+      "sha256": "d127f66e87c29cae1238c2d30ee7732341211810afb95dec5ecb6e69ddd8464b"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/source/apply_materials.py",
+      "size_bytes": 10152,
+      "sha256": "192a0751235ad3cb08e2cb85f96085bc0c510085224ef7bc00e4b6088e612250"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/source/build_guide.py",
+      "size_bytes": 10203,
+      "sha256": "620429e886e5f50504c3a5c69fd5cccc9da8c68fe3423e74a60a0ceaaa8d9ea8"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/source/build_material_data.py",
+      "size_bytes": 10185,
+      "sha256": "3358dbbfcd7c11aa770360fb811c575255d8444e43d00280cc7a76bcdb3fa492"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/source/validate_material_exports.py",
+      "size_bytes": 3995,
+      "sha256": "4f69821e4f10e351475dfae2f28b0100dd07231df10939177d43d3b641e80930"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/textures/01_wood_basecolor.png",
+      "size_bytes": 1661184,
+      "sha256": "4ec84be260af3d3198076acf1c4743b1f893c58682845b82b5415dd29ea4cb72"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/textures/02_floor_basecolor.png",
+      "size_bytes": 1722111,
+      "sha256": "61548b37cf8e40d65687c251d2bdb5cb7b9f90fac3c9936b4a70352677374ebc"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/textures/03_wall_basecolor.png",
+      "size_bytes": 1633143,
+      "sha256": "79afcec2e6b898b744f5b883745d7d1c85f9d94576c127848146f3d42656f492"
+    },
+    {
+      "path": "preproduction/uncle_extraction_kit_materiales/textures/04_fabric_basecolor.png",
+      "size_bytes": 2246298,
+      "sha256": "26c34c8ed3ab5a00ab4c9a85fca9819b55dfbc6e4d69219ce7ec6565588a5fbc"
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "status": "DESIGN_MAPPING_NOT_RUNTIME_CODE",
+  "source": "GDD v1.0 controls; UI context details in UI_SPEC.md",
+  "actions": [
+    {
+      "id": "Move",
+      "keyboard_mouse": "WASD",
+      "gamepad": "leftStick",
+      "context": "Gameplay"
+    },
+    {
+      "id": "Look",
+      "keyboard_mouse": "mouseDelta",
+      "gamepad": "rightStick",
+      "context": "Gameplay"
+    },
+    {
+      "id": "GrabLeft",
+      "keyboard_mouse": "mouseLeft",
+      "gamepad": "leftTrigger",
+      "context": "Gameplay"
+    },
+    {
+      "id": "GrabRight",
+      "keyboard_mouse": "mouseRight",
+      "gamepad": "rightTrigger",
+      "context": "Gameplay"
+    },
+    {
+      "id": "Interact",
+      "keyboard_mouse": "E",
+      "gamepad": "buttonSouth",
+      "context": "Gameplay"
+    },
+    {
+      "id": "ReleaseAll",
+      "keyboard_mouse": "Q",
+      "gamepad": "buttonEast",
+      "context": "Gameplay"
+    },
+    {
+      "id": "Effort",
+      "keyboard_mouse": "LeftShift",
+      "gamepad": "leftStickPress",
+      "context": "Gameplay"
+    },
+    {
+      "id": "Crouch",
+      "keyboard_mouse": "LeftCtrl",
+      "gamepad": "rightStickPress",
+      "context": "Gameplay"
+    },
+    {
+      "id": "Dodge",
+      "keyboard_mouse": "Space",
+      "gamepad": "buttonWest",
+      "context": "Gameplay"
+    },
+    {
+      "id": "Ping",
+      "keyboard_mouse": "F",
+      "gamepad": "dpadUp",
+      "context": "Gameplay"
+    },
+    {
+      "id": "Menu",
+      "keyboard_mouse": "Escape",
+      "gamepad": "start",
+      "context": "Gameplay"
+    },
+    {
+      "id": "UIConfirm",
+      "keyboard_mouse": "Enter or mouseLeft on focused control",
+      "gamepad": "buttonSouth",
+      "context": "UI"
+    },
+    {
+      "id": "UICancel",
+      "keyboard_mouse": "Escape",
+      "gamepad": "buttonEast",
+      "context": "UI"
+    },
+    {
+      "id": "UINavigate",
+      "keyboard_mouse": "arrows or WASD",
+      "gamepad": "dpad or leftStick",
+      "context": "UI"
+    }
+  ],
+  "context_rules": [
+    "UI and Gameplay are exclusive at dispatch",
+    "Cancel effort and held game input before opening incompatible UI",
+    "Opening pause requests safe release; host confirms registry cleanup",
+    "A UI cancel press cannot also trigger gameplay ReleaseAll after closing",
+    "Reacquire input on new press; no automatic old grab restore",
+    "Glyph labels follow remapped binding and active device"
+  ],
+  "focus_order": {
+    "01_main_menu": [
+      "play_solo",
+      "play_friends",
+      "how_to",
+      "settings",
+      "quit"
+    ],
+    "02_private_lobby": [
+      "own_ready",
+      "host_difficulty_if_available",
+      "copy_code",
+      "start_if_enabled",
+      "leave_lobby"
+    ],
+    "03_settings": [
+      "master",
+      "music",
+      "voice",
+      "cues",
+      "language",
+      "attack_subtitles",
+      "shake",
+      "head_bob",
+      "toggle_grab",
+      "profanity",
+      "text_size",
+      "apply",
+      "back"
+    ],
+    "08_pause_online": [
+      "resume",
+      "settings",
+      "leave_match"
+    ],
+    "09_result_success": [
+      "retry_if_host",
+      "new_setup_if_host",
+      "back_lobby_or_menu"
+    ],
+    "10_result_timeout": [
+      "retry_if_host",
+      "new_setup_if_host",
+      "back_lobby_or_menu"
+    ],
+    "11_host_disconnected": [
+      "back_menu"
+    ],
+    "12_tutorial": [
+      "back"
+    ],
+    "confirm_leave": [
+      "cancel",
+      "confirm"
+    ],
+    "unsaved_settings": [
+      "apply",
+      "discard",
+      "cancel"
+    ]
+  },
+  "notes": [
+    "Gameplay HUD has no navigation focus unless a wheel/menu explicitly opens",
+    "Skip disabled actions in traversal; expose disabled reason in persistent text",
+    "Do not use manufacturer-specific glyph artwork without an appropriate source",
+    "Guest results default focus goes to their enabled exit action"
+  ]
+}

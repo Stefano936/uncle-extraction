@@ -1,0 +1,30 @@
+﻿state,authority,event,next,rule
+Menu,local,play_solo,SetupSolo,No external online service needed for local mode
+Menu,local,play_friends,ConnectionChoice,Create room or join code; reusable modal
+ConnectionChoice,local+session,create_or_join,Connecting,Display busy and allow cancel; ignore stale callbacks
+Connecting,session,success,Lobby,"Validate version, slots and round availability"
+Connecting,session,failure,ConnectionError,Concrete reason; retry only when reason is retryable
+Lobby,host+local ready,all_present_ready_and_host_start,Loading,Host commits setup; clients cannot start
+Loading,host,scene_ready,Playing.Free,All required actors loaded or controlled timeout
+Playing.Free,host for grip,grab_request,Playing.Pending,Do not show Holding before grant
+Playing.Pending,host,grant_or_reject,Playing.Holding|Playing.Free,Pair grant with requestId; discard stale replies
+Playing.Holding,host,tension_threshold,Playing.Strained,Color plus icon and text; no audio spam
+Playing.Holding|Playing.Strained,host,release_or_fall,Playing.Free|Playing.Fallen,Apply cleanup confirmation; no restoring old grab automatically
+Playing.Any,host,attack_windup,Playing.Telegraph,Overlay on base gameplay state; cancel after authoritative end
+Playing.Any,host,forced_recovery,Playing.RecoveryCue,Show opportunity; do not hide next critical cue
+Playing.Any,host,knockdown,Playing.Fallen,Release hands; auto-recovery; no death screen
+Playing.Fallen,host,standup_complete,Playing.Free,Short control-return cue; grace from game rules
+Playing.Any,local,pause,PauseSolo|PauseOnline,Solo pauses local sim; online does not
+PauseOnline,local,resume,Playing.Current,Round may have advanced; do not resume a stale state
+Playing.Any|PauseOnline,host,round_terminal,ResultSuccess|ResultTimeout,Terminal authority wins over transient overlays
+ResultSuccess|ResultTimeout,host,retry_or_new_setup,Lobby,Ready resets; same seed only for retry
+Playing.Any|Lobby|Loading,session,host_lost,ConnectionError,No migration promised; explicit return path
+ResultSuccess|ResultTimeout,session,host_lost_after_terminal_confirmed,ResultSuccess|ResultTimeout,Keep confirmed result; disable session commands and offer menu
+SetupSolo,local authority,confirm_setup,Loading,One-player config; no online service dependency
+PauseSolo,local,resume,Playing.Current,Resume local simulation; new input press required
+ConnectionError,local,back_menu,Menu,Cleanup old attempts and present an enabled exit
+Connecting,local,cancel,Menu,Cancel provider attempt and ignore late completion
+ResultSuccess|ResultTimeout,local,exit_menu,Menu,Leave session safely without rewriting confirmed result
+AnyLocalMenu,local,open_settings,Settings,Remember prior context and draft options
+Settings,local,apply,PreviousContext,Persist only accepted values; cancel restores stored draft
+Settings,local,back_with_changes,UnsavedModal,Apply or discard; keep existing session if any

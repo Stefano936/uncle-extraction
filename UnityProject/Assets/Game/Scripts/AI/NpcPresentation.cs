@@ -1,0 +1,71 @@
+using UnityEngine;
+
+namespace UncleExtraction
+{
+    /// Senales visibles de intencion: color del cuerpo, pose de brazos/piernas e indicador sobre la cabeza.
+    /// Solo presentacion: no decide si un golpe ocurrio (GDD 06).
+    public class NpcPresentation : MonoBehaviour
+    {
+        public NpcBrain brain;
+        public Renderer[] bodyRenderers;
+        public Transform armL, armR, legL, legR;
+        public Transform indicator;
+        public Renderer indicatorRenderer;
+
+        static readonly Color idle = new Color(0.55f, 0.35f, 0.75f);
+        Quaternion armL0, armR0, legL0, legR0;
+
+        void Start()
+        {
+            if (armL) armL0 = armL.localRotation; if (armR) armR0 = armR.localRotation;
+            if (legL) legL0 = legL.localRotation; if (legR) legR0 = legR.localRotation;
+        }
+
+        void Update()
+        {
+            if (!brain) return;
+            Color c = idle; Vector3 aL = Vector3.zero, aR = Vector3.zero, lL = Vector3.zero, lR = Vector3.zero;
+            bool showInd = false; float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 18f);
+            switch (brain.State)
+            {
+                case NpcState.Windup:
+                    showInd = true;
+                    switch (brain.CurrentAttack.id)
+                    {
+                        case AttackId.Slap: c = new Color(1f, 0.6f, 0.1f); aR = new Vector3(0, 0, 150); break;          // hombro y mano arriba
+                        case AttackId.Push: c = new Color(1f, 0.25f, 0.2f); aL = new Vector3(-60, 0, 0); aR = new Vector3(-60, 0, 0); break; // palmas atras
+                        case AttackId.Kick: c = new Color(0.95f, 0.85f, 0.1f); lR = new Vector3(-80, 0, 0); break;      // rodilla flexionada
+                        case AttackId.Shake: c = new Color(0.2f, 0.9f, 1f); aL = new Vector3(0, 0, -40); aR = new Vector3(0, 0, 40); break; // inhala
+                    }
+                    c = Color.Lerp(c, Color.white, pulse * 0.35f);
+                    break;
+                case NpcState.Attack:
+                    c = Color.red; showInd = true;
+                    if (brain.CurrentAttack.id == AttackId.Push) { aL = aR = new Vector3(80, 0, 0); }
+                    if (brain.CurrentAttack.id == AttackId.Slap) aR = new Vector3(70, 0, 40);
+                    if (brain.CurrentAttack.id == AttackId.Kick) lR = new Vector3(70, 0, 0);
+                    break;
+                case NpcState.Recover: c = new Color(0.35f, 0.55f, 1f); break;
+                case NpcState.ForcedRecovery: c = new Color(0.6f, 0.9f, 1f); aL = new Vector3(0, 0, -10); aR = new Vector3(0, 0, 10); break;
+                case NpcState.Anchor: c = new Color(0.8f, 0.3f, 0.9f); break;
+                case NpcState.Secured: c = new Color(0.3f, 0.9f, 0.4f); break;
+            }
+            foreach (var r in bodyRenderers) if (r) r.material.color = c;
+            Pose(armL, armL0, aL); Pose(armR, armR0, aR); Pose(legL, legL0, lL); Pose(legR, legR0, lR);
+            if (indicator)
+            {
+                indicator.gameObject.SetActive(showInd);
+                if (showInd)
+                {
+                    indicator.localScale = Vector3.one * (0.18f + 0.08f * pulse);
+                    if (indicatorRenderer) indicatorRenderer.material.color = c;
+                }
+            }
+        }
+
+        static void Pose(Transform t, Quaternion rest, Vector3 euler)
+        {
+            if (t) t.localRotation = Quaternion.Slerp(t.localRotation, rest * Quaternion.Euler(euler), 0.25f);
+        }
+    }
+}

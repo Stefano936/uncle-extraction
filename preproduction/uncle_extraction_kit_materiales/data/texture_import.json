@@ -1,0 +1,166 @@
+{
+  "status": "ART_PROTOTYPE_NOT_UNITY_IMPORTED",
+  "materials": [
+    {
+      "id": "MAT_Wood_Boards",
+      "file": "textures/01_wood_basecolor.png",
+      "actual_source_pixels": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "sha256": "4ec84be260af3d3198076acf1c4743b1f893c58682845b82b5415dd29ea4cb72",
+      "map_type": "Base Color only",
+      "source_modified_after_generation": false,
+      "color_space": "sRGB",
+      "alpha_needed": false,
+      "mipmaps_proposed": true,
+      "filter_proposed": "Trilinear",
+      "max_size_proposed": 2048,
+      "npot_scale_proposed": "ToNearest; inspect actual imported resolution",
+      "cpu_read_write_proposed": false,
+      "wrap_proposed": "Mirror",
+      "metallic": 0.0,
+      "smoothness_proposed": 0.22,
+      "unity_tiling_for_supplied_fbx": [
+        1,
+        1
+      ],
+      "physical_tile_m_encoded_in_uv0": 1.0,
+      "normal_map": null,
+      "height_map": null,
+      "roughness_map": null,
+      "raw_edge_mean_absolute_rgb_difference_0_255": {
+        "left_right": 2.04,
+        "top_bottom": 12.523
+      },
+      "seam_note": "A raw edge statistic is diagnostic only. Mirror wrapping was selected for wood/wall/fabric; floor uses Repeat. No claim of exact periodic source pixels."
+    },
+    {
+      "id": "MAT_Floor_Tiles",
+      "file": "textures/02_floor_basecolor.png",
+      "actual_source_pixels": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "sha256": "61548b37cf8e40d65687c251d2bdb5cb7b9f90fac3c9936b4a70352677374ebc",
+      "map_type": "Base Color only",
+      "source_modified_after_generation": false,
+      "color_space": "sRGB",
+      "alpha_needed": false,
+      "mipmaps_proposed": true,
+      "filter_proposed": "Trilinear",
+      "max_size_proposed": 2048,
+      "npot_scale_proposed": "ToNearest; inspect actual imported resolution",
+      "cpu_read_write_proposed": false,
+      "wrap_proposed": "Repeat",
+      "metallic": 0.0,
+      "smoothness_proposed": 0.18,
+      "unity_tiling_for_supplied_fbx": [
+        1,
+        1
+      ],
+      "physical_tile_m_encoded_in_uv0": 2.0,
+      "normal_map": null,
+      "height_map": null,
+      "roughness_map": null,
+      "raw_edge_mean_absolute_rgb_difference_0_255": {
+        "left_right": 3.264,
+        "top_bottom": 5.22
+      },
+      "seam_note": "A raw edge statistic is diagnostic only. Mirror wrapping was selected for wood/wall/fabric; floor uses Repeat. No claim of exact periodic source pixels."
+    },
+    {
+      "id": "MAT_Wall_Taupe",
+      "file": "textures/03_wall_basecolor.png",
+      "actual_source_pixels": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "sha256": "79afcec2e6b898b744f5b883745d7d1c85f9d94576c127848146f3d42656f492",
+      "map_type": "Base Color only",
+      "source_modified_after_generation": false,
+      "color_space": "sRGB",
+      "alpha_needed": false,
+      "mipmaps_proposed": true,
+      "filter_proposed": "Trilinear",
+      "max_size_proposed": 2048,
+      "npot_scale_proposed": "ToNearest; inspect actual imported resolution",
+      "cpu_read_write_proposed": false,
+      "wrap_proposed": "Mirror",
+      "metallic": 0.0,
+      "smoothness_proposed": 0.05,
+      "unity_tiling_for_supplied_fbx": [
+        1,
+        1
+      ],
+      "physical_tile_m_encoded_in_uv0": 2.0,
+      "normal_map": null,
+      "height_map": null,
+      "roughness_map": null,
+      "raw_edge_mean_absolute_rgb_difference_0_255": {
+        "left_right": 2.08,
+        "top_bottom": 1.732
+      },
+      "seam_note": "A raw edge statistic is diagnostic only. Mirror wrapping was selected for wood/wall/fabric; floor uses Repeat. No claim of exact periodic source pixels."
+    },
+    {
+      "id": "MAT_Shirt_Fabric",
+      "file": "textures/04_fabric_basecolor.png",
+      "actual_source_pixels": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "sha256": "26c34c8ed3ab5a00ab4c9a85fca9819b55dfbc6e4d69219ce7ec6565588a5fbc",
+      "map_type": "Base Color only",
+      "source_modified_after_generation": false,
+      "color_space": "sRGB",
+      "alpha_needed": false,
+      "mipmaps_proposed": true,
+      "filter_proposed": "Trilinear",
+      "max_size_proposed": 2048,
+      "npot_scale_proposed": "ToNearest; inspect actual imported resolution",
+      "cpu_read_write_proposed": false,
+      "wrap_proposed": "Mirror",
+      "metallic": 0.0,
+      "smoothness_proposed": 0.1,
+      "unity_tiling_for_supplied_fbx": [
+        1,
+        1
+      ],
+      "physical_tile_m_encoded_in_uv0": 0.5,
+      "normal_map": null,
+      "height_map": null,
+      "roughness_map": null,
+      "raw_edge_mean_absolute_rgb_difference_0_255": {
+        "left_right": 4.287,
+        "top_bottom": 2.971
+      },
+      "seam_note": "A raw edge statistic is diagnostic only. Mirror wrapping was selected for wood/wall/fabric; floor uses Repeat. No claim of exact periodic source pixels."
+    }
+  ],
+  "shader_proposed": "Universal Render Pipeline/Lit",
+  "workflow": "Metallic",
+  "surface_type": "Opaque",
+  "base_color_multiplier": [
+    1,
+    1,
+    1,
+    1
+  ],
+  "maps_not_delivered": [
+    "normal",
+    "height",
+    "roughness",
+    "metallic",
+    "ambient_occlusion"
+  ],
+  "notes": [
+    "Do not import RGB color as a normal map.",
+    "No fabricated .mat or .meta files are included. Create them in the installed Unity version.",
+    "Material smoothness is a scalar; it is not stored in the alpha of these opaque RGB files."
+  ]
+}

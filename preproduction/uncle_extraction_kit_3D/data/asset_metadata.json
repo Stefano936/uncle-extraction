@@ -1,0 +1,249 @@
+{
+  "version": "0.1",
+  "status": "PROTOTYPE_ASSETS_NOT_A_GAME",
+  "generator_blender": "4.3.2",
+  "source_units": "meters",
+  "source_up": "Z",
+  "source_character_front": "-Y",
+  "fbx_forward": "-Z",
+  "fbx_up": "Y",
+  "export_scale": 1,
+  "unrealistic_or_simplified": [
+    "rigid segment weights; not production skinning",
+    "3 rough animation actions; not final gameplay timing",
+    "front blockout wall lowered for inspection",
+    "no physics bodies, collisions, scripts, UI or networking included"
+  ],
+  "assets": [
+    {
+      "id": "uncle_prototype",
+      "fbx": "models/uncle_prototype.fbx",
+      "glb": "models/uncle_prototype.glb",
+      "triangles": 3992,
+      "objects": 10,
+      "bounds_blender_xyz_m": [
+        1.709999680519104,
+        0.6200000047683716,
+        1.9325003027915955
+      ],
+      "animated": true,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    },
+    {
+      "id": "stool",
+      "fbx": "models/stool.fbx",
+      "glb": "models/stool.glb",
+      "triangles": 136,
+      "objects": 7,
+      "bounds_blender_xyz_m": [
+        0.5400000214576721,
+        0.5400000214576721,
+        0.8299999833106995
+      ],
+      "animated": false,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    },
+    {
+      "id": "table",
+      "fbx": "models/table.fbx",
+      "glb": "models/table.glb",
+      "triangles": 92,
+      "objects": 6,
+      "bounds_blender_xyz_m": [
+        1.399999976158142,
+        0.8999999761581421,
+        0.8199999928474426
+      ],
+      "animated": false,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    },
+    {
+      "id": "bar_counter",
+      "fbx": "models/bar_counter.fbx",
+      "glb": "models/bar_counter.glb",
+      "triangles": 88,
+      "objects": 5,
+      "bounds_blender_xyz_m": [
+        4.119999885559082,
+        0.8999999761581421,
+        1.0799999237060547
+      ],
+      "animated": false,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    },
+    {
+      "id": "transport_cart",
+      "fbx": "models/transport_cart.fbx",
+      "glb": "models/transport_cart.glb",
+      "triangles": 352,
+      "objects": 11,
+      "bounds_blender_xyz_m": [
+        1.2000000476837158,
+        0.8600000143051147,
+        0.9500000327825546
+      ],
+      "animated": false,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    },
+    {
+      "id": "exit_door",
+      "fbx": "models/exit_door.fbx",
+      "glb": "models/exit_door.glb",
+      "triangles": 212,
+      "objects": 4,
+      "bounds_blender_xyz_m": [
+        1.5,
+        0.16749999672174454,
+        2.200000047683716
+      ],
+      "animated": false,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    },
+    {
+      "id": "passenger_van",
+      "fbx": "models/passenger_van.fbx",
+      "glb": "models/passenger_van.glb",
+      "triangles": 520,
+      "objects": 18,
+      "bounds_blender_xyz_m": [
+        2.519972801208496,
+        5.38114595413208,
+        2.3299998939037323
+      ],
+      "animated": false,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    },
+    {
+      "id": "bar_blockout_shell",
+      "fbx": "models/bar_blockout_shell.fbx",
+      "glb": "models/bar_blockout_shell.glb",
+      "triangles": 84,
+      "objects": 11,
+      "bounds_blender_xyz_m": [
+        18.200000762939453,
+        17.09999990463257,
+        2.6400000900030136
+      ],
+      "animated": false,
+      "status": "PROTOTYPE_NOT_UNITY_TESTED"
+    }
+  ],
+  "npc": {
+    "bone_count": 12,
+    "deform_bones": 11,
+    "clips": [
+      "Idle_Prototype",
+      "Push_Prototype",
+      "Kick_Prototype"
+    ],
+    "grab_sockets": [
+      {
+        "id": "Grab_Shoulder_L",
+        "bone": "chest",
+        "position_blender_rest_m": [
+          0.33,
+          -0.04,
+          1.39
+        ]
+      },
+      {
+        "id": "Grab_Shoulder_R",
+        "bone": "chest",
+        "position_blender_rest_m": [
+          -0.33,
+          -0.04,
+          1.39
+        ]
+      },
+      {
+        "id": "Grab_Forearm_L",
+        "bone": "forearm.L",
+        "position_blender_rest_m": [
+          0.71,
+          -0.025,
+          1.0
+        ]
+      },
+      {
+        "id": "Grab_Forearm_R",
+        "bone": "forearm.R",
+        "position_blender_rest_m": [
+          -0.71,
+          -0.025,
+          1.0
+        ]
+      },
+      {
+        "id": "Grab_Ankle_L",
+        "bone": "calf.L",
+        "position_blender_rest_m": [
+          0.18,
+          0,
+          0.17
+        ]
+      },
+      {
+        "id": "Grab_Ankle_R",
+        "bone": "calf.R",
+        "position_blender_rest_m": [
+          -0.18,
+          0,
+          0.17
+        ]
+      },
+      {
+        "id": "Grab_Belt",
+        "bone": "pelvis",
+        "position_blender_rest_m": [
+          0,
+          0.15,
+          0.91
+        ]
+      },
+      {
+        "id": "Grab_Belt_Alt",
+        "bone": "pelvis",
+        "position_blender_rest_m": [
+          0,
+          -0.19,
+          0.91
+        ]
+      }
+    ]
+  },
+  "placement_blender_m": {
+    "npc": [
+      -3,
+      2.6,
+      0
+    ],
+    "counter": [
+      -3,
+      4.4,
+      0
+    ],
+    "cart": [
+      -7,
+      -4,
+      0
+    ],
+    "door_hinge": [
+      4.25,
+      -6,
+      0
+    ],
+    "van": [
+      0,
+      -8.7,
+      0
+    ]
+  },
+  "runtime_setup_required": [
+    "Unity import and material extraction",
+    "Generic animation rig import and clip review",
+    "Rigidbody and 11-body ragdoll configuration",
+    "primitive colliders and bounded joints",
+    "NPC states, attacks, hand authority and input",
+    "connection and Steam integration"
+  ]
+}

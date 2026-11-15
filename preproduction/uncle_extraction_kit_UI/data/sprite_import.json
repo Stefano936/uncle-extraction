@@ -1,0 +1,280 @@
+{
+  "status": "DESIGN_RECIPE_NOT_UNITY_IMPORTED",
+  "sprites": [
+    {
+      "id": "panel_dark",
+      "file": "assets/sprites/panel_dark.png",
+      "size_px": [
+        256,
+        256
+      ],
+      "border_lbrt_px": [
+        24,
+        24,
+        24,
+        24
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "panel_danger",
+      "file": "assets/sprites/panel_danger.png",
+      "size_px": [
+        256,
+        128
+      ],
+      "border_lbrt_px": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "button_primary",
+      "file": "assets/sprites/button_primary.png",
+      "size_px": [
+        256,
+        96
+      ],
+      "border_lbrt_px": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "button_hover",
+      "file": "assets/sprites/button_hover.png",
+      "size_px": [
+        256,
+        96
+      ],
+      "border_lbrt_px": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "button_pressed",
+      "file": "assets/sprites/button_pressed.png",
+      "size_px": [
+        256,
+        96
+      ],
+      "border_lbrt_px": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "button_disabled",
+      "file": "assets/sprites/button_disabled.png",
+      "size_px": [
+        256,
+        96
+      ],
+      "border_lbrt_px": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "keycap",
+      "file": "assets/sprites/keycap.png",
+      "size_px": [
+        96,
+        96
+      ],
+      "border_lbrt_px": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "bar_track",
+      "file": "assets/sprites/bar_track.png",
+      "size_px": [
+        256,
+        32
+      ],
+      "border_lbrt_px": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "bar_fill_teal",
+      "file": "assets/sprites/bar_fill_teal.png",
+      "size_px": [
+        256,
+        32
+      ],
+      "border_lbrt_px": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "bar_fill_amber",
+      "file": "assets/sprites/bar_fill_amber.png",
+      "size_px": [
+        256,
+        32
+      ],
+      "border_lbrt_px": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    },
+    {
+      "id": "focus_ring",
+      "file": "assets/sprites/focus_ring.png",
+      "size_px": [
+        256,
+        96
+      ],
+      "border_lbrt_px": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "texture_type": "Sprite (2D and UI)",
+      "sprite_mode": "Single",
+      "mesh_type": "Full Rect",
+      "sRGB": true,
+      "alpha_is_transparency": true,
+      "mipmaps": false,
+      "filter": "Bilinear",
+      "compression": "None proposed; profile before shipping",
+      "ppu": 100,
+      "ui_image_type": "Sliced",
+      "text_baked_in": false
+    }
+  ]
+}

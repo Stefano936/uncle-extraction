@@ -1,0 +1,1681 @@
+{
+  "screens": [
+    {
+      "id": "01_main_menu",
+      "png": "screens/01_main_menu.png",
+      "svg": "screens/01_main_menu.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "UNCLE",
+          "x0": 64,
+          "y0": 136,
+          "x1": 479,
+          "y1": 222
+        },
+        {
+          "text": "EXTRACTION",
+          "x0": 64,
+          "y0": 265,
+          "x1": 865,
+          "y1": 351
+        },
+        {
+          "text": "The party is over. He disagrees.",
+          "x0": 68,
+          "y0": 398,
+          "x1": 545,
+          "y1": 427
+        },
+        {
+          "text": "PLAY SOLO",
+          "x0": 97,
+          "y0": 509,
+          "x1": 263,
+          "y1": 529
+        },
+        {
+          "text": "PLAY WITH FRIENDS",
+          "x0": 97,
+          "y0": 601,
+          "x1": 404,
+          "y1": 621
+        },
+        {
+          "text": "HOW TO PLAY",
+          "x0": 97,
+          "y0": 693,
+          "x1": 308,
+          "y1": 713
+        },
+        {
+          "text": "SETTINGS",
+          "x0": 97,
+          "y0": 785,
+          "x1": 247,
+          "y1": 805
+        },
+        {
+          "text": "QUIT",
+          "x0": 97,
+          "y0": 877,
+          "x1": 171,
+          "y1": 901
+        },
+        {
+          "text": "1-4 PLAYERS",
+          "x0": 1336,
+          "y0": 712,
+          "x1": 1492,
+          "y1": 728
+        },
+        {
+          "text": "Bad decisions. Better",
+          "x0": 1320,
+          "y0": 775,
+          "x1": 1754,
+          "y1": 802
+        },
+        {
+          "text": "with friends.",
+          "x0": 1320,
+          "y0": 825,
+          "x1": 1578,
+          "y1": 852
+        }
+      ]
+    },
+    {
+      "id": "02_private_lobby",
+      "png": "screens/02_private_lobby.png",
+      "svg": "screens/02_private_lobby.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "GET THE CREW TOGETHER",
+          "x0": 64,
+          "y0": 103,
+          "x1": 859,
+          "y1": 144
+        },
+        {
+          "text": "YOUR CREW",
+          "x0": 95,
+          "y0": 232,
+          "x1": 292,
+          "y1": 253
+        },
+        {
+          "text": "PRIVATE",
+          "x0": 866,
+          "y0": 234,
+          "x1": 968,
+          "y1": 250
+        },
+        {
+          "text": "YOU",
+          "x0": 182,
+          "y0": 320,
+          "x1": 254,
+          "y1": 342
+        },
+        {
+          "text": "Host",
+          "x0": 184,
+          "y0": 365,
+          "x1": 236,
+          "y1": 382
+        },
+        {
+          "text": "READY",
+          "x0": 842,
+          "y0": 340,
+          "x1": 936,
+          "y1": 358
+        },
+        {
+          "text": "SAM",
+          "x0": 183,
+          "y0": 453,
+          "x1": 258,
+          "y1": 475
+        },
+        {
+          "text": "Joined",
+          "x0": 182,
+          "y0": 498,
+          "x1": 255,
+          "y1": 520
+        },
+        {
+          "text": "READY",
+          "x0": 848,
+          "y0": 470,
+          "x1": 942,
+          "y1": 488
+        },
+        {
+          "text": "ALEX",
+          "x0": 183,
+          "y0": 586,
+          "x1": 269,
+          "y1": 608
+        },
+        {
+          "text": "Joined",
+          "x0": 182,
+          "y0": 631,
+          "x1": 255,
+          "y1": 653
+        },
+        {
+          "text": "NOT READY",
+          "x0": 848,
+          "y0": 603,
+          "x1": 1010,
+          "y1": 621
+        },
+        {
+          "text": "JAMIE",
+          "x0": 181,
+          "y0": 719,
+          "x1": 279,
+          "y1": 747
+        },
+        {
+          "text": "Joined",
+          "x0": 182,
+          "y0": 764,
+          "x1": 255,
+          "y1": 786
+        },
+        {
+          "text": "READY",
+          "x0": 848,
+          "y0": 736,
+          "x1": 942,
+          "y1": 754
+        },
+        {
+          "text": "THE LAST ROUND",
+          "x0": 1218,
+          "y0": 239,
+          "x1": 1561,
+          "y1": 265
+        },
+        {
+          "text": "Mode: Alcohol / Partygoer",
+          "x0": 1218,
+          "y0": 299,
+          "x1": 1526,
+          "y1": 322
+        },
+        {
+          "text": "DIFFICULTY",
+          "x0": 1218,
+          "y0": 366,
+          "x1": 1365,
+          "y1": 383
+        },
+        {
+          "text": "RELAXED",
+          "x0": 1235,
+          "y0": 432,
+          "x1": 1353,
+          "y1": 449
+        },
+        {
+          "text": "NORMAL",
+          "x0": 1433,
+          "y0": 432,
+          "x1": 1545,
+          "y1": 449
+        },
+        {
+          "text": "HARD",
+          "x0": 1631,
+          "y0": 432,
+          "x1": 1705,
+          "y1": 449
+        },
+        {
+          "text": "He fights to stay. Work together to get",
+          "x0": 1218,
+          "y0": 515,
+          "x1": 1755,
+          "y1": 542
+        },
+        {
+          "text": "him out.",
+          "x0": 1218,
+          "y0": 554,
+          "x1": 1334,
+          "y1": 575
+        },
+        {
+          "text": "4 PLAYERS  /  10 MIN",
+          "x0": 1234,
+          "y0": 648,
+          "x1": 1491,
+          "y1": 666
+        },
+        {
+          "text": "START EXTRACTION",
+          "x0": 1243,
+          "y0": 758,
+          "x1": 1540,
+          "y1": 778
+        },
+        {
+          "text": "Waiting for Alex to get ready.",
+          "x0": 1220,
+          "y0": 836,
+          "x1": 1554,
+          "y1": 858
+        },
+        {
+          "text": "LEAVE LOBBY",
+          "x0": 89,
+          "y0": 960,
+          "x1": 291,
+          "y1": 980
+        },
+        {
+          "text": "COPY INVITE CODE",
+          "x0": 1210,
+          "y0": 960,
+          "x1": 1495,
+          "y1": 980
+        }
+      ]
+    },
+    {
+      "id": "03_settings",
+      "png": "screens/03_settings.png",
+      "svg": "screens/03_settings.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "SETTINGS",
+          "x0": 64,
+          "y0": 103,
+          "x1": 363,
+          "y1": 144
+        },
+        {
+          "text": "AUDIO & LANGUAGE",
+          "x0": 96,
+          "y0": 243,
+          "x1": 446,
+          "y1": 266
+        },
+        {
+          "text": "Master volume",
+          "x0": 98,
+          "y0": 328,
+          "x1": 299,
+          "y1": 349
+        },
+        {
+          "text": "80%",
+          "x0": 770,
+          "y0": 328,
+          "x1": 827,
+          "y1": 346
+        },
+        {
+          "text": "Music",
+          "x0": 98,
+          "y0": 433,
+          "x1": 175,
+          "y1": 454
+        },
+        {
+          "text": "50%",
+          "x0": 770,
+          "y0": 433,
+          "x1": 827,
+          "y1": 451
+        },
+        {
+          "text": "NPC voice",
+          "x0": 98,
+          "y0": 538,
+          "x1": 233,
+          "y1": 559
+        },
+        {
+          "text": "90%",
+          "x0": 770,
+          "y0": 538,
+          "x1": 827,
+          "y1": 556
+        },
+        {
+          "text": "Gameplay cues",
+          "x0": 98,
+          "y0": 643,
+          "x1": 307,
+          "y1": 670
+        },
+        {
+          "text": "100%",
+          "x0": 770,
+          "y0": 643,
+          "x1": 844,
+          "y1": 661
+        },
+        {
+          "text": "Language",
+          "x0": 98,
+          "y0": 777,
+          "x1": 231,
+          "y1": 803
+        },
+        {
+          "text": "ENGLISH",
+          "x0": 526,
+          "y0": 771,
+          "x1": 634,
+          "y1": 787
+        },
+        {
+          "text": "COMFORT & ACCESSIBILITY",
+          "x0": 968,
+          "y0": 243,
+          "x1": 1444,
+          "y1": 266
+        },
+        {
+          "text": "Descriptive attack subtitles",
+          "x0": 970,
+          "y0": 330,
+          "x1": 1340,
+          "y1": 357
+        },
+        {
+          "text": "ON",
+          "x0": 1711,
+          "y0": 335,
+          "x1": 1748,
+          "y1": 351
+        },
+        {
+          "text": "Camera shake",
+          "x0": 970,
+          "y0": 422,
+          "x1": 1164,
+          "y1": 443
+        },
+        {
+          "text": "OFF",
+          "x0": 1711,
+          "y0": 427,
+          "x1": 1760,
+          "y1": 443
+        },
+        {
+          "text": "Head bob",
+          "x0": 970,
+          "y0": 514,
+          "x1": 1100,
+          "y1": 535
+        },
+        {
+          "text": "OFF",
+          "x0": 1711,
+          "y0": 519,
+          "x1": 1760,
+          "y1": 535
+        },
+        {
+          "text": "Toggle grab",
+          "x0": 969,
+          "y0": 606,
+          "x1": 1127,
+          "y1": 633
+        },
+        {
+          "text": "ON",
+          "x0": 1711,
+          "y0": 611,
+          "x1": 1748,
+          "y1": 627
+        },
+        {
+          "text": "Profanity filter",
+          "x0": 970,
+          "y0": 698,
+          "x1": 1162,
+          "y1": 725
+        },
+        {
+          "text": "OFF",
+          "x0": 1711,
+          "y0": 703,
+          "x1": 1760,
+          "y1": 719
+        },
+        {
+          "text": "Text size: 100%  /  adjustable",
+          "x0": 969,
+          "y0": 803,
+          "x1": 1335,
+          "y1": 827
+        },
+        {
+          "text": "BACK",
+          "x0": 89,
+          "y0": 954,
+          "x1": 172,
+          "y1": 974
+        },
+        {
+          "text": "APPLY CHANGES",
+          "x0": 1321,
+          "y0": 954,
+          "x1": 1569,
+          "y1": 974
+        }
+      ]
+    },
+    {
+      "id": "04_hud_free",
+      "png": "screens/04_hud_free.png",
+      "svg": "screens/04_hud_free.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "GET HIM OUT",
+          "x0": 90,
+          "y0": 123,
+          "x1": 336,
+          "y1": 147
+        },
+        {
+          "text": "Get him into the van.",
+          "x0": 90,
+          "y0": 169,
+          "x1": 346,
+          "y1": 187
+        },
+        {
+          "text": "08:42",
+          "x0": 1710,
+          "y0": 126,
+          "x1": 1825,
+          "y1": 152
+        },
+        {
+          "text": "LEFT HAND",
+          "x0": 147,
+          "y0": 885,
+          "x1": 273,
+          "y1": 900
+        },
+        {
+          "text": "FREE",
+          "x0": 147,
+          "y0": 922,
+          "x1": 226,
+          "y1": 942
+        },
+        {
+          "text": "Hold to grab",
+          "x0": 147,
+          "y0": 962,
+          "x1": 271,
+          "y1": 981
+        },
+        {
+          "text": "LMB",
+          "x0": 351,
+          "y0": 892,
+          "x1": 399,
+          "y1": 907
+        },
+        {
+          "text": "RIGHT HAND",
+          "x0": 1579,
+          "y0": 885,
+          "x1": 1721,
+          "y1": 900
+        },
+        {
+          "text": "FREE",
+          "x0": 1579,
+          "y0": 922,
+          "x1": 1658,
+          "y1": 942
+        },
+        {
+          "text": "Hold to grab",
+          "x0": 1579,
+          "y0": 962,
+          "x1": 1703,
+          "y1": 981
+        },
+        {
+          "text": "RMB",
+          "x0": 1783,
+          "y0": 892,
+          "x1": 1834,
+          "y1": 907
+        },
+        {
+          "text": "ENERGY",
+          "x0": 662,
+          "y0": 922,
+          "x1": 757,
+          "y1": 937
+        },
+        {
+          "text": "Grip first",
+          "x0": 1100,
+          "y0": 937,
+          "x1": 1188,
+          "y1": 956
+        },
+        {
+          "text": "LMB",
+          "x0": 775,
+          "y0": 647,
+          "x1": 823,
+          "y1": 662
+        },
+        {
+          "text": "Aim at a handle",
+          "x0": 858,
+          "y0": 635,
+          "x1": 1071,
+          "y1": 653
+        }
+      ]
+    },
+    {
+      "id": "05_hud_grab",
+      "png": "screens/05_hud_grab.png",
+      "svg": "screens/05_hud_grab.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "GET HIM OUT",
+          "x0": 90,
+          "y0": 123,
+          "x1": 336,
+          "y1": 147
+        },
+        {
+          "text": "Get him into the van.",
+          "x0": 90,
+          "y0": 169,
+          "x1": 346,
+          "y1": 187
+        },
+        {
+          "text": "08:42",
+          "x0": 1710,
+          "y0": 126,
+          "x1": 1825,
+          "y1": 152
+        },
+        {
+          "text": "LEFT HAND",
+          "x0": 147,
+          "y0": 885,
+          "x1": 273,
+          "y1": 900
+        },
+        {
+          "text": "HOLDING",
+          "x0": 147,
+          "y0": 922,
+          "x1": 292,
+          "y1": 942
+        },
+        {
+          "text": "Left forearm",
+          "x0": 147,
+          "y0": 962,
+          "x1": 270,
+          "y1": 977
+        },
+        {
+          "text": "LMB",
+          "x0": 351,
+          "y0": 892,
+          "x1": 399,
+          "y1": 907
+        },
+        {
+          "text": "RIGHT HAND",
+          "x0": 1579,
+          "y0": 885,
+          "x1": 1721,
+          "y1": 900
+        },
+        {
+          "text": "FREE",
+          "x0": 1579,
+          "y0": 922,
+          "x1": 1658,
+          "y1": 942
+        },
+        {
+          "text": "Hold to grab",
+          "x0": 1579,
+          "y0": 962,
+          "x1": 1703,
+          "y1": 981
+        },
+        {
+          "text": "RMB",
+          "x0": 1783,
+          "y0": 892,
+          "x1": 1834,
+          "y1": 907
+        },
+        {
+          "text": "ENERGY",
+          "x0": 662,
+          "y0": 922,
+          "x1": 757,
+          "y1": 937
+        },
+        {
+          "text": "SHIFT",
+          "x0": 1112,
+          "y0": 937,
+          "x1": 1178,
+          "y1": 952
+        },
+        {
+          "text": "Effort",
+          "x0": 1226,
+          "y0": 937,
+          "x1": 1278,
+          "y1": 951
+        },
+        {
+          "text": "PULL TOGETHER",
+          "x0": 610,
+          "y0": 722,
+          "x1": 849,
+          "y1": 741
+        },
+        {
+          "text": "Q release all  ·  Watch his free hand.",
+          "x0": 610,
+          "y0": 765,
+          "x1": 1045,
+          "y1": 786
+        }
+      ]
+    },
+    {
+      "id": "06_hud_windup",
+      "png": "screens/06_hud_windup.png",
+      "svg": "screens/06_hud_windup.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "GET HIM OUT",
+          "x0": 90,
+          "y0": 123,
+          "x1": 336,
+          "y1": 147
+        },
+        {
+          "text": "Get him into the van.",
+          "x0": 90,
+          "y0": 169,
+          "x1": 346,
+          "y1": 187
+        },
+        {
+          "text": "08:42",
+          "x0": 1710,
+          "y0": 126,
+          "x1": 1825,
+          "y1": 152
+        },
+        {
+          "text": "LEFT HAND",
+          "x0": 147,
+          "y0": 885,
+          "x1": 273,
+          "y1": 900
+        },
+        {
+          "text": "HOLDING",
+          "x0": 147,
+          "y0": 922,
+          "x1": 292,
+          "y1": 942
+        },
+        {
+          "text": "Left forearm",
+          "x0": 147,
+          "y0": 962,
+          "x1": 270,
+          "y1": 977
+        },
+        {
+          "text": "LMB",
+          "x0": 351,
+          "y0": 892,
+          "x1": 399,
+          "y1": 907
+        },
+        {
+          "text": "RIGHT HAND",
+          "x0": 1579,
+          "y0": 885,
+          "x1": 1721,
+          "y1": 900
+        },
+        {
+          "text": "FREE",
+          "x0": 1579,
+          "y0": 922,
+          "x1": 1658,
+          "y1": 942
+        },
+        {
+          "text": "Hold to grab",
+          "x0": 1579,
+          "y0": 962,
+          "x1": 1703,
+          "y1": 981
+        },
+        {
+          "text": "RMB",
+          "x0": 1783,
+          "y0": 892,
+          "x1": 1834,
+          "y1": 907
+        },
+        {
+          "text": "ENERGY",
+          "x0": 662,
+          "y0": 922,
+          "x1": 757,
+          "y1": 937
+        },
+        {
+          "text": "SHIFT",
+          "x0": 1112,
+          "y0": 937,
+          "x1": 1178,
+          "y1": 952
+        },
+        {
+          "text": "Effort",
+          "x0": 1226,
+          "y0": 937,
+          "x1": 1278,
+          "y1": 951
+        },
+        {
+          "text": "PUSH INCOMING",
+          "x0": 1385,
+          "y0": 401,
+          "x1": 1672,
+          "y1": 424
+        },
+        {
+          "text": "Step aside or let go.",
+          "x0": 1385,
+          "y0": 454,
+          "x1": 1647,
+          "y1": 479
+        },
+        {
+          "text": "[preparing a push]  Back up.",
+          "x0": 574,
+          "y0": 755,
+          "x1": 1025,
+          "y1": 782
+        }
+      ]
+    },
+    {
+      "id": "07_hud_fallen",
+      "png": "screens/07_hud_fallen.png",
+      "svg": "screens/07_hud_fallen.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "GET HIM OUT",
+          "x0": 90,
+          "y0": 123,
+          "x1": 336,
+          "y1": 147
+        },
+        {
+          "text": "Get him into the van.",
+          "x0": 90,
+          "y0": 169,
+          "x1": 346,
+          "y1": 187
+        },
+        {
+          "text": "08:42",
+          "x0": 1710,
+          "y0": 126,
+          "x1": 1825,
+          "y1": 152
+        },
+        {
+          "text": "LEFT HAND",
+          "x0": 147,
+          "y0": 885,
+          "x1": 273,
+          "y1": 900
+        },
+        {
+          "text": "RELEASED",
+          "x0": 147,
+          "y0": 922,
+          "x1": 309,
+          "y1": 942
+        },
+        {
+          "text": "Getting up",
+          "x0": 147,
+          "y0": 962,
+          "x1": 253,
+          "y1": 981
+        },
+        {
+          "text": "LMB",
+          "x0": 351,
+          "y0": 892,
+          "x1": 399,
+          "y1": 907
+        },
+        {
+          "text": "RIGHT HAND",
+          "x0": 1579,
+          "y0": 885,
+          "x1": 1721,
+          "y1": 900
+        },
+        {
+          "text": "RELEASED",
+          "x0": 1579,
+          "y0": 922,
+          "x1": 1741,
+          "y1": 942
+        },
+        {
+          "text": "Getting up",
+          "x0": 1579,
+          "y0": 962,
+          "x1": 1685,
+          "y1": 981
+        },
+        {
+          "text": "RMB",
+          "x0": 1783,
+          "y0": 892,
+          "x1": 1834,
+          "y1": 907
+        },
+        {
+          "text": "ENERGY",
+          "x0": 662,
+          "y0": 922,
+          "x1": 757,
+          "y1": 937
+        },
+        {
+          "text": "RECOVERING",
+          "x0": 1100,
+          "y0": 937,
+          "x1": 1233,
+          "y1": 952
+        },
+        {
+          "text": "FLOOR INSPECTION",
+          "x0": 660,
+          "y0": 418,
+          "x1": 1130,
+          "y1": 450
+        },
+        {
+          "text": "Getting up automatically...",
+          "x0": 575,
+          "y0": 500,
+          "x1": 959,
+          "y1": 528
+        },
+        {
+          "text": "You will regain control shortly.",
+          "x0": 574,
+          "y0": 603,
+          "x1": 932,
+          "y1": 626
+        }
+      ]
+    },
+    {
+      "id": "08_pause_online",
+      "png": "screens/08_pause_online.png",
+      "svg": "screens/08_pause_online.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "TAKE A BREATHER",
+          "x0": 64,
+          "y0": 104,
+          "x1": 614,
+          "y1": 143
+        },
+        {
+          "text": "ONLINE MATCH CONTINUES",
+          "x0": 616,
+          "y0": 282,
+          "x1": 954,
+          "y1": 298
+        },
+        {
+          "text": "Your friends and the uncle are still moving.",
+          "x0": 599,
+          "y0": 348,
+          "x1": 1243,
+          "y1": 377
+        },
+        {
+          "text": "RESUME",
+          "x0": 625,
+          "y0": 487,
+          "x1": 751,
+          "y1": 507
+        },
+        {
+          "text": "SETTINGS",
+          "x0": 625,
+          "y0": 613,
+          "x1": 775,
+          "y1": 633
+        },
+        {
+          "text": "LEAVE MATCH",
+          "x0": 625,
+          "y0": 739,
+          "x1": 835,
+          "y1": 759
+        }
+      ]
+    },
+    {
+      "id": "09_result_success",
+      "png": "screens/09_result_success.png",
+      "svg": "screens/09_result_success.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "UNCLE EXTRACTED",
+          "x0": 64,
+          "y0": 131,
+          "x1": 896,
+          "y1": 190
+        },
+        {
+          "text": "He is in the van. Somehow.",
+          "x0": 68,
+          "y0": 227,
+          "x1": 503,
+          "y1": 251
+        },
+        {
+          "text": "EXTRACTION TIME",
+          "x0": 112,
+          "y0": 382,
+          "x1": 358,
+          "y1": 400
+        },
+        {
+          "text": "04:38",
+          "x0": 112,
+          "y0": 456,
+          "x1": 379,
+          "y1": 519
+        },
+        {
+          "text": "TEAM FALLS",
+          "x0": 687,
+          "y0": 382,
+          "x1": 851,
+          "y1": 400
+        },
+        {
+          "text": "7",
+          "x0": 687,
+          "y0": 457,
+          "x1": 745,
+          "y1": 518
+        },
+        {
+          "text": "ESCAPES",
+          "x0": 1262,
+          "y0": 382,
+          "x1": 1383,
+          "y1": 400
+        },
+        {
+          "text": "2",
+          "x0": 1262,
+          "y0": 456,
+          "x1": 1320,
+          "y1": 518
+        },
+        {
+          "text": "HUMAN DOORSTOP",
+          "x0": 112,
+          "y0": 609,
+          "x1": 439,
+          "y1": 631
+        },
+        {
+          "text": "Kept the exit open for the crew.",
+          "x0": 112,
+          "y0": 669,
+          "x1": 538,
+          "y1": 696
+        },
+        {
+          "text": "RETRY SAME SETUP",
+          "x0": 89,
+          "y0": 882,
+          "x1": 388,
+          "y1": 902
+        },
+        {
+          "text": "NEW SETUP",
+          "x0": 696,
+          "y0": 882,
+          "x1": 874,
+          "y1": 902
+        },
+        {
+          "text": "BACK TO LOBBY",
+          "x0": 1305,
+          "y0": 882,
+          "x1": 1546,
+          "y1": 902
+        }
+      ]
+    },
+    {
+      "id": "10_result_timeout",
+      "png": "screens/10_result_timeout.png",
+      "svg": "screens/10_result_timeout.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "CLOSING TIME",
+          "x0": 64,
+          "y0": 131,
+          "x1": 689,
+          "y1": 190
+        },
+        {
+          "text": "The ride left. He did not.",
+          "x0": 67,
+          "y0": 227,
+          "x1": 458,
+          "y1": 251
+        },
+        {
+          "text": "EXTRACTION TIME",
+          "x0": 112,
+          "y0": 382,
+          "x1": 358,
+          "y1": 400
+        },
+        {
+          "text": "--:--",
+          "x0": 112,
+          "y0": 472,
+          "x1": 285,
+          "y1": 518
+        },
+        {
+          "text": "TEAM FALLS",
+          "x0": 687,
+          "y0": 382,
+          "x1": 851,
+          "y1": 400
+        },
+        {
+          "text": "12",
+          "x0": 687,
+          "y0": 456,
+          "x1": 804,
+          "y1": 518
+        },
+        {
+          "text": "ESCAPES",
+          "x0": 1262,
+          "y0": 382,
+          "x1": 1383,
+          "y1": 400
+        },
+        {
+          "text": "4",
+          "x0": 1262,
+          "y0": 457,
+          "x1": 1320,
+          "y1": 518
+        },
+        {
+          "text": "NEXT TRY",
+          "x0": 112,
+          "y0": 609,
+          "x1": 277,
+          "y1": 631
+        },
+        {
+          "text": "Wait for his recovery, clear the route and pull together.",
+          "x0": 112,
+          "y0": 669,
+          "x1": 856,
+          "y1": 696
+        },
+        {
+          "text": "RETRY SAME SETUP",
+          "x0": 89,
+          "y0": 882,
+          "x1": 388,
+          "y1": 902
+        },
+        {
+          "text": "NEW SETUP",
+          "x0": 696,
+          "y0": 882,
+          "x1": 874,
+          "y1": 902
+        },
+        {
+          "text": "BACK TO LOBBY",
+          "x0": 1305,
+          "y0": 882,
+          "x1": 1546,
+          "y1": 902
+        }
+      ]
+    },
+    {
+      "id": "11_host_disconnected",
+      "png": "screens/11_host_disconnected.png",
+      "svg": "screens/11_host_disconnected.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "THE HOST LEFT",
+          "x0": 553,
+          "y0": 425,
+          "x1": 1005,
+          "y1": 465
+        },
+        {
+          "text": "This match has ended. You can return to the menu and",
+          "x0": 554,
+          "y0": 508,
+          "x1": 1354,
+          "y1": 530
+        },
+        {
+          "text": "start another one.",
+          "x0": 555,
+          "y0": 549,
+          "x1": 818,
+          "y1": 571
+        },
+        {
+          "text": "BACK TO MENU",
+          "x0": 580,
+          "y0": 694,
+          "x1": 812,
+          "y1": 714
+        }
+      ]
+    },
+    {
+      "id": "12_tutorial",
+      "png": "screens/12_tutorial.png",
+      "svg": "screens/12_tutorial.svg",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "status": "STATIC_DESIGN_NOT_GAMEPLAY",
+      "text_bounds": [
+        {
+          "text": "UNCLE EXTRACTION",
+          "x0": 64,
+          "y0": 29,
+          "x1": 333,
+          "y1": 47
+        },
+        {
+          "text": "DESIGN MOCKUP / NO GAMEPLAY",
+          "x0": 1390,
+          "y0": 34,
+          "x1": 1782,
+          "y1": 51
+        },
+        {
+          "text": "UI DESIGN v0.1  |  Illustrative values  |  English layout",
+          "x0": 64,
+          "y0": 1034,
+          "x1": 574,
+          "y1": 1053
+        },
+        {
+          "text": "GET HIM OUT. TOGETHER.",
+          "x0": 64,
+          "y0": 103,
+          "x1": 842,
+          "y1": 144
+        },
+        {
+          "text": "01 / GRAB",
+          "x0": 104,
+          "y0": 416,
+          "x1": 305,
+          "y1": 446
+        },
+        {
+          "text": "Use either hand to grab a",
+          "x0": 104,
+          "y0": 499,
+          "x1": 489,
+          "y1": 528
+        },
+        {
+          "text": "forearm, ankle or clothing",
+          "x0": 104,
+          "y0": 541,
+          "x1": 493,
+          "y1": 570
+        },
+        {
+          "text": "handle.",
+          "x0": 104,
+          "y0": 583,
+          "x1": 216,
+          "y1": 606
+        },
+        {
+          "text": "LMB  /  RMB",
+          "x0": 120,
+          "y0": 742,
+          "x1": 267,
+          "y1": 760
+        },
+        {
+          "text": "02 / WATCH",
+          "x0": 711,
+          "y0": 416,
+          "x1": 944,
+          "y1": 446
+        },
+        {
+          "text": "He telegraphs every attack.",
+          "x0": 711,
+          "y0": 499,
+          "x1": 1130,
+          "y1": 528
+        },
+        {
+          "text": "Step aside or release before he",
+          "x0": 711,
+          "y0": 541,
+          "x1": 1181,
+          "y1": 570
+        },
+        {
+          "text": "hits.",
+          "x0": 711,
+          "y0": 583,
+          "x1": 775,
+          "y1": 606
+        },
+        {
+          "text": "SPACE  /  Q",
+          "x0": 727,
+          "y0": 742,
+          "x1": 863,
+          "y1": 761
+        },
+        {
+          "text": "03 / MOVE",
+          "x0": 1318,
+          "y0": 416,
+          "x1": 1524,
+          "y1": 446
+        },
+        {
+          "text": "Pull during recovery. Use the",
+          "x0": 1318,
+          "y0": 499,
+          "x1": 1748,
+          "y1": 528
+        },
+        {
+          "text": "cart and clear a route to the",
+          "x0": 1318,
+          "y0": 541,
+          "x1": 1742,
+          "y1": 564
+        },
+        {
+          "text": "van.",
+          "x0": 1318,
+          "y0": 590,
+          "x1": 1383,
+          "y1": 606
+        },
+        {
+          "text": "WASD  /  E",
+          "x0": 1334,
+          "y0": 742,
+          "x1": 1462,
+          "y1": 760
+        },
+        {
+          "text": "BACK",
+          "x0": 89,
+          "y0": 949,
+          "x1": 172,
+          "y1": 969
+        },
+        {
+          "text": "Practice solo before joining your crew.",
+          "x0": 665,
+          "y0": 950,
+          "x1": 1198,
+          "y1": 977
+        }
+      ]
+    }
+  ]
+}

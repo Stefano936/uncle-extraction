@@ -1,0 +1,148 @@
+{
+  "kit_version": "0.1",
+  "date": "2026-11-15",
+  "purpose": "Supplement to original design documentation",
+  "self_excluded": true,
+  "files": [
+    {
+      "path": "GUIA_DEL_KIT_3D.pdf",
+      "bytes": 3517210,
+      "sha256": "5c55e37a1f3d5d7305d35ee52692fb4a01cdcd2e21dd37b9df03da4c11b84cc1"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4887,
+      "sha256": "ac334499f04fb7f56e33c044c52e2fea4ee0f65cfcb906f8a1e2399e7ce6701b"
+    },
+    {
+      "path": "claude/INTEGRAR_KIT.md",
+      "bytes": 3643,
+      "sha256": "d66ead212c3fd5a2b4c348d220cd91861469c7c8059219e2aca442e703f4e6d4"
+    },
+    {
+      "path": "data/asset_metadata.json",
+      "bytes": 5499,
+      "sha256": "ee79351821a2c2f791a179e9eb4d770fe6433ad6c4d2d01330cdce53c505280f"
+    },
+    {
+      "path": "data/validation_report.json",
+      "bytes": 4351,
+      "sha256": "19be2accc02f682703ff4b3c3d4ec6c22f1a5d9336e7283b7e8e09a562f03076"
+    },
+    {
+      "path": "models/bar_blockout_shell.fbx",
+      "bytes": 35244,
+      "sha256": "4ace2a6fb76c1825a6954e0be58e3a637d3735bd81922fb227733b61af5c9656"
+    },
+    {
+      "path": "models/bar_blockout_shell.glb",
+      "bytes": 11312,
+      "sha256": "867192d06e9f2152fd94eec54f5b361de1c28e885618e6ada72ad317e45a04ac"
+    },
+    {
+      "path": "models/bar_counter.fbx",
+      "bytes": 22252,
+      "sha256": "28c9b40f5eef69303747475c7118083364f9ff7158b114a3d3b5398756da6b94"
+    },
+    {
+      "path": "models/bar_counter.glb",
+      "bytes": 8760,
+      "sha256": "a96d208f7b093aa6af3cd6c7b8336efb7640196afac8afdeff252dead4636874"
+    },
+    {
+      "path": "models/exit_door.fbx",
+      "bytes": 23900,
+      "sha256": "024732dd2028dac56decec94109e2600b2ffad60f895025f9a7d0e15814ab774"
+    },
+    {
+      "path": "models/exit_door.glb",
+      "bytes": 18336,
+      "sha256": "569f288f46c59866a3f003fc2401d4948a4086f134438c45b1fc51f92ebb0902"
+    },
+    {
+      "path": "models/passenger_van.fbx",
+      "bytes": 62300,
+      "sha256": "272c4b88db5eab05a7828e0911039886ae61b3fb6270df7ad754a2fbd2a17257"
+    },
+    {
+      "path": "models/passenger_van.glb",
+      "bytes": 46104,
+      "sha256": "c4b83777e066db28a64416d20c4f9f4ff5463b7ad09b4f7876076fee36d29b47"
+    },
+    {
+      "path": "models/stool.fbx",
+      "bytes": 31468,
+      "sha256": "f7bfd178ffe7463c564729cb71bf4ec11882a1a27cb9b252789c10031ec2fbd4"
+    },
+    {
+      "path": "models/stool.glb",
+      "bytes": 13552,
+      "sha256": "a413e37d5718ce804a2ff7d0316a1a3e108451b6383c0978a77b1d452f916ce0"
+    },
+    {
+      "path": "models/table.fbx",
+      "bytes": 27724,
+      "sha256": "2e40983922fe9e4b98b71c42389b2e59c01c18506b297b5f6a32cb34f69857d6"
+    },
+    {
+      "path": "models/table.glb",
+      "bytes": 11096,
+      "sha256": "bdf6398b8b49b31ca96392ccf08f9416e871e43dcbe782b4711babdd6b9f995d"
+    },
+    {
+      "path": "models/transport_cart.fbx",
+      "bytes": 40636,
+      "sha256": "9a9dccb10b8e0dc028f1d4757db353c32e21dfd7c14f8af03e5ffbb99a612221"
+    },
+    {
+      "path": "models/transport_cart.glb",
+      "bytes": 27332,
+      "sha256": "bc2b58243238ce94b72fe2d007fafcfde806492e9d72ffefd4ebdd662bf47891"
+    },
+    {
+      "path": "models/uncle_prototype.fbx",
+      "bytes": 491116,
+      "sha256": "2bfd679c53610d6a37ad0f203631d0a38d59398a0766b07924ec1c8a6fe45cad"
+    },
+    {
+      "path": "models/uncle_prototype.glb",
+      "bytes": 506220,
+      "sha256": "e21f185caf3ef5f9ef9ca6ca9b9b2b70cb6dd933c7b84793ec59e2567d33e9e3"
+    },
+    {
+      "path": "previews/01_uncle_actual_mesh.png",
+      "bytes": 1457945,
+      "sha256": "84932ed12e5268e1c97dc3861d804e9c16e94c68c6a15d3917d6525b4b91a6d0"
+    },
+    {
+      "path": "previews/02_bar_actual_assembly.png",
+      "bytes": 2128878,
+      "sha256": "44c767d7dcc029b8708c5e81f1e76236963eca708063ea531f2b7bd87d6e9d07"
+    },
+    {
+      "path": "previews/03_actual_animation_poses.png",
+      "bytes": 1767182,
+      "sha256": "b3100b31532bdebc41b097e48f3f54d8b01d2d288be8696bf9395fe2223d3b8a"
+    },
+    {
+      "path": "source/Uncle_Extraction_Blockout.blend",
+      "bytes": 1669104,
+      "sha256": "b7bbf11e48f69e75a47333eefa61b13cb6bb2e77bea48852b7f3139c640b14ac"
+    },
+    {
+      "path": "source/generate_kit.py",
+      "bytes": 19702,
+      "sha256": "86cc41d5ff45053b0bfd03451385e716bc922aa36516acb1e68328d83742c6a5"
+    },
+    {
+      "path": "source/render_pose_preview.py",
+      "bytes": 1613,
+      "sha256": "15c73b2f936ebe0e848556f833625e92ea1398fe8c6186288826ffdb3ccc29b9"
+    },
+    {
+      "path": "source/validate_exports.py",
+      "bytes": 4354,
+      "sha256": "5e7344c19f2cb768de2a4407623b38e3ee0d01f63eea849209c4084e823bd5a5"
+    }
+  ]
+}

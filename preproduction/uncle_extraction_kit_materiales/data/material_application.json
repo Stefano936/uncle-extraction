@@ -1,0 +1,427 @@
+{
+  "status": "LOOKDEV_NOT_UNITY_TESTED",
+  "blender_version": "4.3.2",
+  "source_scene": "sibling 3D kit or --scene argument",
+  "color_maps_only": true,
+  "new_gameplay_logic": false,
+  "normal_roughness_height_maps_delivered": false,
+  "materials": [
+    {
+      "id": "MAT_Wood_Boards",
+      "file": "01_wood_basecolor.png",
+      "tile_m": 1.0,
+      "roughness": 0.78,
+      "wrap": "MIRROR",
+      "role": "tabletops and counter surfaces"
+    },
+    {
+      "id": "MAT_Floor_Tiles",
+      "file": "02_floor_basecolor.png",
+      "tile_m": 2.0,
+      "roughness": 0.82,
+      "wrap": "REPEAT",
+      "role": "interior bar floor only"
+    },
+    {
+      "id": "MAT_Wall_Taupe",
+      "file": "03_wall_basecolor.png",
+      "tile_m": 2.0,
+      "roughness": 0.95,
+      "wrap": "MIRROR",
+      "role": "bar walls"
+    },
+    {
+      "id": "MAT_Shirt_Fabric",
+      "file": "04_fabric_basecolor.png",
+      "tile_m": 0.5,
+      "roughness": 0.9,
+      "wrap": "MIRROR",
+      "role": "burgundy shirt only"
+    }
+  ],
+  "uv": [
+    {
+      "asset": "uncle_prototype",
+      "mesh": "Uncle_Prototype_Mesh",
+      "loops": 8280,
+      "textured_polygons": 106,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "stool",
+      "mesh": "Foot_Ring",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "stool",
+      "mesh": "Leg",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "stool",
+      "mesh": "Leg.001",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "stool",
+      "mesh": "Leg.002",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "stool",
+      "mesh": "Leg.003",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "stool",
+      "mesh": "Seat",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "table",
+      "mesh": "TableLeg",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "table",
+      "mesh": "TableLeg.001",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "table",
+      "mesh": "TableLeg.002",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "table",
+      "mesh": "TableLeg.003",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "table",
+      "mesh": "TableTop",
+      "loops": 96,
+      "textured_polygons": 26,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_counter",
+      "mesh": "CounterBody",
+      "loops": 96,
+      "textured_polygons": 26,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_counter",
+      "mesh": "CounterTop",
+      "loops": 96,
+      "textured_polygons": 26,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "CartDeck",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "HandleBar",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "HandleUpright",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "HandleUpright.001",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "Wheel",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "Wheel.001",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "Wheel.002",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "transport_cart",
+      "mesh": "Wheel.003",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "exit_door",
+      "mesh": "DoorKnob",
+      "loops": 360,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "exit_door",
+      "mesh": "DoorPanel",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Cabin",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Chassis",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "PassengerBench",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "RearDoorPanel",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "RearDoorPanel.001",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "RearFloor",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "RearSide",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "RearSide.001",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Roof",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Wheel.004",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Wheel.005",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Wheel.006",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Wheel.007",
+      "loops": 72,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "passenger_van",
+      "mesh": "Windshield",
+      "loops": 96,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "mesh": "BackWall",
+      "loops": 24,
+      "textured_polygons": 6,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "mesh": "FrontWall_Left",
+      "loops": 24,
+      "textured_polygons": 6,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "mesh": "FrontWall_Right",
+      "loops": 24,
+      "textured_polygons": 6,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "mesh": "InteriorFloor",
+      "loops": 24,
+      "textured_polygons": 6,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "mesh": "Sidewalk",
+      "loops": 24,
+      "textured_polygons": 0,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "mesh": "SideWall",
+      "loops": 24,
+      "textured_polygons": 6,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "mesh": "SideWall.001",
+      "loops": 24,
+      "textured_polygons": 6,
+      "method": "Root-local planar projection by dominant face; prototype UV, not hand-authored production unwrap"
+    }
+  ],
+  "fbx_exports": [
+    {
+      "asset": "uncle_prototype",
+      "file": "models/uncle_prototype_material_variant.fbx",
+      "texture_materials": [
+        "MAT_Shirt_Fabric"
+      ],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    },
+    {
+      "asset": "stool",
+      "file": "models/stool_material_variant.fbx",
+      "texture_materials": [],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    },
+    {
+      "asset": "table",
+      "file": "models/table_material_variant.fbx",
+      "texture_materials": [
+        "MAT_Wood_Boards"
+      ],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    },
+    {
+      "asset": "bar_counter",
+      "file": "models/bar_counter_material_variant.fbx",
+      "texture_materials": [
+        "MAT_Wood_Boards"
+      ],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    },
+    {
+      "asset": "transport_cart",
+      "file": "models/transport_cart_material_variant.fbx",
+      "texture_materials": [],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    },
+    {
+      "asset": "exit_door",
+      "file": "models/exit_door_material_variant.fbx",
+      "texture_materials": [],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    },
+    {
+      "asset": "passenger_van",
+      "file": "models/passenger_van_material_variant.fbx",
+      "texture_materials": [],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    },
+    {
+      "asset": "bar_blockout_shell",
+      "file": "models/bar_blockout_shell_material_variant.fbx",
+      "texture_materials": [
+        "MAT_Floor_Tiles",
+        "MAT_Wall_Taupe"
+      ],
+      "purpose": "UV/material prototype variant; no gameplay components"
+    }
+  ],
+  "glb_review_file": "models/scene_material_review.glb",
+  "source_blend": "source/Material_Lookdev.blend",
+  "notes": [
+    "Four generated unedited base-color maps; source files are 1254x1254, not 2048.",
+    "Mirror is a shader wrapping choice, not proof that original edge pixels are periodic.",
+    "Floor uses Repeat to preserve checkerboard parity.",
+    "UV scale encodes meters per repeat; use material tiling 1,1 with these FBX variants.",
+    "Tiny wood legs remain flat color; avoid board seams painted across thin legs."
+  ]
+}
