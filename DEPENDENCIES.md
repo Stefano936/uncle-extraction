@@ -22,3 +22,18 @@ Versionar `UnityProject/ProjectSettings/ProjectVersion.txt`, `UnityProject/Packa
 - PC `msi`, Windows x64. Detectados por nombre de carpeta: Git para Windows, .NET (`dotnet`), JetBrains, VS Code, Docker, WSL.
 - **Unity Hub / Editor: no detectados** en `C:\Program Files` ni en AppData. Puede estar en otro disco; confirmarlo al iniciar M0.
 - Git LFS: no disponible en la VM de Cowork; no comprobado en Windows. No se usa todavía.
+
+## Fijado en M0 (2026-11-15, comprobado)
+
+| Componente | Versión | Evidencia |
+| --- | --- | --- |
+| SO | Windows 11 Home 10.0.26200, x64; GPU RTX 3070 Ti Laptop | Log de la build. |
+| Unity Editor | 6000.3.28f1 (Unity 6.3 LTS), `C:\Program Files\Unity\Hub\Editor\6000.3.28f1` | `ProjectSettings/ProjectVersion.txt`. |
+| Módulos | Windows Mono (incluido), Windows Build Support IL2CPP | `unity editors -i`. IL2CPP sin probar (falta VS C++). |
+| Unity Hub / CLI | 3.22.6 / 1.0.0 (winget `Unity.UnityHub`, `Unity.CLI`) | winget. |
+| Licencia | Unity Personal activa | `unity license`. |
+| Input System | 1.20.1 (manejo de entrada: ambos) | `Packages/manifest.json`. |
+| Test Framework | 1.6.0 (NUnit 2.0.5) | Ídem. |
+| uGUI | 2.0.0 | Ídem. |
+| Render | Built-in (URP pendiente) | Decisión M1. |
+| Red | Sin instalar (M2) | — |

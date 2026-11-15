@@ -1,12 +1,48 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-15 (Cowork, sesión 2: entorno + código M1).
+Última actualización: 2026-11-15 (Claude Code local, sesión 3: integración Git + M0/M1 compilado).
 
 ## Hito actual
 
-M0 + M1 — código de PhysicsLab **escrito, sin compilar ni ejecutar**. Falta que Stefano ejecute `tools/windows/setup_entorno.cmd` (instalaciones, GitHub, Unity, licencia) y luego `tools/windows/unity_m0_m1.cmd`.
+M0 + M1 — PhysicsLab **compila, pasa las pruebas automáticas y tiene build Windows que arranca**. Falta jugarlo a mano (no hubo control de pantalla en la sesión) y verificar un intento individual completo.
 
-## Código M1 implementado (no compilado todavía)
+## Niveles de verificación (2026-11-15, sesión 3)
+
+| Nivel | Estado | Evidencia |
+| --- | --- | --- |
+| Código escrito | OK | `UnityProject/Assets/Game/` (sin cambios de C# en esta sesión). |
+| Compilación C# | OK, 0 errores, 0 warnings | Unity 6000.3.28f1 batch; `.local-setup/logs/unity/01b_bootstrap.log` (local, no versionado). |
+| Escena PhysicsLab | Generada | `PhysicsLabBuilder.BuildFromCommandLine` → `Assets/Game/Scenes/PhysicsLab.unity`, 10 sockets. |
+| Pruebas EditMode | 9/9 PASS | `03_editmode.xml`. |
+| Pruebas PlayMode | 4/4 PASS (12 s) | `04_playmode.xml`: 8 agarres + 10 reinicios sin huérfanos; arrastre (tío movido >0,3 m); empujón derriba, suelta manos y levanta con invulnerabilidad; extracción asegura. Ojo: el cerebro del NPC está apagado y la extracción teletransporta al tío; no es un intento completo. |
+| Build Windows (Mono, x64) | OK | `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (~92 MB, no versionado), 0 errores, 54 s. |
+| Arranque de la build | OK | 20 s en ventana 1280×720: D3D11 (RTX 3070 Ti), PhysX 4.1.2, Input System inicializado, sin excepciones (`06_build_smoke.log`). |
+| Jugado a mano / intento individual completo | NOT_RUN | Sin herramientas de control de pantalla en la sesión. |
+| IL2CPP | NOT_RUN | Módulo instalado; falta Visual Studio con C++. |
+| Red | NOT_RUN | M2. |
+
+## Comandos verificados (Git Bash, desde `UnityProject/`)
+
+```
+U="C:/Program Files/Unity/Hub/Editor/6000.3.28f1/Editor/Unity.exe"
+"$U" -batchmode -nographics -projectPath . -logFile <log> -executeMethod UncleExtraction.EditorTools.ProjectBootstrap.Run
+"$U" -batchmode -nographics -quit -projectPath . -logFile <log> -executeMethod UncleExtraction.EditorTools.PhysicsLabBuilder.BuildFromCommandLine
+"$U" -batchmode -nographics -projectPath . -logFile <log> -runTests -testPlatform EditMode -testResults <xml>
+"$U" -batchmode -nographics -projectPath . -logFile <log> -runTests -testPlatform PlayMode -testResults <xml>
+"$U" -batchmode -nographics -quit -projectPath . -logFile <log> -executeMethod UncleExtraction.EditorTools.BuildTools.BuildWindows -ueBackend Mono -ueOut ../Builds/PhysicsLab
+```
+
+`tools/windows/unity_m0_m1.cmd` hace lo mismo (busca `6000.3.*`).
+
+## Cambios de esta sesión
+
+- Historias unidas: los 4 commits de Cowork (Descargas) + commit inicial de GitHub, merge `21021fc` (único conflicto `README.md`: se conservó el ampliado). Sin force push; la carpeta de Descargas queda intacta como respaldo.
+- Herramientas instaladas (winget oficial): Unity Hub 3.22.6, Unity CLI 1.0.0, editor 6000.3.28f1 + Windows Build Support (IL2CPP). Licencia Unity Personal activa (la activó Stefano). `gh` ya estaba autenticado.
+- Corrección: `ProjectBootstrap` no podía correr porque los asmdef de pruebas no compilaban sin Test Framework (huevo y gallina). Se fijaron los paquetes directamente en `Packages/manifest.json`. Se quitaron paquetes por defecto no usados (purchasing, analytics, collab-proxy, 2D, XR helpers) y el `Assets/Resources/BillingMode.json` que dejó purchasing.
+- `.gitattributes`: LF para json/asmdef/physicMaterial/ProjectVersion de Unity.
+- Commit `bcc8f9b` (proyecto Unity, escena, settings, .meta).
+
+## Código M1 implementado
 
 `UnityProject/Assets/Game/` (asmdefs Runtime, Editor, Tests):
 
@@ -20,66 +56,28 @@ M0 + M1 — código de PhysicsLab **escrito, sin compilar ni ejecutar**. Falta q
 
 Decisiones y simplificaciones: ver `docs/DECISIONES_IMPLEMENTACION.md` (2026-11-15, M1).
 
-## Ubicación y versionado
-
-- Carpeta de trabajo: `C:\Users\stuff\Downloads\UNCLE_EXTRACTION_REPOSITORIO_Y_CLAUDE_v1\uncle-extraction` (raíz del repositorio; no hay carpetas `uncle-extraction` anidadas).
-- Git inicializado localmente en rama `main` con un commit de la entrega completa. **Remoto todavía no vinculado**: el repositorio privado `Stefano936/uncle-extraction` ya tiene un commit con un README inicial y debe unirse con los pasos de la sección "Vincular GitHub".
-- Sin Git LFS por ahora: el archivo más grande pesa 19,3 MB (`ATLAS_INTERFAZ.pdf`), todo el contenido ~115 MB. Ver `docs/DECISIONES_IMPLEMENTACION.md`.
-
-## Estado comprobado (2026-11-15)
-
-| Comprobación | Resultado | Evidencia |
-| --- | --- | --- |
-| Acceso a Google Drive | OK | Carpeta de entrega listada; contiene la entrega ya descomprimida (no hay ZIP en Drive). |
-| Acceso a la carpeta local | OK | Lectura/escritura en la carpeta de arriba. |
-| Integridad local | OK | 214/214 archivos de `ENTREGA_SHA256.json` presentes con SHA-256 idéntico; único extra: el propio manifiesto. |
-| Acceso a GitHub | BLOQUEADO | Ni el entorno en la nube ni la VM local tienen credenciales/ruta al repo privado (403). No se pudo clonar ni comparar el remoto. |
-| Validador de catálogos (`preproduction/uncle_extraction/tools/validate_spec.py`) | OK | 11 estados, 60 líneas de diálogo, 79 assets, 48 tareas, 72 casos QA. No es prueba de juego. |
-| Unity instalado | NO DETECTADO | No hay `Unity`/`Unity Hub` en `C:\Program Files` ni carpeta `UnityHub` en AppData. Sí hay Git para Windows, .NET, JetBrains, VS Code. |
-| GitHub CLI | NO DETECTADO | Sin carpeta `GitHub CLI` en Program Files. |
-| Acceso de Claude a la PC (Cowork) | PARCIAL | Lectura/escritura de esta carpeta desde una VM Linux; sin shell de Windows. Control de pantalla disponible pero sin escritura en terminales ni UAC. Por eso las instalaciones van en scripts que ejecuta Stefano. |
-
-Las verificaciones de juego siguen sin ejecutarse:
-
-| Verificación | Estado |
-| --- | --- |
-| Importación en Unity / compilación C# | NOT_RUN — código escrito; solo revisión manual (sin compilador disponible en la sesión). |
-| Laboratorio en Play / build Windows | NOT_RUN — pendiente M1. |
-| Host y cliente / internet | NOT_RUN — pendiente M2 / M4. |
-| Playtest de diversión | NOT_RUN. |
-
 ## Faltantes y contradicciones detectadas
 
-- **Unity 6.3 LTS no instalado** (bloquea M0). Ver `DEPENDENCIES.md`.
 - `preproduction/uncle_extraction/data/asset_manifest.csv` marca todos los modelos como `pending/TBD`, pero el kit 3D entregó prototipos de 8 de ellos (bar shell, barra, puerta, camioneta, banqueta, mesa, carrito, tío). El README del kit pide registrar «prototipo entregado / producción pendiente». No se editó la fuente original; actualizar el estado al importar en Unity.
 - Sin modelo todavía (usar primitivas en PhysicsLab): cuerpo compartido del jugador, brazos en primera persona, marco de puerta, vaso señuelo, vereda. Audio: todo pendiente (P1, no bloquea M1).
 - Texturas: solo Base Color, 1254 px (los prompts pedían 2048). Sin normal/roughness/AO.
 - Todo el arte entregado es **prototipo/placeholder**; el arte conceptual (`preproduction/uncle_extraction/art/`) es solo referencia de dirección final. Los GLB no son importables por Unity sin paquete extra: usar FBX.
 - El kit no trae ragdoll funcional ni triggers: `Extraction_Volume` y sockets son marcadores.
-- `00_EMPEZAR_AQUI.md` y `docs/GUIA_GITHUB.md` suponen clonar primero y copiar; en la práctica se inicializó Git en la carpeta extraída. Para vincular, seguir la sección siguiente.
 - `ENTREGA_SHA256.json` es una foto del empaquetado: `.gitignore`, `.gitattributes`, `PROGRESS.md`, `DEPENDENCIES.md` y `docs/DECISIONES_IMPLEMENTACION.md` cambiaron después a propósito.
+- `00_EMPEZAR_AQUI.md` y `docs/GUIA_GITHUB.md` describen la vinculación con GitHub, ya realizada (merge `21021fc`); quedan como historia.
 
-## Vincular GitHub (lo hace Stefano, una sola vez)
+## Ubicación y versionado
 
-En PowerShell o Git Bash, dentro de la carpeta de trabajo:
-
-```bash
-git remote add origin https://github.com/Stefano936/uncle-extraction.git
-git fetch origin
-git merge origin/main --allow-unrelated-histories -X ours -m "Merge initial GitHub README"
-git push -u origin main
-```
-
-`-X ours` conserva el README ampliado local si choca con el README inicial. Revisar `git log --oneline` antes del push. Sin force push. Si el autor del commit inicial no es el deseado: `git commit --amend --reset-author --no-edit` antes del push.
+- Carpeta principal: `C:\Users\stuff\OneDrive\Escritorio\uncle-extraction`; `origin` = `Stefano936/uncle-extraction` (privado), rama `main`.
+- OneDrive sincroniza `UnityProject/Library` (ignorado por Git, pero pesado). Recomendado excluirlo de OneDrive, o mover el clon fuera de OneDrive si aparecen bloqueos de archivos.
+- Sin Git LFS (ver `docs/DECISIONES_IMPLEMENTACION.md`).
 
 ## Próxima acción exacta
 
-1. Stefano: doble clic en `tools\windows\setup_entorno.cmd` (instala GitHub CLI, Unity Hub, Unity CLI y Unity 6.3 LTS + IL2CPP; inicia sesión en GitHub y Unity en el navegador; hace `fetch` sin mezclar). Activar la licencia Personal en Unity Hub.
-2. Claude: leer `.local-setup/logs/`, integrar `origin/main` resolviendo conflictos uno por uno, commit. Stefano: `tools\windows\subir_cambios.cmd` (push sin force).
-3. Stefano: `tools\windows\unity_m0_m1.cmd`. Claude: leer `.local-setup/logs/unity/`, corregir errores de compilación/pruebas, fijar versiones en `DEPENDENCIES.md`, versionar `ProjectSettings/` y `Packages/`.
-4. Probar a mano: abrir `UnityProject` en Unity Hub, escena `Assets/Game/Scenes/PhysicsLab.unity`, Play.
-
-Si Cowork no alcanza (por ejemplo, para iterar rápido sobre errores de compilación), abrir esta misma carpeta en Claude Code y pedir: «Leé CLAUDE.md y PROGRESS.md y continuá desde la Próxima acción exacta».
+1. Stefano (o Claude con control de pantalla): abrir `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` o la escena en el editor y jugar un intento completo: agarrar con clic izquierdo/derecho, arrastrar al tío, esquivar un ataque anunciado, caer y levantarse, cargarlo en el carrito (E para la correa) y llevarlo a la zona verde. Anotar qué no funciona o no se siente bien.
+2. Claude: agregar una prueba PlayMode de intento individual completo con el cerebro del NPC encendido (sin teletransportes) para cubrir el criterio de salida de M1.
+3. Pendientes de M1 según decisiones: vaso señuelo, ayuda de compañero, superposición con sólidos y puerta en la extracción; URP.
+4. Instalar Visual Studio 2022 con «Desarrollo de juegos con C++» y probar la build IL2CPP.
 
 ## Al cerrar una sesión
 
