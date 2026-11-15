@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace UncleExtraction
@@ -7,7 +9,7 @@ namespace UncleExtraction
 
     /// Cerebro del tio (GDD 06-07). Decide cada 0,2 s; ataques con preparacion visible, ventana activa unica y recuperacion obligatoria.
     [RequireComponent(typeof(NpcBody))]
-    public class NpcBrain : MonoBehaviour, IResettable
+    public class NpcBrain : NetworkBehaviour, IResettable
     {
         public static NpcBrain Instance { get; private set; }
 
@@ -19,22 +21,37 @@ namespace UncleExtraction
         public float anchorSearchRadius = 1.4f;
         public float maxAnchorTime = 9f;
 
-        public NpcState State { get; private set; } = NpcState.Loiter;
-        public string Intent { get; private set; } = "";
-        public AttackDef CurrentAttack { get; private set; }
+        // Estado replicado: solo el anfitrion decide (especificacion 06/07); los clientes lo usan para presentacion, HUD y autopiloto.
+        readonly NetworkVariable<NpcState> nState = new NetworkVariable<NpcState>(NpcState.Loiter);
+        readonly NetworkVariable<FixedString64Bytes> nIntent = new NetworkVariable<FixedString64Bytes>();
+        readonly NetworkVariable<AttackId> nAttack = new NetworkVariable<AttackId>();
+        readonly NetworkVariable<float> nStateEnd = new NetworkVariable<float>();
+        readonly NetworkVariable<float> nBudget01 = new NetworkVariable<float>(1f);
+        readonly NetworkVariable<bool> nWriggle = new NetworkVariable<bool>();
+        readonly NetworkVariable<FixedString32Bytes> nAnchorHand = new NetworkVariable<FixedString32Bytes>();
+        readonly NetworkVariable<int> nAttacks = new NetworkVariable<int>(), nHits = new NetworkVariable<int>();
+        bool Mirror => IsSpawned && !IsServer;
+
+        NpcState state = NpcState.Loiter; string intent = ""; AttackDef currentAttack; bool wriggle;
+        public NpcState State => Mirror ? nState.Value : state;
+        public string Intent => Mirror ? nIntent.Value.ToString() : intent;
+        public AttackDef CurrentAttack => Mirror ? LabBalance.Attack(nAttack.Value) : currentAttack;
         public bool AttackPending => State == NpcState.Windup || State == NpcState.Attack;
-        public float StateTimeLeft => Mathf.Max(0f, stateUntil - Time.time);
-        public float Budget { get; private set; }
+        public float StateTimeLeft => Mirror ? Mathf.Max(0f, nStateEnd.Value - NetAuth.ServerNow) : Mathf.Max(0f, stateUntil - Time.time);
+        float budget;
+        public float Budget { get => Mirror ? nBudget01.Value * BudgetMax : budget; private set => budget = value; }
         public float BudgetMax => LabBalance.NpcBudget * Resistance;
         public float Resistance => RoundDirector.Instance ? RoundDirector.Instance.Resistance : 1f;
-        public bool IsAnchored => anchorJoint != null;
-        public GrabSocket AnchorHandSocket { get; private set; }
+        public bool IsAnchored => Mirror ? nAnchorHand.Value.Length > 0 : anchorJoint != null;
+        GrabSocket anchorHand;
+        public GrabSocket AnchorHandSocket { get => Mirror ? GrabSocket.ById(nAnchorHand.Value.ToString()) : anchorHand; private set => anchorHand = value; }
         public bool Strapped => TransportCart.Instance && TransportCart.Instance.IsStrapped;
         public Vector3 AttackDirection { get; private set; }
-        public int AttacksStarted { get; private set; }
-        public int HitsLanded { get; private set; }
+        int attacksStarted, hitsLanded;
+        public int AttacksStarted { get => Mirror ? nAttacks.Value : attacksStarted; private set => attacksStarted = value; }
+        public int HitsLanded { get => Mirror ? nHits.Value : hitsLanded; private set => hitsLanded = value; }
         public string LastRejection { get; private set; } = "";
-        public bool WriggleAttempt { get; private set; }
+        public bool WriggleAttempt { get => Mirror ? nWriggle.Value : wriggle; private set => wriggle = value; }
 
         NpcBody body; System.Random rng;
         float stateUntil, nextDecision, nextAttackAt, lastGrabbedAt = -99f, anchorStart, nextWriggleAt;
@@ -45,10 +62,10 @@ namespace UncleExtraction
         readonly HashSet<PlayerMotor> hitThisAttack = new HashSet<PlayerMotor>();
 
         void Awake() { Instance = this; body = GetComponent<NpcBody>(); rng = new System.Random(seed); Budget = LabBalance.NpcBudget; }
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
         void Start() { RefreshPlayers(); Budget = BudgetMax; ScheduleNextAttack(); }
 
-        public void RefreshPlayers() { players.Clear(); players.AddRange(FindObjectsByType<PlayerMotor>(FindObjectsSortMode.None)); }
+        public void RefreshPlayers() { players.Clear(); players.AddRange(PlayerMotor.All); }
 
         int GrabCount => GrabRegistry.CountOnBody(body.Body);
         bool Grabbed => GrabCount > 0;
@@ -56,6 +73,8 @@ namespace UncleExtraction
 
         void Update()
         {
+            if (!NetAuth.IsServer) return; // los clientes solo presentan el estado replicado
+            Publish();
             if (State == NpcState.Secured) { body.desiredWalkVelocity = Vector3.zero; body.resistForce = Vector3.zero; return; }
             if (Grabbed || Strapped) lastGrabbedAt = Now;
             body.SetCarried(Strapped);
@@ -142,6 +161,7 @@ namespace UncleExtraction
 
         void Decide()
         {
+            RefreshPlayers(); // entran y salen jugadores durante la ronda (red)
             if (AttackPending || State == NpcState.Recover || State == NpcState.ForcedRecovery) return;
 
             if (Strapped)
@@ -198,10 +218,11 @@ namespace UncleExtraction
 
         bool StartAttack(AttackId id, bool forced)
         {
+            RefreshPlayers();
             if (AttackPending && !forced) return false;
             if (id == AttackId.Shake && !Grabbed && !forced) { LastRejection = "sacudida sin agarres"; return false; }
             if ((id == AttackId.Push || id == AttackId.Kick) && body.Posture != NpcPosture.Upright && !forced) { LastRejection = "requiere postura de pie"; return false; }
-            CurrentAttack = LabBalance.Attack(id); WriggleAttempt = false;
+            currentAttack = LabBalance.Attack(id); WriggleAttempt = false;
             var t = NearestPlayer(out _);
             lockedDir = t ? Flat(t.transform.position - transform.position) : body.Forward;
             if (lockedDir.sqrMagnitude < 0.01f) lockedDir = body.Forward;
@@ -215,7 +236,7 @@ namespace UncleExtraction
 
         void StartWriggle()
         {
-            CurrentAttack = LabBalance.Attack(AttackId.Shake); WriggleAttempt = true;
+            currentAttack = LabBalance.Attack(AttackId.Shake); WriggleAttempt = true;
             AttackDirection = lockedDir = body.Forward;
             Enter(NpcState.Windup, 1.4f, "SE QUIERE SOLTAR DEL CARRITO");
             nextWriggleAt = Now + 7f + (float)rng.NextDouble() * 3f;
@@ -229,6 +250,7 @@ namespace UncleExtraction
 
         void ResolveAttack()
         {
+            RefreshPlayers();
             Budget -= CurrentAttack.budgetCost * Resistance;
             ScheduleNextAttack();
             if (WriggleAttempt)
@@ -320,13 +342,28 @@ namespace UncleExtraction
         public void Secure()
         {
             ReleaseAnchor("secured");
-            State = NpcState.Secured; Intent = "ASEGURADO";
+            state = NpcState.Secured; intent = "ASEGURADO";
         }
 
         // ---------- Utilidades ----------
-        void Enter(NpcState s, float duration, string intent)
+        void Enter(NpcState s, float duration, string why)
         {
-            State = s; stateUntil = Now + duration; Intent = intent;
+            state = s; stateUntil = Now + duration; intent = why;
+        }
+
+        void Publish()
+        {
+            if (!IsSpawned || !IsServer) return;
+            if (nState.Value != state) nState.Value = state;
+            var fi = new FixedString64Bytes(intent); if (!nIntent.Value.Equals(fi)) nIntent.Value = fi;
+            if (nAttack.Value != currentAttack.id) nAttack.Value = currentAttack.id;
+            float end = NetAuth.ServerNow + Mathf.Max(0f, stateUntil - Time.time);
+            if (Mathf.Abs(nStateEnd.Value - end) > 0.05f) nStateEnd.Value = end;
+            float b = BudgetMax > 0f ? budget / BudgetMax : 0f; if (Mathf.Abs(nBudget01.Value - b) > 0.01f) nBudget01.Value = b;
+            if (nWriggle.Value != wriggle) nWriggle.Value = wriggle;
+            var ah = new FixedString32Bytes(anchorJoint && anchorHand ? anchorHand.socketId : ""); if (!nAnchorHand.Value.Equals(ah)) nAnchorHand.Value = ah;
+            if (nAttacks.Value != attacksStarted) nAttacks.Value = attacksStarted;
+            if (nHits.Value != hitsLanded) nHits.Value = hitsLanded;
         }
 
         PlayerMotor NearestPlayer(out float dist)
@@ -351,7 +388,7 @@ namespace UncleExtraction
             foreach (var j in GetComponents<ConfigurableJoint>()) DestroyImmediate(j);
             anchorJoint = null;
             rng = new System.Random(seed);
-            State = NpcState.Loiter; Intent = ""; WriggleAttempt = false;
+            state = NpcState.Loiter; intent = ""; WriggleAttempt = false;
             Budget = BudgetMax; lastGrabbedAt = -99f; nextDecision = 0f; nextWriggleAt = Now + 4f;
             hitThisAttack.Clear(); RefreshPlayers(); ScheduleNextAttack();
         }

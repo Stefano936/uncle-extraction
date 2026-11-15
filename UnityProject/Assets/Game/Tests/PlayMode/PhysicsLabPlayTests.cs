@@ -18,6 +18,10 @@ namespace UncleExtraction.Tests
             GrabRegistry.Verbose = false;
             SceneManager.LoadScene("PhysicsLab");
             yield return null; yield return new WaitForFixedUpdate();
+            // El jugador lo genera la red (modo individual = anfitrion en loopback): esperarlo.
+            for (float t = 0; t < 5f && PlayerControls.Local == null; t += Time.unscaledDeltaTime) yield return null;
+            Assert.IsNotNull(PlayerControls.Local, "el anfitrion local deberia generar al jugador");
+            yield return new WaitForFixedUpdate();
             npc = Object.FindAnyObjectByType<NpcBrain>(); body = npc.GetComponent<NpcBody>();
             player = Object.FindAnyObjectByType<PlayerMotor>(); hands = player.GetComponent<PlayerHands>();
             round = Object.FindAnyObjectByType<RoundDirector>(); rig = Object.FindAnyObjectByType<LabForceRig>();

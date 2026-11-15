@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 namespace UncleExtraction
@@ -5,8 +6,10 @@ namespace UncleExtraction
     public enum PlayerState { Active, Stumble, Fallen, GettingUp }
 
     /// Capsula dinamica con rotacion bloqueada (especificacion 03). Mueve por aceleracion limitada, nunca escribiendo transform.position.
+    /// Red (especificacion 07): el anfitrion simula movimiento, compostura, caidas y recuperacion de TODOS los jugadores;
+    /// el dueno solo mueve su camara (mirada) localmente; el resto ve el estado replicado.
     [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
-    public class PlayerMotor : MonoBehaviour, IResettable
+    public class PlayerMotor : NetworkBehaviour, IResettable
     {
         public Transform cameraPivot;
         public float acceleration = 16f;      // m/s^2 en suelo
@@ -16,27 +19,51 @@ namespace UncleExtraction
         public float getUpDuration = 0.6f;
         public string playerName = "Jugador 1";
 
-        public PlayerState State { get; private set; } = PlayerState.Active;
-        public float Composure { get; private set; } = LabBalance.ComposureMax;
-        public float Energy { get; private set; } = LabBalance.EnergyMax;
-        public bool Crouching { get; private set; }
+        static readonly Vector3[] SpawnPoints = { new Vector3(0, 0, 2f), new Vector3(1.1f, 0, 2f), new Vector3(-1.1f, 0, 2f), new Vector3(2.2f, 0, 2f) };
+
+        // Estado replicado (escribe solo el anfitrion).
+        readonly NetworkVariable<PlayerState> nState = new NetworkVariable<PlayerState>(PlayerState.Active);
+        readonly NetworkVariable<float> nComposure = new NetworkVariable<float>(LabBalance.ComposureMax);
+        readonly NetworkVariable<float> nEnergy = new NetworkVariable<float>(LabBalance.EnergyMax);
+        readonly NetworkVariable<bool> nCrouch = new NetworkVariable<bool>(false);
+        readonly NetworkVariable<float> nStateEnd = new NetworkVariable<float>(0f);
+        readonly NetworkVariable<float> nDodgeReady = new NetworkVariable<float>(0f);
+        readonly NetworkVariable<int> nFalls = new NetworkVariable<int>(0);
+
+        bool Auth => NetAuth.IsServer;
+        bool Mirror => IsSpawned && !IsServer;
+
+        PlayerState state = PlayerState.Active; float composure = LabBalance.ComposureMax, energy = LabBalance.EnergyMax; bool crouching; int fallCount;
+
+        public PlayerState State => Mirror ? nState.Value : state;
+        public float Composure => Mirror ? nComposure.Value : composure;
+        public float Energy => Mirror ? nEnergy.Value : energy;
+        public bool Crouching => Mirror ? nCrouch.Value : crouching;
+        public int FallCount => Mirror ? nFalls.Value : fallCount;
         public bool Invulnerable => Time.time < invulnUntil;
-        public float StateTimeLeft => Mathf.Max(0f, stateUntil - Time.time);
-        public float DodgeCooldownLeft => Mathf.Max(0f, dodgeReadyAt - Time.time);
+        public float StateTimeLeft => Mirror ? Mathf.Max(0f, nStateEnd.Value - NetAuth.ServerNow) : Mathf.Max(0f, stateUntil - Time.time);
+        public float DodgeCooldownLeft => Mirror ? Mathf.Max(0f, nDodgeReady.Value - NetAuth.ServerNow) : Mathf.Max(0f, dodgeReadyAt - Time.time);
         public Rigidbody Body => rb;
         public bool ControlsEnabled => State == PlayerState.Active;
-        public int FallCount { get; private set; }
+        public float Yaw => yaw;
+        public float Pitch => pitch;
+        public PlayerControls Controls => controls;
 
-        /// Entrada simulada para pruebas automaticas (null = usar teclado/raton).
+        /// Entrada simulada para pruebas automaticas en el anfitrion (null = usar los controles del jugador).
         public Vector2? DebugMove;
 
-        Rigidbody rb; CapsuleCollider col; PlayerHands hands;
+        Rigidbody rb; CapsuleCollider col; PlayerHands hands; PlayerControls controls;
         float yaw, pitch, invulnUntil, stateUntil, composureRegenAt, energyRegenAt, dodgeReadyAt, dodgeUntil;
         float roll; Vector3 spawnPos; Quaternion spawnRot;
 
+        /// Jugadores presentes (se generan y se van con la red): la IA no puede cachearlos en Start.
+        public static readonly System.Collections.Generic.List<PlayerMotor> All = new System.Collections.Generic.List<PlayerMotor>();
+        void OnEnable() { if (!All.Contains(this)) All.Add(this); }
+        void OnDisable() { All.Remove(this); }
+
         void Awake()
         {
-            rb = GetComponent<Rigidbody>(); col = GetComponent<CapsuleCollider>(); hands = GetComponent<PlayerHands>();
+            rb = GetComponent<Rigidbody>(); col = GetComponent<CapsuleCollider>(); hands = GetComponent<PlayerHands>(); controls = GetComponent<PlayerControls>();
             rb.mass = LabBalance.PlayerMass; rb.freezeRotation = true;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -44,39 +71,82 @@ namespace UncleExtraction
             yaw = transform.eulerAngles.y; spawnPos = transform.position; spawnRot = transform.rotation;
         }
 
+        public override void OnNetworkSpawn()
+        {
+            playerName = $"Jugador {OwnerClientId + 1}";
+            if (IsServer)
+            {
+                spawnPos = SpawnPoints[(int)(OwnerClientId % (ulong)SpawnPoints.Length)];
+                rb.position = spawnPos; transform.position = spawnPos;
+            }
+            if (!IsOwner)
+            {   // solo el dueno ve por esta camara y escucha por este oido
+                var cam = GetComponentInChildren<Camera>(); if (cam) cam.enabled = false;
+                var al = GetComponentInChildren<AudioListener>(); if (al) al.enabled = false;
+            }
+            Debug.Log($"[Player] spawn {playerName} owner={OwnerClientId} local={IsOwner} server={IsServer}");
+        }
+
         void Update()
         {
             float dt = Time.deltaTime;
+            bool local = controls == null || controls.IsLocal;
             bool canLook = State == PlayerState.Active || State == PlayerState.Stumble;
-            if (canLook && Cursor.lockState == CursorLockMode.Locked)
+            if (local)
             {
-                Vector2 look = LabInput.Look() * mouseSensitivity;
-                yaw += look.x; pitch = Mathf.Clamp(pitch - look.y, -85f, 85f);
+                if (canLook && Cursor.lockState == CursorLockMode.Locked)
+                {
+                    Vector2 look = LabInput.Look() * mouseSensitivity;
+                    yaw += look.x; pitch = Mathf.Clamp(pitch - look.y, -85f, 85f);
+                }
             }
+            else if (controls.HasRemoteLook(out float ry, out float rp)) { yaw = ry; pitch = rp; }
 
-            if (State == PlayerState.Active)
+            if (Auth)
             {
-                bool wantCrouch = LabInput.Held(Act.Crouch);
-                if (wantCrouch != Crouching) SetCrouch(wantCrouch);
-                if (LabInput.Pressed(Act.Dodge)) TryDodge();
+                if (state == PlayerState.Active)
+                {
+                    bool wantCrouch = Ctrl(Act.Crouch);
+                    if (wantCrouch != crouching) SetCrouch(wantCrouch);
+                    if (controls != null ? controls.Pressed(Act.Dodge) : LabInput.Pressed(Act.Dodge)) TryDodge();
+                }
+                UpdateStateTimers();
+                UpdateRegen(dt);
+                Publish();
             }
-            UpdateStateTimers();
-            UpdateRegen(dt);
             UpdateCamera(dt);
+        }
+
+        bool Ctrl(Act a) => controls != null ? controls.Held(a) : LabInput.Held(a);
+        Vector2 MoveInput() => DebugMove ?? (controls != null ? controls.Move() : LabInput.Move());
+
+        void Publish()
+        {
+            if (!IsSpawned || !IsServer) return;
+            if (nState.Value != state) nState.Value = state;
+            if (!Mathf.Approximately(nComposure.Value, composure)) nComposure.Value = composure;
+            if (!Mathf.Approximately(nEnergy.Value, energy)) nEnergy.Value = energy;
+            if (nCrouch.Value != crouching) nCrouch.Value = crouching;
+            if (nFalls.Value != fallCount) nFalls.Value = fallCount;
+            float end = NetAuth.ServerNow + Mathf.Max(0f, stateUntil - Time.time);
+            if (Mathf.Abs(nStateEnd.Value - end) > 0.05f) nStateEnd.Value = end;
+            float dr = NetAuth.ServerNow + Mathf.Max(0f, dodgeReadyAt - Time.time);
+            if (Mathf.Abs(nDodgeReady.Value - dr) > 0.05f) nDodgeReady.Value = dr;
         }
 
         void FixedUpdate()
         {
+            if (!Auth) return;
             rb.MoveRotation(Quaternion.Euler(0f, yaw, 0f));
             if (Time.time < dodgeUntil) return;
 
-            Vector2 input = State == PlayerState.Active ? (DebugMove ?? LabInput.Move()) : Vector2.zero;
-            float speed = Crouching ? LabBalance.CrouchSpeed : (hands != null && hands.AnyHeld ? LabBalance.LoadedSpeed : LabBalance.WalkSpeed);
+            Vector2 input = state == PlayerState.Active ? MoveInput() : Vector2.zero;
+            float speed = crouching ? LabBalance.CrouchSpeed : (hands != null && hands.AnyHeld ? LabBalance.LoadedSpeed : LabBalance.WalkSpeed);
             Vector3 wish = (Quaternion.Euler(0, yaw, 0) * new Vector3(input.x, 0, input.y)) * speed;
             Vector3 v = rb.linearVelocity; Vector3 hv = new Vector3(v.x, 0, v.z);
             bool grounded = IsGrounded();
             float accel = acceleration * (grounded ? 1f : airControl);
-            if (State == PlayerState.Fallen) accel *= 0.5f; // friccion de suelo mientras esta caido
+            if (state == PlayerState.Fallen) accel *= 0.5f; // friccion de suelo mientras esta caido
             Vector3 dv = Vector3.ClampMagnitude(wish - hv, accel * Time.fixedDeltaTime);
             rb.AddForce(dv, ForceMode.VelocityChange);
         }
@@ -96,7 +166,7 @@ namespace UncleExtraction
                 Vector3 b = transform.position + Vector3.up * (LabBalance.CapsuleHeight - col.radius);
                 if (Physics.CheckCapsule(a, b, col.radius * 0.95f, ~0, QueryTriggerInteraction.Ignore) && OverlapsOther(a, b)) return;
             }
-            Crouching = on;
+            crouching = on;
             float h = on ? 1.2f : LabBalance.CapsuleHeight;
             col.height = h; col.center = new Vector3(0, h * 0.5f, 0);
         }
@@ -111,7 +181,7 @@ namespace UncleExtraction
         void TryDodge()
         {
             if (Time.time < dodgeReadyAt) return;
-            Vector2 input = DebugMove ?? LabInput.Move();
+            Vector2 input = MoveInput();
             if (input.sqrMagnitude < 0.01f) return; // el paso evasivo necesita direccion
             Vector3 dir = Quaternion.Euler(0, yaw, 0) * new Vector3(input.x, 0, input.y).normalized;
             float dist = LabBalance.DodgeDistance;
@@ -121,45 +191,46 @@ namespace UncleExtraction
             dodgeUntil = Time.time + dur; dodgeReadyAt = Time.time + LabBalance.DodgeCooldown;
         }
 
-        /// Impacto de un ataque o empujon. Devuelve true si afecto al jugador.
+        /// Impacto de un ataque o empujon (solo anfitrion). Devuelve true si afecto al jugador.
         public bool ApplyImpact(Vector3 deltaV, float composureLoss, string source)
         {
-            if (Invulnerable || State == PlayerState.Fallen || State == PlayerState.GettingUp) return false;
+            if (!Auth) return false;
+            if (Invulnerable || state == PlayerState.Fallen || state == PlayerState.GettingUp) return false;
             rb.AddForce(deltaV, ForceMode.VelocityChange);
-            Composure = Mathf.Max(0f, Composure - composureLoss);
+            composure = Mathf.Max(0f, composure - composureLoss);
             composureRegenAt = Time.time + LabBalance.ComposureRegenDelay;
             float dvHoriz = new Vector3(deltaV.x, 0, deltaV.z).magnitude;
-            bool knockdown = Composure <= 0f || dvHoriz >= LabBalance.DirectKnockdownDeltaV;
-            Debug.Log($"[Player] {playerName} impact from {source}: dv={dvHoriz:0.00} composure={Composure:0} knockdown={knockdown}");
+            bool knockdown = composure <= 0f || dvHoriz >= LabBalance.DirectKnockdownDeltaV;
+            Debug.Log($"[Player] {playerName} impact from {source}: dv={dvHoriz:0.00} composure={composure:0} knockdown={knockdown}");
             if (knockdown) Fall(source);
-            else { State = PlayerState.Stumble; stateUntil = Time.time + LabBalance.MinorStumbleLock; }
+            else { state = PlayerState.Stumble; stateUntil = Time.time + LabBalance.MinorStumbleLock; }
             return true;
         }
 
         public void Fall(string source)
         {
-            if (State == PlayerState.Fallen) return;
-            FallCount++;
+            if (!Auth || state == PlayerState.Fallen) return;
+            fallCount++;
             if (hands) hands.ReleaseAll(ReleaseReason.Fell);
-            if (Crouching) SetCrouch(false);
-            State = PlayerState.Fallen;
+            if (crouching) SetCrouch(false);
+            state = PlayerState.Fallen;
             stateUntil = Time.time + LabBalance.FallLockMax;
             Debug.Log($"[Player] {playerName} FALL ({source})");
         }
 
         void UpdateStateTimers()
         {
-            if (State == PlayerState.Stumble && Time.time >= stateUntil) State = PlayerState.Active;
-            else if (State == PlayerState.Fallen && Time.time >= stateUntil)
+            if (state == PlayerState.Stumble && Time.time >= stateUntil) state = PlayerState.Active;
+            else if (state == PlayerState.Fallen && Time.time >= stateUntil)
             {
                 FindSafeStandPosition();
-                State = PlayerState.GettingUp; stateUntil = Time.time + getUpDuration;
+                state = PlayerState.GettingUp; stateUntil = Time.time + getUpDuration;
             }
-            else if (State == PlayerState.GettingUp && Time.time >= stateUntil)
+            else if (state == PlayerState.GettingUp && Time.time >= stateUntil)
             {
-                State = PlayerState.Active;
+                state = PlayerState.Active;
                 invulnUntil = Time.time + LabBalance.StandupInvulnerability;
-                Composure = Mathf.Max(Composure, LabBalance.ComposureMax * 0.6f); // decision de laboratorio, ver DECISIONES_IMPLEMENTACION
+                composure = Mathf.Max(composure, LabBalance.ComposureMax * 0.6f); // decision de laboratorio, ver DECISIONES_IMPLEMENTACION
             }
         }
 
@@ -186,17 +257,17 @@ namespace UncleExtraction
 
         void UpdateRegen(float dt)
         {
-            if (Time.time >= composureRegenAt && State != PlayerState.Fallen)
-                Composure = Mathf.Min(LabBalance.ComposureMax, Composure + LabBalance.ComposureRegenPerS * dt);
+            if (Time.time >= composureRegenAt && state != PlayerState.Fallen)
+                composure = Mathf.Min(LabBalance.ComposureMax, composure + LabBalance.ComposureRegenPerS * dt);
             if (Time.time >= energyRegenAt)
-                Energy = Mathf.Min(LabBalance.EnergyMax, Energy + LabBalance.EnergyRegenPerS * dt);
+                energy = Mathf.Min(LabBalance.EnergyMax, energy + LabBalance.EnergyRegenPerS * dt);
         }
 
-        /// Consume energia para el esfuerzo. Devuelve false si no queda.
+        /// Consume energia para el esfuerzo (anfitrion). Devuelve false si no queda.
         public bool ConsumeEffort(float dt)
         {
-            if (Energy <= 0f) return false;
-            Energy = Mathf.Max(0f, Energy - LabBalance.EffortEnergyPerS * dt);
+            if (energy <= 0f) return false;
+            energy = Mathf.Max(0f, energy - LabBalance.EffortEnergyPerS * dt);
             energyRegenAt = Time.time + LabBalance.EnergyRegenDelay;
             return true;
         }
@@ -204,25 +275,34 @@ namespace UncleExtraction
         void UpdateCamera(float dt)
         {
             if (!cameraPivot) return;
-            float targetRoll = State == PlayerState.Fallen ? 65f : 0f;
-            float targetEye = State == PlayerState.Fallen ? 0.45f : (Crouching ? crouchEyeHeight : standEyeHeight);
+            var st = State;
+            float targetRoll = st == PlayerState.Fallen ? 65f : 0f;
+            float targetEye = st == PlayerState.Fallen ? 0.45f : (Crouching ? crouchEyeHeight : standEyeHeight);
             roll = Mathf.MoveTowards(roll, targetRoll, 260f * dt);
             Vector3 lp = cameraPivot.localPosition;
             lp.y = Mathf.MoveTowards(lp.y, targetEye, 4f * dt);
             cameraPivot.localPosition = lp;
-            cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, roll);
+            // La raiz gira en el anfitrion; la camara aplica la diferencia para que la mirada local responda sin esperar a la red.
+            float yawOffset = Mathf.DeltaAngle(transform.eulerAngles.y, yaw);
+            cameraPivot.localRotation = Quaternion.Euler(0f, yawOffset, 0f) * Quaternion.Euler(pitch, 0f, roll);
         }
 
         public void ResetState()
         {
+            if (!Auth) return;
             if (hands) hands.ReleaseAll(ReleaseReason.Reset);
-            State = PlayerState.Active; Composure = LabBalance.ComposureMax; Energy = LabBalance.EnergyMax;
+            state = PlayerState.Active; composure = LabBalance.ComposureMax; energy = LabBalance.EnergyMax;
             invulnUntil = stateUntil = composureRegenAt = energyRegenAt = dodgeReadyAt = dodgeUntil = 0f;
-            if (Crouching) SetCrouch(false);
+            if (crouching) SetCrouch(false);
             rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
             rb.position = spawnPos; rb.rotation = spawnRot; transform.SetPositionAndRotation(spawnPos, spawnRot);
             yaw = spawnRot.eulerAngles.y; pitch = 0f; roll = 0f; DebugMove = null;
+            if (IsSpawned && !IsOwner) ResetLookRpc(yaw);
         }
+
+        /// El anfitrion reubica al jugador remoto al reiniciar: su mirada local debe acompanar.
+        [Rpc(SendTo.Owner)]
+        void ResetLookRpc(float newYaw) { yaw = newYaw; pitch = 0f; }
 
         public void SetYawPitch(float newYaw, float newPitch) { yaw = newYaw; pitch = newPitch; }
     }

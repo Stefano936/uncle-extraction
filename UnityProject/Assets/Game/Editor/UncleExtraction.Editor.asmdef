@@ -2,7 +2,8 @@
     "name": "UncleExtraction.Editor",
     "rootNamespace": "UncleExtraction.EditorTools",
     "references": [
-        "UncleExtraction.Runtime"
+        "UncleExtraction.Runtime",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [
         "Editor"

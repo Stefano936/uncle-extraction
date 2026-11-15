@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace UncleExtraction
@@ -7,38 +8,65 @@ namespace UncleExtraction
     public enum RoundState { Running, Success, Timeout }
 
     /// Reloj, exito, derrota y reinicio limpio (especificacion 02). En PhysicsLab el "anfitrion" es la instancia local.
-    public class RoundDirector : MonoBehaviour
+    public class RoundDirector : NetworkBehaviour
     {
         public static RoundDirector Instance { get; private set; }
         public Difficulty difficulty = Difficulty.Normal;
         [Range(1, 4)] public int partySize = 1;
+        /// El escalado usa el numero efectivo de jugadores conectados; el panel de laboratorio puede fijarlo a mano.
+        public bool autoPartySize = true;
 
-        public RoundState State { get; private set; } = RoundState.Running;
-        public float Elapsed { get; private set; }
-        public float TimeLimit => LabBalance.RoundTime(partySize, difficulty);
-        public float Resistance => LabBalance.Resistance(partySize, difficulty);
-        public float AttackInterval => LabBalance.AttackInterval(partySize, difficulty);
-        public int Restarts { get; private set; }
+        readonly NetworkVariable<RoundState> nState = new NetworkVariable<RoundState>(RoundState.Running);
+        readonly NetworkVariable<float> nElapsed = new NetworkVariable<float>();
+        readonly NetworkVariable<Difficulty> nDifficulty = new NetworkVariable<Difficulty>(Difficulty.Normal);
+        readonly NetworkVariable<int> nParty = new NetworkVariable<int>(1);
+        readonly NetworkVariable<int> nRestarts = new NetworkVariable<int>();
+        bool Mirror => IsSpawned && !IsServer;
+
+        RoundState state = RoundState.Running; float elapsed; int restarts;
+        public RoundState State { get => Mirror ? nState.Value : state; private set => state = value; }
+        public float Elapsed { get => Mirror ? nElapsed.Value : elapsed; private set => elapsed = value; }
+        public Difficulty CurrentDifficulty => Mirror ? nDifficulty.Value : difficulty;
+        public int PartySize => Mirror ? nParty.Value : partySize;
+        public float TimeLimit => LabBalance.RoundTime(PartySize, CurrentDifficulty);
+        public float Resistance => LabBalance.Resistance(PartySize, CurrentDifficulty);
+        public float AttackInterval => LabBalance.AttackInterval(PartySize, CurrentDifficulty);
+        public int Restarts { get => Mirror ? nRestarts.Value : restarts; private set => restarts = value; }
         public string LastStressReport { get; private set; } = "";
         public bool StressRunning { get; private set; }
 
         void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); }
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
 
         void Update()
         {
+            if (LabInput.Pressed(Act.Restart)) { if (NetAuth.IsServer) Restart(); else RequestRestartRpc(); }
+            if (!NetAuth.IsServer) return;
+            if (autoPartySize) partySize = Mathf.Clamp(NetAuth.ConnectedPlayers, 1, 4);
+            if (IsSpawned)
+            {
+                if (nState.Value != state) nState.Value = state;
+                if (Mathf.Abs(nElapsed.Value - elapsed) > 0.1f) nElapsed.Value = elapsed;
+                if (nDifficulty.Value != difficulty) nDifficulty.Value = difficulty;
+                if (nParty.Value != partySize) nParty.Value = partySize;
+                if (nRestarts.Value != restarts) nRestarts.Value = restarts;
+            }
             if (State == RoundState.Running)
             {
                 Elapsed += Time.deltaTime;
                 if (TimeLimit > 0f && Elapsed >= TimeLimit) { State = RoundState.Timeout; GrabRegistry.ReleaseEverything(ReleaseReason.Reset); Debug.Log("[Round] TIMEOUT"); }
             }
-            if (LabInput.Pressed(Act.Restart)) Restart();
         }
 
         public void OnExtracted() { if (State == RoundState.Running) { State = RoundState.Success; Debug.Log($"[Round] SUCCESS in {Elapsed:0.0}s"); } }
 
+        /// Cualquier jugador puede pedir reintentar; decide y ejecuta el anfitrion.
+        [Rpc(SendTo.Server)]
+        void RequestRestartRpc(RpcParams p = default) { Debug.Log($"[Round] restart pedido por cliente {p.Receive.SenderClientId}"); Restart(); }
+
         public void Restart()
         {
+            if (!NetAuth.IsServer) { RequestRestartRpc(); return; }
             GrabRegistry.ReleaseEverything(ReleaseReason.Reset);
             foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
                 if (mb is IResettable r) r.ResetState();

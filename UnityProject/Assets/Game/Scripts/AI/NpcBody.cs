@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 namespace UncleExtraction
@@ -7,7 +8,7 @@ namespace UncleExtraction
     /// Cuerpo central simplificado del tio (especificacion 04: "el prototipo comienza con un cuerpo central").
     /// Masa 110 kg constante. Equilibrio con torque limitado: tirones fuertes o bajos lo derriban.
     [RequireComponent(typeof(Rigidbody))]
-    public class NpcBody : MonoBehaviour, IResettable
+    public class NpcBody : NetworkBehaviour, IResettable
     {
         public Transform pelvis, torso, shoulderL, shoulderR, head;
         public float balanceKp = 60f, balanceKd = 12f;
@@ -16,12 +17,17 @@ namespace UncleExtraction
         public float standUpDelay = 2.5f;
         public float walkAccel = 6f;
 
-        public NpcPosture Posture { get; private set; } = NpcPosture.Upright;
+        readonly NetworkVariable<NpcPosture> nPosture = new NetworkVariable<NpcPosture>(NpcPosture.Upright);
+        readonly NetworkVariable<int> nFalls = new NetworkVariable<int>();
+        bool Mirror => IsSpawned && !IsServer;
+        NpcPosture posture = NpcPosture.Upright;
+        public NpcPosture Posture { get => Mirror ? nPosture.Value : posture; private set => posture = value; }
         public Rigidbody Body => rb;
         public float TiltDeg => Vector3.Angle(transform.up, Vector3.up);
         public Vector3 Forward { get { var f = transform.forward; f.y = 0; return f.sqrMagnitude > 1e-4f ? f.normalized : Vector3.forward; } }
         public Vector3 ChestPosition => torso ? torso.position : transform.position + Vector3.up * 1.3f;
-        public int FallCount { get; private set; }
+        int fallCount;
+        public int FallCount { get => Mirror ? nFalls.Value : fallCount; private set => fallCount = value; }
 
         // Ordenes del cerebro (se aplican en FixedUpdate)
         [System.NonSerialized] public Vector3 desiredWalkVelocity;
@@ -43,6 +49,12 @@ namespace UncleExtraction
 
         void FixedUpdate()
         {
+            if (!NetAuth.IsServer) return; // fisica del tio: solo el anfitrion
+            if (IsSpawned)
+            {
+                if (nPosture.Value != posture) nPosture.Value = posture;
+                if (nFalls.Value != fallCount) nFalls.Value = fallCount;
+            }
             // Salvaguardas de velocidad (especificacion 04)
             if (rb.linearVelocity.magnitude > LabBalance.NpcMaxLinearVel) rb.linearVelocity = rb.linearVelocity.normalized * LabBalance.NpcMaxLinearVel;
 

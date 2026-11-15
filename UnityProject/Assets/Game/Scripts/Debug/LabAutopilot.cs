@@ -27,7 +27,7 @@ namespace UncleExtraction
         static readonly Vector3 DragFinalStand = new Vector3(1.8f, 0, -8.45f); // el tio entra de costado, con los pies primero
         // Ruta del JUGADOR tirando del asa (el carrito va detras): recto por el centro de la puerta y,
         // al final, de costado para que el carrito quede atravesado dentro de la zona.
-        static readonly Vector3[] CartPullPath = { new Vector3(0, 0, 1.6f), new Vector3(0, 0, -0.4f), new Vector3(0, 0, -3.5f), new Vector3(-2.2f, 0, -6.0f), new Vector3(-2.6f, 0, -8.45f), new Vector3(2.6f, 0, -8.45f) };
+        static readonly Vector3[] CartPullPath = { new Vector3(0, 0, 2.8f), new Vector3(0, 0, 1.2f), new Vector3(0, 0, -0.4f), new Vector3(0, 0, -3.5f), new Vector3(-2.2f, 0, -6.0f), new Vector3(-2.6f, 0, -8.45f), new Vector3(2.6f, 0, -8.45f) };
 
         Coroutine routine; HingeJoint door; Vector3 stuckRef; float stuckSince; bool zigLogged, cartClearedDoor;
         NpcState lastNpc; int lastFalls;
@@ -36,7 +36,7 @@ namespace UncleExtraction
 
         void Awake()
         {
-            if (!player) player = FindAnyObjectByType<PlayerMotor>();
+            if (!player && PlayerControls.Local) player = PlayerControls.Local.GetComponent<PlayerMotor>();
             if (player && !hands) hands = player.GetComponent<PlayerHands>();
             if (!npc) npc = FindAnyObjectByType<NpcBrain>();
             if (npc && !body) body = npc.GetComponent<NpcBody>();
@@ -46,7 +46,8 @@ namespace UncleExtraction
             door = FindAnyObjectByType<HingeJoint>();
         }
 
-        bool quitOnEnd;
+        bool quitOnEnd; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
+        static readonly Vector3 OpenSpot = new Vector3(1.5f, 0f, 2.6f);
 
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
         void Start()
@@ -56,12 +57,15 @@ namespace UncleExtraction
             {
                 if (args[i] == "-ueQuitOnEnd") quitOnEnd = true;
                 if (args[i] == "-ueAutopilot" && i + 1 < args.Length)
-                    StartRun(args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart : AutopilotMode.Drag);
+                    pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart : AutopilotMode.Drag;
+                if (args[i] == "-ueAutopilotDelay" && i + 1 < args.Length) float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out pendingDelay);
             }
         }
 
         void Update()
         {
+            // El jugador local aparece cuando la red lo genera (en un cliente, al conectarse).
+            if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay) { var m = pendingMode.Value; pendingMode = null; StartRun(m); }
             if (quitOnEnd && round && round.State != RoundState.Running)
             {
                 Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; saliendo");
@@ -72,8 +76,10 @@ namespace UncleExtraction
         public void StartRun(AutopilotMode mode)
         {
             StopRun();
+            if (PlayerControls.Local) { player = PlayerControls.Local.GetComponent<PlayerMotor>(); hands = PlayerControls.Local.GetComponent<PlayerHands>(); }
+            if (!player || !hands) { Debug.LogWarning("[Autopilot] sin jugador local todavia"); return; }
             Mode = mode; Running = true; Timeline.Clear();
-            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
+            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
             aimSince = Time.time; nextReport = Time.time + 10f;
             Log($"inicio modo {mode}: tio en {body.Body.position}, jugador en {player.transform.position}");
             routine = StartCoroutine(mode == AutopilotMode.Drag ? DragRun() : CartRun());
@@ -84,8 +90,6 @@ namespace UncleExtraction
             if (routine != null) StopCoroutine(routine);
             routine = null; Running = false; Status = "";
             LabInput.ClearSimulated();
-            if (hands) { hands.DebugHoldLeft = hands.DebugHoldRight = null; hands.DebugEffort = false; }
-            if (player) player.DebugMove = null;
         }
 
         public void ResetState() => StopRun();
@@ -97,8 +101,19 @@ namespace UncleExtraction
         static Vector3 Flat(Vector3 v) { v.y = 0; return v; }
         Vector3 Eye => hands.cam.transform.position;
         Vector3 Me => Flat(player.transform.position);
-        bool Holding(int hand) => GrabRegistry.Find(hands, hand) != null;
-        GrabSocket Held(int hand) => GrabRegistry.Find(hands, hand)?.socket;
+        // Estado de manos replicado: funciona igual en el anfitrion y en un cliente conectado.
+        bool Holding(int hand) => hands.HeldSocketId(hand) != "";
+        GrabSocket Held(int hand) => hands.HeldSocket(hand);
+        /// Ocupacion de un punto: en el anfitrion, el registro; en un cliente, las manos replicadas de todos los jugadores.
+        static int Occupancy(GrabSocket s)
+        {
+            if (NetAuth.IsServer) return GrabRegistry.OccupancyOf(s);
+            int n = 0;
+            foreach (var h in FindObjectsByType<PlayerHands>(FindObjectsSortMode.None))
+                for (int k = 0; k < 2; k++) if (h.HeldSocketId(k) == s.socketId) n++;
+            return n;
+        }
+        static void SetHold(int hand, bool on) => LabInput.Simulated[hand == 0 ? (int)Act.GrabLeft : (int)Act.GrabRight] = on;
         bool Finished => round.State != RoundState.Running;
 
         void LookAt(Vector3 p)
@@ -112,12 +127,12 @@ namespace UncleExtraction
         /// Mueve al jugador en direccion mundial 'dir' (sin importar hacia donde mira).
         void MoveWorld(Vector3 dir)
         {
-            dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { player.DebugMove = Vector2.zero; return; }
+            dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; return; }
             Vector3 local = Quaternion.Euler(0, -player.transform.eulerAngles.y, 0) * dir.normalized;
-            player.DebugMove = new Vector2(local.x, local.z);
+            LabInput.SimulatedMove = new Vector2(local.x, local.z);
         }
 
-        void Idle() { hands.DebugHoldLeft = hands.DebugHoldRight = false; hands.DebugEffort = false; player.DebugMove = Vector2.zero; }
+        void Idle() { SetHold(0, false); SetHold(1, false); LabInput.Simulated[(int)Act.Effort] = false; LabInput.SimulatedMove = Vector2.zero; }
 
         IEnumerator Tap(Act a) { LabInput.Simulated[(int)a] = true; yield return null; LabInput.Simulated[(int)a] = false; }
 
@@ -125,13 +140,19 @@ namespace UncleExtraction
         GrabSocket BestFreeUncleSocket(GrabSocket exclude, bool nearestOnly = false)
         {
             string pref = body.Posture == NpcPosture.Upright ? "forearm" : "ankle";
-            return GrabSocket.All.Where(s => s.body == body.Body && s != exclude && GrabRegistry.OccupancyOf(s) < s.capacity)
+            return GrabSocket.All.Where(s => s.body == body.Body && s != exclude && Occupancy(s) < s.capacity)
                                  .OrderBy(s => (!nearestOnly && s.socketId.StartsWith(pref) ? 0f : 3f) + Vector3.Distance(s.Position, Eye))
                                  .FirstOrDefault();
         }
 
+        Vector3 lastMe; float lastMeAt;
         void Observe()
         {
+            // Diagnostico: salto de posicion del jugador (tunel fisico o recolocacion) o cruce de la pared del frente
+            if (lastMeAt > 0f && Vector3.Distance(Me, lastMe) > 0.8f) Log($"SALTO jugador {lastMe} -> {Me} en {Time.time - lastMeAt:0.000}s");
+            bool wasIn = lastMe.z > -2f, isIn = Me.z > -2f;
+            if (lastMeAt > 0f && wasIn != isIn && Mathf.Abs(Me.x) > 0.75f) Log($"CRUCE de pared fuera de la puerta: {lastMe} -> {Me}");
+            lastMe = Me; lastMeAt = Time.time;
             if (npc.State != lastNpc) { Log($"tio {lastNpc}->{npc.State} '{npc.Intent}'"); lastNpc = npc.State; }
             if (player.FallCount > lastFalls) { Log($"jugador derribado (caidas={player.FallCount})"); lastFalls = player.FallCount; }
             if (Time.time >= nextReport)
@@ -174,7 +195,7 @@ namespace UncleExtraction
             lastTarget = target;
             MoveWorld(flat > stopAt ? target.Position - player.transform.position : Vector3.zero);
             bool press = d <= LabBalance.GrabReach && (hands.Candidate == target || (hands.Candidate && Time.time - aimSince > 1.5f));
-            if (hand == 0) hands.DebugHoldLeft = press; else hands.DebugHoldRight = press;
+            if (hand == 0) SetHold(0, press); else SetHold(1, press);
         }
 
         // ---------- arrastre del tio por una ruta ----------
@@ -187,7 +208,7 @@ namespace UncleExtraction
             if (!holdingAny)
             {   // fase de acercamiento y agarre (mano izquierda primero)
                 Status = "agarrando al tio";
-                hands.DebugHoldRight = false;
+                SetHold(1, false);
                 var target = BestFreeUncleSocket(null);
                 if (target) ApproachAndGrab(0, target, LabBalance.GrabReach - 0.35f);
                 yield return null;
@@ -205,9 +226,9 @@ namespace UncleExtraction
                     LookAt(second.Position);
                     bool near = Vector3.Distance(Flat(Eye), Flat(second.Position)) <= 0.9f;
                     MoveWorld(near ? Vector3.zero : second.Position - player.transform.position);
-                    hands.DebugHoldRight = near && hands.Candidate == second;
+                    SetHold(1, near && hands.Candidate == second);
                     yield return null;
-                    if (Holding(1)) Log($"agarra {Held(1).socketId} con la derecha"); else hands.DebugHoldRight = false;
+                    if (Holding(1)) Log($"agarra {Held(1).socketId} con la derecha"); else SetHold(1, false);
                     yield break;
                 }
             }
@@ -235,8 +256,8 @@ namespace UncleExtraction
             Vector3 goal = wp == path.Length - 1 ? finalStand : next + (next - uFlat).normalized * 1.1f;
             goal.z = Mathf.Max(goal.z, -8.85f); // la camioneta
             float gap = Vector3.Distance(Me, uFlat);
-            hands.DebugEffort = gap > 1.5f;
-            if (gap > 1.8f || Vector3.Distance(Me, goal) < 0.3f) player.DebugMove = Vector2.zero; // dejar que el resorte lo traiga
+            LabInput.Simulated[(int)Act.Effort] = gap > 1.5f;
+            if (gap > 1.8f || Vector3.Distance(Me, goal) < 0.3f) LabInput.SimulatedMove = Vector2.zero; // dejar que el resorte lo traiga
             else MoveWorld(goal - Me);
 
             // Esquivar ataques directos anunciados (la sacudida solo se evita soltando).
@@ -275,6 +296,34 @@ namespace UncleExtraction
                 if (CommonStep()) { yield return null; continue; }
                 if (zone.AllPointsInside || Time.time < handsOffUntil) { yield return HandsOffInZone(); continue; }
 
+                if (!cart.IsStrapped && cartNeedsSpace)
+                {   // llevar el carrito vacio a un lugar despejado del bar y volver a intentarlo
+                    var h = GrabSocket.All.First(s => s.socketId == "cart_handle");
+                    Vector3 cc0 = Flat(cart.transform.position);
+                    if (Vector3.Distance(cc0, OpenSpot) < 0.6f)
+                    {
+                        Log($"carrito en lugar abierto {cc0}"); cartNeedsSpace = false;
+                        Idle(); yield return Tap(Act.ReleaseAll); continue;
+                    }
+                    Status = "moviendo el carrito a un lugar abierto";
+                    if (!HoldingCart())
+                    {
+                        if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
+                        LookAt(h.Position);
+                        bool reach = Vector3.Distance(Eye, h.Position) <= LabBalance.GrabReach - 0.2f;
+                        MoveWorld(reach ? Vector3.zero : h.Position - player.transform.position);
+                        SetHold(0, reach && hands.Candidate == h); SetHold(1, reach && hands.Candidate == h);
+                        yield return null; continue;
+                    }
+                    // tirar del asa caminando hacia mas alla del lugar abierto
+                    Vector3 dirO = Flat(OpenSpot - cc0).normalized;
+                    LookAt(h.Position);
+                    float gapO = Vector3.Distance(Me, Flat(h.Position));
+                    LabInput.SimulatedMove = Vector2.zero;
+                    if (gapO <= 1.25f) MoveWorld(OpenSpot + dirO * 1.4f - Me);
+                    yield return null; continue;
+                }
+
                 if (!cart.IsStrapped)
                 {
                     // 1) Llevar al tio junto al carrito y 2) asegurarlo con E.
@@ -284,8 +333,16 @@ namespace UncleExtraction
                         Idle(); yield return Tap(Act.ReleaseAll);
                         LookAt(cart.transform.position + Vector3.up * 0.6f);
                         yield return Tap(Act.Interact);
-                        yield return null;
+                        for (float w = 0; w < 0.8f && !cart.IsStrapped; w += Time.deltaTime) yield return null; // la subida dura 0,45 s
                         if (cart.IsStrapped) Log($"asegura al tio en el carrito (correas={cart.StrapCount})");
+                        else
+                        {   // sin lugar (por ejemplo, el jugador esta en el volumen): apartarse y reintentar
+                            Log($"no pudo asegurarlo: '{hands.LastFeedback}'; se aparta");
+                            if (!hands.LastFeedback.Contains("jugador")) cartNeedsSpace = true; // pared u objeto: mover el carrito a un lugar abierto
+                            Vector3 away = Flat(player.transform.position - cart.transform.position).normalized;
+                            for (float w = 0; w < 0.6f; w += Time.deltaTime) { MoveWorld(away); yield return null; }
+                            LabInput.SimulatedMove = Vector2.zero;
+                        }
                         continue;
                     }
                     if (HoldingCart()) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
@@ -305,11 +362,14 @@ namespace UncleExtraction
                     if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
                     Status = "tomando el asa";
                     Vector3 behind = cart.transform.TransformPoint(new Vector3(0, 0, -1.5f));
-                    if (Vector3.Distance(Me, Flat(behind)) > 0.5f && Vector3.Distance(Eye, handle.Position) > LabBalance.GrabReach - 0.2f)
-                    { LookAt(handle.Position); MoveWorld(behind - player.transform.position); hands.DebugHoldLeft = hands.DebugHoldRight = false; yield return null; continue; }
-                    LookAt(handle.Position); player.DebugMove = Vector2.zero;
+                    if (Vector3.Distance(Eye, handle.Position) > LabBalance.GrabReach - 0.2f)
+                    {   // acercarse por detras del asa si ese lado esta libre; si no (pared), directo al asa
+                        bool behindFree = !Physics.CheckCapsule(behind + Vector3.up * 0.4f, behind + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
+                        Vector3 dest = behindFree && Vector3.Distance(Me, Flat(behind)) > 0.5f ? behind : handle.Position;
+                        LookAt(handle.Position); MoveWorld(dest - player.transform.position); SetHold(0, false); SetHold(1, false); yield return null; continue; }
+                    LookAt(handle.Position); LabInput.SimulatedMove = Vector2.zero;
                     bool aimed = hands.Candidate == handle;
-                    hands.DebugHoldLeft = aimed; hands.DebugHoldRight = aimed;
+                    SetHold(0, aimed); SetHold(1, aimed);
                     yield return null;
                     if (HoldingCart()) Log("toma el asa");
                     continue;
@@ -318,9 +378,9 @@ namespace UncleExtraction
                 Vector3 cc = Flat(cart.transform.position);
                 if (!(Held(0)?.socketId == "cart_handle" && Held(1)?.socketId == "cart_handle"))
                 {   // las dos manos en el asa
-                    LookAt(handle.Position); player.DebugMove = Vector2.zero;
+                    LookAt(handle.Position); LabInput.SimulatedMove = Vector2.zero;
                     bool aimed = hands.Candidate == handle;
-                    if (!Holding(0)) hands.DebugHoldLeft = aimed; if (!Holding(1)) hands.DebugHoldRight = aimed;
+                    if (!Holding(0)) SetHold(0, aimed); if (!Holding(1)) SetHold(1, aimed);
                     yield return null; continue;
                 }
                 while (cartWp < CartPullPath.Length - 1 && (cartWp < 3 || cartClearedDoor) && Vector3.Distance(Me, CartPullPath[cartWp]) < 0.6f) { cartWp++; Log($"jugador hacia el punto {cartWp}/{CartPullPath.Length - 1} con el carrito en {Flat(cart.transform.position)}"); }
@@ -340,7 +400,7 @@ namespace UncleExtraction
                 }
                 float gap = Vector3.Distance(Me, Flat(handle.Position));
                 LookAt(handle.Position);
-                hands.DebugEffort = gap > 1.1f;
+                LabInput.Simulated[(int)Act.Effort] = gap > 1.1f;
                 // de espaldas hacia el punto; si el carrito se queda atras, esperar a que el resorte lo traiga
                 // Destrabar: si el carrito no avanza en 2 s, zigzaguear de costado (como sacudir un changuito trabado).
                 if (Vector3.Distance(cc, stuckRef) > 0.15f) { stuckRef = cc; stuckSince = Time.time; zigLogged = false; }
@@ -352,7 +412,7 @@ namespace UncleExtraction
                     MoveWorld(side + Flat(Me - cc).normalized * 0.5f);
                     if (Time.time - stuckSince > 12f) { stuckSince = Time.time; stuckRef = cc; }
                 }
-                else if (gap > 1.25f || Vector3.Distance(Me, goal) < 0.2f) player.DebugMove = Vector2.zero;
+                else if (gap > 1.25f || Vector3.Distance(Me, goal) < 0.2f) LabInput.SimulatedMove = Vector2.zero;
                 else MoveWorld(goal - Me);
                 yield return null;
             }

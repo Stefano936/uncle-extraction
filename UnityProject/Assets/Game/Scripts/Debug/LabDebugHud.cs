@@ -19,6 +19,13 @@ namespace UncleExtraction
         void Update()
         {
             if (LabInput.Pressed(Act.ToggleCursor)) { panel = !panel; LockCursor(!panel); }
+            // El jugador local lo genera la red al conectarse: enlazar el HUD a SU personaje, nunca al de otro.
+            var local = PlayerControls.Local;
+            if (local && (!player || player.gameObject != local.gameObject))
+            {
+                player = local.GetComponent<PlayerMotor>(); hands = local.GetComponent<PlayerHands>();
+                if (autopilot) { autopilot.player = player; autopilot.hands = hands; }
+            }
         }
 
         static void LockCursor(bool on) { Cursor.lockState = on ? CursorLockMode.Locked : CursorLockMode.None; Cursor.visible = !on; }
@@ -77,16 +84,24 @@ namespace UncleExtraction
             GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"PhysicsLab  {timer}", mid);
 
             if (autopilot && autopilot.Running) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
+            if (Time.unscaledTime < NetSession.StatusUntil) GUI.Label(new Rect(0, H * 0.72f, W, 30), NetSession.StatusMessage, mid);
+            if (NetAuth.Listening)
+            {
+                var nm = Unity.Netcode.NetworkManager.Singleton;
+                string role = nm.IsHost ? (NetSession.Mode == NetMode.Solo ? "Solo" : "Anfitrion") : "Cliente";
+                GUI.Label(new Rect(W - 330, 8, 320, 22), $"{role} | jugadores {(nm.IsServer ? nm.ConnectedClientsIds.Count : (round ? round.PartySize : 0))}", small);
+            }
+            else GUI.Label(new Rect(W - 330, 8, 320, 22), NetSession.Mode == NetMode.Client ? "Conectando..." : "", small);
             if (panel) DrawPanel(W, H);
             else GUI.Label(new Rect(10, 8, 600, 22), "Tab: panel de depuracion / liberar raton", small);
         }
 
         string HandText(int hand)
         {
-            var l = GrabRegistry.Find(hands, hand);
+            var s = hands.HeldSocket(hand);
             string n = hand == 0 ? "Mano izq (clic izq)" : "Mano der (clic der)";
-            if (l == null) return $"{n}: libre";
-            return $"{n}: {l.socket.label}  tension {l.tension01 * 100:0}%{(hands.EffortActive ? "  ESFUERZO" : "")}";
+            if (s == null) return $"{n}: libre";
+            return $"{n}: {s.label}  tension {hands.Tension01(hand) * 100:0}%{(hands.EffortActive ? "  ESFUERZO" : "")}";
         }
 
         void Bar(float x, float y, string label, float v, Color c)
@@ -100,15 +115,19 @@ namespace UncleExtraction
         {
             GUILayout.BeginArea(new Rect(10, 40, 340, H - 140), box);
             GUILayout.Label("<b>PhysicsLab - depuracion</b> (Tab cierra)", new GUIStyle(small) { richText = true });
+            bool host = NetAuth.IsServer;
+            if (!host) GUILayout.Label("Cliente: los ajustes de ronda, IA y fuerzas los decide el anfitrion.", small);
+            GUI.enabled = host;
             if (round)
             {
                 GUILayout.Label($"Ronda: {round.State}  t={round.Elapsed:0.0}s  reinicios={round.Restarts}", small);
-                GUILayout.Label($"Dificultad {round.difficulty} | jugadores (escala) {round.partySize} | R={round.Resistance:0.00} | intervalo={round.AttackInterval:0.00}s", small);
+                GUILayout.Label($"Dificultad {round.CurrentDifficulty} | jugadores (escala) {round.PartySize}{(round.autoPartySize ? " auto" : "")} | R={round.Resistance:0.00} | intervalo={round.AttackInterval:0.00}s", small);
                 GUILayout.BeginHorizontal();
                 foreach (Difficulty d in System.Enum.GetValues(typeof(Difficulty))) if (GUILayout.Button(d.ToString())) round.difficulty = d;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                for (int n = 1; n <= 4; n++) if (GUILayout.Button($"N={n}")) round.partySize = n;
+                if (GUILayout.Button("auto")) round.autoPartySize = true;
+                for (int n = 1; n <= 4; n++) if (GUILayout.Button($"N={n}")) { round.autoPartySize = false; round.partySize = n; }
                 GUILayout.EndHorizontal();
             }
             if (npc)
@@ -128,15 +147,17 @@ namespace UncleExtraction
                 foreach (int n in new[] { 0, 1, 2, 4 }) if (GUILayout.Button(n.ToString())) rig.SetVirtualPullers(n);
                 GUILayout.EndHorizontal();
             }
+            GUI.enabled = true;
             if (autopilot)
             {
                 GUILayout.Label(autopilot.Running ? $"Autopiloto: {autopilot.Mode} - {autopilot.Status}" : "Autopiloto (juega solo, para mirar):", small);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Arrastrar")) { round.Restart(); autopilot.StartRun(AutopilotMode.Drag); }
-                if (GUILayout.Button("Carrito")) { round.Restart(); autopilot.StartRun(AutopilotMode.Cart); }
+                if (GUILayout.Button("Arrastrar")) { if (host) round.Restart(); autopilot.StartRun(AutopilotMode.Drag); }
+                if (GUILayout.Button("Carrito")) { if (host) round.Restart(); autopilot.StartRun(AutopilotMode.Cart); }
                 if (GUILayout.Button("Parar")) autopilot.StopRun();
                 GUILayout.EndHorizontal();
             }
+            GUI.enabled = host;
             GUILayout.Label($"Resorte de agarre k={GrabSpring.K:0} N/m  c={GrabSpring.C:0} N*s/m", small);
             GrabSpring.K = GUILayout.HorizontalSlider(GrabSpring.K, 300f, 4000f);
             GrabSpring.C = GUILayout.HorizontalSlider(GrabSpring.C, 20f, 600f);
@@ -154,6 +175,7 @@ namespace UncleExtraction
             if (round && GUILayout.Button("10 reinicios")) round.RunResetStress(10);
             GUILayout.EndHorizontal();
             if (round && round.LastStressReport != "") GUILayout.Label(round.LastStressReport, small);
+            GUI.enabled = true;
             GUILayout.Label($"Agarres: activos {GrabRegistry.Count} creados {GrabRegistry.TotalCreated} liberados {GrabRegistry.TotalReleased} uniones {RoundDirector.CountGameplayJoints()}", small);
             GUILayout.Label("WASD mover | raton mirar | clic izq/der manos | Shift esfuerzo | Q soltar | E interactuar | Ctrl agacharse | Espacio paso evasivo | R reiniciar", small);
             GUILayout.EndArea();

@@ -2,6 +2,9 @@ using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using System.Reflection;
+using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -13,6 +16,7 @@ namespace UncleExtraction.EditorTools
     public static class PhysicsLabBuilder
     {
         public const string ScenePath = "Assets/Game/Scenes/PhysicsLab.unity";
+        public const string PlayerPrefabPath = "Assets/Game/Prefabs/Player.prefab";
         const string MatDir = "Assets/Game/Materials";
 
         [MenuItem("Uncle Extraction/Reconstruir PhysicsLab")]
@@ -31,7 +35,7 @@ namespace UncleExtraction.EditorTools
 
         public static void Build()
         {
-            Directory.CreateDirectory("Assets/Game/Scenes"); Directory.CreateDirectory(MatDir);
+            Directory.CreateDirectory("Assets/Game/Scenes"); Directory.CreateDirectory(MatDir); Directory.CreateDirectory("Assets/Game/Prefabs");
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             var floorM = Mat("Floor", new Color(0.35f, 0.3f, 0.27f));
@@ -127,19 +131,39 @@ namespace UncleExtraction.EditorTools
             cart.npc = body; zone.npc = body;
 
             // Jugador
-            var player = BuildPlayer(handM, playerPM, out var motor, out var hands);
+            // Jugador: prefab de red que el anfitrion genera por cada conexion (no vive en la escena).
+            var playerGo = BuildPlayer(handM, playerPM, out var motor, out var hands);
+            var playerPrefab = PrefabUtility.SaveAsPrefabAsset(playerGo, PlayerPrefabPath);
+            UnityEngine.Object.DestroyImmediate(playerGo);
+
+            // Objetos de escena replicados (fisica del anfitrion; clientes cinematicos e interpolados)
+            Networked(npcGo); Networked(cartGo); Networked(door); Networked(chair);
+            zoneGo.AddComponent<NetworkObject>();
+
+            // Camara general mientras no hay jugador local (conectando)
+            var overview = new GameObject("Overview_Camera").AddComponent<Camera>();
+            overview.transform.SetPositionAndRotation(new Vector3(6f, 6f, -9f), Quaternion.Euler(28f, -35f, 0f)); overview.depth = -10;
 
             // Sistemas
             var sys = new GameObject("Systems");
+            sys.AddComponent<NetworkObject>();
+            var session = sys.AddComponent<NetSession>(); session.playerPrefab = playerPrefab;
             var round = sys.AddComponent<RoundDirector>();
             var rig = sys.AddComponent<LabForceRig>(); rig.npc = body; rig.pullTarget = zoneGo.transform;
             var hud = sys.AddComponent<LabDebugHud>();
-            hud.player = motor; hud.hands = hands; hud.npc = brain; hud.npcBody = body; hud.cart = cart; hud.zone = zone; hud.round = round; hud.rig = rig;
+            hud.npc = brain; hud.npcBody = body; hud.cart = cart; hud.zone = zone; hud.round = round; hud.rig = rig;
             var auto = sys.AddComponent<LabAutopilot>();
-            auto.player = motor; auto.hands = hands; auto.npc = brain; auto.body = body; auto.cart = cart; auto.zone = zone; auto.round = round;
+            auto.npc = brain; auto.body = body; auto.cart = cart; auto.zone = zone; auto.round = round;
             hud.autopilot = auto;
 
             EditorSceneManager.SaveScene(scene, ScenePath);
+            // NGO genera GlobalObjectIdHash en OnValidate, que en modo batch no siempre corre: forzarlo y guardar de nuevo.
+            int hashed = ForceNetworkIds(UnityEngine.Object.FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None));
+            hashed += ForceNetworkIds(new[] { playerPrefab.GetComponent<NetworkObject>() });
+            EditorUtility.SetDirty(playerPrefab); AssetDatabase.SaveAssets();
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            Debug.Log($"[LabBuilder] network ids: {hashed}");
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
             Debug.Log($"[LabBuilder] PhysicsLab saved: {ScenePath} sockets={UnityEngine.Object.FindObjectsByType<GrabSocket>(FindObjectsSortMode.None).Length}");
@@ -198,13 +222,45 @@ namespace UncleExtraction.EditorTools
             var cap = go.AddComponent<CapsuleCollider>(); cap.sharedMaterial = pm;
             var pivot = new GameObject("CameraPivot").transform; pivot.SetParent(go.transform, false); pivot.localPosition = new Vector3(0, 1.62f, 0);
             var camGo = new GameObject("PlayerCamera"); camGo.tag = "MainCamera"; camGo.transform.SetParent(pivot, false);
-            var cam = camGo.AddComponent<Camera>(); cam.fieldOfView = 85f; cam.nearClipPlane = 0.05f; // FOV vertical (convencion de Unity)
+            var cam = camGo.AddComponent<Camera>(); cam.depth = 0; cam.fieldOfView = 85f; cam.nearClipPlane = 0.05f; // FOV vertical (convencion de Unity)
             camGo.AddComponent<AudioListener>();
             var hl = NoCollider(LocalPrim(PrimitiveType.Cube, "Hand_L", camGo.transform, new Vector3(-0.28f, -0.3f, 0.75f), new Vector3(0.09f, 0.07f, 0.16f), handM));
             var hr = NoCollider(LocalPrim(PrimitiveType.Cube, "Hand_R", camGo.transform, new Vector3(0.28f, -0.3f, 0.75f), new Vector3(0.09f, 0.07f, 0.16f), handM));
+            go.AddComponent<NetworkObject>();
+            var nt = go.AddComponent<NetworkTransform>(); nt.AuthorityMode = NetworkTransform.AuthorityModes.Server; nt.Interpolate = true;
+            nt.SyncRotAngleX = false; nt.SyncRotAngleZ = false; nt.SyncScaleX = nt.SyncScaleY = nt.SyncScaleZ = false;
+            go.AddComponent<NetworkRigidbody>();
+            go.AddComponent<PlayerControls>();
             motor = go.AddComponent<PlayerMotor>(); motor.cameraPivot = pivot;
             hands = go.AddComponent<PlayerHands>(); hands.cam = cam; hands.leftHandVisual = hl.transform; hands.rightHandVisual = hr.transform;
             return go;
+        }
+
+        // ---------- red ----------
+        static void Networked(GameObject go)
+        {
+            go.AddComponent<NetworkObject>();
+            var nt = go.AddComponent<NetworkTransform>();
+            nt.AuthorityMode = NetworkTransform.AuthorityModes.Server; nt.Interpolate = true;
+            go.AddComponent<NetworkRigidbody>();
+        }
+
+        static int ForceNetworkIds(NetworkObject[] objs)
+        {
+            var validate = typeof(NetworkObject).GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            var hashField = typeof(NetworkObject).GetField("GlobalObjectIdHash", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            int n = 0; var seen = new System.Collections.Generic.HashSet<uint>();
+            foreach (var o in objs)
+            {
+                if (!o) continue;
+                validate?.Invoke(o, null);
+                EditorUtility.SetDirty(o);
+                uint h = hashField != null ? (uint)hashField.GetValue(o) : 0u;
+                if (h == 0 || !seen.Add(h)) Debug.LogError($"[LabBuilder] NetworkObject {o.name} hash invalido o duplicado: {h}");
+                else n++;
+                Debug.Log($"[LabBuilder] {o.name} GlobalObjectIdHash={h}");
+            }
+            return n;
         }
 
         // ---------- utilidades ----------

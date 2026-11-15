@@ -23,6 +23,9 @@ namespace UncleExtraction.Tests
             LabInput.ClearSimulated();
             SceneManager.LoadScene("PhysicsLab");
             yield return null; yield return new WaitForFixedUpdate();
+            for (float t = 0; t < 5f && PlayerControls.Local == null; t += Time.unscaledDeltaTime) yield return null;
+            Assert.IsNotNull(PlayerControls.Local, "el anfitrion local deberia generar al jugador");
+            yield return new WaitForFixedUpdate();
             npc = Object.FindAnyObjectByType<NpcBrain>(); body = npc.GetComponent<NpcBody>();
             round = Object.FindAnyObjectByType<RoundDirector>(); zone = Object.FindAnyObjectByType<ExtractionZone>();
             cart = Object.FindAnyObjectByType<TransportCart>(); auto = Object.FindAnyObjectByType<LabAutopilot>();

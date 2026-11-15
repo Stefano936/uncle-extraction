@@ -1,41 +1,70 @@
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace UncleExtraction
 {
-    /// Dos manos independientes. Mantener boton = agarrar/mantener (GDD 04). Las uniones las valida GrabRegistry.
+    /// Dos manos independientes. Mantener boton = agarrar/mantener (GDD 04). Las uniones las valida GrabRegistry (solo anfitrion).
+    /// Red: el anfitrion decide agarres, esfuerzo, correa y desanclaje con la intencion del jugador; el estado de cada mano
+    /// se replica para HUD, manos visibles y autopiloto de clientes. El dueno calcula localmente el punto apuntado (solo UI).
     [RequireComponent(typeof(PlayerMotor))]
-    public class PlayerHands : MonoBehaviour, IGrabOwner
+    public class PlayerHands : NetworkBehaviour, IGrabOwner
     {
         public Camera cam;
         public Transform leftHandVisual, rightHandVisual;
         public float aimConeDeg = 22f;
         public Vector3 holdOffset = new Vector3(0.28f, -0.3f, 0.75f); // x se refleja por mano
 
-        PlayerMotor motor; Rigidbody rb;
+        readonly NetworkVariable<FixedString32Bytes> nHeldL = new NetworkVariable<FixedString32Bytes>();
+        readonly NetworkVariable<FixedString32Bytes> nHeldR = new NetworkVariable<FixedString32Bytes>();
+        readonly NetworkVariable<float> nTensionL = new NetworkVariable<float>(), nTensionR = new NetworkVariable<float>();
+        readonly NetworkVariable<bool> nEffort = new NetworkVariable<bool>();
+        readonly NetworkVariable<FixedString64Bytes> nInteract = new NetworkVariable<FixedString64Bytes>();
+        readonly NetworkVariable<float> nInteractProgress = new NetworkVariable<float>();
+
+        PlayerMotor motor; Rigidbody rb; PlayerControls controls;
         readonly List<GrabLink> broken = new List<GrabLink>();
         float effortTime;
         Renderer leftR, rightR;
+        bool effortActive; string interactLabel = ""; float interactProgress;
+
+        bool Auth => NetAuth.IsServer;
+        bool Mirror => IsSpawned && !IsServer;
 
         public string OwnerName => motor ? motor.playerName : name;
         public bool CanGrab => motor && motor.ControlsEnabled;
-        public bool AnyHeld => GrabRegistry.Find(this, 0) != null || GrabRegistry.Find(this, 1) != null;
-        public bool EffortActive { get; private set; }
+        public bool AnyHeld => HeldSocketId(0) != "" || HeldSocketId(1) != "";
+        public bool EffortActive => Mirror ? nEffort.Value : effortActive;
         public GrabSocket Candidate { get; private set; }
         public string LastFeedback { get; private set; } = "";
         public float FeedbackUntil { get; private set; }
-        public float InteractProgress01 { get; private set; }
-        public string InteractLabel { get; private set; } = "";
+        public float InteractProgress01 => Mirror ? nInteractProgress.Value : interactProgress;
+        public string InteractLabel => Mirror ? nInteract.Value.ToString() : interactLabel;
 
-        /// Botones simulados para pruebas (null = entrada real).
+        /// Botones simulados para pruebas en el anfitrion (null = controles del jugador).
         public bool? DebugHoldLeft, DebugHoldRight; public bool DebugEffort;
 
         void Awake()
         {
-            motor = GetComponent<PlayerMotor>(); rb = GetComponent<Rigidbody>();
+            motor = GetComponent<PlayerMotor>(); rb = GetComponent<Rigidbody>(); controls = GetComponent<PlayerControls>();
             if (!cam) cam = GetComponentInChildren<Camera>();
             if (leftHandVisual) leftR = leftHandVisual.GetComponent<Renderer>();
             if (rightHandVisual) rightR = rightHandVisual.GetComponent<Renderer>();
+        }
+
+        /// Id del punto que sostiene una mano ("" = libre). En clientes viene replicado del anfitrion.
+        public string HeldSocketId(int hand)
+        {
+            if (Mirror) return (hand == 0 ? nHeldL : nHeldR).Value.ToString();
+            var l = GrabRegistry.Find(this, hand);
+            return l != null ? l.socket.socketId : "";
+        }
+        public GrabSocket HeldSocket(int hand) => GrabSocket.ById(HeldSocketId(hand));
+        public float Tension01(int hand)
+        {
+            if (Mirror) return (hand == 0 ? nTensionL : nTensionR).Value;
+            var l = GrabRegistry.Find(this, hand); return l != null ? l.tension01 : 0f;
         }
 
         public Vector3 HandOrigin(int hand) => cam ? cam.transform.position : transform.position + Vector3.up * 1.6f;
@@ -47,17 +76,38 @@ namespace UncleExtraction
             return t.TransformPoint(o);
         }
 
+        bool Ctrl(Act a) => controls != null ? controls.Held(a) : LabInput.HeldForGameplay(a);
+        bool CtrlPressed(Act a) => controls != null ? controls.Pressed(a) : LabInput.Pressed(a);
+
         void Update()
         {
             Candidate = FindCandidate();
-            if (!motor.ControlsEnabled) { InteractProgress01 = 0f; return; }
-
-            if (LabInput.Pressed(Act.ReleaseAll)) ReleaseAll(ReleaseReason.ReleaseAll);
-            bool live = Cursor.lockState == CursorLockMode.Locked; // con el panel abierto, los clics son para la UI
-            HandleHand(0, DebugHoldLeft ?? (live && LabInput.Held(Act.GrabLeft)));
-            HandleHand(1, DebugHoldRight ?? (live && LabInput.Held(Act.GrabRight)));
-            HandleInteract();
+            if (Auth)
+            {
+                if (motor.ControlsEnabled)
+                {
+                    if (CtrlPressed(Act.ReleaseAll)) ReleaseAll(ReleaseReason.ReleaseAll);
+                    HandleHand(0, DebugHoldLeft ?? Ctrl(Act.GrabLeft));
+                    HandleHand(1, DebugHoldRight ?? Ctrl(Act.GrabRight));
+                    HandleInteract();
+                }
+                else interactProgress = 0f;
+                Publish();
+            }
             UpdateVisuals();
+        }
+
+        void Publish()
+        {
+            if (!IsSpawned || !IsServer) return;
+            var l = new FixedString32Bytes(HeldSocketId(0)); if (!nHeldL.Value.Equals(l)) nHeldL.Value = l;
+            var r = new FixedString32Bytes(HeldSocketId(1)); if (!nHeldR.Value.Equals(r)) nHeldR.Value = r;
+            float tl = Tension01(0), tr = Tension01(1);
+            if (Mathf.Abs(nTensionL.Value - tl) > 0.05f) nTensionL.Value = tl;
+            if (Mathf.Abs(nTensionR.Value - tr) > 0.05f) nTensionR.Value = tr;
+            if (nEffort.Value != effortActive) nEffort.Value = effortActive;
+            var il = new FixedString64Bytes(interactLabel); if (!nInteract.Value.Equals(il)) nInteract.Value = il;
+            if (Mathf.Abs(nInteractProgress.Value - interactProgress) > 0.02f || (interactProgress == 0f && nInteractProgress.Value != 0f)) nInteractProgress.Value = interactProgress;
         }
 
         void HandleHand(int hand, bool held)
@@ -65,16 +115,25 @@ namespace UncleExtraction
             var link = GrabRegistry.Find(this, hand);
             if (!held) { if (link != null) GrabRegistry.Release(link.id, ReleaseReason.Released); return; }
             if (link != null) return;
-            // Mantener sin agarre: reintenta cada frame (agarre al pasar sobre un punto valido)
-            if (Candidate == null) return;
-            var r = GrabRegistry.TryCreate(this, hand, Candidate, out _);
+            // Mantener sin agarre: reintenta cada frame (agarre al pasar sobre un punto valido).
+            // El anfitrion recalcula el candidato con la mirada recibida: no confia en un socket elegido por el cliente.
+            var c = Candidate;
+            if (c == null) return;
+            var r = GrabRegistry.TryCreate(this, hand, c, out _);
             if (r != GrabResult.Ok && r != GrabResult.HandBusy) Feedback(r == GrabResult.SocketBusy ? "Ocupado" : r == GrabResult.OutOfReach ? "Fuera de alcance" : r.ToString());
         }
 
-        /// API directa (pruebas y depuracion): agarra un socket concreto con una mano.
+        /// API directa (pruebas y depuracion en el anfitrion): agarra un socket concreto con una mano.
         public GrabResult ForceGrab(int hand, GrabSocket s) => GrabRegistry.TryCreate(this, hand, s, out _);
 
-        void Feedback(string msg) { LastFeedback = msg; FeedbackUntil = Time.time + 1.2f; }
+        void Feedback(string msg)
+        {
+            LastFeedback = msg; FeedbackUntil = Time.time + 1.2f;
+            if (IsSpawned && IsServer && !IsOwner) FeedbackRpc(msg);
+        }
+
+        [Rpc(SendTo.Owner)]
+        void FeedbackRpc(FixedString64Bytes msg) { LastFeedback = msg.ToString(); FeedbackUntil = Time.time + 1.2f; }
 
         GrabSocket FindCandidate()
         {
@@ -110,18 +169,19 @@ namespace UncleExtraction
 
         void FixedUpdate()
         {
-            bool wantsEffort = (DebugEffort || LabInput.Held(Act.Effort)) && AnyHeld && motor.ControlsEnabled;
-            if (wantsEffort && effortTime < LabBalance.EffortMax && motor.ConsumeEffort(Time.fixedDeltaTime)) { effortTime += Time.fixedDeltaTime; EffortActive = true; }
-            else { EffortActive = false; if (!wantsEffort) effortTime = 0f; }
+            if (!Auth) return;
+            bool wantsEffort = (DebugEffort || Ctrl(Act.Effort)) && AnyHeld && motor.ControlsEnabled;
+            if (wantsEffort && effortTime < LabBalance.EffortMax && motor.ConsumeEffort(Time.fixedDeltaTime)) { effortTime += Time.fixedDeltaTime; effortActive = true; }
+            else { effortActive = false; if (!wantsEffort) effortTime = 0f; }
 
             broken.Clear();
-            GrabSpring.ApplyOwner(this, rb, HandTarget, EffortActive, Time.fixedDeltaTime, broken);
+            GrabSpring.ApplyOwner(this, rb, HandTarget, effortActive, Time.fixedDeltaTime, broken);
             foreach (var l in broken) { GrabRegistry.Release(l.id, ReleaseReason.Distance); Feedback("Se solto (distancia)"); }
         }
 
         void HandleInteract()
         {
-            InteractLabel = ""; 
+            interactLabel = "";
             var npc = NpcBrain.Instance; var cart = TransportCart.Instance;
             // 1) Desanclar: mantener E sobre la mano anclada del tio 0,9 s
             if (npc && npc.IsAnchored && npc.AnchorHandSocket)
@@ -130,28 +190,33 @@ namespace UncleExtraction
                 bool aiming = to.magnitude <= LabBalance.GrabReach + 0.3f && Vector3.Angle(cam.transform.forward, to) < 30f;
                 if (aiming)
                 {
-                    InteractLabel = "Mantener E: soltarle la mano";
-                    if (LabInput.Held(Act.Interact))
+                    interactLabel = "Mantener E: soltarle la mano";
+                    if (Ctrl(Act.Interact))
                     {
-                        InteractProgress01 += Time.deltaTime / LabBalance.AnchorReleaseHold;
-                        if (InteractProgress01 >= 1f) { npc.ReleaseAnchor("jugador"); InteractProgress01 = 0f; }
+                        interactProgress += Time.deltaTime / LabBalance.AnchorReleaseHold;
+                        if (interactProgress >= 1f) { npc.ReleaseAnchor("jugador"); interactProgress = 0f; }
                     }
-                    else InteractProgress01 = 0f;
+                    else interactProgress = 0f;
                     return;
                 }
             }
-            InteractProgress01 = 0f;
+            interactProgress = 0f;
             // 2) Carrito: E para asegurar / liberar al tio en la caja
             if (cart && Vector3.Distance(transform.position, cart.transform.position) < 2.2f)
             {
-                if (cart.IsStrapped) { InteractLabel = "E: soltar correa del carrito"; if (LabInput.Pressed(Act.Interact)) cart.Unstrap("jugador"); }
-                else if (cart.CanStrap) { InteractLabel = "E: asegurar al tio en el carrito"; if (LabInput.Pressed(Act.Interact)) cart.Strap(); }
+                if (cart.IsStrapped) { interactLabel = "E: soltar correa del carrito"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
+                else if (cart.CanStrap) { interactLabel = "E: subir y asegurar al tio en el carrito"; if (CtrlPressed(Act.Interact) && !cart.Strap()) Feedback(cart.LastFailure); }
             }
         }
 
-        public void ReleaseAll(ReleaseReason r) { GrabRegistry.ReleaseAllOf(this, r); effortTime = 0f; EffortActive = false; }
+        public void ReleaseAll(ReleaseReason r) { GrabRegistry.ReleaseAllOf(this, r); effortTime = 0f; effortActive = false; }
 
-        void OnDisable() => GrabRegistry.ReleaseAllOf(this, ReleaseReason.Disabled);
+        void OnDisable() { if (Auth) GrabRegistry.ReleaseAllOf(this, ReleaseReason.Disabled); }
+
+        public override void OnNetworkDespawn()
+        {   // desconexion mientras agarra: el anfitrion libera todo de ese jugador (especificacion 05)
+            if (IsServer) GrabRegistry.ReleaseAllOf(this, ReleaseReason.Disconnect);
+        }
 
         static readonly Color free = new Color(0.95f, 0.8f, 0.65f), holding = new Color(0.2f, 0.85f, 0.75f), strained = new Color(1f, 0.55f, 0.1f);
         void UpdateVisuals()
@@ -161,10 +226,10 @@ namespace UncleExtraction
         void SetHand(Transform t, Renderer r, int hand)
         {
             if (!t) return;
-            var l = GrabRegistry.Find(this, hand);
-            Vector3 p = l != null ? Vector3.Lerp(HandTarget(hand), l.socket.Position, 0.85f) : HandTarget(hand);
+            var s = HeldSocket(hand);
+            Vector3 p = s ? Vector3.Lerp(HandTarget(hand), s.Position, 0.85f) : HandTarget(hand);
             t.position = Vector3.Lerp(t.position, p, 0.5f);
-            if (r) r.material.color = l == null ? free : Color.Lerp(holding, strained, l.tension01);
+            if (r) r.material.color = s == null ? free : Color.Lerp(holding, strained, Tension01(hand));
         }
     }
 }

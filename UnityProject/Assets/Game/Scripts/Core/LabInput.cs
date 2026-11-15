@@ -11,7 +11,12 @@ namespace UncleExtraction
     /// TODO M1+: migrar a un InputActionAsset remapeable (GDD 04).
     public static class LabInput
     {
-        public static Vector2 Move()
+        /// Movimiento simulado (autopiloto/pruebas). Si tiene valor, reemplaza al teclado.
+        public static Vector2? SimulatedMove;
+
+        public static Vector2 Move() => SimulatedMove ?? RealMove();
+
+        static Vector2 RealMove()
         {
 #if UE_INPUT_SYSTEM
             Vector2 v = Vector2.zero;
@@ -48,7 +53,16 @@ namespace UncleExtraction
 
         /// Botones simulados (pruebas automaticas y autopiloto). Se suman a la entrada real.
         public static readonly bool[] Simulated = new bool[16];
-        public static void ClearSimulated() { System.Array.Clear(Simulated, 0, Simulated.Length); }
+        public static void ClearSimulated() { System.Array.Clear(Simulated, 0, Simulated.Length); SimulatedMove = null; }
+
+        /// Entrada para el juego: los clics reales de agarre solo cuentan con el cursor capturado
+        /// (con el panel de depuracion abierto, los clics son para la UI). Los simulados siempre cuentan.
+        public static bool HeldForGameplay(Act a)
+        {
+            if (Simulated[(int)a]) return true;
+            if ((a == Act.GrabLeft || a == Act.GrabRight) && Cursor.lockState != CursorLockMode.Locked) return false;
+            return RealHeld(a);
+        }
 
         public static bool Held(Act a) => Simulated[(int)a] || RealHeld(a);
 

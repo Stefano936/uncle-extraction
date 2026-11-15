@@ -51,7 +51,7 @@ namespace UncleExtraction
 
         void FixedUpdate()
         {
-            if (pullers.Count == 0 || !pullTarget) return;
+            if (!NetAuth.IsServer || pullers.Count == 0 || !pullTarget) return;
             foreach (var v in pullers)
             {
                 broken.Clear();

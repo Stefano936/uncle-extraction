@@ -10,7 +10,7 @@ namespace UncleExtraction.EditorTools
     /// Uso: Unity.exe -batchmode -nographics -projectPath UnityProject -executeMethod UncleExtraction.EditorTools.ProjectBootstrap.Run
     public static class ProjectBootstrap
     {
-        static readonly string[] Packages = { "com.unity.inputsystem", "com.unity.test-framework", "com.unity.ugui" };
+        static readonly string[] Packages = { "com.unity.inputsystem", "com.unity.test-framework", "com.unity.ugui", "com.unity.netcode.gameobjects", "com.unity.transport" };
         static AddAndRemoveRequest request; static double startedAt;
 
         [MenuItem("Uncle Extraction/M0: instalar paquetes base")]

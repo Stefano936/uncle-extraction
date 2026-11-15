@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 namespace UncleExtraction
@@ -5,11 +6,15 @@ namespace UncleExtraction
     /// Zona de la camioneta: los puntos requeridos (torso, pelvis, hombros) deben estar dentro 1,5 s seguidos.
     /// Pendiente: comprobacion de solapamiento con solidos y cierre de puerta (balance.extraction).
     [RequireComponent(typeof(BoxCollider))]
-    public class ExtractionZone : MonoBehaviour, IResettable
+    public class ExtractionZone : NetworkBehaviour, IResettable
     {
         public NpcBody npc;
-        public float Progress01 => Mathf.Clamp01(held / LabBalance.ExtractionHold);
-        public bool Secured { get; private set; }
+        readonly NetworkVariable<float> nProgress = new NetworkVariable<float>();
+        readonly NetworkVariable<bool> nSecured = new NetworkVariable<bool>();
+        bool Mirror => IsSpawned && !IsServer;
+        bool secured;
+        public float Progress01 => Mirror ? nProgress.Value : Mathf.Clamp01(held / LabBalance.ExtractionHold);
+        public bool Secured { get => Mirror ? nSecured.Value : secured; private set => secured = value; }
         BoxCollider box; float held;
 
         void Awake() { box = GetComponent<BoxCollider>(); box.isTrigger = true; }
@@ -26,6 +31,13 @@ namespace UncleExtraction
 
         void FixedUpdate()
         {
+            if (!NetAuth.IsServer) return;
+            if (IsSpawned)
+            {
+                float p = Mathf.Clamp01(held / LabBalance.ExtractionHold);
+                if (Mathf.Abs(nProgress.Value - p) > 0.02f || (p == 0f && nProgress.Value != 0f)) nProgress.Value = p;
+                if (nSecured.Value != secured) nSecured.Value = secured;
+            }
             if (Secured || !npc) return;
             held = AllPointsInside ? held + Time.fixedDeltaTime : 0f;
             if (held >= LabBalance.ExtractionHold)
