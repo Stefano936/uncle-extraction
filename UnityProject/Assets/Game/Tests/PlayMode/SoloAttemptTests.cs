@@ -8,6 +8,7 @@ namespace UncleExtraction.Tests
 {
     /// Criterio de salida M1: intentos individuales completos con el cerebro del tio ENCENDIDO y sin teletransportes.
     /// LabAutopilot juega usando solo entradas de jugador (mirar, moverse, clics, E, Q, Espacio, agacharse).
+    [Timeout(330000)] // por defecto Unity corta a los 180 s; un intento dificil puede durar mas
     public class SoloAttemptTests
     {
         const float TimeScale = 1f;   // tiempo real: con 4x el autopiloto controla mas grueso y el carrito pasaba en falso
@@ -61,7 +62,6 @@ namespace UncleExtraction.Tests
         [UnityTest] public IEnumerator SoloAttempt_Drag_Hard_Succeeds() => Attempt(AutopilotMode.Drag, Difficulty.Hard);
 
         [UnityTest]
-        [Ignore("Problema conocido (2026-11-15): en tiempo real el carrito con el tio se traba al salir por la puerta; la cabeza del tio sobresale y engancha el marco derecho. Ver PROGRESS.md.")]
         public IEnumerator SoloAttempt_Cart_Normal_Succeeds()
         {
             yield return Attempt(AutopilotMode.Cart, Difficulty.Normal);

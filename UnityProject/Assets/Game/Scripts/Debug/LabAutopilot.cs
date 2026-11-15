@@ -29,7 +29,7 @@ namespace UncleExtraction
         // al final, de costado para que el carrito quede atravesado dentro de la zona.
         static readonly Vector3[] CartPullPath = { new Vector3(0, 0, 1.6f), new Vector3(0, 0, -0.4f), new Vector3(0, 0, -3.5f), new Vector3(-2.2f, 0, -6.0f), new Vector3(-2.6f, 0, -8.45f), new Vector3(2.6f, 0, -8.45f) };
 
-        Coroutine routine; HingeJoint door; Vector3 stuckRef; float stuckSince; bool zigLogged;
+        Coroutine routine; HingeJoint door; Vector3 stuckRef; float stuckSince; bool zigLogged, cartClearedDoor;
         NpcState lastNpc; int lastFalls;
         float handsOffUntil = -1f, aimSince, nextReport;
         GrabSocket lastTarget; bool switchedToAnkles;
@@ -73,7 +73,7 @@ namespace UncleExtraction
         {
             StopRun();
             Mode = mode; Running = true; Timeline.Clear();
-            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null;
+            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
             aimSince = Time.time; nextReport = Time.time + 10f;
             Log($"inicio modo {mode}: tio en {body.Body.position}, jugador en {player.transform.position}");
             routine = StartCoroutine(mode == AutopilotMode.Drag ? DragRun() : CartRun());
@@ -323,13 +323,15 @@ namespace UncleExtraction
                     if (!Holding(0)) hands.DebugHoldLeft = aimed; if (!Holding(1)) hands.DebugHoldRight = aimed;
                     yield return null; continue;
                 }
-                while (cartWp < CartPullPath.Length - 1 && Vector3.Distance(Me, CartPullPath[cartWp]) < 0.6f) { cartWp++; Log($"jugador hacia el punto {cartWp}/{CartPullPath.Length - 1} con el carrito en {Flat(cart.transform.position)}"); }
+                while (cartWp < CartPullPath.Length - 1 && (cartWp < 3 || cartClearedDoor) && Vector3.Distance(Me, CartPullPath[cartWp]) < 0.6f) { cartWp++; Log($"jugador hacia el punto {cartWp}/{CartPullPath.Length - 1} con el carrito en {Flat(cart.transform.position)}"); }
                 Vector3 goal = CartPullPath[cartWp];
                 // Mientras el carrito no cruzo la puerta (z = -2), tirar recto por el centro: en diagonal se traba en el marco.
-                if (cc.z > -2.9f && Me.z < 0.8f)
+                if (cc.z < -4.0f) cartClearedDoor = true;          // carrito + tio que sobresale, del todo afuera
+                else if (cc.z > -1.0f) cartClearedDoor = false;
+                if (!cartClearedDoor && Me.z < 0.8f)
                 {   // antes de la puerta, recentrar el carrito en x; dentro del marco, tirar recto
                     float gx = cc.z > -0.6f ? Mathf.Clamp(-cc.x, -0.6f, 0.6f) : 0f;
-                    goal = new Vector3(gx, 0f, Mathf.Max(Me.z - 1.0f, -6.0f));
+                    goal = new Vector3(gx, 0f, Mathf.Max(Me.z - 1.0f, -6.5f));
                 }
                 else if (cartWp == CartPullPath.Length - 1)
                 {   // tramo final de costado por el frente de la camioneta: avanzar al este hasta que la pelvis pase el centro

@@ -43,7 +43,7 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 
 - Correa: antes era una unión con límite lineal y rotación libre; el tío quedaba en cualquier orientación y, atravesado (1,9 m), no pasaba la puerta de 1,5 m. Decisión: al asegurar, la correa lo acuesta a lo largo de la caja (cabeza hacia el frente, boca arriba) y bloquea la rotación relativa; se desactiva la colisión tío-carrito, porque el prototipo se superpone con las barandas. Alternativa pendiente: ragdoll o pose encogida. Reversible.
 - `LabAutopilot`: el bot de pruebas pasó a ser un componente de la escena, para que pruebas y build compartan código y el usuario pueda mirarlo. Usa solo entradas de jugador.
-- Pruebas de intento completo en tiempo real: con `timeScale` 4 el carrito pasaba 3/3, pero en la build fallaba 0/9 (el bot decide por frame y a 4x controla más grueso). Se usa `timeScale` 1 y la prueba del carrito queda `[Ignore]` con motivo hasta resolver la puerta.
+- Pruebas de intento completo en tiempo real: con `timeScale` 4 el carrito pasaba 3/3, pero en la build fallaba 0/9 (el bot decide por frame y a 4x controla más grueso). Se usa `timeScale` 1 (con `[Timeout(330000)]`). La prueba del carrito estuvo `[Ignore]` hasta corregir el bot (histéresis al cruzar la puerta); hoy pasa.
 - `runInBackground = true`: sin foco, la build se pausaba (una prueba de humo se congeló a los 2,8 s). También es necesario para el anfitrión de M2.
 
 ## Plantilla para nuevas decisiones
