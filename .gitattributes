@@ -31,3 +31,9 @@ preproduction/** -text
 *.inputactions text eol=lf
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
+
+# Proyecto Unity: texto LF reproducible (añadido 2026-11-15, M0).
+UnityProject/**/*.json text eol=lf
+UnityProject/**/*.asmdef text eol=lf
+UnityProject/**/*.physicMaterial text eol=lf
+UnityProject/ProjectSettings/*.txt text eol=lf
