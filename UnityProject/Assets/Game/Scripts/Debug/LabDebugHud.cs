@@ -9,7 +9,7 @@ namespace UncleExtraction
         public PlayerMotor player; public PlayerHands hands;
         public NpcBrain npc; public NpcBody npcBody;
         public TransportCart cart; public ExtractionZone zone;
-        public RoundDirector round; public LabForceRig rig;
+        public RoundDirector round; public LabForceRig rig; public LabAutopilot autopilot;
 
         bool panel = false;
         GUIStyle big, mid, small, box;
@@ -76,6 +76,7 @@ namespace UncleExtraction
             string timer = round ? (round.TimeLimit > 0 ? $"{Mathf.Max(0, round.TimeLimit - round.Elapsed):0}s" : "sin limite") : "";
             GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"PhysicsLab  {timer}", mid);
 
+            if (autopilot && autopilot.Running) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
             if (panel) DrawPanel(W, H);
             else GUI.Label(new Rect(10, 8, 600, 22), "Tab: panel de depuracion / liberar raton", small);
         }
@@ -125,6 +126,15 @@ namespace UncleExtraction
                 GUILayout.Label($"Fuerzas virtuales hacia la camioneta: {rig.ActivePullers}", small);
                 GUILayout.BeginHorizontal();
                 foreach (int n in new[] { 0, 1, 2, 4 }) if (GUILayout.Button(n.ToString())) rig.SetVirtualPullers(n);
+                GUILayout.EndHorizontal();
+            }
+            if (autopilot)
+            {
+                GUILayout.Label(autopilot.Running ? $"Autopiloto: {autopilot.Mode} - {autopilot.Status}" : "Autopiloto (juega solo, para mirar):", small);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Arrastrar")) { round.Restart(); autopilot.StartRun(AutopilotMode.Drag); }
+                if (GUILayout.Button("Carrito")) { round.Restart(); autopilot.StartRun(AutopilotMode.Cart); }
+                if (GUILayout.Button("Parar")) autopilot.StopRun();
                 GUILayout.EndHorizontal();
             }
             GUILayout.Label($"Resorte de agarre k={GrabSpring.K:0} N/m  c={GrabSpring.C:0} N*s/m", small);

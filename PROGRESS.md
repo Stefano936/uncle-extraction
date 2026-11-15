@@ -1,22 +1,24 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-15 (Claude Code local, sesión 3: integración Git, M0/M1 compilado e intento individual automático).
+Última actualización: 2026-11-15 (Claude Code local, sesión 3: integración Git, M0/M1 compilado, autopiloto e intentos individuales automáticos).
 
 ## Hito actual
 
-M0 + M1 — PhysicsLab **compila, pasa las pruebas automáticas (incluido un intento individual completo con el cerebro del tío encendido) y tiene build Windows que arranca**. Falta jugarlo a mano: no hubo control de pantalla en la sesión.
+M0 + M1 — PhysicsLab **compila y pasa las pruebas automáticas, incluidos intentos individuales completos de arrastre en Normal y Difícil, en tiempo real y con el cerebro del tío encendido. La build de Windows completa sola un intento de arrastre con el autopiloto.** Abierto: el modo carrito se traba en la puerta (problema conocido). Falta jugarlo a mano: no hubo control de pantalla en la sesión.
 
 ## Niveles de verificación (2026-11-15, sesión 3)
 
 | Nivel | Estado | Evidencia |
 | --- | --- | --- |
-| Código escrito | OK | `UnityProject/Assets/Game/`. Cambios de C# en esta sesión: `LabInput.Simulated`, levantada del tío en `NpcBrain` y `SoloAttemptTests`. |
+| Código escrito | OK | `UnityProject/Assets/Game/`. Cambios de C# en esta sesión: `LabInput.Simulated`, `LabAutopilot` (nuevo), levantada del tío en `NpcBrain`, correa en `TransportCart`, panel del HUD, `BuildTools` (`runInBackground`) y `SoloAttemptTests`. |
 | Compilación C# | OK, 0 errores, 0 warnings | Unity 6000.3.28f1 batch; `.local-setup/logs/unity/01b_bootstrap.log` (local, no versionado). |
 | Escena PhysicsLab | Generada | `PhysicsLabBuilder.BuildFromCommandLine` → `Assets/Game/Scenes/PhysicsLab.unity`, 10 sockets. |
-| Pruebas EditMode | 9/9 PASS | `10_editmode.xml`. |
-| Pruebas PlayMode | 5/5 PASS, 3 corridas seguidas | `09_playmode_{1,2,3}.xml`. Las 4 originales (cerebro apagado, extracción con teletransporte) + `SoloAttemptTests`. |
-| Intento individual completo (automático) | PASS 3/3, ~20 s de juego | `SoloAttempt_BrainOn_DragUncleIntoVan_Succeeds`: un bot usa solo entradas de jugador (mirar, moverse, clics, E, Q, Espacio, agacharse; sin `Strap()`, `Secure()` ni teletransportes). Normal, 1 jugador, `timeScale` 4. El tío se aferra a la barra, forcejea, da un manotazo y una patada, cae y se agota; el bot lo saca por la puerta y lo entra en la zona. No usa el carrito. |
-| Build Windows (Mono, x64) | OK | `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (~92 MB, no versionado), 0 errores; regenerada tras los cambios (`11_build.log`). |
+| Pruebas EditMode | 9/9 PASS | `23_editmode.xml`. |
+| Pruebas PlayMode | 6 PASS + 1 ignorada, 2 corridas | `22_playmode_{1,2}.xml`. Las 4 originales (cerebro apagado, extracción con teletransporte) + `SoloAttemptTests` en **tiempo real** (`timeScale` 1). |
+| Intento individual de arrastre (automático) | PASS: Normal 28,7 y 28,9 s; Difícil 43,5 y 30,3 s | `LabAutopilot` juega solo con entradas de jugador (mirar, moverse, clics, E, Q, Espacio, agacharse; sin `Strap()`, `Secure()` ni teletransportes). El tío se aferra, forcejea, ataca, cae y se agota; el bot lo saca por la puerta y lo entra de costado, tomado de los tobillos. |
+| Intento individual con carrito (automático) | FALLA en tiempo real (ignorado con motivo) | Asegura al tío con E (correa) y tira del carrito, pero se traba al salir por la puerta: el carrito deriva a la derecha y la cabeza del tío, que sobresale, engancha el marco. 0/3 en la prueba en tiempo real y 0/9 en la build. Con `timeScale` 4 pasaba 3/3, pero era un falso positivo por control más grueso; por eso las pruebas pasaron a tiempo real. |
+| Build Windows (Mono, x64) | OK | `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (~92 MB, no versionado), 0 errores (`24_build.log`). `runInBackground` activado. |
+| Build: intento automático de arrastre | PASS 3/3 tras activar `runInBackground` (13,7, 87,8 y 104,7 s) | `UncleExtraction_PhysicsLab.exe -ueAutopilot drag -ueQuitOnEnd` en ventana de 1280×720; sale con código 0 si la ronda termina en éxito (`25_build_autopilot_drag_*.log`). Antes, 1 de 5 corridas se quedó congelada: sin foco, Unity pausaba el juego. |
 | Arranque de la build | OK | 20 s en ventana 1280×720: D3D11 (RTX 3070 Ti), PhysX 4.1.2, Input System inicializado, sin excepciones (`06_build_smoke.log`). |
 | Jugado a mano | NOT_RUN | Sin herramientas de control de pantalla en la sesión. Sensación, legibilidad de ataques y diversión sin comprobar. |
 | IL2CPP | NOT_RUN | Módulo instalado; falta Visual Studio con C++. |
@@ -43,6 +45,9 @@ U="C:/Program Files/Unity/Hub/Editor/6000.3.28f1/Editor/Unity.exe"
 - `.gitattributes`: LF para json/asmdef/physicMaterial/ProjectVersion de Unity.
 - Commit `bcc8f9b` (proyecto Unity, escena, settings, .meta).
 - Intento individual automático (`Tests/PlayMode/SoloAttemptTests.cs`) y `LabInput.Simulated` (botones simulados que se suman a la entrada real, para pruebas y un futuro autopiloto).
+- `LabAutopilot` (`Scripts/Debug/`): jugador automático para pruebas y demostraciones. En la build: Tab → panel → «Autopiloto: Arrastrar / Carrito / Parar», o por línea de comandos `-ueAutopilot drag|cart [-ueQuitOnEnd]`.
+- Ajuste de juego: al asegurar con E, la correa acuesta al tío a lo largo del carrito y bloquea su rotación (antes giraba libre, quedaba atravesado y no pasaba la puerta).
+- `PlayerSettings.runInBackground = true` (en `BuildTools`).
 - Ajuste de juego: el tío caído necesita 2,5 s sin agarres para levantarse (antes se levantaba al instante al soltarlo y se iba de la zona antes del conteo de 1,5 s). Ver `docs/DECISIONES_IMPLEMENTACION.md`.
 
 ## Hallazgos del intento automático (para el playtest)
@@ -50,7 +55,8 @@ U="C:/Program Files/Unity/Hub/Editor/6000.3.28f1/Editor/Unity.exe"
 - Con una mano (420 N) no se puede arrastrar al tío caído: la fricción ronda los 460 N. Con dos manos (tope 700 N) sí. Puede ser intencional (incentiva usar las dos manos o el carrito), pero hay que comunicarlo.
 - La puerta de 1,5 m es un cuello de botella real: el tío acostado se engancha en el marco si entra en diagonal (GDD: «orientar el cuerpo en el umbral»).
 - Si se lo arrastra de los hombros contra la camioneta, el torso queda bajo el jugador y fuera de la zona. Funciona entrarlo de costado, tomado de los tobillos. La zona (2,2 × 1,6 m) delante de una camioneta sólida es exigente; en el juego final el tío va **dentro** de la camioneta (GDD).
-- En Normal y con un jugador, el bot gana en ~20 s con 2 ataques. Probablemente sea demasiado fácil para un jugador hábil; medirlo a mano antes de tocar el balance.
+- En tiempo real, el bot gana arrastrando en 14–105 s (Normal) y 30–64 s (Difícil), con 1 a 12 ataques. La varianza es alta y podría ser fácil para un jugador hábil: medirlo a mano antes de tocar el balance.
+- Carrito + puerta: el tío (1,9 m) sobresale del carrito (1,4 m) y engancha el marco de 1,5 m si el carrito no sale centrado y recto. Puede ser bueno como desafío («orientar el cuerpo en el umbral»), pero hoy el bot no lo resuelve. Opciones: un carrito más largo, el tío más encogido en la caja, o un bot que alinee mejor antes de la puerta.
 
 ## Código M1 implementado
 
@@ -84,8 +90,8 @@ Decisiones y simplificaciones: ver `docs/DECISIONES_IMPLEMENTACION.md` (2026-11-
 
 ## Próxima acción exacta
 
-1. Stefano (o Claude con control de pantalla): abrir `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` o la escena en el editor y jugar un intento completo: agarrar con clic izquierdo/derecho, arrastrar al tío, esquivar un ataque anunciado, caer y levantarse, cargarlo en el carrito (E para la correa) y llevarlo a la zona verde. Anotar qué no funciona o no se siente bien.
-2. Claude: segunda prueba automática con el carrito (correa con E) y otra en Difícil; convertir el bot en un autopiloto de depuración que se pueda ver en la build.
+1. Stefano (o Claude con control de pantalla): abrir `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe`. Se puede mirar primero al autopiloto (Tab → «Arrastrar») y después jugar un intento completo: agarrar con clic izquierdo/derecho, arrastrar al tío, esquivar un ataque anunciado, caer y levantarse, cargarlo en el carrito (E para la correa) y llevarlo a la zona verde. Anotar qué no funciona o no se siente bien.
+2. Claude: destrabar el modo carrito en la puerta (problema conocido; probar primero el ajuste del carrito o del tío en la caja) y volver a activar `SoloAttempt_Cart_Normal_Succeeds`.
 3. Pendientes de M1 según decisiones: vaso señuelo, ayuda de compañero, superposición con sólidos y puerta en la extracción; URP.
 4. Instalar Visual Studio 2022 con «Desarrollo de juegos con C++» y probar la build IL2CPP.
 

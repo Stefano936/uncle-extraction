@@ -26,6 +26,7 @@ namespace UncleExtraction.EditorTools
         {
             var impl = backend.Equals("IL2CPP", StringComparison.OrdinalIgnoreCase) ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, impl);
+            PlayerSettings.runInBackground = true; // el anfitrion (M2) no debe congelarse sin foco; tambien las pruebas de humo
             if (!File.Exists(PhysicsLabBuilder.ScenePath)) PhysicsLabBuilder.Build();
             var opts = new BuildPlayerOptions
             {

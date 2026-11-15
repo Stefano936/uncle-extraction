@@ -39,6 +39,13 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Problema: en el intento individual automático, el tío llegaba a la zona varias veces pero no se aseguraba. Al soltarlo, si llevaba ≥2,5 s en el piso se levantaba al instante y se iba caminando antes de los 1,5 s de conteo. Decisión: para levantarse necesita 2,5 s en el piso **y** 2,5 s sin agarres (`NpcBrain.Decide`). Antes: solo 2,5 s en el piso. Evidencia: antes, 1 de 2 corridas de la batería fallaba (el tío salía de la zona 3 veces); después, 3/3 PASS en ~20 s. Reversible; revisar en el playtest si hace al tío demasiado dócil.
 - Entrada simulada: `LabInput.Simulated[]` se suma a la entrada real para que las pruebas usen los mismos caminos que un jugador (E, Q, Espacio, agacharse).
 
+## 2026-11-15 — M1: correa del carrito, autopiloto y pruebas en tiempo real
+
+- Correa: antes era una unión con límite lineal y rotación libre; el tío quedaba en cualquier orientación y, atravesado (1,9 m), no pasaba la puerta de 1,5 m. Decisión: al asegurar, la correa lo acuesta a lo largo de la caja (cabeza hacia el frente, boca arriba) y bloquea la rotación relativa; se desactiva la colisión tío-carrito, porque el prototipo se superpone con las barandas. Alternativa pendiente: ragdoll o pose encogida. Reversible.
+- `LabAutopilot`: el bot de pruebas pasó a ser un componente de la escena, para que pruebas y build compartan código y el usuario pueda mirarlo. Usa solo entradas de jugador.
+- Pruebas de intento completo en tiempo real: con `timeScale` 4 el carrito pasaba 3/3, pero en la build fallaba 0/9 (el bot decide por frame y a 4x controla más grueso). Se usa `timeScale` 1 y la prueba del carrito queda `[Ignore]` con motivo hasta resolver la puerta.
+- `runInBackground = true`: sin foco, la build se pausaba (una prueba de humo se congeló a los 2,8 s). También es necesario para el anfitrión de M2.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.

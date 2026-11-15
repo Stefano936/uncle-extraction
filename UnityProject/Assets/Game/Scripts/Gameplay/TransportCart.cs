@@ -36,16 +36,26 @@ namespace UncleExtraction
         {
             if (!CanStrap) return false;
             if (NpcBrain.Instance && NpcBrain.Instance.IsAnchored) return false;
+            // La correa lo acuesta a lo largo de la caja (cabeza hacia el frente, boca arriba) y bloquea su rotacion:
+            // con rotacion libre quedaba atravesado (1,9 m) y no pasaba por la puerta de 1,5 m (decision M1, 2026-11-15).
+            var nb = npc.Body;
+            Vector3 bedPt = transform.TransformPoint(new Vector3(0f, 0.72f, 0f));
+            Quaternion lying = Quaternion.LookRotation(Vector3.up, transform.forward);
+            Vector3 pelvisLocal = npc.pelvis ? npc.transform.InverseTransformPoint(npc.pelvis.position) : new Vector3(0f, 0.95f, 0f);
+            nb.linearVelocity = Vector3.zero; nb.angularVelocity = Vector3.zero;
+            nb.rotation = lying; nb.position = bedPt - lying * pelvisLocal;
+            npc.transform.SetPositionAndRotation(nb.position, nb.rotation);
+
             strap = gameObject.AddComponent<ConfigurableJoint>();
-            strap.connectedBody = npc.Body;
+            strap.connectedBody = nb;
             strap.autoConfigureConnectedAnchor = false;
-            Vector3 anchorWorld = strapPoint ? strapPoint.position : bed.transform.TransformPoint(bed.center);
-            strap.anchor = transform.InverseTransformPoint(anchorWorld);
-            strap.connectedAnchor = npc.Body.transform.InverseTransformPoint(npc.pelvis ? npc.pelvis.position : npc.transform.position);
+            strap.anchor = transform.InverseTransformPoint(bedPt);
+            strap.connectedAnchor = pelvisLocal;
             strap.xMotion = strap.yMotion = strap.zMotion = ConfigurableJointMotion.Limited;
-            strap.linearLimit = new SoftJointLimit { limit = 0.15f };
-            strap.linearLimitSpring = new SoftJointLimitSpring { spring = 2500f, damper = 250f }; // lo acerca de forma progresiva
-            strap.enableCollision = true;
+            strap.angularXMotion = strap.angularYMotion = strap.angularZMotion = ConfigurableJointMotion.Locked;
+            strap.linearLimit = new SoftJointLimit { limit = 0.08f };
+            strap.linearLimitSpring = new SoftJointLimitSpring { spring = 2500f, damper = 250f };
+            strap.enableCollision = false; // el tio acostado se superpone con las barandas del carrito de prototipo
             StrapCount++;
             Debug.Log("[Cart] strapped");
             return true;

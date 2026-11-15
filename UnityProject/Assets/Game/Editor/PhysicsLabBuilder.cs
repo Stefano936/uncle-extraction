@@ -135,6 +135,9 @@ namespace UncleExtraction.EditorTools
             var rig = sys.AddComponent<LabForceRig>(); rig.npc = body; rig.pullTarget = zoneGo.transform;
             var hud = sys.AddComponent<LabDebugHud>();
             hud.player = motor; hud.hands = hands; hud.npc = brain; hud.npcBody = body; hud.cart = cart; hud.zone = zone; hud.round = round; hud.rig = rig;
+            var auto = sys.AddComponent<LabAutopilot>();
+            auto.player = motor; auto.hands = hands; auto.npc = brain; auto.body = body; auto.cart = cart; auto.zone = zone; auto.round = round;
+            hud.autopilot = auto;
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
