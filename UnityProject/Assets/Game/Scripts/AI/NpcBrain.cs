@@ -156,7 +156,8 @@ namespace UncleExtraction
             if (body.Posture == NpcPosture.Fallen)
             {
                 if (Grabbed && Now >= nextAttackAt && TryStartAttack()) return;
-                if (!Grabbed && body.CanTryStandUp) body.TryStandUp();
+                // Se levanta tras standUpDelay en el piso Y standUpDelay sin agarres: soltarlo no lo para al instante (decision M1, 2026-11-15).
+                if (!Grabbed && body.CanTryStandUp && Now - lastGrabbedAt >= body.standUpDelay) body.TryStandUp();
                 if (State != NpcState.Fallen) Enter(NpcState.Fallen, 0f, "en el piso");
                 return;
             }

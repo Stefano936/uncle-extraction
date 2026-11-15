@@ -1,23 +1,24 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-15 (Claude Code local, sesión 3: integración Git + M0/M1 compilado).
+Última actualización: 2026-11-15 (Claude Code local, sesión 3: integración Git, M0/M1 compilado e intento individual automático).
 
 ## Hito actual
 
-M0 + M1 — PhysicsLab **compila, pasa las pruebas automáticas y tiene build Windows que arranca**. Falta jugarlo a mano (no hubo control de pantalla en la sesión) y verificar un intento individual completo.
+M0 + M1 — PhysicsLab **compila, pasa las pruebas automáticas (incluido un intento individual completo con el cerebro del tío encendido) y tiene build Windows que arranca**. Falta jugarlo a mano: no hubo control de pantalla en la sesión.
 
 ## Niveles de verificación (2026-11-15, sesión 3)
 
 | Nivel | Estado | Evidencia |
 | --- | --- | --- |
-| Código escrito | OK | `UnityProject/Assets/Game/` (sin cambios de C# en esta sesión). |
+| Código escrito | OK | `UnityProject/Assets/Game/`. Cambios de C# en esta sesión: `LabInput.Simulated`, levantada del tío en `NpcBrain` y `SoloAttemptTests`. |
 | Compilación C# | OK, 0 errores, 0 warnings | Unity 6000.3.28f1 batch; `.local-setup/logs/unity/01b_bootstrap.log` (local, no versionado). |
 | Escena PhysicsLab | Generada | `PhysicsLabBuilder.BuildFromCommandLine` → `Assets/Game/Scenes/PhysicsLab.unity`, 10 sockets. |
-| Pruebas EditMode | 9/9 PASS | `03_editmode.xml`. |
-| Pruebas PlayMode | 4/4 PASS (12 s) | `04_playmode.xml`: 8 agarres + 10 reinicios sin huérfanos; arrastre (tío movido >0,3 m); empujón derriba, suelta manos y levanta con invulnerabilidad; extracción asegura. Ojo: el cerebro del NPC está apagado y la extracción teletransporta al tío; no es un intento completo. |
-| Build Windows (Mono, x64) | OK | `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (~92 MB, no versionado), 0 errores, 54 s. |
+| Pruebas EditMode | 9/9 PASS | `10_editmode.xml`. |
+| Pruebas PlayMode | 5/5 PASS, 3 corridas seguidas | `09_playmode_{1,2,3}.xml`. Las 4 originales (cerebro apagado, extracción con teletransporte) + `SoloAttemptTests`. |
+| Intento individual completo (automático) | PASS 3/3, ~20 s de juego | `SoloAttempt_BrainOn_DragUncleIntoVan_Succeeds`: un bot usa solo entradas de jugador (mirar, moverse, clics, E, Q, Espacio, agacharse; sin `Strap()`, `Secure()` ni teletransportes). Normal, 1 jugador, `timeScale` 4. El tío se aferra a la barra, forcejea, da un manotazo y una patada, cae y se agota; el bot lo saca por la puerta y lo entra en la zona. No usa el carrito. |
+| Build Windows (Mono, x64) | OK | `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (~92 MB, no versionado), 0 errores; regenerada tras los cambios (`11_build.log`). |
 | Arranque de la build | OK | 20 s en ventana 1280×720: D3D11 (RTX 3070 Ti), PhysX 4.1.2, Input System inicializado, sin excepciones (`06_build_smoke.log`). |
-| Jugado a mano / intento individual completo | NOT_RUN | Sin herramientas de control de pantalla en la sesión. |
+| Jugado a mano | NOT_RUN | Sin herramientas de control de pantalla en la sesión. Sensación, legibilidad de ataques y diversión sin comprobar. |
 | IL2CPP | NOT_RUN | Módulo instalado; falta Visual Studio con C++. |
 | Red | NOT_RUN | M2. |
 
@@ -41,6 +42,15 @@ U="C:/Program Files/Unity/Hub/Editor/6000.3.28f1/Editor/Unity.exe"
 - Corrección: `ProjectBootstrap` no podía correr porque los asmdef de pruebas no compilaban sin Test Framework (huevo y gallina). Se fijaron los paquetes directamente en `Packages/manifest.json`. Se quitaron paquetes por defecto no usados (purchasing, analytics, collab-proxy, 2D, XR helpers) y el `Assets/Resources/BillingMode.json` que dejó purchasing.
 - `.gitattributes`: LF para json/asmdef/physicMaterial/ProjectVersion de Unity.
 - Commit `bcc8f9b` (proyecto Unity, escena, settings, .meta).
+- Intento individual automático (`Tests/PlayMode/SoloAttemptTests.cs`) y `LabInput.Simulated` (botones simulados que se suman a la entrada real, para pruebas y un futuro autopiloto).
+- Ajuste de juego: el tío caído necesita 2,5 s sin agarres para levantarse (antes se levantaba al instante al soltarlo y se iba de la zona antes del conteo de 1,5 s). Ver `docs/DECISIONES_IMPLEMENTACION.md`.
+
+## Hallazgos del intento automático (para el playtest)
+
+- Con una mano (420 N) no se puede arrastrar al tío caído: la fricción ronda los 460 N. Con dos manos (tope 700 N) sí. Puede ser intencional (incentiva usar las dos manos o el carrito), pero hay que comunicarlo.
+- La puerta de 1,5 m es un cuello de botella real: el tío acostado se engancha en el marco si entra en diagonal (GDD: «orientar el cuerpo en el umbral»).
+- Si se lo arrastra de los hombros contra la camioneta, el torso queda bajo el jugador y fuera de la zona. Funciona entrarlo de costado, tomado de los tobillos. La zona (2,2 × 1,6 m) delante de una camioneta sólida es exigente; en el juego final el tío va **dentro** de la camioneta (GDD).
+- En Normal y con un jugador, el bot gana en ~20 s con 2 ataques. Probablemente sea demasiado fácil para un jugador hábil; medirlo a mano antes de tocar el balance.
 
 ## Código M1 implementado
 
@@ -75,7 +85,7 @@ Decisiones y simplificaciones: ver `docs/DECISIONES_IMPLEMENTACION.md` (2026-11-
 ## Próxima acción exacta
 
 1. Stefano (o Claude con control de pantalla): abrir `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` o la escena en el editor y jugar un intento completo: agarrar con clic izquierdo/derecho, arrastrar al tío, esquivar un ataque anunciado, caer y levantarse, cargarlo en el carrito (E para la correa) y llevarlo a la zona verde. Anotar qué no funciona o no se siente bien.
-2. Claude: agregar una prueba PlayMode de intento individual completo con el cerebro del NPC encendido (sin teletransportes) para cubrir el criterio de salida de M1.
+2. Claude: segunda prueba automática con el carrito (correa con E) y otra en Difícil; convertir el bot en un autopiloto de depuración que se pueda ver en la build.
 3. Pendientes de M1 según decisiones: vaso señuelo, ayuda de compañero, superposición con sólidos y puerta en la extracción; URP.
 4. Instalar Visual Studio 2022 con «Desarrollo de juegos con C++» y probar la build IL2CPP.
 

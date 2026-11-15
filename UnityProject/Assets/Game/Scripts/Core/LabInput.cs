@@ -46,7 +46,13 @@ namespace UncleExtraction
 #endif
         }
 
-        public static bool Held(Act a)
+        /// Botones simulados (pruebas automaticas y autopiloto). Se suman a la entrada real.
+        public static readonly bool[] Simulated = new bool[16];
+        public static void ClearSimulated() { System.Array.Clear(Simulated, 0, Simulated.Length); }
+
+        public static bool Held(Act a) => Simulated[(int)a] || RealHeld(a);
+
+        static bool RealHeld(Act a)
         {
 #if UE_INPUT_SYSTEM
             var k = Keyboard.current; var m = Mouse.current; var g = Gamepad.current;

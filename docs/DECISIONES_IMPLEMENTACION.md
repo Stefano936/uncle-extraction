@@ -33,6 +33,12 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Capas de colisión: todavía no. Las manos son virtuales (sin colisionador), así que no se realimentan con el cuerpo agarrado.
 - Pendiente para cerrar M1: distracción con vaso señuelo, ayuda de compañero al levantarse, superposición con sólidos y puerta en la extracción.
 
+## 2026-11-15 — M0/M1: paquetes fijados y levantada del tío
+
+- Problema: `ProjectBootstrap` no podía ejecutarse en un proyecto nuevo porque los asmdef de pruebas no compilaban sin Test Framework. Decisión: fijar Input System 1.20.1, Test Framework 1.6.0 y uGUI 2.0.0 directamente en `Packages/manifest.json` (se versiona). Se quitaron paquetes por defecto no usados (purchasing, analytics, collab-proxy, 2D, XR helpers).
+- Problema: en el intento individual automático, el tío llegaba a la zona varias veces pero no se aseguraba. Al soltarlo, si llevaba ≥2,5 s en el piso se levantaba al instante y se iba caminando antes de los 1,5 s de conteo. Decisión: para levantarse necesita 2,5 s en el piso **y** 2,5 s sin agarres (`NpcBrain.Decide`). Antes: solo 2,5 s en el piso. Evidencia: antes, 1 de 2 corridas de la batería fallaba (el tío salía de la zona 3 veces); después, 3/3 PASS en ~20 s. Reversible; revisar en el playtest si hace al tío demasiado dócil.
+- Entrada simulada: `LabInput.Simulated[]` se suma a la entrada real para que las pruebas usen los mismos caminos que un jugador (E, Q, Espacio, agacharse).
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.
