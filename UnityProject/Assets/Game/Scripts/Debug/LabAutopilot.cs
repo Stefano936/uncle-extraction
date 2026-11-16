@@ -384,7 +384,7 @@ namespace UncleExtraction
         }
 
         // ---------- modo carrito ----------
-        bool realignLogged; float handleAimFailSince, handleSidestepUntil, handlePhaseSeen = -99f, handleSide = 1f; bool handleOccludedLogged;
+        bool realignLogged; float cartBestDist = 99f, cartProgressAt; float handleAimFailSince, handleSidestepUntil, handlePhaseSeen = -99f, handleSide = 1f; bool handleOccludedLogged;
 
         IEnumerator CartRun()
         {
@@ -450,8 +450,16 @@ namespace UncleExtraction
                     Vector3 c = Flat(cart.transform.position), pel = Flat(body.pelvis.position);
                     // Objetivos fijados al empezar (o si el carrito se movio de verdad): recalcularlos cada frame con la
                     // posicion actual del carrito hacia que el jugador lo fuera empujando con el cuerpo hasta una pared.
-                    if (!cartTargetsSet || Vector3.Distance(c, cartRef) > 0.6f)
+                    // Sin acercarse al objetivo en 6 s (el tio cayo del otro lado del carrito): recalcular desde donde esta ahora.
+                    float dTarget = cartTargetsSet ? Vector3.Distance(pel, cartUncleTarget) : 99f;
+                    if (dTarget < cartBestDist - 0.3f) { cartBestDist = dTarget; cartProgressAt = Time.time; }
+                    bool nearCart = Vector3.Distance(pel, c) < 3.0f;                 // solo en el tramo final junto al carrito
+                    if (!nearCart) cartProgressAt = Time.time;
+                    bool stalled = cartTargetsSet && nearCart && Time.time - cartProgressAt > 6f;
+                    if (stalled) Log($"sin avanzar hacia el carrito desde {pel}: recalcula el punto de carga");
+                    if (!cartTargetsSet || Vector3.Distance(c, cartRef) > 0.6f || stalled)
                     {
+                        cartBestDist = 99f; cartProgressAt = Time.time;
                         Vector3 fromCart = (pel - c).sqrMagnitude > 0.01f ? (pel - c).normalized : Vector3.forward;
                         cartRef = c; cartTargetsSet = true;
                         cartUncleTarget = c + fromCart * 0.9f;                                         // junto a la caja, del lado del tio

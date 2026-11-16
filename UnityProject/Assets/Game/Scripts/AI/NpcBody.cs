@@ -210,7 +210,9 @@ namespace UncleExtraction
             {
                 float fr = Mathf.Min(footFriction * f, m * speed / Time.fixedDeltaTime);
                 Vector3 df = -hv / speed * fr;
-                foreach (var b in bodies) b.AddForce(df * (b.mass / m), ForceMode.Force); // repartida: no hace girar al cuerpo
+                // En el punto de apoyo (bajo el centro de masa, a la altura del piso), como los pies: con un tiron alto forma el
+                // mismo par que inclina al cuerpo central. Repartida en el centro de masa lo dejaba inamovible y sin caerse nunca.
+                rb.AddForceAtPosition(df, new Vector3(c.x, ground, c.z), ForceMode.Force);
             }
         }
 

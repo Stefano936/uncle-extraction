@@ -69,6 +69,7 @@ namespace UncleExtraction.EditorTools
         public static LevelSpec Bar() => new LevelSpec
         {
             name = "Bar_LastRound", scenePath = PhysicsLabBuilder.BarScenePath, halfX = 9f, backZ = 10f, kitVisuals = true,
+            articulatedUncle = true, // tio articulado (verificado en PhysicsLab_Articulated); respaldo: false = cuerpo central
             home = new Vector3(4.5f, 0, 7.2f), chairPos = new Vector3(-2.6f, 0.3f, 5.6f), glassPos = new Vector3(-4.2f, 0.88f, 6.2f),
             cartPos = new Vector3(5.6f, 0, 2.4f), cartYaw = 0f, // en el salon, lejos de esquinas y paredes (en la esquina quedaba encajado)
             overviewPos = new Vector3(9f, 7f, -10f), overviewEuler = new Vector3(30f, -32f, 0f),

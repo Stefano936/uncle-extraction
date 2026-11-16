@@ -13,6 +13,16 @@ namespace UncleExtraction.Tests
     {
         static IEnumerable<string> Scenes() { yield return "Bar_LastRound"; yield return "PhysicsLab"; yield return "PhysicsLab_Articulated"; }
 
+        [UnityTest]
+        public IEnumerator Bar_UsesTheArticulatedUncle()
+        {
+            SceneManager.LoadScene("Bar_LastRound");
+            yield return null; yield return new WaitForFixedUpdate();
+            var b = Object.FindAnyObjectByType<NpcBody>();
+            Assert.IsTrue(b.Articulated, "el escenario principal usa el tio articulado (respaldo: LevelSpecs.Bar articulatedUncle = false)");
+            Assert.AreEqual(110f, b.TotalMass, 0.5f);
+        }
+
         static bool IsStatic(Collider c) => c.attachedRigidbody == null && !c.isTrigger;
 
         [UnityTest]

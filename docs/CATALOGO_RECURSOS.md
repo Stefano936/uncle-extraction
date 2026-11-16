@@ -14,7 +14,7 @@ Importación verificada con `Kit3DImporter.ImportAndReport`: metros, Y arriba, s
 | `exit_door.fbx` (1,5 × 2,2 m, origen en la bisagra) | sí | Bar_LastRound (girada 180°) | sí: visual sobre el panel con bisagra existente | Pendiente de producción. |
 | `passenger_van.fbx` (2,52 × 5,38 × 2,33 m) | sí | no | — | No colocada: sus puertas traseras son parte del modelo y no coinciden con las hojas animadas de `VanDoors`. Por ahora la camioneta es de primitivas con las mismas medidas. |
 | `transport_cart.fbx` (1,2 × 0,86 m) | sí | no | — | No colocado: sus proporciones no coinciden con la caja de carga del juego (0,9 × 1,4 m, para el tío acostado de 1,9 m). Hay que rehacerlo o adaptar la caja. |
-| `uncle_prototype.fbx` (1,93 m, 12 huesos, Idle/Push/Kick) | sí | PhysicsLab_Articulated (variante de prueba) | sí: malla ligada a los 11 cuerpos del ragdoll reducido (`RagdollVisual`); colisiones propias por parte | Pendiente: Bar_LastRound sigue con el tío de primitivas hasta verificar la variante; animaciones Idle/Push/Kick sin usar (la pose la da la física). |
+| `uncle_prototype.fbx` (1,93 m, 12 huesos, Idle/Push/Kick) | sí | Bar_LastRound y PhysicsLab_Articulated | sí: malla ligada a los 11 cuerpos del ragdoll reducido (`RagdollVisual`); colisiones propias por parte | Pendiente de producción: es el modelo de prototipo del kit; las animaciones Idle/Push/Kick no se usan (la pose la da la física) y las señales de ataque siguen siendo la esfera amarilla. PhysicsLab conserva el tío de primitivas como respaldo. |
 | `bar_blockout_shell.fbx` (18,2 × 17,1 m) | sí | no | — | Referencia de distribución. No se coloca porque duplicaría el suelo y las paredes. |
 
 ## Escenarios
