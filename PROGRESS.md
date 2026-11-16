@@ -1,14 +1,88 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-16 (sesión 7: tío articulado en Bar_LastRound y `PhysicsLab_Articulated`; pruebas de resistencia separadas por modo).
+Última actualización: 2026-11-16, sesión 8.
 
-**Builds de referencia** (locales, no versionadas). Cada carpeta tiene `VERSION.txt` con el commit de origen; las actuales salen de `f93039c` (URP, materiales del kit, tío articulado en el bar):
-- `Builds/UncleExtraction/UncleExtraction.exe`: release Mono, para jugar. Incluye `LEEME.txt` con controles e instrucciones (`docs/COMO_PROBAR.md`).
-- `Builds/UncleExtraction_Dev/UncleExtraction.exe`: desarrollo, con el simulador de red. Solo para pruebas.
+## Estado vigente
 
-Las rutas anteriores (`Builds/PhysicsLab*`) quedaron obsoletas.
+**Build de referencia** (local, no versionada): `Builds/UncleExtraction/UncleExtraction.exe` (release Mono) y `Builds/UncleExtraction_Dev/` (desarrollo, con el simulador de red).
+- Ambas salen del commit **`ba443bf`**. `VERSION.txt` lo genera `BuildTools` en cada build: commit, si había cambios sin commitear, fecha y tipo.
+- `LEEME.txt` es una copia de `docs/COMO_PROBAR.md`.
 
-## 1. Implementado y verificado
+**Qué se puede jugar:**
+- **Bar_LastRound**, solo o en cooperativo LAN por IP. El tío articulado tiene 11 cuerpos y la malla del kit.
+- **Carrito y camioneta** con piezas del kit sobre la geometría funcional.
+- **Interfaz del kit:** menú, HUD, pausa, resultados y opciones.
+- **Idiomas:** inglés y español rioplatense.
+- **Controles** de teclado y mouse reasignables.
+- **Señales de ataque** sobre el cuerpo y en el piso.
+- **Feedback de agarre** y motivos visibles de bloqueo.
+
+**Sin audio. Sin lobby. Sin internet.**
+
+**Evidencia de esta sesión:**
+- **PM** = PlayMode en el editor (anfitrión en loopback).
+- **AUTO** = partida completa automatizada con entradas de jugador.
+- **NET** = dos procesos de la build en **localhost**. No es LAN ni internet.
+- **VIS** = capturas reales de la build (`-ueShot`, `.local-setup/shots/s8/`, no versionadas). Ninguna fila tiene prueba humana.
+
+| Función | Código / build | Resultado |
+| --- | --- | --- |
+| Regresión completa (interfaz del kit) | `ba443bf` | PM **75/77**, EditMode 9/9. **FAIL 1** (`SoloAttemptTests_Bar` carrito): el bot quedó 150 s sosteniendo el asa del carrito cargado trabado en la puerta (yaw −38°, hoja a 52°) a 1,8 m, esperando que el agarre lo trajera. **FAIL 2** (`SoloAttemptTests_Articulated` carrito): el bot no llegó a cargarlo en el carrito y lo arrastró a mano hasta la camioneta (ganó, pero la prueba exige el carrito). Resto: Bar arrastre Normal 21,4 s y Difícil 81,0 s; laboratorio central carrito 31,6 s y arrastre 174,4/53,6 s; laboratorio articulado arrastre 18,9/41,8 s. |
+| Pose del FAIL 1 reproducida (`StuckRecoveryTests`, pose `bar_fail_m38`) | código siguiente a `ba443bf` | PM: un jugador que tira caminando del asa la saca. **Causa: punto muerto del bot**, no la geometría: con el asa a más de 1,25 m se quedaba quieto esperando. Corregido: si el carrito no avanza en 1,5 s, el bot se acerca al asa y vuelve a tirar. El FAIL 2 queda abierto como fallo intermitente del bot. |
+| Bot de carrito en la puerta: tres modos más (código posterior a `ba443bf`) | ver commit siguiente | Partidas completas (AUTO) tras el arreglo de la espera: **14/15**. FAIL: laboratorio central, carrito a −28° en el marco. **Reproducido** (`lab_fail_m28`, en el bar y en el laboratorio): tirar recto **no** lo saca. Un jugador lo resuelve empujándolo hacia adentro, alineándose y volviendo a tirar (3,7–3,9 s, un intento); no hay cambio de juego. El bot ahora hace esa maniobra. Tanda siguiente **8/9**: laboratorio central, carrito derecho pero corrido 1,37 m del eje contra la pared interior; el bot ahora también se recentra. Tanda siguiente de los tres intentos de carrito: **3/3** (Bar 63,9 s, laboratorio 29,9 s, articulado 33,9 s). Una tanda no prueba que la intermitencia desapareció. |
+| Regresión completa (señales de ataque, convergencia, desvío del bot) | `dfedb95` | PM **74/74**, EditMode 9/9. AUTO 12/12: Bar carrito 51,3 s; arrastre Normal 17,7 s y Difícil 52,3 s; laboratorio articulado carrito 37,2 s y arrastre 30,7/26,9 s; laboratorio central carrito 27,7 s y arrastre 23,8/17,4 s. |
+| Regresión anterior (atascos) | `a68a318` | PM **61/62**. FAIL del bot de carrito en el laboratorio articulado: el asa quedó contra la pared y el bot caminó contra el carrito 280 s. Corregido en el bot (`dfedb95`): ahora rodea hasta un costado libre del asa. |
+| Red en Bar_LastRound, `-Scenario all` | build `ba443bf` | NET **9/9 PASS en la primera tanda, sin repeticiones**: coop, repeat, lose, netsim (RTT del cliente ~255 ms, 3 % de pérdida), race, hostleave, clientdrop, loaddrop, closedrop. Todos los finales convergieron dentro del mismo intento (`convergencia=0,00s`). Historial en `.local-setup/logs/net/net_smoke_history.csv`. |
+| **Atascos abiertos** (`StuckRecoveryTests`, jugador guionado con entradas normales) | `a68a318` y siguientes | PM 5/5. Pie en la abertura: el HUD dice «Le queda un pie afuera: empujalo adentro» y el jugador lo resuelve. Jugador detrás del tío: sale por el costado. Carrito torcido en la puerta (45° y 90°) con el tío atado: sale tirando recto del asa. Fuerza de la puerta medida. |
+| **Señales de ataque** (`AttackSignalTests`, 3 variantes × 4 ataques) | `dfedb95` | PM 12/12. En el articulado, la preparación mueve una extremidad 0,13–0,51 m y el golpe, 0,16–0,24 m más; sigue de pie y sin uniones estiradas. El aviso del piso es visible y se llena con la preparación. VIS: patada con el sector del piso apuntando al jugador y «VA A PATEAR». |
+| **Interfaz del kit** (`UiTests`) | `4860437` | PM 3/3: manos «sujetando» tras agarrar; aviso de ataque localizado que cambia con el idioma; resultados reales; avisos limpios al terminar; menú con texto sin cambiar de idioma; remapeo con intercambio. VIS: menú, HUD, aviso de ataque y resultados (fallos vistos y corregidos: botones vacíos, superposiciones, «1 JUGADORES», nombres del mouse en inglés). |
+| Escenario, extracción, red, tío articulado, URP y materiales | sesión 7 | Ver «Historial»; esta sesión se volvió a verificar con la regresión y la red de arriba. |
+
+**Diagnóstico de los dos atascos (pedido de esta sesión):**
+- **Pie o mano en la abertura de la camioneta: problema de interacción, corregido en el juego.**
+  - El motivo ahora nombra la parte y una marca la señala.
+  - La mira ya no deja que el punto que sostiene una mano le gane al segundo punto cercano: esa era la causa de que la segunda mano no tomara el otro hombro, tanto del jugador como del bot.
+  - Un jugador lo resuelve empujando el tobillo o tirando de los dos hombros hacia la cabina.
+  - No se tocaron colisiones, el cuerpo ni la extracción.
+- **Carrito atravesado en la puerta del bar: fallo del bot.**
+  - Un jugador lo saca tirando recto del asa.
+  - El primer «atasco irrecuperable» era un error del armado de la prueba (carrito encimado con la hoja); se corrigió y se revirtió el retén de la puerta que había motivado.
+  - Bot: junto a la puerta no zigzaguea y rodea el carrito cuando el asa queda contra una pared.
+
+**Fallos intermitentes conocidos** (se mantienen visibles):
+- **Bot del modo carrito:** falló en 2 de las 4 regresiones completas de esta sesión.
+  - `a68a318`: el asa contra la pared. Corregido.
+  - `ba443bf`: dos FAIL. El bot quedó esperando con el asa lejos (corregido) y no llegó a cargarlo en el laboratorio articulado (abierto).
+  - Sigue siendo el punto más inestable de las pruebas automáticas. No es una regla del juego.
+- **Red:** en la sesión 7, `coop` falló 1 de 3 veces (bot con el pie del tío en la puerta) y hubo un crash del driver NVIDIA en un arranque simultáneo. En esta sesión, 9/9 en una tanda.
+
+## Pendiente (en orden)
+
+1. **Lobby y preparación de jugadores:** sala previa con miembros presentes, listo/no listo, dificultad solo editable por el anfitrión, Start con motivo cuando está deshabilitado, rechazo de unirse con la ronda iniciada, compatibilidad de versión. Pantallas de error y pérdida del anfitrión con el kit.
+2. Pruebas con **3 y 4 clientes** en procesos separados (localhost).
+3. **Audio y diálogos** con procedencia y licencia (catálogo `dialogue_en_es.csv` del paquete; voz y efectos sin fuente todavía).
+4. Validación de la interfaz a 720p, ultrawide y texto al 150 % (necesita una persona). Navegación con mando.
+5. Rendimiento, sesiones largas, las tres dificultades, QA, build reproducible.
+
+## Bloqueado por cuentas, equipos o participantes
+
+| Bloqueo | Paso mínimo |
+| --- | --- |
+| Internet (Sessions/Relay) | En cloud.unity.com: crear o elegir organización y proyecto, habilitar Multiplayer Services/Relay y pasarme el Project ID, o vincularlo en el editor (Edit → Project Settings → Services). |
+| LAN | Otra PC en la misma red: `UncleExtraction.exe` → Jugar con amigos → Crear partida en la red local (aceptar el firewall) en una, y Unirse por IP en la otra. |
+| Steam | Cuenta de Steamworks, pago de Steam Direct y App ID. |
+| IL2CPP | Visual Studio 2022 con «Desarrollo de juegos con C++». |
+| Prueba humana | Jugar `Builds/UncleExtraction/UncleExtraction.exe` siguiendo `LEEME.txt`. No bloquea el desarrollo. |
+
+## Próxima acción exacta
+
+1. Lobby local/LAN con preparación: estado de sala replicado (NGO), pantalla del kit y rechazo de unirse en curso. Primero el modelo de datos y las pruebas de red (`net_smoke` con un escenario `lobby`).
+2. `net_smoke`: escenario con 3 y 4 procesos (un anfitrión y dos o tres clientes con autopiloto).
+3. Audio: buscar recursos con licencia compatible y registrar la procedencia en el catálogo; si no hay, dejar el sistema de eventos de sonido con el catálogo de diálogos como subtítulos.
+
+## Historial (resultados de sesiones anteriores, sin reescribir)
+
+### Sesión 7 (2026-11-16): tabla de evidencia tal como quedó
 
 Los niveles de evidencia son: **PM** = PlayMode en el editor (anfitrión en loopback); **AUTO** = partida completa automatizada con entradas de jugador (sin teletransportes ni `Secure()` directo); **NET** = dos procesos de la build en **localhost**. Nada de esta tabla tiene prueba humana, LAN ni internet.
 
@@ -35,7 +109,7 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
 - **`[Timeout]` (prueba):** no se heredaba en la subclase.
 - **Script de red:** colisión de variables `$H`/`$h`, array desenvuelto y procesos zombis que ocupaban el puerto 7777.
 
-## 2. Implementado con observaciones
+### Sesión 7: observaciones y fallos
 
 - **Batería con `a0309d7`** (PM, bar con el tío articulado): PlayMode **57/57** (`pt_full_f4.xml`), EditMode 9/9. Intentos: Bar carrito 43,1 s, arrastre Normal 20,7 s, Difícil 52,0 s; laboratorio articulado carrito 67,4 s, arrastre 41,6/37,2 s; laboratorio central carrito 27,5 s, arrastre 43,4/105,1 s.
 - **Observación (playtest):** con el tío atado y nadie en el asa, el carrito no tiene freno y un jugador que lo choca caminando lo empuja varios metros. Se probó frenarlo también atado y se revirtió (la amortiguación sobre los 30 kg del carrito no alcanza: 3–4 m en 2 s, y empeoró al bot).
@@ -54,38 +128,11 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
 - **Balance:** el carrito en solitario sigue siendo probablemente demasiado fácil; revisar en el playtest antes de tocar valores.
 - **Visuales del kit:** camioneta y carrito siguen siendo primitivas; el tío del kit solo está en la variante articulada. Ver `docs/CATALOGO_RECURSOS.md`.
 
-## 3. Pendiente de implementar (en orden)
 
-2. URP, materiales y texturas del kit, animaciones del kit (Idle/Push/Kick) y feedback visual de agarres y golpes.
-3. Interfaz con el kit de UI (hoy IMGUI provisional), localización EN/es_UY, controles remapeables (InputActionAsset) y opciones completas.
-4. Sonido y diálogos con procedencia y licencia registradas.
-5. Sessions/Relay y lobby: preparación, cupos, compatibilidad de versión, carga, errores y bloqueo de incorporación con la ronda iniciada. Hoy el laboratorio admite unirse en curso.
-6. Pruebas con 3 y 4 clientes, las tres dificultades, rendimiento y sesiones largas; QA; build reproducible.
-
-## 4. Bloqueado por cuentas, equipos o participantes
-
-| Bloqueo | Qué tiene que hacer Stefano |
-| --- | --- |
-| Internet (Sessions/Relay) | En cloud.unity.com: crear o elegir organización y proyecto, habilitar Multiplayer Services/Relay y pasarme el Project ID, o vincularlo en el editor (Edit → Project Settings → Services). |
-| LAN | Otra PC en la misma red: `UncleExtraction.exe` → Jugar con amigos → Crear partida en una (aceptar el firewall) y Unirse con su IP en la otra. |
-| Steam | Cuenta de Steamworks, pago de Steam Direct y App ID. |
-| IL2CPP | Visual Studio 2022 con «Desarrollo de juegos con C++». |
-| Prueba humana | Jugar `Builds/UncleExtraction/UncleExtraction.exe` siguiendo `LEEME.txt`; no bloquea el desarrollo. |
-
-## Antecedentes (resumen; el detalle está en el log de Git y en `docs/DECISIONES_IMPLEMENTACION.md`)
+### Antecedentes (resumen; el detalle está en el log de Git y en `docs/DECISIONES_IMPLEMENTACION.md`)
 
 - **M0/M1:** Unity 6000.3.28f1, PhysicsLab y autopiloto.
 - **M2 (`2a42a0b`, `c27d209`):** NGO con anfitrión autoritativo.
 - **M3 (`f1728e0` → `9f9b0bb`):** camioneta real con cierre, señuelo, ayuda, menús, rescate técnico y red con latencia simulada en PhysicsLab.
 - **Sesión 6 (`d8c204b` y siguientes):** Bar_LastRound y LevelLayout.
 
-## Próxima acción exacta
-
-1. Bot con el tío articulado en la camioneta: si `NeedsPushingIn` (un pie o una mano en la franja de la puerta), empujar la parte que sobresale (no la pelvis) y, si un bot queda dentro de la camioneta, salir avanzando hacia la puerta aunque no llegue al carril lateral. Intermitente en `coop` (1 de 3).
-2. Variantes FBX `*_material_variant.fbx` (camioneta, carrito, cascarón): comparar medidas con la camioneta y el carrito del juego (carrito del kit 1,2 × 0,86 m frente a la caja de 0,9 × 1,4 m) y decidir si adaptar el modelo o la caja; registrar en `docs/CATALOGO_RECURSOS.md`.
-3. Señales de ataque sobre la malla del tío (hoy esfera amarilla), lenguaje de interacción (contorno de agarre válido, tensión de anclaje, cierre bloqueado explicado).
-4. Después: UI del kit, EN/es_UY, controles remapeables, sonido con licencia; Sessions/Relay (bloqueado por Unity Cloud).
-
-## Al cerrar una sesión
-
-Anotar comportamiento implementado, archivos, commit, comandos y pruebas ejecutadas, resultados, bloqueos y siguiente acción.

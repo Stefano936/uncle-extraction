@@ -430,6 +430,7 @@ namespace UncleExtraction
         }
 
         // ---------- modo carrito ----------
+        float unjamUntil;
         float handleBestDist = 99f, handleProgressAt, handleAroundUntil, handleLastSeen = -99f; Vector3 handleAround;
         bool realignLogged; float cartBestDist = 99f, cartProgressAt; float handleAimFailSince, handleSidestepUntil, handlePhaseSeen = -99f, handleSide = 1f; bool handleOccludedLogged;
 
@@ -589,7 +590,7 @@ namespace UncleExtraction
                 else if (cc.z > L.doorZ + 1.0f) cartClearedDoor = false;
                 if (!cartClearedDoor && Me.z < L.doorZ + 2.8f)
                 {   // antes de la puerta, recentrar el carrito en x; dentro del marco, tirar recto
-                    float gx = L.doorX + (cc.z > L.doorZ + 1.4f ? Mathf.Clamp(L.doorX - cc.x, -0.6f, 0.6f) : 0f);
+                    float gx = L.doorX + (cc.z > L.doorZ + 1.4f || Mathf.Abs(cc.x - L.doorX) > 0.35f ? Mathf.Clamp(L.doorX - cc.x, -0.6f, 0.6f) : 0f); // tambien si quedo corrido del eje contra la pared (solo_unjam)
                     goal = new Vector3(gx, 0f, Mathf.Max(Me.z - 1.0f, L.doorZ - 4.5f));
                 }
 
@@ -612,6 +613,19 @@ namespace UncleExtraction
                     yield return null; continue;
                 }
                 realignLogged = false;
+                // Trabado en el marco con el tiro recto (StuckRecoveryTests, pose lab_fail_m28): como un jugador, empujarlo
+                // hacia adentro ~1,8 s y volver a tirar alineado con la puerta (el objetivo de la ruta ya recentra en x).
+                if (Time.time < unjamUntil)
+                {
+                    LookAt(handle.Position); LabInput.Simulated[(int)Act.Effort] = true; MoveWorld(Flat(cc - Me));
+                    yield return null; continue;
+                }
+                if (Time.time - stuckSince > 3f && Mathf.Abs(cc.z - L.doorZ) <= 1.6f)
+                {
+                    unjamUntil = Time.time + 1.8f; stuckSince = Time.time; stuckRef = cc;
+                    Log($"carrito trabado en la puerta en {cc} (yaw {cart.transform.eulerAngles.y:0}): lo empuja hacia adentro y vuelve a tirar alineado");
+                    yield return null; continue;
+                }
                 // Junto a la puerta no zigzaguear: tirar recto por el eje la saca aun atravesada (StuckRecoveryTests, poses de
                 // 45 y 90 grados); el zigzag era lo que terminaba de girarla contra la pared.
                 if (Time.time - stuckSince > 2f && Mathf.Abs(cc.z - L.doorZ) > 1.6f)
@@ -622,6 +636,7 @@ namespace UncleExtraction
                     MoveWorld(side + Flat(Me - cc).normalized * 0.5f);
                     if (Time.time - stuckSince > 12f) { stuckSince = Time.time; stuckRef = cc; }
                 }
+                else if (gap > 1.25f && Time.time - stuckSince > 1.5f) MoveWorld(Flat(handle.Position) - Me); // el carrito no viene: acercarse al asa y volver a tirar (pt_ba4: 150 s quieto esperando)
                 else if (gap > 1.25f || Vector3.Distance(Me, goal) < 0.2f) LabInput.SimulatedMove = Vector2.zero;
                 else MoveWorld(goal - Me);
                 yield return null;

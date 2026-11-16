@@ -279,13 +279,15 @@ namespace UncleExtraction.Tests
         /// ultimo recurso soltar la correa (E). Falla si no sale o si solo sale soltando al tio.
         /// Poses del carrito cargado en la puerta: "diag45" montado sobre el marco en diagonal; "cross90" girado 90 grados
         /// dentro del bar contra la cara interior del muro, con el asa en la abertura.
-        public static readonly string[] CartPoses = { "diag45", "cross90" };
+        public static readonly string[] CartPoses = { "diag45", "cross90", "bar_fail_m38", "lab_fail_m28" };
 
         [UnityTest]
         public IEnumerator Cart_CrookedInDoorway_StraightPullBringsItThrough([ValueSource(nameof(CartPoses))] string pose)
         {
             if (pose == "diag45") yield return StrappedCartAt(new Vector3(L.doorX + 0.1f, 0f, L.doorZ + 0.2f), 45f);
-            else yield return StrappedCartAt(new Vector3(L.doorX + 0.3f, 0f, L.doorZ + 0.57f), 90f);
+            else if (pose == "cross90") yield return StrappedCartAt(new Vector3(L.doorX + 0.3f, 0f, L.doorZ + 0.57f), 90f);
+            else if (pose == "bar_fail_m38") yield return StrappedCartAt(new Vector3(L.doorX - 0.07f, 0f, L.doorZ + 0.01f), -38f); // pose exacta del FAIL de pt_ba4 (bot 150 s tirando)
+            else yield return StrappedCartAt(new Vector3(L.doorX + 0.12f, 0f, L.doorZ + 0.63f), -28f); // pose del FAIL de solo_gap (laboratorio, tio central)
             var handle = GrabSocket.ById("cart_handle");
             Place(Flat(handle.Position) + new Vector3(0.5f, 0f, -0.75f), 0f); // del lado opuesto a la bisagra: la hoja no tapa el asa
             yield return new WaitForSeconds(0.2f);
@@ -382,4 +384,7 @@ namespace UncleExtraction.Tests
             }
         }
     }
+
+    /// Mismas reproducciones en el laboratorio con el tio de cuerpo central (respaldo).
+    public class StuckRecoveryTests_Lab : StuckRecoveryTests { protected override string Scene => "PhysicsLab"; }
 }

@@ -96,6 +96,55 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Tío articulado de pie: el resorte de altura reemplaza el apoyo de los pies y ahora también su fricción (Coulomb, μ 0,42, en el punto de apoyo). Sin fricción se deslizaba; repartida por masa quedaba inamovible y no se inclinaba nunca; en el punto de apoyo da el mismo par que inclina al central. Bar_LastRound usa el articulado; respaldo: `articulatedUncle = false`.
 - Freno del carrito con el tío atado: probado y revertido (ver PROGRESS).
 
+## 2026-11-16 — Atascos abiertos: fallos del bot frente a problemas de interacción
+
+Se armaron reproducciones controladas (`StuckRecoveryTests`) con un jugador guionado que solo usa entradas normales.
+
+**Extremidad en la abertura de la camioneta (problema de interacción, corregido en el juego):**
+- El motivo era genérico («Le queda algo afuera»). Ahora nombra la parte: «Le queda un pie afuera: empujalo adentro».
+- La mira no dejaba tomar un segundo punto cerca del primero: el punto que ya sostenía la otra mano ganaba la selección. Por eso la segunda mano (del jugador y del bot) no tomaba el otro hombro para acomodarlo. Ahora un punto de capacidad 1 que ya sostiene el propio jugador no compite.
+- La recuperación (empujar el tobillo hacia adentro o, si la pierna vuelve a estirarse, entrar por el costado y tirar de los dos hombros hacia la cabina) funciona.
+- Salir de la camioneta por el costado con el tío acostado en el centro también funciona.
+- No se tocaron colisiones, el tamaño del cuerpo ni las condiciones de extracción.
+
+**Carrito atravesado en la puerta del bar (fallo del bot):**
+- Con el carrito cargado en diagonal (45°) o atravesado (90°) en el marco y la hoja de la puerta apoyada, un jugador que tira recto del asa lo saca. La hoja y el marco lo enderezan.
+- Primero pareció irrecuperable: era un error del armado de la prueba (el carrito aparecía encimado con la hoja cerrada). Se corrigió el armado y se descartó el retén de apertura que se había agregado por ese motivo.
+- En el bot: junto a la puerta ya no zigzaguea, sino que tira recto; el zigzag lo terminaba de girar contra la pared.
+- Otro modo del bot, visto en la regresión: con el asa contra una pared, caminaba contra el carrito para siempre. Ahora rodea hasta un costado libre del asa.
+
+**Puerta del bar:**
+- Se midió que se cierra sola con 25 N en el borde a 45° y 64 N a 90°.
+- Se agregó una manija agarrable (`door_handle`; GDD: «manija visible», «si nadie abre una puerta») y el reinicio de la hoja al reiniciar la ronda, que faltaba.
+
+## 2026-11-16 — Final de ronda por convergencia (instrumentación)
+
+- El registro del estado final ya no espera 0,5 s fijos. Cada proceso espera hasta que el estado replicado es coherente con el resultado del mismo intento: con victoria, tío asegurado, puertas `Closed` y tío `Secured`; con derrota, nada asegurado.
+- El tiempo máximo es 2 s, por debajo de los 3 s en que el anfitrión reinicia o cierra. Se registra `convergencia=<s>` o `TIMEOUT(...) faltan=...`. Si llega un reinicio antes de converger, se registra `reinicio` sin mezclarlo con la ronda siguiente.
+- `net_smoke.ps1` compara anfitrión y cliente del mismo intento (`reinicios`), exige convergencia y anota en cada resultado la versión de la build (`VERSION.txt`). El historial acumulado (`net_smoke_history.csv`) conserva fallos iniciales y repeticiones.
+- No cambió la arquitectura del juego.
+
+## 2026-11-16 — Señales de ataque y lenguaje de interacción
+
+- **Poses de ataque del tío articulado:** se mueven los objetivos de las articulaciones en el anfitrión (pose física, replicada con las partes). Nunca se desincronizan del golpe, que decide `NpcBrain` con su reloj.
+  - Empujón y patada salen de los clips del kit (`Push_Prototype`, `Kick_Prototype`) muestreados al construir la escena. El cuadro de preparación es el efector más atrás antes del golpe y el cuadro de golpe, el más adelante.
+  - Manotazo y sacudida son poses autorizadas por direcciones de segmento (el kit no trae esos clips).
+- **Aviso en el piso** con el alcance y el arco reales del ataque (`LabBalance`), con relleno que crece durante la preparación. **Nombre del ataque** sobre la cabeza, con las claves del catálogo del kit (`hud.slap`…). Ninguno de los dos depende solo del color.
+- **Feedback de agarre del jugador local:**
+  - anillo sobre el punto apuntado: válido (sólido), ocupado (grueso, con «ocupado») o fuera de alcance (punteado, «acercate»);
+  - línea de tensión de cada mano que se engrosa y parpadea cerca de soltarse;
+  - vibración de las manos con esfuerzo;
+  - rombo sobre lo que bloquea el cierre de la camioneta, con el motivo.
+
+## 2026-11-16 — Interfaz del kit, idiomas y controles
+
+- **uGUI con texto estándar y las fuentes DejaVu del kit, no TextMeshPro.** El proyecto no tiene TMP Essentials (falta `TMP_Settings`) y su importación es interactiva. El texto de uGUI con una fuente TTF dinámica muestra acentos, ñ y signos.
+- **Pantallas construidas por código en tiempo de ejecución,** con `UiSkin` (Resources) que guarda los sprites, íconos y fuentes del kit. Son reproducibles y no hay prefabs que mantener a mano.
+- **Mensajes que viajan por red como claves con parámetros** (`van.part_outside|part=part.foot`): cada jugador los ve en su idioma. Los textos fijos en español dentro del código se reemplazaron por claves.
+- **Controles reasignables con un mapa propio** (`InputBindings`: rutas del Input System por acción, guardadas en PlayerPrefs) y no con un `InputActionAsset`. `LabInput` ya centraliza la lectura por acción y el autopiloto y las pruebas la simulan. Si una tecla ya estaba asignada, se intercambia. El mando conserva su asignación fija.
+- **Datos de resultados:** solo los reales (tiempo, caídas del grupo, dificultad y jugadores). No hay contador de fugas, así que no se muestra. Tampoco hay premios.
+- **Lobby y preparación de jugadores: pendientes.** El cooperativo actual entra directo a la escena, sin sala previa.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.
