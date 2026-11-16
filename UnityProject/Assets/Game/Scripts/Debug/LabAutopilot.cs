@@ -329,6 +329,12 @@ namespace UncleExtraction
             float laneX = L.vanAxisX + side;
             if (Me.z < L.vanRearZ + 0.25f && Mathf.Abs(Me.x - laneX) > 0.25f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(laneX, 1.5f, Me.z)); MoveWorld(new Vector3(laneX, 0, Me.z) - Me); yield return null; yield break; }
             if (Me.z < L.vanRearZ + 1.8f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(laneX, 1.5f, L.vanRearZ + 3.25f)); MoveWorld(L.CloseStand(side) - Me); yield return null; yield break; }
+            if (!van.InRange(Me))
+            {   // quedo lejos de la abertura (empujado o al salir): acercarse a un punto de cierre libre
+                Vector3 st = L.CloseStand(side);
+                foreach (var pm in PlayerMotor.All) if (pm && pm != player && Vector3.Distance(Flat(pm.transform.position), st) < 0.7f) st = L.CloseStand(-side);
+                LabInput.Simulated[(int)Act.Interact] = false; LookAt(van.closePoint); MoveWorld(st - Me); yield return null; yield break;
+            }
             LabInput.SimulatedMove = Vector2.zero;
             LookAt(van.closePoint);
             if (noClose) { Status = "esperando (no cierra)"; LabInput.Simulated[(int)Act.Interact] = false; yield return null; yield break; }
@@ -526,12 +532,14 @@ namespace UncleExtraction
                 // Carrito atravesado (la hoja de la puerta o una pared lo giro): realinearlo tirando del asa hacia adelante, en la
                 // direccion de la ruta, como un changuito; el zigzag lo terminaba de girar 90 grados contra la pared.
                 Vector3 pullDir = Flat(goal - cc); Vector3 cartBack = Flat(-cart.transform.forward);
-                if (cc.z < L.doorZ - 0.3f && pullDir.sqrMagnitude > 0.25f && Vector3.Angle(cartBack, pullDir) > 50f) // ya afuera (vereda)
+                float skew = pullDir.sqrMagnitude > 0.25f ? Vector3.Angle(cartBack, pullDir) : 0f;
+                // Solo atravesado de verdad (empujarlo de frente tambien sirve), ya fuera del marco y mientras avance.
+                if (cc.z < L.doorZ - 1.2f && skew > 50f && skew < 130f && Time.time - stuckSince <= 2f)
                 {
-                    if (!realignLogged) { realignLogged = true; Log($"carrito atravesado en {cc} ({Vector3.Angle(cartBack, pullDir):0} grados): lo realinea"); }
+                    if (!realignLogged) { realignLogged = true; Log($"carrito atravesado en {cc} ({skew:0} grados): lo realinea"); }
                     Vector3 lead = cc + pullDir.normalized * 1.7f;
                     if (gap > 1.25f) LabInput.SimulatedMove = Vector2.zero; else MoveWorld(lead - Me);
-                    stuckSince = Time.time; yield return null; continue;
+                    yield return null; continue;
                 }
                 realignLogged = false;
                 if (Time.time - stuckSince > 2f)

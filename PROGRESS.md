@@ -32,19 +32,24 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
 
 ## 2. Implementado con observaciones
 
-- **Freno del carrito y nueva estrategia del modo carrito del bot** (llevar el carrito vacío a un punto junto a la ruta y cargar al tío al pasar): carrito con correa PASS en PhysicsLab (27,3 s) y Bar_LastRound (27,6 s), con el tío intentando soltarse dos veces. Los resultados de la batería completa con estos cambios están en el mensaje del commit.
-- **Batería completa con este commit** (PM, `126_playmode.xml`): 19/20.
-  - **Bar_LastRound:** arrastre Normal 23,9 s, arrastre Difícil 39,1 s, carrito 27,5 s, todos PASS.
-  - **PhysicsLab:** carrito 38,4 s PASS, arrastre Normal 55,1 s PASS, **arrastre Difícil FAIL**. Es un caso conocido de la ruta del bot: el tío quedó caído en el umbral, la hoja de la puerta tapa la línea de visión a sus agarres y el bot dejó de moverse al descartar todos los puntos. Se corrigió que se quede quieto (limpia el descarte), sin volver a correr la batería. Un jugador empujaría la puerta o lo tomaría desde adentro.
-  - **EditMode** 9/9. Builds release y dev OK.
-- **Balance:** el carrito en solitario se resuelve en ~20–30 s con 0–1 ataques porque, asegurado, el tío solo intenta soltarse. Probablemente sea demasiado fácil; revisarlo en el playtest antes de tocar valores.
-- **Carrito en solitario:** a veces el primer intento de carga choca con una pared y el bot reubica el carrito. Funciona, pero un jugador podría frustrarse; revisarlo en el playtest.
-- **Visuales del kit:** la camioneta, el carrito y el tío siguen siendo primitivas. Ver `docs/CATALOGO_RECURSOS.md`.
-- **Driver NVIDIA:** un crash en un arranque simultáneo en sesiones anteriores. El script escalona los arranques y reintenta; no volvió a ocurrir.
+- **Batería con `724ffe1`** (PM): PlayMode **50/50** (`pt_full_art3.xml`), EditMode 9/9. Intentos completos: PhysicsLab carrito 84,7 s, arrastre Normal 41,5 s, arrastre Difícil 78,1 s; Bar_LastRound carrito 30,5 s, arrastre Normal 30,5 s, arrastre Difícil 53,6 s; PhysicsLab_Articulated carrito 24,6 s, arrastre Normal 12,0 s, arrastre Difícil 14,5 s. En esa misma sesión, corridas anteriores dieron FAIL y se corrigieron antes de esta batería (detalle abajo); ninguna se cuenta como PASS.
+- **Fallos encontrados y corregidos en la sesión 7:**
+  - *Juego:* la carga cinemática del tío articulado en el carrito lanzaba al jugador (~3 m en 0,45 s). Ahora las colisiones tío-jugador se ignoran solo durante la subida y se restauran siempre (prueba de reinicio a mitad de la carga lo verifica).
+  - *Juego:* caído junto a la baranda, el tío no se levantaba nunca (buscaba lugar solo bajo su centro de masa). Ahora busca el lugar libre más cercano hasta 0,8 m. Prueba nueva; **no** comprobé que fallara con el código anterior.
+  - *Juego:* el articulado caía con un empujón leve (el par de equilibrio actuaba sobre 50 kg). Ahora usa la inercia de todo el cuerpo. Prueba nueva que fallaba antes del cambio (reproducido) y pasa después.
+  - *Bot:* quieto para siempre con el asa del carrito tapada por el tío acostado; carrito girado 90° por la hoja de la puerta y arrastrado contra la pared (intermitente, también con el tío central); cliente fuera del alcance de cierre sin acercarse (`closedrop` NOT_RUN 2/2 en Bar). Corregidos en la ruta del bot; las reglas del juego no cambiaron.
+  - *Build:* `PhysicsLab_Articulated` no estaba en la lista de escenas de `BuildTools` (la primera corrida de red dio FAIL/NOT_RUN por eso).
+- **FAIL intermitente conocido — bot del modo carrito en PhysicsLab con el tío central.** En la sesión 7 el intento `SoloAttemptTests.SoloAttempt_Cart_Normal_Succeeds` pasó 5 de 8 corridas. Los tres fallos son de navegación del bot con el carrito por la puerta (carrito girado o atravesado en el marco; en el último, el tío se soltó en la puerta, volvió al bar y el bot trabó el carrito vacío en el marco). Ninguno es una regla del juego, pero un jugador también puede trabar el carrito ahí: revisarlo en el playtest. Última corrida de intentos completos sobre el código del commit que agrega esta nota (`pt_solo_cs2`): **8/9**; el fallo es este (Lab carrito central). Los demás: Lab arrastre Normal 51,3 s y Difícil 53,6 s; articulado carrito 22,4 s, arrastre 12,0/13,6 s; Bar carrito 30,2 s, arrastre Normal 31,7 s y Difícil 87,9 s. No se debilitó ninguna condición.
+- **Prueba de carrito en partida completa:** exige que el tío intente soltarse cuando la regla lo permite (atado con más de 40 % de presupuesto por más que el intervalo máximo de 10 s). Agotado no lo intenta (fatiga, GDD 05); eso pasó en una corrida del articulado y es conducta correcta. La conducta en sí la exige siempre `Cart_StrappedUncle_SignalsAndTriesToWriggleFree`.
+- **Tío articulado: demasiado fácil (bloquea pasarlo a Bar_LastRound).** Arrastre Difícil 14,5 s con 1 ataque frente a 53–78 s con 6–9 del central; en la red, `lose` (límite de 20 s) dio FAIL porque el bot ganó en 17,4 s. Hipótesis sin verificar: al tirar de hombros o antebrazos se levanta el torso y solo rozan las piernas, así que baja la fricción; el central es un tronco rígido apoyado entero. Hay que medirlo e igualar la dificultad sin cambiar la masa total.
+- **Red con el articulado** (NET localhost, build de `724ffe1`, `-Scene PhysicsLab_Articulated`): coop, reintento, red simulada (RTT ~209 ms), carrera, salida del anfitrión, desconexión agarrando, durante la carga y durante el cierre PASS; `lose` FAIL (ver arriba).
+- **Red en Bar_LastRound** (build de `724ffe1`): coop, reintento, derrota, red simulada (RTT ~236 ms), carrera, salida del anfitrión, desconexión agarrando y durante la carga PASS; `closedrop` NOT_RUN (bot). Con la corrección del bot (commit siguiente): `closedrop` y `coop` PASS 2/2.
+- **Balance:** el carrito en solitario sigue siendo probablemente demasiado fácil; revisar en el playtest antes de tocar valores.
+- **Visuales del kit:** camioneta y carrito siguen siendo primitivas; el tío del kit solo está en la variante articulada. Ver `docs/CATALOGO_RECURSOS.md`.
 
 ## 3. Pendiente de implementar (en orden)
 
-1. Ragdoll reducido del tío (11 cuerpos) conservando la versión estable hasta verificar agarres, ataques, carrito, extracción y replicación.
+1. Ragdoll reducido: igualar la dificultad del articulado con la del central y recién después pasarlo a Bar_LastRound (el central queda como respaldo).
 2. URP, materiales y texturas del kit, animaciones del kit (Idle/Push/Kick) y feedback visual de agarres y golpes.
 3. Interfaz con el kit de UI (hoy IMGUI provisional), localización EN/es_UY, controles remapeables (InputActionAsset) y opciones completas.
 4. Sonido y diálogos con procedencia y licencia registradas.
@@ -70,9 +75,9 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
 
 ## Próxima acción exacta
 
-1. Registrar el resultado de los intentos completos con la fuga nueva (PhysicsLab y Bar_LastRound). Si alguno falla, diagnosticar si es por el juego (la fuga) o por la ruta.
-2. Ragdoll reducido: prototipo en PhysicsLab detrás de una opción (`NpcBody` actual como respaldo). Verificar estabilidad (watchdog), agarres en los 11 cuerpos, carrito, extracción y replicación de la pose reducida antes de pasarlo a Bar_LastRound.
-3. URP y presentación (pendientes 2 y 3).
+1. Medir con una prueba la fuerza o el tiempo para arrastrar 3 m al tío caído, central y articulado, tomándolo del cinturón, de los hombros y de los tobillos. Igualar la dificultad (fricción por parte, resistencia activa caído, rigidez de las uniones caído) sin cambiar los 110 kg. Repetir `lose` en red.
+2. Con la dificultad pareja: `LevelSpecs.Bar()` con `articulatedUncle = true`, batería completa y `net_smoke -Scenario all` en Bar_LastRound. Conservar el central como respaldo.
+3. Presentación: URP, materiales del kit, señales de ataque sobre la malla del kit y el resto de los pendientes 2 y 3.
 
 ## Al cerrar una sesión
 
