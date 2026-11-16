@@ -15,7 +15,7 @@
 | Netcode for GameObjects | 2.14.0 | Ídem. |
 | Unity Transport | 2.7.5 | Ídem. |
 | Multiplayer Tools | 2.2.12 (simulador de red en editor y builds de desarrollo) | Ídem. |
-| Render | Built-in, sin URP todavía | Pendiente. |
+| Render | URP `com.unity.render-pipelines.universal` 17.3.0 (incluido en el editor 6000.3.28f1; trae core 17.3.0, shadergraph 17.3.0 y universal-config 17.0.3) | Asset y renderer creados por código (`UrpSetup`, `Assets/Game/Settings/`), sombras a 40 m, MSAA 2x. Verificado en la build con capturas (`-ueShot`). |
 | Multiplayer Services (Sessions/Relay) | Sin instalar | Requiere un proyecto de Unity Cloud (bloqueo de cuenta). |
 | Steamworks.NET | Sin instalar | Requiere cuenta de Steamworks y App ID. |
 

@@ -89,6 +89,13 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Red: el anfitrión simula; cada parte tiene `NetworkTransform` de autoridad del servidor y en clientes las partes son cinemáticas (pose reducida replicada).
 - Malla del kit: `uncle_prototype.fbx` girado 180° y ligado a las partes con `RagdollVisual` (cada hueso copia la pose de su parte con el desfase medido en reposo). El lado de cada hueso se elige por cercanía, no por el sufijo `.L/.R`.
 
+## 2026-11-16 — URP y dificultad del tío articulado
+
+- URP 17.3.0 (el que trae el editor; no requiere descarga). `UrpSetup.Ensure()` crea el asset y el renderer si faltan, los asigna a Graphics y a todos los niveles de calidad y, si cambió el pipeline, reimporta los FBX del kit para que sus materiales salgan con URP/Lit. Lo llama `PhysicsLabBuilder.Build`, así que reconstruir las escenas deja el proyecto en URP aunque se borre la configuración. Los materiales del constructor toman el shader del pipeline activo.
+- `-ueShot archivo@segundos`: capturas desde la propia build para verificar la presentación sin depender de la ventana (PowerShell no obtiene el handle de la ventana de Unity).
+- Tío articulado de pie: el resorte de altura reemplaza el apoyo de los pies y ahora también su fricción (Coulomb, μ 0,42, en el punto de apoyo). Sin fricción se deslizaba; repartida por masa quedaba inamovible y no se inclinaba nunca; en el punto de apoyo da el mismo par que inclina al central. Bar_LastRound usa el articulado; respaldo: `articulatedUncle = false`.
+- Freno del carrito con el tío atado: probado y revertido (ver PROGRESS).
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.

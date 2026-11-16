@@ -40,6 +40,7 @@ namespace UncleExtraction.EditorTools
         /// menu y Build Settings (Frontend, Bar_LastRound, PhysicsLab).
         public static void Build()
         {
+            UrpSetup.Ensure(); // pipeline de render antes de crear materiales y escenas
             Directory.CreateDirectory("Assets/Game/Scenes"); Directory.CreateDirectory(MatDir); Directory.CreateDirectory("Assets/Game/Prefabs");
             builtPlayerPrefab = null;
             BuildLevel(LevelSpecs.Lab());
@@ -378,6 +379,7 @@ namespace UncleExtraction.EditorTools
             string path = $"{MatDir}/{name}.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (!m) { m = new Material(DefaultShader()); AssetDatabase.CreateAsset(m, path); }
+            var sh = DefaultShader(); if (m.shader != sh) m.shader = sh; // materiales creados antes de URP
             m.color = c; EditorUtility.SetDirty(m); return m;
         }
         static Shader DefaultShader()
