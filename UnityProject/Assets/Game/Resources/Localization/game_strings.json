@@ -336,6 +336,31 @@
    "key": "action.Restart",
    "en": "Restart (lab)",
    "es_UY": "Reiniciar (laboratorio)"
+  },
+  {
+   "key": "input.mouse_leftButton",
+   "en": "LMB",
+   "es_UY": "Clic izq."
+  },
+  {
+   "key": "input.mouse_rightButton",
+   "en": "RMB",
+   "es_UY": "Clic der."
+  },
+  {
+   "key": "input.mouse_middleButton",
+   "en": "MMB",
+   "es_UY": "Clic central"
+  },
+  {
+   "key": "input.mouse_backButton",
+   "en": "Mouse 4",
+   "es_UY": "Botón 4"
+  },
+  {
+   "key": "input.mouse_forwardButton",
+   "en": "Mouse 5",
+   "es_UY": "Botón 5"
   }
  ]
 }

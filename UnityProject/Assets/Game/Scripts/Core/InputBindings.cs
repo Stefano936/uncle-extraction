@@ -55,6 +55,7 @@ namespace UncleExtraction
         public static string Display(Act a)
         {
             string p = Path(a);
+            if (p.StartsWith("<Mouse>/")) { string k = "input.mouse_" + p.Substring(8); if (Loc.Has(k)) return Loc.T(k); }
 #if UE_INPUT_SYSTEM
             var c = Control(p); if (c != null) return c.displayName;
 #endif

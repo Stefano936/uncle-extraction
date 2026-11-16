@@ -138,7 +138,7 @@ namespace UncleExtraction
             resDetail.text = Loc.T(win ? "round.success_detail" : "round.timeout_detail");
             int falls = 0; foreach (var pm in PlayerMotor.All) if (pm) falls += pm.FallCount;
             string time = win ? $"{(int)(round.Elapsed / 60f)}:{(int)(round.Elapsed % 60f):00}" : "—";
-            resStats.text = $"{Loc.T("round.time")}:  {time}\n{Loc.T("round.falls")}:  {falls}\n{Loc.T("lobby.difficulty")}:  {Loc.T(round.CurrentDifficulty == Difficulty.Relaxed ? "lobby.relaxed" : round.CurrentDifficulty == Difficulty.Hard ? "lobby.hard" : "lobby.normal")}\n{Loc.T("lobby.players_other", ("count", round.PartySize.ToString()))}"
+            resStats.text = $"{Loc.T("round.time")}:  {time}\n{Loc.T("round.falls")}:  {falls}\n{Loc.T("lobby.difficulty")}:  {Loc.T(round.CurrentDifficulty == Difficulty.Relaxed ? "lobby.relaxed" : round.CurrentDifficulty == Difficulty.Hard ? "lobby.hard" : "lobby.normal")}\n{Loc.T(round.PartySize == 1 ? "lobby.players_one" : "lobby.players_other", ("count", round.PartySize.ToString()))}"
                             + (win ? "" : "\n\n" + Loc.T("round.hint"));
             // reintentar: el anfitrion decide; un invitado espera al anfitrion (o sale)
             bool host = NetAuth.IsServer;
@@ -150,10 +150,12 @@ namespace UncleExtraction
     /// Texto de un boton o etiqueta que se traduce solo al cambiar el idioma.
     public class LocText : MonoBehaviour
     {
-        public string key;
+        [SerializeField] string _key;
+        /// Asignar la clave aplica el texto en el acto (AddComponent llama a OnEnable antes de poder asignarla).
+        public string key { get => _key; set { _key = value; Apply(); } }
         Text t;
-        void OnEnable() { if (!t) t = GetComponentInChildren<Text>(); Loc.Changed += Apply; Apply(); }
+        void OnEnable() { Loc.Changed += Apply; Apply(); }
         void OnDisable() { Loc.Changed -= Apply; }
-        void Apply() { if (t && !string.IsNullOrEmpty(key)) t.text = Loc.T(key); }
+        void Apply() { if (!t) t = GetComponentInChildren<Text>(); if (t && !string.IsNullOrEmpty(_key)) t.text = Loc.T(_key); }
     }
 }

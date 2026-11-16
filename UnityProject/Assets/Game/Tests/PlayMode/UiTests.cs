@@ -71,6 +71,10 @@ namespace UncleExtraction.Tests
             yield return null; yield return null;
             var menu = Object.FindAnyObjectByType<FrontendMenu>(); Assert.IsNotNull(menu);
             Assert.AreEqual(FrontendMenu.Page.Main, menu.Current);
+            // sin cambiar de idioma: los botones ya tienen texto (fallo visto en la captura de la build)
+            var first = Object.FindObjectsByType<Button>(FindObjectsSortMode.None).Select(b => b.GetComponentInChildren<Text>().text).ToList();
+            Assert.IsTrue(first.All(x => !string.IsNullOrEmpty(x)), "botones del menu sin texto: " + string.Join(",", first));
+            CollectionAssert.Contains(first, Loc.T("button.play_solo"));
             Loc.SetLanguage(Loc.EsUY); yield return null;
             var texts = Object.FindObjectsByType<Text>(FindObjectsSortMode.None).Select(t => t.text).ToList();
             CollectionAssert.Contains(texts, "JUGAR SOLO");

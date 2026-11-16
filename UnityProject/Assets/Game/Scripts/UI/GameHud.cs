@@ -40,10 +40,11 @@ namespace UncleExtraction
                 var a = new Vector2(h == 0 ? 0f : 1f, 0f);
                 var u = new HandUi { box = Ui.PanelBox(h == 0 ? "LeftHand" : "RightHand", root, a, new Vector2(h == 0 ? Ui.Margin : -Ui.Margin, Ui.Margin), new Vector2(380, 150)) };
                 u.icon = Ui.Icon(u.box, "Icon", h == 0 ? "hand_left" : "hand_right", new Vector2(0, 0.5f), new Vector2(46, 8), 64, Ui.Text);
-                u.title = Ui.Label(u.box, "Title", "", Ui.FontHud, Ui.Muted, TextAnchor.UpperLeft, true); Inset(u.title, 92, 14, 16, 0);
-                u.state = Ui.Label(u.box, "State", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleLeft, true); Inset(u.state, 92, 46, 16, 0);
-                u.socket = Ui.Label(u.box, "Socket", "", Ui.FontHud, Ui.Muted, TextAnchor.LowerLeft); Inset(u.socket, 92, 0, 16, 34);
-                u.tension = Ui.Bar(u.box, "Tension", new Vector2(0.5f, 0f), new Vector2(46, 16), new Vector2(260, 18), true, out _);
+                // filas fijas desde arriba (sin superponerse): titulo, estado, punto/ayuda; la tension va abajo
+                u.title = Ui.Label(u.box, "Title", "", Ui.FontHud, Ui.Muted, TextAnchor.MiddleLeft, true); Row(u.title, 92, 12, 26, 16);
+                u.state = Ui.Label(u.box, "State", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleLeft, true); Row(u.state, 92, 40, 34, 16);
+                u.socket = Ui.Label(u.box, "Socket", "", Ui.FontHud, Ui.Muted, TextAnchor.MiddleLeft); Row(u.socket, 92, 78, 30, 16);
+                u.tension = Ui.Bar(u.box, "Tension", new Vector2(0.5f, 0f), new Vector2(38, 14), new Vector2(272, 16), true, out _);
                 hand[h] = u;
             }
             // energia (abajo al centro) y compostura
@@ -82,6 +83,12 @@ namespace UncleExtraction
             Loc.Changed += Relabel; Relabel();
         }
 
+        static void Row(Text t, float left, float top, float height, float right)
+        {
+            var rt = t.rectTransform; rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(0.5f, 1f);
+            rt.offsetMin = new Vector2(left, -(top + height)); rt.offsetMax = new Vector2(-right, -top);
+            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Truncate;
+        }
         static void Inset(Text t, float left, float top, float right, float bottom) { t.rectTransform.offsetMin = new Vector2(left, bottom); t.rectTransform.offsetMax = new Vector2(-right, -top); }
 
         void Relabel()

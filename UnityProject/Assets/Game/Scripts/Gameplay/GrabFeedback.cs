@@ -29,7 +29,7 @@ namespace UncleExtraction
             if (material) { ringMat = new Material(material); mr.sharedMaterial = ringMat; }
             var lgo = new GameObject("Grab_Aim_Label"); lgo.transform.SetParent(ring, false);
             label = lgo.AddComponent<TextMesh>(); label.anchor = TextAnchor.LowerCenter; label.alignment = TextAlignment.Center;
-            label.characterSize = 0.02f; label.fontSize = 64;
+            label.characterSize = 0.011f; label.fontSize = 64;
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font) { label.font = font; lgo.GetComponent<MeshRenderer>().sharedMaterial = font.material; }
             for (int h = 0; h < 2; h++)
@@ -50,7 +50,7 @@ namespace UncleExtraction
             var wr = warn.gameObject.AddComponent<MeshRenderer>(); wr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             if (material) { warnMat = new Material(material); wr.sharedMaterial = warnMat; }
             var wl = new GameObject("Block_Label"); wl.transform.SetParent(warn, false); wl.transform.localPosition = new Vector3(0, 0.16f, 0);
-            warnLabel = wl.AddComponent<TextMesh>(); warnLabel.anchor = TextAnchor.LowerCenter; warnLabel.alignment = TextAlignment.Center; warnLabel.characterSize = 0.022f; warnLabel.fontSize = 64;
+            warnLabel = wl.AddComponent<TextMesh>(); warnLabel.anchor = TextAnchor.LowerCenter; warnLabel.alignment = TextAlignment.Center; warnLabel.characterSize = 0.014f; warnLabel.fontSize = 64;
             var f2 = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); if (f2) { warnLabel.font = f2; wl.GetComponent<MeshRenderer>().sharedMaterial = f2.material; }
             warn.gameObject.SetActive(false);
         }
