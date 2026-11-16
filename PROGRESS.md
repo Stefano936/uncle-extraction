@@ -2,7 +2,7 @@
 
 Última actualización: 2026-11-16 (sesión 7: tío articulado en Bar_LastRound y `PhysicsLab_Articulated`; pruebas de resistencia separadas por modo).
 
-**Builds de referencia** (locales, no versionadas). Cada carpeta tiene `VERSION.txt` con el commit de origen; las actuales salen de `a0309d7`:
+**Builds de referencia** (locales, no versionadas). Cada carpeta tiene `VERSION.txt` con el commit de origen; las actuales salen de `c81d2a1` (URP, tío articulado en el bar):
 - `Builds/UncleExtraction/UncleExtraction.exe`: release Mono, para jugar. Incluye `LEEME.txt` con controles e instrucciones (`docs/COMO_PROBAR.md`).
 - `Builds/UncleExtraction_Dev/UncleExtraction.exe`: desarrollo, con el simulador de red. Solo para pruebas.
 
