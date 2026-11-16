@@ -46,9 +46,31 @@ namespace UncleExtraction.EditorTools
             foreach (var f in new[] { "DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "FONT_LICENSE.txt" })
                 CopyIfChanged(Path.Combine(Kit, "assets/fonts", f), $"{UiDir}/Fonts/{f}");
             CopyIfChanged(Path.Combine(Kit, "data/localization_en_es.json"), $"{LocDir}/ui_strings.json");
+            Directory.CreateDirectory(UiDir + "/Backgrounds");
+            CopyIfChanged(Path.Combine(Kit, "assets/backgrounds/bar_idle.png"), $"{UiDir}/Backgrounds/bar_idle.png");
+            ConfigureSprite($"{UiDir}/Backgrounds/bar_idle.png", Vector4.zero, 100);
             AssetDatabase.Refresh();
+            BuildSkin();
             AssetDatabase.SaveAssets();
             Debug.Log($"[UiKit] {n} sprites e iconos importados; fuentes DejaVu y catalogo EN/es_UY en {LocDir}");
+        }
+
+        public const string SkinPath = "Assets/Game/Resources/UI/UiSkin.asset";
+        /// UiSkin en Resources (las pantallas se arman en tiempo de ejecucion con estos sprites y fuentes).
+        static void BuildSkin()
+        {
+            Directory.CreateDirectory("Assets/Game/Resources/UI");
+            var skin = AssetDatabase.LoadAssetAtPath<UiSkin>(SkinPath);
+            if (!skin) { skin = ScriptableObject.CreateInstance<UiSkin>(); AssetDatabase.CreateAsset(skin, SkinPath); }
+            Sprite Sp(string file) => AssetDatabase.LoadAssetAtPath<Sprite>($"{UiDir}/Sprites/{file}.png");
+            skin.panel = Sp("panel_dark"); skin.panelDanger = Sp("panel_danger"); skin.button = Sp("button_primary"); skin.buttonHover = Sp("button_hover");
+            skin.buttonPressed = Sp("button_pressed"); skin.buttonDisabled = Sp("button_disabled"); skin.focus = Sp("focus_ring"); skin.keycap = Sp("keycap");
+            skin.barTrack = Sp("bar_track"); skin.barAmber = Sp("bar_fill_amber"); skin.barTeal = Sp("bar_fill_teal");
+            skin.background = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiDir}/Backgrounds/bar_idle.png");
+            skin.font = AssetDatabase.LoadAssetAtPath<Font>(FontPath); skin.fontBold = AssetDatabase.LoadAssetAtPath<Font>(FontBoldPath);
+            skin.icons = Directory.GetFiles(UiDir + "/Icons", "*.png").Select(f => AssetDatabase.LoadAssetAtPath<Sprite>(f.Replace('\\', '/'))).Where(x => x).ToList();
+            EditorUtility.SetDirty(skin);
+            Debug.Log($"[UiKit] UiSkin: {skin.icons.Count} iconos, fuente {(skin.font ? skin.font.name : "FALTA")}, panel {(skin.panel ? "ok" : "FALTA")}");
         }
 
         static void CopyIfChanged(string src, string dst)

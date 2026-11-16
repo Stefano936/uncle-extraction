@@ -133,7 +133,7 @@ namespace UncleExtraction
             var c = Candidate;
             if (c == null) return;
             var r = GrabRegistry.TryCreate(this, hand, c, out _);
-            if (r != GrabResult.Ok && r != GrabResult.HandBusy) Feedback(r == GrabResult.SocketBusy ? "Ocupado" : r == GrabResult.OutOfReach ? "Fuera de alcance" : r.ToString());
+            if (r != GrabResult.Ok && r != GrabResult.HandBusy) Feedback(r == GrabResult.SocketBusy ? "hud.grip_busy" : r == GrabResult.OutOfReach ? "hud.too_far" : r.ToString());
         }
 
         /// API directa (pruebas y depuracion en el anfitrion): agarra un socket concreto con una mano.
@@ -197,7 +197,7 @@ namespace UncleExtraction
 
             broken.Clear();
             GrabSpring.ApplyOwner(this, rb, HandTarget, effortActive, Time.fixedDeltaTime, broken);
-            foreach (var l in broken) { GrabRegistry.Release(l.id, ReleaseReason.Distance); Feedback("Se solto (distancia)"); }
+            foreach (var l in broken) { GrabRegistry.Release(l.id, ReleaseReason.Distance); Feedback("grab.lost_distance"); }
         }
 
         void HandleInteract()
@@ -210,7 +210,7 @@ namespace UncleExtraction
                 if (!other || other == motor || other.State != PlayerState.Fallen) continue;
                 Vector3 to = other.transform.position + Vector3.up * 0.4f - cam.transform.position;
                 if (to.magnitude > 1.9f || Vector3.Angle(cam.transform.forward, to) > 40f) continue;
-                interactLabel = $"Mantener E: ayudar a {other.playerName} a levantarse";
+                interactLabel = Loc.Code("interact.help_up", ("player", other.playerName));
                 if (Ctrl(Act.Interact) && other.AssistGetUp(Time.deltaTime)) interactProgress = Mathf.Clamp01(1f - other.StateTimeLeft / LabBalance.FallLockMax);
                 return;
             }
@@ -221,7 +221,7 @@ namespace UncleExtraction
                 bool aiming = to.magnitude <= LabBalance.GrabReach + 0.3f && Vector3.Angle(cam.transform.forward, to) < 30f;
                 if (aiming)
                 {
-                    interactLabel = "Mantener E: soltarle la mano";
+                    interactLabel = "interact.unanchor";
                     if (Ctrl(Act.Interact))
                     {
                         interactProgress += Time.deltaTime / LabBalance.AnchorReleaseHold;
@@ -239,7 +239,7 @@ namespace UncleExtraction
                 string why = van.BlockReason();
                 if (why == "")
                 {
-                    interactLabel = "Mantener E: cerrar la camioneta";
+                    interactLabel = "van.hold_close";
                     interactProgress = Ctrl(Act.Interact) ? van.HoldClose(this, Time.deltaTime) : 0f;
                 }
                 else interactLabel = why;
@@ -248,8 +248,8 @@ namespace UncleExtraction
             // 3) Carrito: E para asegurar / liberar al tio en la caja
             if (cart && Vector3.Distance(transform.position, cart.transform.position) < 2.2f)
             {
-                if (cart.IsStrapped) { interactLabel = "E: soltar correa del carrito"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
-                else if (cart.CanStrap) { interactLabel = "E: subir y asegurar al tio en el carrito"; if (CtrlPressed(Act.Interact) && !cart.Strap()) Feedback(cart.LastFailure); }
+                if (cart.IsStrapped) { interactLabel = "cart.unstrap"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
+                else if (cart.CanStrap) { interactLabel = "cart.strap"; if (CtrlPressed(Act.Interact) && !cart.Strap()) Feedback(cart.LastFailure); }
             }
         }
 

@@ -42,8 +42,25 @@ namespace UncleExtraction.EditorTools
             {   // instrucciones junto al ejecutable (docs/COMO_PROBAR.md)
                 var guide = Path.Combine(Directory.GetParent(Application.dataPath).Parent.FullName, "docs", "COMO_PROBAR.md");
                 if (File.Exists(guide)) File.Copy(guide, Path.Combine(outDir, "LEEME.txt"), true);
+                // version de origen: commit, si habia cambios sin commitear y cuando se genero (cada resultado se asocia a esto)
+                string head = Git("rev-parse --short HEAD"), dirty = Git("status --porcelain --untracked-files=no");
+                File.WriteAllText(Path.Combine(outDir, "VERSION.txt"),
+                    $"Commit de origen: {head}{(dirty != "" ? " + cambios sin commitear" : "")}
+Generada: {DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}
+Tipo: {(dev ? "desarrollo" : "release")} {impl}
+");
             }
             return s.result == BuildResult.Succeeded;
+        }
+
+        static string Git(string args)
+        {
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo("git", args) { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = Directory.GetParent(Application.dataPath).Parent.FullName };
+                using var p = System.Diagnostics.Process.Start(psi); string o = p.StandardOutput.ReadToEnd().Trim(); p.WaitForExit(5000); return o;
+            }
+            catch (Exception e) { return "desconocido (" + e.Message + ")"; }
         }
 
         static string Arg(string name)

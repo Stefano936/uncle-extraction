@@ -45,43 +45,44 @@ namespace UncleExtraction
             float W = Screen.width, H = Screen.height;
             // Reticula y candidato
             GUI.Label(new Rect(W / 2 - 10, H / 2 - 12, 20, 24), "+", mid);
-            if (hands && hands.Candidate) GUI.Label(new Rect(W / 2 - 200, H / 2 + 14, 400, 24), $"[{hands.Candidate.label}]", mid);
-            if (hands && Time.time < hands.FeedbackUntil) GUI.Label(new Rect(W / 2 - 200, H / 2 + 38, 400, 24), hands.LastFeedback, mid);
-            if (hands && hands.InteractLabel != "")
+            if (hands && hands.Candidate && !GameHud.Instance) GUI.Label(new Rect(W / 2 - 200, H / 2 + 14, 400, 24), $"[{hands.Candidate.label}]", mid);
+            bool kitHud = GameHud.Instance; // el HUD del kit muestra avisos, ataques, barras y reloj: aca solo depuracion
+            if (hands && Time.time < hands.FeedbackUntil && !kitHud) GUI.Label(new Rect(W / 2 - 200, H / 2 + 38, 400, 24), hands.LastFeedback, mid);
+            if (hands && hands.InteractLabel != "" && !kitHud)
             {
                 GUI.Label(new Rect(W / 2 - 250, H / 2 + 62, 500, 24), hands.InteractLabel, mid);
                 if (hands.InteractProgress01 > 0) GUI.Box(new Rect(W / 2 - 100, H / 2 + 88, 200 * hands.InteractProgress01, 10), GUIContent.none);
             }
 
             // Senal de ataque (accesible: texto + cuenta regresiva, ademas del color/pose)
-            if (npc && (npc.State == NpcState.Windup || npc.State == NpcState.Attack))
+            if (npc && (npc.State == NpcState.Windup || npc.State == NpcState.Attack) && !kitHud)
             {
                 var prev = GUI.color; GUI.color = npc.State == NpcState.Attack ? Color.red : new Color(1f, 0.75f, 0.2f);
                 string t = npc.State == NpcState.Windup ? $"{(npc.WriggleAttempt ? "SE QUIERE SOLTAR" : npc.CurrentAttack.label)}  {npc.StateTimeLeft:0.0}s" : npc.CurrentAttack.label + "!";
                 GUI.Label(new Rect(0, H * 0.18f, W, 50), t, big);
                 GUI.color = prev;
             }
-            if (npc && npc.State == NpcState.ForcedRecovery) GUI.Label(new Rect(0, H * 0.18f, W, 50), $"EL TIO ESTA AGOTADO  {npc.StateTimeLeft:0.0}s", big);
+            if (npc && npc.State == NpcState.ForcedRecovery && !kitHud) GUI.Label(new Rect(0, H * 0.18f, W, 50), $"EL TIO ESTA AGOTADO  {npc.StateTimeLeft:0.0}s", big);
 
-            if (player && player.State == PlayerState.Fallen) GUI.Label(new Rect(0, H * 0.45f, W, 50), $"CAIDO - te levantas en {player.StateTimeLeft:0.0}s", big);
-            if (round && round.State == RoundState.Success) GUI.Label(new Rect(0, H * 0.3f, W, 60), $"EXTRAIDO en {round.Elapsed:0.0}s  (R para reiniciar)", big);
-            if (round && round.State == RoundState.Timeout) GUI.Label(new Rect(0, H * 0.3f, W, 60), "SE ACABO EL TIEMPO  (R para reiniciar)", big);
+            if (player && player.State == PlayerState.Fallen && !kitHud) GUI.Label(new Rect(0, H * 0.45f, W, 50), $"CAIDO - te levantas en {player.StateTimeLeft:0.0}s", big);
+            if (round && round.State == RoundState.Success && !kitHud) GUI.Label(new Rect(0, H * 0.3f, W, 60), $"EXTRAIDO en {round.Elapsed:0.0}s  (R para reiniciar)", big);
+            if (round && round.State == RoundState.Timeout && !kitHud) GUI.Label(new Rect(0, H * 0.3f, W, 60), "SE ACABO EL TIEMPO  (R para reiniciar)", big);
 
             // Barras del jugador
-            if (player)
+            if (player && !kitHud)
             {
                 Bar(20, H - 70, "Compostura", player.Composure / LabBalance.ComposureMax, new Color(0.2f, 0.85f, 0.75f));
                 Bar(20, H - 45, "Energia", player.Energy / LabBalance.EnergyMax, new Color(1f, 0.7f, 0.2f));
             }
-            if (hands)
+            if (hands && !kitHud)
             {
                 GUI.Label(new Rect(W - 330, H - 70, 320, 22), HandText(0), small);
                 GUI.Label(new Rect(W - 330, H - 48, 320, 22), HandText(1), small);
             }
-            if (zone && zone.Progress01 > 0f && !zone.Secured) GUI.Label(new Rect(0, H * 0.6f, W, 30), $"Cargando en la camioneta {zone.Progress01 * 100f:0}%", mid);
+            if (zone && zone.Progress01 > 0f && !zone.Secured && !kitHud) GUI.Label(new Rect(0, H * 0.6f, W, 30), $"Cargando en la camioneta {zone.Progress01 * 100f:0}%", mid);
 
             string timer = round ? (round.TimeLimit > 0 ? $"{Mathf.Max(0, round.TimeLimit - round.Elapsed):0}s" : "sin limite") : "";
-            GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"{(LevelLayout.Current ? LevelLayout.Current.displayName : "")}  {timer}", mid);
+            if (!kitHud) GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"{(LevelLayout.Current ? LevelLayout.Current.displayName : "")}  {timer}", mid);
 
             if (autopilot && autopilot.Running) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
             if (Time.unscaledTime < NetSession.StatusUntil) GUI.Label(new Rect(0, H * 0.72f, W, 30), NetSession.StatusMessage, mid);

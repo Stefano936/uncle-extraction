@@ -72,16 +72,16 @@ namespace UncleExtraction
             var k = Keyboard.current; var m = Mouse.current; var g = Gamepad.current;
             switch (a)
             {
-                case Act.GrabLeft: return (m != null && m.leftButton.isPressed) || (g != null && g.leftTrigger.isPressed);
-                case Act.GrabRight: return (m != null && m.rightButton.isPressed) || (g != null && g.rightTrigger.isPressed);
-                case Act.Interact: return (k != null && k.eKey.isPressed) || (g != null && g.buttonSouth.isPressed);
-                case Act.ReleaseAll: return (k != null && k.qKey.isPressed) || (g != null && g.buttonEast.isPressed);
-                case Act.Effort: return (k != null && k.leftShiftKey.isPressed) || (g != null && g.leftStickButton.isPressed);
-                case Act.Crouch: return (k != null && k.leftCtrlKey.isPressed) || (g != null && g.rightStickButton.isPressed);
-                case Act.Dodge: return (k != null && k.spaceKey.isPressed) || (g != null && g.buttonWest.isPressed);
-                case Act.Restart: return k != null && k.rKey.isPressed;
-                case Act.ToggleCursor: return k != null && k.tabKey.isPressed;
-                case Act.Pause: return (k != null && k.escapeKey.isPressed) || (g != null && g.startButton.isPressed);
+                case Act.GrabLeft: return InputBindings.KeyHeld(a) || (g != null && g.leftTrigger.isPressed);
+                case Act.GrabRight: return InputBindings.KeyHeld(a) || (g != null && g.rightTrigger.isPressed);
+                case Act.Interact: return InputBindings.KeyHeld(a) || (g != null && g.buttonSouth.isPressed);
+                case Act.ReleaseAll: return InputBindings.KeyHeld(a) || (g != null && g.buttonEast.isPressed);
+                case Act.Effort: return InputBindings.KeyHeld(a) || (g != null && g.leftStickButton.isPressed);
+                case Act.Crouch: return InputBindings.KeyHeld(a) || (g != null && g.rightStickButton.isPressed);
+                case Act.Dodge: return InputBindings.KeyHeld(a) || (g != null && g.buttonWest.isPressed);
+                case Act.Restart: return InputBindings.KeyHeld(a);
+                case Act.ToggleCursor: return InputBindings.KeyHeld(a);
+                case Act.Pause: return InputBindings.KeyHeld(a) || (g != null && g.startButton.isPressed);
             }
             return false;
 #elif ENABLE_LEGACY_INPUT_MANAGER

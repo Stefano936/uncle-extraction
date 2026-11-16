@@ -396,7 +396,7 @@ namespace UncleExtraction
         {
             var van = VanDoors.Instance; if (!van) return false;
             string why = van.BlockReason();
-            return why.Contains("afuera") || why.Contains("trabado");
+            return why.StartsWith("van.part_outside") || why == "van.stuck";
         }
 
         /// Carrera por un mismo punto (especificacion 05): dos jugadores apuntan al cinturon y aprietan en el mismo instante
@@ -486,7 +486,7 @@ namespace UncleExtraction
                         else
                         {   // sin lugar (por ejemplo, el jugador esta en el volumen): apartarse y reintentar
                             Log($"no pudo asegurarlo: '{hands.LastFeedback}'; se aparta");
-                            if (!hands.LastFeedback.Contains("jugador")) cartNeedsSpace = true; // pared u objeto: mover el carrito a un lugar abierto
+                            if (!hands.LastFeedback.Contains("blocker.player")) cartNeedsSpace = true; // pared u objeto: mover el carrito a un lugar abierto
                             Vector3 away = Flat(player.transform.position - cart.transform.position).normalized;
                             for (float w = 0; w < 0.6f; w += Time.deltaTime) { MoveWorld(away); yield return null; }
                             LabInput.SimulatedMove = Vector2.zero;

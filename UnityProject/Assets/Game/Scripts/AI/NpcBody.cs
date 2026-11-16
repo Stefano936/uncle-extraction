@@ -102,18 +102,20 @@ namespace UncleExtraction
         public static NpcBody Of(Rigidbody b) { if (!b) return null; var n = b.GetComponent<NpcBody>(); return n ? n : b.GetComponentInParent<NpcBody>(); }
         /// Nombre para el jugador de la parte del tio a la que pertenece un cuerpo ("un pie", "la cabeza"...). Lo usan los
         /// avisos de cierre y carga para decir que hay que acomodar. Sin lado izquierdo/derecho: depende de donde se mire.
-        public static string PartLabel(Rigidbody b)
+        public static string PartLabel(Rigidbody b) => Loc.T(PartKey(b));
+        /// Clave de localizacion de la parte (part.foot, part.head...): viaja por red y cada jugador la traduce.
+        public static string PartKey(Rigidbody b)
         {
             var part = b ? b.GetComponent<RagdollPart>() : null;
-            if (!part) return Of(b) && Of(b).Articulated ? "la cadera" : "una parte del cuerpo";
+            if (!part) return Of(b) && Of(b).Articulated ? "part.hip" : "part.body";
             string r = part.role ?? "";
-            if (r.StartsWith("calf")) return "un pie";
-            if (r.StartsWith("thigh")) return "una pierna";
-            if (r.StartsWith("forearm")) return "una mano";
-            if (r.StartsWith("upper_arm")) return "un brazo";
-            if (r == "head") return "la cabeza";
-            if (r == "chest") return "el torso";
-            return "una parte del cuerpo";
+            if (r.StartsWith("calf")) return "part.foot";
+            if (r.StartsWith("thigh")) return "part.leg";
+            if (r.StartsWith("forearm")) return "part.hand";
+            if (r.StartsWith("upper_arm")) return "part.arm";
+            if (r == "head") return "part.head";
+            if (r == "chest") return "part.torso";
+            return "part.body";
         }
         public int GrabCount() { int n = 0; foreach (var b in bodies) n += GrabRegistry.CountOnBody(b); return n; }
         public void ReleaseAllGrabs(ReleaseReason r) { foreach (var b in bodies) GrabRegistry.ReleaseAllOnBody(b, r); }

@@ -57,9 +57,9 @@ namespace UncleExtraction
                 var rb = c.attachedRigidbody;
                 if (!rb) continue;                              // piso, rampa y paredes no bloquean
                 BlockPoint = c.bounds.center;
-                if (rb.GetComponent<PlayerMotor>()) { what = "Hay alguien en la puerta"; return true; }
-                if (NpcBody.Of(rb)) { what = $"Le queda {NpcBody.PartLabel(rb)} afuera: empujalo adentro"; return true; }
-                what = $"{rb.name} bloquea la puerta"; return true;
+                if (rb.GetComponent<PlayerMotor>()) { what = "van.player_in_door"; return true; }
+                if (NpcBody.Of(rb)) { what = Loc.Code("van.part_outside", ("part", NpcBody.PartKey(rb))); return true; }
+                what = Loc.Code("van.object_in_door", ("object", rb.name)); return true;
             }
             return false;
         }
@@ -69,8 +69,8 @@ namespace UncleExtraction
         {
             var zone = ExtractionZone.Instance;
             if (!zone) return "Sin zona";
-            if (!zone.AllPointsInside) return "El tio no esta adentro";
-            if (zone.SolidOverlap) return "Esta trabado con algo: acomodalo";
+            if (!zone.AllPointsInside) return "van.not_inside";
+            if (zone.SolidOverlap) return "van.stuck";
             if (DoorwayBlocked(out string what)) return what;
             return "";
         }
@@ -81,9 +81,9 @@ namespace UncleExtraction
             var zone = ExtractionZone.Instance;
             BlockPoint = null;
             if (!zone || zone.Secured) return "";
-            if (CurrentPhase == Phase.Closing) return "Cerrando...";
+            if (CurrentPhase == Phase.Closing) return "van.closing";
             string f = ConditionsFail(); if (f != "") return f;
-            if (!zone.PoseReady) return $"Acomodandolo... {zone.Progress01 * 100f:0}%";
+            if (!zone.PoseReady) return Loc.Code("van.settling", ("percent", (zone.Progress01 * 100f).ToString("0")));
             return "";
         }
 

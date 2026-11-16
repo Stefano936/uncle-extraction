@@ -163,6 +163,7 @@ namespace UncleExtraction.EditorTools
             doors.closePoint = new Vector3(0, 1.2f, rearZ); doors.doorwayCenter = new Vector3(0, floorY + 0.9f, rearZ + 0.62f);
             doors.doorwayHalf = new Vector3(halfW - 0.1f, 0.85f, 0.6f);
 
+            if (spec.kitVisuals && KitDressing.Van(van, rearZ, frontZ, cabZ, floorY, roofY, halfW)) { KitDressing.VanLeaves(doorsGo.transform, van); Debug.Log("[LabBuilder] camioneta vestida con passenger_van del kit (piso, rampa y zona funcionales)"); }
             // Volumen de carga (interior, entre la abertura y la mampara)
             var zoneGo = new GameObject("Extraction_Zone"); zoneGo.transform.position = new Vector3(0, floorY + 0.85f, (rearZ + cabZ) * 0.5f);
             var zoneBox = zoneGo.AddComponent<BoxCollider>(); zoneBox.size = new Vector3(halfW * 2f - 0.25f, 1.7f, (rearZ - cabZ) - 0.1f);
@@ -192,6 +193,7 @@ namespace UncleExtraction.EditorTools
             var strapPt = new GameObject("Strap_Point").transform; strapPt.SetParent(ct, false); strapPt.localPosition = new Vector3(0, 0.6f, 0);
             Socket(handle.transform, "cart_handle", "asa del carrito", Vector3.zero, cartRb, 2);
             var cart = cartGo.AddComponent<TransportCart>(); cart.bed = bed; cart.strapPoint = strapPt;
+            if (spec.kitVisuals && KitDressing.Cart(ct)) Debug.Log("[LabBuilder] carrito vestido con transport_cart del kit (geometria funcional sin cambios)");
 
             // Tio
             NpcBody body; NpcBrain brain; NpcPresentation pres;

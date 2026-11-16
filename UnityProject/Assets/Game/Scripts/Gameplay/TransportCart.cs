@@ -61,7 +61,7 @@ namespace UncleExtraction
         public bool Strap()
         {
             if (!NetAuth.IsServer || !CanStrap) return false;
-            if (NpcBrain.Instance && NpcBrain.Instance.IsAnchored) { LastFailure = "Primero soltale la mano de la barra"; return false; }
+            if (NpcBrain.Instance && NpcBrain.Instance.IsAnchored) { LastFailure = "cart.anchor_first"; return false; }
             if (loading) return false;
             // Carga comprensible (M1/M3): destino acostado a lo largo de la caja (cabeza hacia el frente, boca arriba),
             // validado contra paredes, jugadores y objetos; si no hay espacio, no se carga. Luego una subida corta de 0,45 s
@@ -71,7 +71,7 @@ namespace UncleExtraction
             Quaternion lying = Quaternion.LookRotation(Vector3.up, transform.forward);
             Vector3 pelvisLocal = npc.pelvis ? npc.transform.InverseTransformPoint(npc.pelvis.position) : new Vector3(0f, 0.95f, 0f);
             Vector3 rootPos = bedPt - lying * pelvisLocal;
-            if (!LyingVolumeFree(rootPos, lying, out string blocker)) { LastFailure = "No hay lugar para acostarlo (" + blocker + ")"; Debug.Log($"[Cart] strap bloqueado por {blocker}"); return false; }
+            if (!LyingVolumeFree(rootPos, lying, out string blocker)) { LastFailure = Loc.Code("cart.no_room", ("blocker", blocker)); Debug.Log($"[Cart] strap bloqueado por {blocker}"); return false; }
             npc.ReleaseAllGrabs(ReleaseReason.Secured); // nadie lo sostiene mientras sube
             StartCoroutine(LoadRoutine(rootPos, lying, bedPt, pelvisLocal));
             LastFailure = "";
@@ -95,7 +95,7 @@ namespace UncleExtraction
             {
                 var col = overlap[i]; var arb = col.attachedRigidbody;
                 if (npc.Owns(arb) || arb == rb) continue;
-                blocker = arb && arb.GetComponent<PlayerMotor>() ? "un jugador" : arb ? arb.name : col.name; return false;
+                blocker = arb && arb.GetComponent<PlayerMotor>() ? "blocker.player" : arb ? arb.name : col.name; return false;
             }
             return true;
         }

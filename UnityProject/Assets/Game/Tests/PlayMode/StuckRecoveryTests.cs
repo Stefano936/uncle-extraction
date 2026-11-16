@@ -154,16 +154,16 @@ namespace UncleExtraction.Tests
                 LayUncleInVan(L.vanRearZ - dz, L.vanAxisX + 0.2f);
                 yield return new WaitForSeconds(1.0f);
                 reason = van.BlockReason();
-                if (zone.AllPointsInside && reason.Contains("afuera")) { found = dz; break; }
+                if (zone.AllPointsInside && reason.StartsWith("van.part_outside")) { found = dz; break; }
             }
             Assert.IsFalse(float.IsNaN(found), $"no se pudo reproducir un pie en la abertura con el resto adentro (ultimo motivo '{reason}')");
             Debug.Log($"[Stuck] pie en la abertura con la pelvis a {found:0.00} m de la abertura: '{reason}'");
-            StringAssert.Contains("pie", reason, "el motivo debe nombrar la parte que sobresale");
+            StringAssert.Contains("part=part.foot", reason, "el motivo debe nombrar la parte que sobresale");
 
             // Desde el lugar normal de cierre, el HUD muestra el motivo en lugar de «Mantener E»
             Place(L.CloseStand(1f), 180f);
             for (int i = 0; i < 5; i++) { LookAt(van.closePoint); yield return null; }
-            StringAssert.Contains("afuera", hands.InteractLabel, "el jugador ve por que no se puede cerrar");
+            StringAssert.StartsWith("van.part_outside", hands.InteractLabel, "el jugador ve por que no se puede cerrar");
             yield return CloseFromOutside(1.5f);
             Assert.IsFalse(zone.Secured, "con un pie afuera no se cierra");
 
@@ -186,7 +186,7 @@ namespace UncleExtraction.Tests
             yield return new WaitForSeconds(LabBalance.ExtractionHold + 0.2f);
             string afterFoot = van.BlockReason();
             Debug.Log($"[Stuck] tras empujar el pie: motivo '{afterFoot}', HUD '{hands.InteractLabel}'");
-            if (afterFoot.Contains("afuera"))
+            if (afterFoot.StartsWith("van.part_outside"))
             {   // La pierna vuelve a estirarse: el cuerpo entero esta demasiado cerca de la abertura. Entrar por el costado
                 // hasta la mampara, tomar un hombro y tirar del torso hacia la cabina; salir por el costado y cerrar.
                 float side = body.pelvis.position.x > L.vanAxisX ? -0.8f : 0.8f, lane = L.vanAxisX + side;
@@ -199,7 +199,7 @@ namespace UncleExtraction.Tests
                 yield return GrabWith(1, second, 1.5f);
                 Debug.Log($"[Stuck] adentro en {Me}: manos {hands.HeldSocketId(0)}/{hands.HeldSocketId(1)}; contactos del tio: {Contacts()}");
                 float pz0 = body.pelvis.position.z;
-                for (float t = 0; t < 5f && van.BlockReason().Contains("afuera"); t += Time.deltaTime)
+                for (float t = 0; t < 5f && van.BlockReason().StartsWith("van.part_outside"); t += Time.deltaTime)
                 { LookAt(sh.Position); MoveWorld(Vector3.back); Hold(Act.Effort, true); yield return null; }
                 LabInput.SimulatedMove = Vector2.zero; Hold(Act.Effort, false); Hold(Act.GrabLeft, false); Hold(Act.GrabRight, false); Hold(Act.Crouch, false);
                 Debug.Log($"[Stuck] tiro del torso: pelvis {pz0:0.00} -> {body.pelvis.position.z:0.00}, jugador {Me}, manos {hands.HeldSocketId(0)}/{hands.HeldSocketId(1)}");
