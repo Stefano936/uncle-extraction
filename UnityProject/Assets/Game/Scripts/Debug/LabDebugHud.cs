@@ -85,7 +85,7 @@ namespace UncleExtraction
             if (!kitHud) GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"{(LevelLayout.Current ? LevelLayout.Current.displayName : "")}  {timer}", mid);
 
             if (autopilot && autopilot.Running) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
-            if (Time.unscaledTime < NetSession.StatusUntil) GUI.Label(new Rect(0, H * 0.72f, W, 30), NetSession.StatusMessage, mid);
+            if (Time.unscaledTime < NetSession.StatusUntil && !kitHud) GUI.Label(new Rect(0, H * 0.72f, W, 30), NetSession.StatusMessage, mid);
             if (NetAuth.Listening)
             {
                 var nm = Unity.Netcode.NetworkManager.Singleton;

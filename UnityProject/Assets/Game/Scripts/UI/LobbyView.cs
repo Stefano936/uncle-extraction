@@ -70,7 +70,8 @@ namespace UncleExtraction
             difficulty.text = Loc.T("lobby.difficulty");
             diffBtn.GetComponentInChildren<Text>().text = dn + (host ? "  ▸" : "");
             diffBtn.interactable = host; // invitados: solo lectura
-            readyBtn.GetComponentInChildren<Text>().text = Loc.T(local && local.Ready ? "button.not_ready" : "button.ready");
+            // accion clara: «LISTO» para confirmar; ya confirmado se marca con ✓ (pulsar de nuevo lo deshace)
+            readyBtn.GetComponentInChildren<Text>().text = local && local.Ready ? "✓ " + Loc.T("button.ready") : Loc.T("button.ready");
             bool all = RoundDirector.AllReady(out string waiting);
             startBtn.interactable = host && all;
             startBtn.GetComponentInChildren<Text>().text = Loc.T(host ? "button.start" : "button.wait_host");

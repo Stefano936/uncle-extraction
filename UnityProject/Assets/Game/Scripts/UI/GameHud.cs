@@ -110,7 +110,7 @@ namespace UncleExtraction
         {
             if (!root) return;
             var pc = PlayerControls.Local; var motor = pc ? pc.GetComponent<PlayerMotor>() : null; var hands = pc ? pc.GetComponent<PlayerHands>() : null;
-            bool running = round && round.State == RoundState.Running;
+            bool running = round && round.State == RoundState.Running && !round.InLobby; // en la sala no hay HUD de juego
             bool show = motor && hands && running && !(GameFlowUI.Instance && GameFlowUI.Instance.Paused);
             root.gameObject.SetActive(show);
             if (!show) return;
