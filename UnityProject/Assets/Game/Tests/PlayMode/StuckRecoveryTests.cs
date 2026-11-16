@@ -148,6 +148,7 @@ namespace UncleExtraction.Tests
         [UnityTest]
         public IEnumerator Van_FootInDoorway_IsExplained_AndPlayerTucksItIn()
         {
+            if (!body.Articulated) Assert.Ignore("cuerpo central (una capsula): no tiene un pie separado; sus casos de camioneta estan en PhysicsLabPlayTests");
             float found = float.NaN; string reason = "";
             foreach (var dz in new[] { 0.55f, 0.65f, 0.75f, 0.85f, 0.95f })
             {

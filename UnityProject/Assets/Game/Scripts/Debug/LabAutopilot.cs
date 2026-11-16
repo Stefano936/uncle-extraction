@@ -64,6 +64,8 @@ namespace UncleExtraction
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-ueQuitOnEnd") quitOnEnd = true;
+                if (args[i] == "-ueHost" || args[i] == "-ueClient") lobbyBot = true;
+                if (args[i] == "-ueExpectPlayers" && i + 1 < args.Length) int.TryParse(args[i + 1], out expectPlayers);
                 if (args[i] == "-ueAutopilot" && i + 1 < args.Length)
                     pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart
                                 : args[i + 1].Equals("race", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Race : AutopilotMode.Drag;
@@ -76,12 +78,28 @@ namespace UncleExtraction
             }
         }
 
+        /// Procesos de prueba lanzados por linea de comandos (-ueHost/-ueClient): en la sala confirman solos y el anfitrion
+        /// inicia cuando estan los jugadores esperados (-ueExpectPlayers, por defecto 2). Con el juego abierto desde el menu
+        /// no hace nada: la sala la manejan las personas.
+        int expectPlayers = 2; bool lobbyBot; float lobbyLogAt;
+        void LobbyStep()
+        {
+            if (!lobbyBot || !round || !round.InLobby || !PlayerControls.Local) return;
+            if (!PlayerControls.Local.Ready) { PlayerControls.Local.SetReady(true); Log("sala: confirma listo"); }
+            if (NetAuth.IsServer && RoundDirector.AllReady(out _) && NetAuth.ConnectedPlayers >= expectPlayers && Time.unscaledTime > lobbyLogAt)
+            {
+                lobbyLogAt = Time.unscaledTime + 1f;
+                if (round.StartFromLobby()) Log($"sala: inicia la ronda con {NetAuth.ConnectedPlayers} jugadores");
+            }
+        }
+
         void Update()
         {
             CheckFinal(); // tambien despues de un reinicio que llego antes de converger
+            LobbyStep();
             // El jugador local aparece cuando la red lo genera (en un cliente, al conectarse).
             // Ronda nueva: esperar 0,5 s de ronda para tener las posiciones reiniciadas replicadas (en un cliente)
-            if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay && round && round.State == RoundState.Running && (NetAuth.IsServer || round.Elapsed > 0.5f))
+            if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay && round && round.State == RoundState.Running && !round.InLobby && (NetAuth.IsServer || round.Elapsed > 0.5f))
             { var m = pendingMode.Value; pendingMode = null; lastMode = m; quitAt = -1f; StartRun(m); }
             if ((quitOnEnd || repeatLeft > 0 || menuAtEnd) && round && round.State != RoundState.Running && !pendingMode.HasValue)
             {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre o reinicie

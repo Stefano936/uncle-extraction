@@ -20,7 +20,9 @@ namespace UncleExtraction
         public bool Paused => paused;
         public static GameFlowUI Instance { get; private set; }
         /// Pausa o resultados en pantalla, o escuchando una tecla para remapear: no se controla al personaje.
-        public static bool BlockingInput => InputBindings.Listening || (Instance && Instance.isActiveAndEnabled && (Instance.paused || (Instance.round && Instance.round.State != RoundState.Running)));
+        public static bool BlockingInput => InputBindings.Listening || (Instance && Instance.isActiveAndEnabled && (Instance.paused || (Instance.round && (Instance.round.State != RoundState.Running || Instance.round.InLobby))));
+        public bool LobbyVisible => lobby != null && lobby.Root && lobby.Root.gameObject.activeSelf;
+        LobbyView lobby;
         public bool ResultsVisible => resultsRoot && resultsRoot.gameObject.activeSelf;
         public string ResultsTitle => resTitle ? resTitle.text : "";
 
@@ -30,7 +32,7 @@ namespace UncleExtraction
             GameSettings.Load(); if (!round) round = FindAnyObjectByType<RoundDirector>(); if (!npc) npc = FindAnyObjectByType<NpcBrain>();
             if (!GetComponent<GameHud>()) gameObject.AddComponent<GameHud>();
             canvas = Ui.Canvas("FlowUI", 20);
-            BuildPause(); BuildResults();
+            BuildPause(); BuildResults(); lobby = new LobbyView(canvas.transform, round);
             Loc.Changed += Relabel; Relabel();
         }
         void OnDisable() { if (Time.timeScale == 0f) Time.timeScale = 1f; }
@@ -55,7 +57,7 @@ namespace UncleExtraction
             resTitle = Ui.Label(resultsRoot, "Title", "", Ui.FontTitle + 10, Ui.Text, TextAnchor.UpperCenter, true); Inset(resTitle, 20, 30, 20, 0);
             resDetail = Ui.Label(resultsRoot, "Detail", "", Ui.FontBody, Ui.Muted, TextAnchor.UpperCenter); Inset(resDetail, 40, 120, 40, 0);
             resStats = Ui.Label(resultsRoot, "Stats", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft); Inset(resStats, 120, 200, 120, 0);
-            resRetry = Btn(resultsRoot, "Retry", "button.retry_same", -430, () => round.Restart());
+            resRetry = Btn(resultsRoot, "Retry", "button.retry_same", -430, () => { if (NetSession.Mode == NetMode.Solo) round.Restart(); else round.BackToLobby(); }); // en red: vuelve a la sala con confirmacion limpia
             resMenu = Btn(resultsRoot, "Menu", "button.back_menu", -520, () => NetSession.LeaveToMenu());
             resultsRoot.gameObject.SetActive(false);
         }
@@ -87,6 +89,7 @@ namespace UncleExtraction
             }
             if (BlockingInput) { Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
             UpdateResults(ended);
+            lobby?.Update();
         }
 
         void CloseOverlays()

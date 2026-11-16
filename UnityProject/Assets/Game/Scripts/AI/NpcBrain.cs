@@ -91,6 +91,7 @@ namespace UncleExtraction
             ApplyIntentToBody();
 
             if (!brainEnabled || Now < nextDecision) return;
+            if (RoundDirector.Instance && RoundDirector.Instance.InLobby) return; // en la sala el tio espera
             nextDecision = Now + 0.2f; // 5 Hz (balance.simulation.npc_decision_hz)
             Decide();
         }

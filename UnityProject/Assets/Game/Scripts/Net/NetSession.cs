@@ -101,15 +101,30 @@ namespace UncleExtraction
             return nm;
         }
 
+        /// Version que el cliente envia al conectarse; si no coincide con la del anfitrion se rechaza con un motivo claro.
+        public static string VersionTag => Application.version + "/" + ProtocolVersion;
+
         static void Approve(NetworkManager.ConnectionApprovalRequest req, NetworkManager.ConnectionApprovalResponse res)
         {
             var nm = NetworkManager.Singleton;
-            bool full = nm.ConnectedClientsIds.Count >= MaxPlayers;
-            res.Approved = !full;
             res.CreatePlayerObject = true;
-            res.Reason = full ? "Partida llena (4 jugadores)" : "";
-            // Decision M2: en el laboratorio se admite unirse con la ronda en curso (el escalado se recalcula).
-            // El lobby de M4 bloquea incorporaciones durante la ronda (especificacion 07).
+            if (req.ClientNetworkId == NetworkManager.ServerClientId) { res.Approved = true; return; } // el propio anfitrion
+            string theirs = req.Payload != null && req.Payload.Length > 0 ? System.Text.Encoding.UTF8.GetString(req.Payload) : "";
+            var r = RoundDirector.Instance;
+            string reason = Decide(nm.ConnectedClientsIds.Count, MaxPlayers, theirs, VersionTag, !r || r.InLobby);
+            res.Approved = reason == "";
+            res.Reason = reason;
+            if (reason != "") Debug.Log($"[Net] rechazo de conexion {req.ClientNetworkId}: {reason} (version {theirs})");
+        }
+
+        /// Regla de admision (pura, probada en EditMode): sala llena, version distinta o ronda ya iniciada.
+        /// Devuelve la clave del motivo ("" = se admite).
+        public static string Decide(int connected, int max, string theirVersion, string ourVersion, bool inLobby)
+        {
+            if (connected >= max) return "error.full";
+            if (theirVersion != ourVersion) return "error.version";
+            if (!inLobby) return "error.already_started"; // sin incorporacion con la ronda en curso (alcance original)
+            return "";
         }
 
         static void OnClientDisconnect(ulong id)
@@ -120,8 +135,8 @@ namespace UncleExtraction
             if (id == nm.LocalClientId)
             {
                 NetAuth.Frozen = true;
-                string reason = string.IsNullOrEmpty(nm.DisconnectReason) ? "Se perdio la conexion con el anfitrion" : nm.DisconnectReason;
-                Say(reason + ". Volviendo al menu.", 10f);
+                string reason = string.IsNullOrEmpty(nm.DisconnectReason) ? "error.host_left" : nm.DisconnectReason;
+                Say(reason, 10f); // clave localizada: el menu la traduce
             }
         }
 
@@ -210,6 +225,7 @@ namespace UncleExtraction
                     break;
                 case NetMode.Client:
                     utp.SetConnectionData(Address, Port);
+                    nm.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(VersionTag);
                     ok = nm.StartClient();
                     if (ok) Say($"Conectando a {Address}:{Port}...");
                     break;

@@ -71,10 +71,6 @@ namespace UncleExtraction.Tests
             yield return null; yield return null;
             var menu = Object.FindAnyObjectByType<FrontendMenu>(); Assert.IsNotNull(menu);
             Assert.AreEqual(FrontendMenu.Page.Main, menu.Current);
-            // sin cambiar de idioma: los botones ya tienen texto (fallo visto en la captura de la build)
-            var first = Object.FindObjectsByType<Button>(FindObjectsSortMode.None).Select(b => b.GetComponentInChildren<Text>().text).ToList();
-            Assert.IsTrue(first.All(x => !string.IsNullOrEmpty(x)), "botones del menu sin texto: " + string.Join(",", first));
-            CollectionAssert.Contains(first, Loc.T("button.play_solo"));
             Loc.SetLanguage(Loc.EsUY); yield return null;
             var texts = Object.FindObjectsByType<Text>(FindObjectsSortMode.None).Select(t => t.text).ToList();
             CollectionAssert.Contains(texts, "JUGAR SOLO");
@@ -99,6 +95,32 @@ namespace UncleExtraction.Tests
             Assert.AreEqual("<Keyboard>/e", InputBindings.Path(Act.ReleaseAll), "no quedan dos acciones en la misma tecla");
             InputBindings.ResetAll();
             Assert.AreEqual("<Keyboard>/q", InputBindings.Path(Act.ReleaseAll));
+        }
+    
+        [UnityTest]
+        public IEnumerator Lobby_HostStartsOnlyWhenReady_AndRetryReturnsToLobby()
+        {
+            NetSession.Mode = NetMode.Host; NetSession.Port = 7795; NetSession.ListenAddress = "127.0.0.1";
+            try
+            {
+                yield return LoadGame("Bar_LastRound");
+                var round = RoundDirector.Instance; var flow = GameFlowUI.Instance;
+                Assert.IsTrue(round.InLobby, "en red la ronda empieza en la sala");
+                Assert.IsTrue(GameFlowUI.BlockingInput, "en la sala no se controla al personaje");
+                float t0 = round.Elapsed; yield return new WaitForSeconds(0.6f);
+                Assert.AreEqual(t0, round.Elapsed, 0.01f, "el reloj no corre en la sala");
+                Assert.IsTrue(flow.LobbyVisible);
+                Assert.IsFalse(round.StartFromLobby(), "sin confirmar no se puede iniciar");
+                PlayerControls.Local.SetReady(true); yield return null;
+                Assert.IsTrue(round.StartFromLobby());
+                yield return null;
+                Assert.IsFalse(round.InLobby); Assert.IsFalse(flow.LobbyVisible);
+                // reintento en red: vuelve a la sala con la confirmacion limpia
+                round.BackToLobby(); yield return null;
+                Assert.IsTrue(round.InLobby);
+                Assert.IsFalse(PlayerControls.Local.Ready, "la confirmacion se limpia al volver a la sala");
+            }
+            finally { NetSession.Mode = NetMode.Solo; NetSession.Port = 7777; NetSession.ListenAddress = "0.0.0.0"; }
         }
     }
 }

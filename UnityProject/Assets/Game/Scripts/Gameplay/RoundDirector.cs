@@ -23,6 +23,11 @@ namespace UncleExtraction
         readonly NetworkVariable<Difficulty> nDifficulty = new NetworkVariable<Difficulty>(Difficulty.Normal);
         readonly NetworkVariable<int> nParty = new NetworkVariable<int>(1);
         readonly NetworkVariable<int> nRestarts = new NetworkVariable<int>();
+        readonly NetworkVariable<bool> nLobby = new NetworkVariable<bool>();
+        bool inLobby;
+        /// Sala previa (UI_SPEC 3; especificacion 07): en partidas en red la ronda empieza en sala. Reloj quieto, el tio no
+        /// decide, nadie controla su personaje; el anfitrion inicia cuando todos los presentes estan listos. En solitario no hay sala.
+        public bool InLobby => Mirror ? nLobby.Value : inLobby;
         bool Mirror => IsSpawned && !IsServer;
 
         RoundState state = RoundState.Running; float elapsed; int restarts;
@@ -46,6 +51,44 @@ namespace UncleExtraction
         public bool StressRunning { get; private set; }
 
         void Start() { if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; }
+        public override void OnNetworkSpawn()
+        {
+            if (IsServer && NetSession.Mode != NetMode.Solo) { inLobby = true; nLobby.Value = true; Debug.Log("[Lobby] sala abierta"); }
+        }
+
+        /// Todos los jugadores presentes confirmaron (no se exigen lugares vacios).
+        public static bool AllReady(out string waitingFor)
+        {
+            waitingFor = "";
+            foreach (var pm in PlayerMotor.All)
+            {
+                if (!pm) continue; var pc = pm.Controls;
+                if (pc && !pc.Ready) { waitingFor = pm.playerName; return false; }
+            }
+            return PlayerMotor.All.Count > 0;
+        }
+
+        /// Anfitrion: empezar la ronda desde la sala (solo con todos listos).
+        public bool StartFromLobby()
+        {
+            if (!NetAuth.IsServer || !inLobby || !AllReady(out _)) return false;
+            inLobby = false; if (IsSpawned) nLobby.Value = false;
+            Restart();
+            Debug.Log($"[Lobby] ronda iniciada con {PlayerMotor.All.Count} jugador(es), dificultad {difficulty}");
+            return true;
+        }
+
+        /// Anfitrion: volver a la sala con la misma configuracion y la confirmacion limpia (reintento en red).
+        public void BackToLobby()
+        {
+            if (!NetAuth.IsServer) { RequestRestartRpc(); return; }
+            foreach (var pm in PlayerMotor.All) if (pm && pm.Controls) pm.Controls.SetReadyServer(false);
+            Restart();
+            if (NetSession.Mode != NetMode.Solo) { inLobby = true; if (IsSpawned) nLobby.Value = true; Debug.Log("[Lobby] vuelta a la sala"); }
+        }
+
+        /// Anfitrion: dificultad desde la sala (los invitados la ven de solo lectura).
+        public void SetDifficulty(Difficulty d) { if (NetAuth.IsServer && InLobby) { difficulty = d; foreach (var pm in PlayerMotor.All) if (pm && pm.Controls && !pm.Controls.IsHostPlayer) pm.Controls.SetReadyServer(false); } }
         void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); }
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
 
@@ -61,8 +104,9 @@ namespace UncleExtraction
                 if (nDifficulty.Value != difficulty) nDifficulty.Value = difficulty;
                 if (nParty.Value != partySize) nParty.Value = partySize;
                 if (nRestarts.Value != restarts) nRestarts.Value = restarts;
+                if (nLobby.Value != inLobby) nLobby.Value = inLobby;
             }
-            if (State == RoundState.Running)
+            if (State == RoundState.Running && !inLobby)
             {
                 Elapsed += Time.deltaTime;
                 if (TimeLimit > 0f && Elapsed >= TimeLimit) { State = RoundState.Timeout; GrabRegistry.ReleaseEverything(ReleaseReason.Reset); Debug.Log($"[Round] TIMEOUT at {Elapsed:0.0}s"); }

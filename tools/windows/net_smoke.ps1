@@ -1,7 +1,9 @@
 # UNCLE EXTRACTION - pruebas de humo de red con DOS PROCESOS en la misma PC (localhost, 127.0.0.1).
 # No es una prueba LAN ni de internet: registrar esos resultados por separado.
 # Uso: powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 [-Scenario <lista separada por comas>|all] [-Scene Bar_LastRound|PhysicsLab] [-Runs 1]
-#   Escenarios: coop, repeat, lose, netsim, race, hostleave, clientdrop, loaddrop, closedrop
+#   Escenarios: coop, repeat, lose, netsim, race, hostleave, clientdrop, loaddrop, closedrop, party3, party4, latejoin
+#   party3/party4: un anfitrion y 2/3 clientes en procesos separados (sala, inicio con todos listos, ronda completa).
+#   latejoin: un cliente que llega con la ronda iniciada es rechazado con motivo (sin incorporacion en curso).
 #   netsim usa la build de desarrollo: el simulador de red de NGO solo existe en editor y builds de desarrollo.
 # Codigo de salida: 0 = TODOS los escenarios pedidos dieron PASS; 1 = hubo algun FAIL; 2 = ejecucion incompleta
 #   (algun BLOCKED o NOT_RUN, o no se ejecuto nada). Un 0 nunca encubre escenarios sin correr.
@@ -14,7 +16,7 @@ $Log    = Join-Path $Repo '.local-setup\logs\net'
 New-Item -ItemType Directory -Force -Path $Log | Out-Null
 if (-not (Test-Path $Exe)) { Write-Host "Falta la build: $Exe" -ForegroundColor Red; exit 2 }
 $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
-$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop')
+$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin')
 $Wanted = if ($Scenario -eq 'all') { $All } else { $Scenario -split ',' | ForEach-Object { $_.Trim() } }
 $results = @()
 # Procesos del juego que quedaron vivos de una corrida anterior ocupan el puerto 7777: cerrarlos (solo los de Builds\)
@@ -41,7 +43,7 @@ function RttRange($g, $pat) {
   $v = (Grep $g $pat) | ForEach-Object { [int]([regex]::Match($_, $pat).Groups[1].Value) }
   if ($v) { return "{0}-{1} ms" -f ($v | Measure-Object -Minimum).Minimum, ($v | Measure-Object -Maximum).Maximum } else { return '-' }
 }
-function HostArgs([string[]]$x) { @('-ueHost','-ueListen','127.0.0.1','-uePort','7777') + $x }
+function HostArgs([string[]]$x, [int]$expect = 2) { @('-ueHost','-ueListen','127.0.0.1','-uePort','7777','-ueExpectPlayers',"$expect") + $x }
 function ClientArgs([string[]]$x) { @('-ueClient','127.0.0.1','-uePort','7777') + $x }
 
 # Dos procesos: anfitrion y cliente. Devuelve $null si alguno crasheo al arrancar (registro conservado).
@@ -66,6 +68,17 @@ function PairRetry($label, $tag, [string[]]$h, [string[]]$c, [int]$timeout, [str
 # El estado final lo registra cada proceso al converger (LabAutopilot): resultado, tio asegurado y puertas coherentes entre
 # si dentro del MISMO intento (reinicios), con tiempo maximo. "convergencia=TIMEOUT(...) faltan=..." = no convergio.
 function Converged($l) { $c = Field $l 'convergencia'; $c -ne '' -and $c -notmatch 'TIMEOUT|reinicio' }
+# N procesos (anfitrion + N-1 clientes), arranque escalonado; devuelve los juegos o $null si alguno crasheo.
+function Party($tag, [int]$n, [int]$timeout) {
+  $games = @(); $games += Start-Game "${tag}_host" (HostArgs @('-ueAutopilot','drag','-ueQuitOnEnd') $n)
+  for ($k = 1; $k -lt $n; $k++) { Start-Sleep 4; $games += Start-Game "${tag}_client$k" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd')) }
+  $deadline = (Get-Date).AddSeconds($timeout)
+  foreach ($g in $games) { $left = [int][Math]::Max(1, ($deadline - (Get-Date)).TotalMilliseconds); $null = $g.p.WaitForExit($left) }
+  foreach ($g in $games) { Stop-Game $g }
+  if (@($games | Where-Object { Crashed $_ }).Count -gt 0) { return $null }
+  return $games
+}
+
 function SameFinal($a, $b) {
   $a -and $b -and (Converged $a) -and (Converged $b) -and ((Field $a 'reinicios') -eq (Field $b 'reinicios')) -and ((Field $a 'ronda') -eq (Field $b 'ronda')) -and ((Field $a 'asegurado') -eq (Field $b 'asegurado')) -and ((Field $a 'tio') -eq (Field $b 'tio')) -and (((Field $a 'puertas') -split '/')[0] -eq ((Field $b 'puertas') -split '/')[0])
 }
@@ -151,6 +164,30 @@ for ($run = 1; $run -le $Runs; $run++) {
           if (-not $drop) { Record $label 'NOT_RUN' "el cliente no llego a cerrar (sin desconexion en el momento pedido)" }
           else { $ok = "$after" -match 'puertas=Open' -and "$after" -match 'asegurado=False' -and $exc -eq 0
             Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "anfitrion despues: $([regex]::Match("$after",'puertas=\S+').Value) $([regex]::Match("$after",'asegurado=\S+').Value) excepciones=$exc" } }
+      }
+      { $_ -in 'party3','party4' } {
+        $n = if ($sc -eq 'party3') { 3 } else { 4 }
+        $g = Party $tag $n 420
+        if ($null -eq $g) { Record $label 'BLOCKED' "crash al arrancar algun proceso; ver $Log\${tag}_*.log"; break }
+        $finals = @($g | ForEach-Object { @(Finals $_)[0] })
+        $started = Last $g[0] 'sala: inicia la ronda con'
+        $allSame = $true; foreach ($f in $finals) { if (-not (SameFinal $finals[0] $f)) { $allSame = $false } }
+        $ok = $allSame -and (Field $finals[0] 'ronda') -eq 'Success' -and ("$started" -match "con $n jugadores")
+        $detail = "procesos=$n inicio[$([regex]::Match("$started",'con \d+ jugadores').Value)] " + (($finals | ForEach-Object { "[" + (Brief $_) + "]" }) -join ' ')
+        Record $label $(if ($ok) { 'PASS' } elseif (-not $started) { 'NOT_RUN' } else { 'FAIL' }) $detail
+      }
+      'latejoin' {
+        # anfitrion solo (espera 1 jugador) con la ronda en curso; un cliente llega a los 14 s y debe ser rechazado con motivo
+        $hostG = Start-Game "${tag}_host" (HostArgs @('-ueAutopilot','drag','-ueQuitOnEnd') 1)
+        Start-Sleep 14
+        $cliG = Start-Game "${tag}_client" (ClientArgs @())
+        Start-Sleep 12
+        Stop-Game $cliG; $null = $hostG.p.WaitForExit(120000); Stop-Game $hostG
+        if ((Crashed $hostG) -or (Crashed $cliG)) { Record $label 'BLOCKED' "crash; ver $Log\${tag}_*.log"; break }
+        $rej = Last $hostG 'rechazo de conexion .*error.already_started'
+        $cliSaw = Last $cliG 'error.already_started'
+        $started = Last $hostG 'sala: inicia la ronda'
+        Record $label $(if ($rej -and $cliSaw -and $started) { 'PASS' } elseif (-not $started) { 'NOT_RUN' } else { 'FAIL' }) "ronda_iniciada=$([bool]$started) rechazo_anfitrion=$([bool]$rej) cliente_ve_motivo=$([bool]$cliSaw)"
       }
       default { Record $label 'NOT_RUN' "escenario desconocido" }
     }

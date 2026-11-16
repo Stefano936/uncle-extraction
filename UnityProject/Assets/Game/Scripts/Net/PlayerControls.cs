@@ -36,6 +36,15 @@ namespace UncleExtraction
 
         /// Verdadero en la instancia que controla este personaje con su teclado (o sin red).
         public bool IsLocal => !IsSpawned || IsOwner;
+        readonly NetworkVariable<bool> nReady = new NetworkVariable<bool>();
+        bool readyLocal;
+        /// Confirmacion en la sala (la decide el anfitrion con el pedido del jugador).
+        public bool Ready => IsSpawned ? nReady.Value : readyLocal;
+        public bool IsHostPlayer => !IsSpawned || OwnerClientId == NetworkManager.ServerClientId;
+        public void SetReady(bool on) { if (!IsSpawned || IsServer) SetReadyServer(on); else ReadyRpc(on); }
+        public void SetReadyServer(bool on) { readyLocal = on; if (IsSpawned && IsServer) nReady.Value = on; }
+        [Rpc(SendTo.Server)]
+        void ReadyRpc(bool on, RpcParams p = default) { if (p.Receive.SenderClientId == OwnerClientId && RoundDirector.Instance && RoundDirector.Instance.InLobby) SetReadyServer(on); }
         public float SecondsSinceIntent => IsLocal ? 0f : Time.time - lastRemoteAt;
 
         void Awake() { motor = GetComponent<PlayerMotor>(); }
