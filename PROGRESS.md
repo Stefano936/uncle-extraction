@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-15 (sesión 5: estabilización de M3 con la camioneta real; red repetida; flujo de menús).
+Última actualización: 2026-11-15 (sesión 5: M3 estabilizado con la camioneta real; red repetida con latencia y pérdida simuladas; flujo de menús verificado; rescate técnico).
 
-Build de referencia vigente: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (release, Mono) y `Builds/PhysicsLab_Dev/UncleExtraction_PhysicsLab.exe` (desarrollo, con simulador de red), generadas desde el árbol de trabajo del commit que sigue a `f1728e0` (ver el log de Git). Las pruebas anteriores a la camioneta nueva (commits ≤ `c27d209`) **no** validan la versión actual.
+Build de referencia vigente: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (release, Mono) y `Builds/PhysicsLab_Dev/UncleExtraction_PhysicsLab.exe` (desarrollo, con simulador de red), generadas desde el commit de esta actualización (el siguiente a `b285556`). Las pruebas anteriores a la camioneta nueva (commits ≤ `c27d209`) **no** validan la versión actual.
 
 ## 1. Implementado y verificado (versión actual)
 
@@ -14,9 +14,10 @@ Build de referencia vigente: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` 
 | Vaso señuelo: atrae solo si un jugador lo colocó, está apoyado y a la vista; 2,5 s (mitad desde el 3.er uso); 12 s de enfriamiento; suelta el anclaje | PlayMode PASS | `Decoy_ReleasesAnchor_DistractsAndHasCooldown` |
 | Ayuda de compañero para levantarse (mirar y mantener E: se levanta al doble de velocidad) | PlayMode PASS | `Teammate_HelpsFallenPlayer_GetUpFaster` (2.º jugador local sin red) |
 | Intentos individuales completos con la camioneta nueva (autopiloto con entradas de jugador; sin teletransportes ni `Secure()` directo) | PlayMode PASS 3/3 | arrastre Normal 26,3 s, arrastre Difícil 17,7 s, carrito Normal 23,5 s (`85_solo.log`). Antes de la corrección: 1/3 |
-| Pruebas de laboratorio | PlayMode PASS 9/9 en 2 corridas | `84_lab_{1,2}.xml` |
+| Pruebas de laboratorio + flujo + intentos | PlayMode PASS 14/14 | `99_playmode.xml`: 10 de laboratorio (incluido el rescate técnico), 3 intentos completos (carrito 24,1 s, arrastre Difícil 17,7 s, arrastre Normal 24,7 s) y el flujo de menús. EditMode 9/9 (`89_editmode.xml`) |
+| Flujo de menús | PlayMode PASS | `GameFlowTests`: Frontend → solo en Difícil (la dificultad llega a la ronda) → derrota por tiempo → los resultados bloquean el control → reintento → menú con la red cerrada |
+| Rescate técnico (especificación 08) | PlayMode PASS | `Watchdog_RescuesUncleFallenBelowMap_AndReleasesGrabs`: con posición no finita, bajo el mapa (y < -1,5) o velocidad > 25 m/s sostenida, suelta los vínculos y vuelve a la última pose segura |
 | Cooperativo en red con extracción real | localhost, 2 procesos: PASS | anfitrión y cliente terminan con el mismo estado: `Success t=23,1 puertas=Closed tío=Secured` (`net_smoke.ps1 -Scenario coop`). RTT 5–6 ms |
-| Base de red (M2) | localhost, 2 procesos | carrera por el mismo socket, desconexión del cliente agarrando, salida del anfitrión: PASS en `c27d209`; se repiten con la versión actual (ver tabla de red) |
 
 ## 2. Implementado con fallos u observaciones abiertas
 
@@ -27,9 +28,9 @@ Build de referencia vigente: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` 
 
 ## 3. Pendiente de implementar (en orden)
 
-1. M3 restante: fuga mejorada (rutas hacia la salida o el banco cuando está libre), derrota y reintento ya funcionan por tiempo; revisar escalado efectivo al cambiar jugadores y el rescate técnico (watchdog).
-2. Flujo completo: **escrito y compilado, sin verificar en uso** → escena `Frontend` (menú: solo con dificultad, con amigos (anfitrión o IP), opciones con sensibilidad, invertir Y, FOV y volumen, salir), pausa con Esc (detiene el tiempo solo en solitario), resultados con reintentar o menú, vuelta al menú si se va el anfitrión. Falta: prueba de navegación en la build y prueba automática del flujo.
-3. Escenario `Bar_LastRound` con el kit 3D (FBX copiados en `Assets/Game/Art/Kit3D/` y `Kit3DImporter` escrito; falta ejecutar el informe de importación y armar la escena). PhysicsLab queda para diagnóstico.
+1. M3 restante: fuga mejorada (hoy, si está libre, vuelve caminando a su banco). Derrota por tiempo, reintento, escalado por jugadores conectados y rescate técnico: implementados y verificados.
+2. Flujo completo: implementado y con prueba automática (sección 1). Falta: navegación con mouse en la build (prueba manual) y reemplazar la IMGUI provisional por el kit de UI. Detalle anterior:  → escena `Frontend` (menú: solo con dificultad, con amigos (anfitrión o IP), opciones con sensibilidad, invertir Y, FOV y volumen, salir), pausa con Esc (detiene el tiempo solo en solitario), resultados con reintentar o menú, vuelta al menú si se va el anfitrión. Falta: prueba de navegación en la build y prueba automática del flujo.
+3. Escenario `Bar_LastRound` con el kit 3D. Importación verificada (`Kit3DImporter.ImportAndReport`, `94_kit.log`): metros e Y arriba, sin conversión doble. Tío: 1,93 m, pose T, frente hacia −Z, 12 huesos, clips Idle 1,97 s / Kick 2,97 s / Push 2,77 s, 8 marcadores `Grab_*`. Barra: 4,12 × 0,9 m con `Npc_Anchor_L/R`. Camioneta: 2,52 × 5,38 × 2,33 m con `Extraction_Volume` y bisagras traseras. Carrito: 1,2 × 0,86 m con `Player_Handle`. Cascarón del bar: 18,2 × 17,1 m con `Npc_Start`, `Player_Start` y `Exit_Clearance_Center`. Falta: `LevelLayout` (rutas y apariciones por escena) y la escena. PhysicsLab queda para diagnóstico.
 4. Ragdoll reducido del tío (11 cuerpos), con estabilidad y replicación antes de reemplazar el cuerpo central.
 5. URP, interfaz con el kit de UI, animaciones, audio, localización EN/es_UY y controles remapeables (InputActionAsset).
 6. Sessions/Relay (M4), QA, rendimiento y build reproducible.
@@ -44,9 +45,25 @@ Build de referencia vigente: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` 
 | IL2CPP | Instalar Visual Studio 2022 con «Desarrollo de juegos con C++». |
 | Prueba manual y playtest | Jugar la build; no bloquea el desarrollo. |
 
-## Red: resultados con la versión actual
+## Red: resultados con la versión actual (2 procesos, **localhost**)
 
-Ver la última ejecución de `powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 -Scenario all` en `.local-setup/logs/net/net_smoke_results.csv`. Todo es **localhost** (2 procesos en la misma PC). La red degradada usa el simulador de red oficial (Multiplayer Tools 2.2.12) en la build de desarrollo: 120 ms ±20 ms y 3 % de pérdida en el cliente. LAN e internet: NOT_RUN.
+| Escenario | Resultado | Detalle |
+| --- | --- | --- |
+| Cooperativo con extracción real | PASS (2 corridas) | anfitrión y cliente terminan igual: `Success`, puertas `Closed`, tío `Secured` (17,6/17,5 s y 23,3/23,3 s). RTT 3–7 ms |
+| Reintento tras ganar (el anfitrión reinicia y los dos vuelven a jugar) | PASS 2/2 | 2 victorias y `reinicios=1` en ambos procesos |
+| Red degradada (simulador oficial en el cliente: 120 ms ±20 ms, 3 % de pérdida; build de desarrollo) | PASS (2 corridas) | éxito y estado final igual en ambos (26,8/24,9 s y 37,4/37,3 s); RTT medido por el cliente ~236–265 ms |
+| Carrera por el mismo socket | PASS | nunca hay 2 agarres vivos sobre `belt`; uno gana y el otro recibe «Ocupado» |
+| Salida del anfitrión a mitad de ronda | PASS | el cliente ve la desconexión, no simula ni gana solo y vuelve al menú |
+| Desconexión del cliente mientras agarra | PASS | el anfitrión queda con 0 agarres |
+| LAN / internet | NOT_RUN | ver bloqueos |
+
+Fallos encontrados y corregidos en esta tanda, antes de los PASS de arriba:
+- Al volver al menú, el cliente que había entrado por argumentos de prueba volvía a la partida y jugaba solo. Ahora el reenvío ocurre una vez por proceso.
+- En el reintento, el cliente arrancaba antes de recibir las posiciones reiniciadas.
+- El tío llegó a salir del mapa por el costado de la camioneta. Ahora hay piso extendido y límites invisibles en la vereda.
+- El bot insistía en cerrar con las piernas del tío afuera. Ahora vuelve a acomodarlo.
+
+Pendiente de red: desconexión exactamente durante el cierre de puertas o durante la carga del carrito. El reinicio en esos momentos sí está cubierto en PlayMode. Comando: `powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 -Scenario all` → `.local-setup/logs/net/net_smoke_results.csv`.
 
 ## Arquitectura y decisiones
 
@@ -65,9 +82,10 @@ Ver `CLAUDE.md` («Entorno y comandos verificados»). Novedades: `-ueDev` en `Bu
 
 ## Próxima acción exacta
 
-1. Leer `net_smoke_results.csv` de la corrida completa y registrar PASS/FAIL por escenario arriba; corregir lo que falle.
-2. Verificar el flujo de menús en la build (Frontend → solo → resultados → menú) y agregar una prueba PlayMode del flujo.
-3. Ejecutar `Kit3DImporter.ImportAndReport`, registrar medidas reales y armar `Bar_LastRound`.
+1. Crear `LevelLayout` (componente de escena con las rutas del autopiloto, las apariciones de jugadores y el punto de cierre) y hacer que `LabAutopilot` y `PlayerMotor` lo lean, manteniendo PhysicsLab igual.
+2. `BarLastRoundBuilder`: bar de 18 × 12 m con barra, mesas, banquetas y rincón de karaoke; puerta de 1,5 m; vereda de 14 × 5 m; camioneta. Colisiones con primitivas y visuales de los FBX del kit. Agregarla al menú como escenario principal y PhysicsLab como «Laboratorio».
+3. Repetir los intentos completos y `net_smoke.ps1` en la escena nueva.
+4. Después: ragdoll reducido, URP y presentación.
 
 ## Al cerrar una sesión
 

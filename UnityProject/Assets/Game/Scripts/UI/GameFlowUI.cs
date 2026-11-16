@@ -13,11 +13,15 @@ namespace UncleExtraction
         float resultsSince = -1f;
 
         public bool Paused => paused;
-        public static bool BlockingInput { get; private set; }
+        static GameFlowUI instance;
+        /// Pausa abierta o resultados en pantalla: no se controla al personaje (calculado al momento, sin depender del orden de Update).
+        public static bool BlockingInput => instance && instance.isActiveAndEnabled && (instance.paused || (instance.round && instance.round.State != RoundState.Running));
 
+        void Awake() { instance = this; }
         void Start() { GameSettings.Load(); if (!round) round = FindAnyObjectByType<RoundDirector>(); if (!npc) npc = FindAnyObjectByType<NpcBrain>(); }
 
-        void OnDisable() { BlockingInput = false; if (Time.timeScale == 0f) Time.timeScale = 1f; }
+        void OnDisable() { if (Time.timeScale == 0f) Time.timeScale = 1f; }
+        void OnDestroy() { if (instance == this) instance = null; }
 
         void Update()
         {
@@ -25,7 +29,6 @@ namespace UncleExtraction
             if (ended && resultsSince < 0f) resultsSince = Time.unscaledTime;
             if (!ended) resultsSince = -1f;
             if (LabInput.Pressed(Act.Pause) && !ended) SetPaused(!paused);
-            BlockingInput = paused || ended;
             if (BlockingInput) { Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
         }
 

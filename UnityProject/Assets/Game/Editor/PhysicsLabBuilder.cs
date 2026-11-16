@@ -62,7 +62,12 @@ namespace UncleExtraction.EditorTools
 
             // Escenario: interior x[-7,7] z[-2,10]; vereda y camioneta hacia -z
             var env = new GameObject("Environment").transform;
-            Box("Floor", env, new Vector3(0, -0.1f, 4), new Vector3(30, 0.2f, 36), floorM);
+            Box("Floor", env, new Vector3(0, -0.1f, 0), new Vector3(30, 0.2f, 44), floorM); // z -22..22: el suelo pasa de largo la camioneta
+            // Limites del area jugable (vereda y calle): muros invisibles; nadie se cae por un borde del mapa
+            var bounds = new GameObject("Play_Bounds").transform; bounds.SetParent(env);
+            NoRenderer(Box("Bound_W", bounds, new Vector3(-8.5f, 1.5f, -9f), new Vector3(0.2f, 3f, 14f), wallM));
+            NoRenderer(Box("Bound_E", bounds, new Vector3(8.5f, 1.5f, -9f), new Vector3(0.2f, 3f, 14f), wallM));
+            NoRenderer(Box("Bound_S", bounds, new Vector3(0f, 1.5f, -16.2f), new Vector3(17f, 3f, 0.2f), wallM));
             Box("Wall_Back", env, new Vector3(0, 1.5f, 10.1f), new Vector3(14.4f, 3, 0.2f), wallM);
             Box("Wall_L", env, new Vector3(-7.1f, 1.5f, 4), new Vector3(0.2f, 3, 12.4f), wallM);
             Box("Wall_R", env, new Vector3(7.1f, 1.5f, 4), new Vector3(0.2f, 3, 12.4f), wallM);
@@ -188,6 +193,7 @@ namespace UncleExtraction.EditorTools
             var session = sys.AddComponent<NetSession>(); session.playerPrefab = playerPrefab;
             var round = sys.AddComponent<RoundDirector>();
             var rig = sys.AddComponent<LabForceRig>(); rig.npc = body; rig.pullTarget = zoneGo.transform;
+            sys.AddComponent<PhysicsWatchdog>();
             var flow = sys.AddComponent<GameFlowUI>(); flow.round = round; flow.npc = brain;
             var hud = sys.AddComponent<LabDebugHud>();
             hud.npc = brain; hud.npcBody = body; hud.cart = cart; hud.zone = zone; hud.round = round; hud.rig = rig;
@@ -327,6 +333,7 @@ namespace UncleExtraction.EditorTools
             var g = GameObject.CreatePrimitive(p); g.name = n; g.transform.SetParent(parent, false);
             g.transform.localPosition = localPos; g.transform.localScale = scale; g.GetComponent<Renderer>().sharedMaterial = m; return g;
         }
+        static GameObject NoRenderer(GameObject g) { var r = g.GetComponent<Renderer>(); if (r) UnityEngine.Object.DestroyImmediate(r); return g; }
         static GameObject NoCollider(GameObject g) { var c = g.GetComponent<Collider>(); if (c) UnityEngine.Object.DestroyImmediate(c); return g; }
 
         static Material Mat(string name, Color c)

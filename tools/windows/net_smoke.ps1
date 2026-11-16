@@ -22,7 +22,7 @@ function Stop-Game($g) { if (-not $g.p.HasExited) { $g.p.CloseMainWindow() | Out
 function Grep($g, $pat) { if (Test-Path $g.log) { Select-String -Path $g.log -Pattern $pat | ForEach-Object { $_.Line } } }
 function Crashed($g) { (Grep $g 'Crash!!!').Count -gt 0 }
 function Record($name, $state, $detail) { $script:results += [pscustomobject]@{ Escenario = $name; Resultado = $state; Detalle = $detail }; Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail) }
-function Final($g) { (Grep $g '\[NetDiag\] final:') | Select-Object -Last 1 }
+function Final($g) { (Grep $g '\[NetDiag\] final:') | Select-Object -First 1 }  # el primer final: lo que vio cada proceso al terminar la ronda en red
 function Field($line, $k) { [regex]::Match("$line", "$k=(\S+)").Groups[1].Value }
 
 # Cooperativo hasta la extraccion real (camioneta, cierre). Devuelve $null si un proceso crasheo al arrancar.
@@ -59,7 +59,8 @@ for ($run = 1; $run -le $Runs; $run++) {
   if ($Scenario -in 'repeat','all') {
     # Ganar, reiniciar (decide el anfitrion) y volver a ganar; los dos procesos deben ver los mismos reinicios.
     $r = RunCoop "repeat #$run" "repeat_$run" @('-ueRepeat','1') @('-ueRepeat','1')
-    if ($r) { $cmp = CompareFinal $r; $wins = (Grep $r.h '\[Round\] SUCCESS').Count; $fh = Final $r.h; $fc = Final $r.c
+    if ($r) { $cmp = CompareFinal $r; $wins = (Grep $r.h '\[Round\] SUCCESS').Count
+      $fh = (Grep $r.h '\[NetDiag\] final:') | Select-Object -Last 1; $fc = (Grep $r.c '\[NetDiag\] final:') | Select-Object -Last 1
       Record "repeat #$run" $(if ($cmp.ok -and $wins -ge 2 -and (Field $fh 'reinicios') -eq '1' -and (Field $fc 'reinicios') -eq '1') { 'PASS' } else { 'FAIL' }) "victorias=$wins reinicios anfitrion=$(Field $fh 'reinicios') cliente=$(Field $fc 'reinicios'); $($cmp.txt)" }
   }
   if ($Scenario -in 'netsim','all') {

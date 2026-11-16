@@ -69,13 +69,14 @@ namespace UncleExtraction
         void Update()
         {
             // El jugador local aparece cuando la red lo genera (en un cliente, al conectarse).
-            if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay && round && round.State == RoundState.Running)
-            { var m = pendingMode.Value; pendingMode = null; lastMode = m; StartRun(m); }
+            // Ronda nueva: esperar 0,5 s de ronda para tener las posiciones reiniciadas replicadas (en un cliente)
+            if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay && round && round.State == RoundState.Running && (NetAuth.IsServer || round.Elapsed > 0.5f))
+            { var m = pendingMode.Value; pendingMode = null; lastMode = m; quitAt = -1f; StartRun(m); }
             if ((quitOnEnd || repeatLeft > 0) && round && round.State != RoundState.Running && !pendingMode.HasValue)
             {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre o reinicie
                 if (quitAt < 0f)
-                {
-                    quitAt = Time.unscaledTime + 3f; NetSession.LogWorldNow("final");
+                {   // el cliente sale antes que el anfitrion: si el anfitrion cierra primero, el cliente veria una desconexion
+                    quitAt = Time.unscaledTime + (NetAuth.IsServer ? 3f : 1f); NetSession.LogWorldNow("final");
                     Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; {(repeatLeft > 0 ? "reinicia en 3 s" : "saliendo en 3 s")}");
                 }
                 else if (Time.unscaledTime >= quitAt)
@@ -159,7 +160,7 @@ namespace UncleExtraction
         /// De pie: antebrazos (no puede aferrarse a la barra). En el piso: tobillos (el torso queda detras al entrar en la zona).
         GrabSocket BestFreeUncleSocket(GrabSocket exclude, bool nearestOnly = false)
         {
-            string pref = body.Posture == NpcPosture.Upright ? "forearm" : "ankle";
+            string pref = pushingIn ? "shoulder" : body.Posture == NpcPosture.Upright ? "forearm" : "ankle"; // acomodar: tirar del torso hacia la cabina
             return GrabSocket.All.Where(s => s.body == body.Body && s != exclude && Occupancy(s) < s.capacity && !(unreachable.TryGetValue(s, out float until) && Time.time < until))
                                  .OrderBy(s => (!nearestOnly && s.socketId.StartsWith(pref) ? 0f : 3f) + Vector3.Distance(s.Position, Eye))
                                  .FirstOrDefault();
@@ -235,8 +236,11 @@ namespace UncleExtraction
         int wp;
 
         /// Un frame de arrastre. 'path' es la ruta del tio; 'finalStand' donde se para el jugador en el ultimo tramo.
+        bool pushingIn;
         IEnumerator DragStep(Vector3[] path, Vector3 finalStand, bool anklesOnLastLeg)
         {
+            pushingIn = zone && zone.AllPointsInside && NeedsPushingIn();
+            if (pushingIn) anklesOnLastLeg = false;
             bool holdingAny = Holding(0) || Holding(1);
             if (!holdingAny)
             {   // fase de acercamiento y agarre (mano izquierda primero)
@@ -287,6 +291,10 @@ namespace UncleExtraction
 
             Vector3 next = path[wp];
             Vector3 goal = wp == path.Length - 1 ? finalStand : next + (next - uFlat).normalized * 1.1f;
+            if (uFlat.z < -8.0f && Mathf.Abs(uFlat.x) > 1.3f)
+            {   // quedo al costado de la camioneta: primero volver al eje frente a la rampa
+                next = new Vector3(0f, 0f, -7.4f); goal = next + (next - uFlat).normalized * 1.1f;
+            }
             goal.z = Mathf.Max(goal.z, -12.0f); // mampara de la cabina
             float gap = Vector3.Distance(Me, uFlat);
             LabInput.Simulated[(int)Act.Effort] = gap > 1.5f;
@@ -318,6 +326,14 @@ namespace UncleExtraction
         }
         float nextCloseLog;
 
+        /// El tio esta "adentro" pero algo sobresale por la abertura o esta trabado: hay que acomodarlo antes de cerrar.
+        bool NeedsPushingIn()
+        {
+            var van = VanDoors.Instance; if (!van) return false;
+            string why = van.BlockReason();
+            return why.Contains("afuera") || why.Contains("trabado");
+        }
+
         /// Carrera por un mismo punto (especificacion 05): dos jugadores apuntan al cinturon y aprietan en el mismo instante
         /// de reloj (-ueRaceAt, ms Unix). El anfitrion debe crear un solo agarre y responder SocketBusy al otro.
         IEnumerator RaceRun()
@@ -342,7 +358,7 @@ namespace UncleExtraction
             while (!Finished)
             {
                 if (CommonStep()) { yield return null; continue; }
-                if (zone.AllPointsInside && !zone.Secured) { yield return CloseStep(); continue; }
+                if (zone.AllPointsInside && !zone.Secured && !NeedsPushingIn()) { yield return CloseStep(); continue; }
                 yield return DragStep(DragPath, DragFinalStand, true);
             }
             Finish();
@@ -355,7 +371,7 @@ namespace UncleExtraction
             while (!Finished)
             {
                 if (CommonStep()) { yield return null; continue; }
-                if (zone.AllPointsInside && !zone.Secured) { yield return CloseStep(); continue; }
+                if (zone.AllPointsInside && !zone.Secured && !NeedsPushingIn()) { yield return CloseStep(); continue; }
 
                 if (!cart.IsStrapped && cartNeedsSpace)
                 {   // llevar el carrito vacio a un lugar despejado del bar y volver a intentarlo

@@ -10,6 +10,7 @@ namespace UncleExtraction
     public class FrontendMenu : MonoBehaviour
     {
         public const string GameScene = "PhysicsLab";
+        static bool argsForwarded;
         enum Page { Main, Solo, Friends, Options }
         Page page = Page.Main;
         string ip = "127.0.0.1", port = "7777";
@@ -21,7 +22,11 @@ namespace UncleExtraction
             Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
             NetAuth.Frozen = false;
             var a = Environment.GetCommandLineArgs();
-            foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueAutopilot") { SceneManager.LoadScene(GameScene); return; }
+            if (!argsForwarded)
+            {   // argumentos de prueba: entrar directo una sola vez por proceso (al volver al menu, quedarse en el menu)
+                argsForwarded = true;
+                foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueAutopilot") { SceneManager.LoadScene(GameScene); return; }
+            }
             port = NetSession.Port.ToString();
         }
 

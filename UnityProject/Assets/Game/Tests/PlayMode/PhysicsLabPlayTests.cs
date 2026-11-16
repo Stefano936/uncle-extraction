@@ -262,5 +262,23 @@ namespace UncleExtraction.Tests
             var uc = body.GetComponent<Collider>();
             foreach (var cc in cart.GetComponentsInChildren<Collider>()) Assert.IsFalse(Physics.GetIgnoreCollision(uc, cc), "sin colisiones ignoradas residuales");
         }
+
+        [UnityTest]
+        public IEnumerator Watchdog_RescuesUncleFallenBelowMap_AndReleasesGrabs()
+        {
+            var dog = Object.FindAnyObjectByType<PhysicsWatchdog>();
+            Assert.IsNotNull(dog, "PhysicsLab incluye el rescate tecnico");
+            PlacePlayer(new Vector3(0, 0, 6.0f), 0f);
+            yield return new WaitForSeconds(1.2f); // registra una pose segura
+            hands.DebugHoldLeft = true;
+            Assert.AreEqual(GrabResult.Ok, hands.ForceGrab(0, Sock("belt")));
+            body.Body.position = new Vector3(0f, -20f, 7f); body.transform.position = body.Body.position; // condicion tecnica: bajo el mapa
+            PlacePlayer(new Vector3(4f, 0f, 2f), 0f); // fuera de alcance: lo que se suelte no puede volver a agarrarse enseguida
+            yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
+            Assert.AreEqual(1, dog.Rescues, dog.LastRescue);
+            Assert.Greater(body.Body.position.y, -1f, "vuelve a la ultima pose segura");
+            Assert.AreEqual(0, GrabRegistry.CountOnBody(body.Body), "suelta los vinculos del cuerpo rescatado");
+            hands.DebugHoldLeft = false;
+        }
     }
 }
