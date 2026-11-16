@@ -24,6 +24,7 @@ namespace UncleExtraction
         public float walkAccel = 6f;
         [Header("Articulado (vacio = cuerpo central)")]
         public RagdollPart[] parts = new RagdollPart[0];
+        public float footFriction = 0.42f; // mu de los pies sostenidos por el resorte: promedio tio 0,25 / piso 0,6, como el central apoyado
         public float hoverHeight = 0.92f, hoverK = 9000f, hoverC = 900f; // altura del centro de la pelvis de pie (m) y resorte (N/m, N*s/m)
 
         readonly NetworkVariable<NpcPosture> nPosture = new NetworkVariable<NpcPosture>(NpcPosture.Upright);
@@ -199,6 +200,18 @@ namespace UncleExtraction
             float err = ground + hoverHeight - c.y;
             float f = Mathf.Clamp(hoverK * err - hoverC * rb.linearVelocity.y, 0f, TotalMass * 9.81f * 1.6f);
             rb.AddForce(Vector3.up * f, ForceMode.Force);
+            // El resorte reemplaza el apoyo de los pies: aporta tambien su friccion (Coulomb, mu del material x fuerza que
+            // sostiene). Sin esto, de pie se deslizaba como sobre hielo y arrastrarlo era mucho mas facil que al central.
+            Vector3 hv = Vector3.zero; float m = 0f;
+            foreach (var b in bodies) { hv += b.linearVelocity * b.mass; m += b.mass; }
+            hv /= Mathf.Max(m, 1e-3f); hv.y = 0f;
+            float speed = hv.magnitude;
+            if (speed > 1e-3f && f > 0f)
+            {
+                float fr = Mathf.Min(footFriction * f, m * speed / Time.fixedDeltaTime);
+                Vector3 df = -hv / speed * fr;
+                foreach (var b in bodies) b.AddForce(df * (b.mass / m), ForceMode.Force); // repartida: no hace girar al cuerpo
+            }
         }
 
         public void SetFallen(string why)

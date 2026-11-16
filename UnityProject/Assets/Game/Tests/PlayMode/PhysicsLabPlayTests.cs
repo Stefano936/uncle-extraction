@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -389,6 +390,45 @@ namespace UncleExtraction.Tests
                 Assert.AreEqual(falls0, body.FallCount, $"empujon leve hacia {dir} lo tumbo (inclinacion {body.TiltDeg:0})");
             }
         }
+
+
+        public static IEnumerable<string> DragPairs() { yield return "shoulder_l+shoulder_r"; yield return "belt+forearm_l"; yield return "ankle_l+ankle_r"; }
+
+        /// Medicion (cerebro apagado, solo fisica): cuanto se arrastra al tio caido en 3 s retrocediendo con esfuerzo, segun
+        /// de donde se lo tome. Sirve para comparar la dificultad del cuerpo central y del articulado ([DragMeasure] en el log).
+        [UnityTest]
+        public IEnumerator Measure_DragFallenUncle([ValueSource(typeof(PhysicsLabPlayTests), nameof(DragPairs))] string pairIds)
+        {
+            var pair = pairIds.Split('+');
+            bool byFeet = pair[0].StartsWith("ankle");
+            Quaternion lying = Quaternion.LookRotation(Vector3.up, Vector3.back); // boca arriba, cabeza hacia -z
+            Vector3 pelvisLocal = body.transform.InverseTransformPoint(body.pelvis.position);
+            Vector3 pel = new Vector3(0f, 0.4f, 3f);
+            body.TeleportTo(pel - lying * pelvisLocal, lying);
+            body.SetFallen("medicion");
+            yield return new WaitForSeconds(1.0f);
+            // jugador del lado de la cabeza (mirando +z) o de los pies (mirando -z); retrocede alejandose del tio
+            Vector3 a = Sock(pair[0]).Position, b = Sock(pair[1]).Position, mid = (a + b) * 0.5f;
+            float h = Mathf.Max(0.1f, 1.62f - mid.y), horiz = Mathf.Sqrt(Mathf.Max(0.04f, 1.25f * 1.25f - h * h)); // ojos al alcance
+            float zStand = byFeet ? mid.z + Mathf.Min(horiz, 0.6f) : mid.z - Mathf.Min(horiz, 0.6f);
+            PlacePlayer(new Vector3(mid.x, 0f, zStand), byFeet ? 180f : 0f);
+            yield return new WaitForFixedUpdate();
+            hands.DebugHoldLeft = true; hands.DebugHoldRight = true;
+            Assert.AreEqual(GrabResult.Ok, hands.ForceGrab(0, Sock(pair[0])), pair[0]);
+            Assert.AreEqual(GrabResult.Ok, hands.ForceGrab(1, Sock(pair[1])), pair[1]);
+            Vector3 start = body.pelvis.position;
+            player.DebugMove = new Vector2(0, -1); hands.DebugEffort = true;
+            float t0 = Time.time;
+            while (Time.time - t0 < 3f && GrabRegistry.Count == 2) yield return null;
+            player.DebugMove = null; hands.DebugEffort = false;
+            float moved = Vector3.Distance(Flat(body.pelvis.position), Flat(start));
+            float dur = Time.time - t0;
+            Debug.Log($"[DragMeasure] {Scene} {pairIds}: {moved:0.00} m en {dur:0.0} s ({moved / Mathf.Max(dur, 0.01f):0.00} m/s), agarres al final={GrabRegistry.Count}");
+            hands.DebugHoldLeft = false; hands.DebugHoldRight = false;
+            Assert.Greater(moved, 0.3f, "se puede arrastrar");
+        }
+
+        static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
         [Test]
         public void Uncle_TotalMass_Is110kg_RegardlessOfVariant()
