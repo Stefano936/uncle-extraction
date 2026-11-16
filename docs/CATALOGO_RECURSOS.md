@@ -29,7 +29,7 @@ Importación verificada con `Kit3DImporter.ImportAndReport`: metros, Y arriba, s
 
 | Recurso | Estado |
 | --- | --- |
-| Kit de materiales (`preproduction/uncle_extraction_kit_materiales/`) | Pendiente de importar: solo Base Color de 1254 px, sin normal, roughness ni AO. |
+| Kit de materiales (`preproduction/uncle_extraction_kit_materiales/`) | **Importado y colocado** (Bar_LastRound): madera, piso y pared como URP/Lit (`Assets/Game/Art/Materials/`), texturas a 1024 px (fuente 1254 px), UV en metros generadas por `KitMaterials`. Tela (`MAT_Shirt_Fabric`) importable pero sin usar. Sin normal, roughness ni AO (no entregados). Variantes FBX `*_material_variant` sin usar todavía. |
 | Kit de UI (`preproduction/uncle_extraction_kit_UI/`) | Pendiente: la interfaz actual es IMGUI provisional. |
 | Audio y diálogos | Pendiente: no hay sonido. Los textos EN/es están en `preproduction/uncle_extraction/data/dialogue_en_es.csv` (sin integrar). |
 | Materiales de color de las primitivas (`Assets/Game/Materials/`) | Placeholders generados por el constructor. |

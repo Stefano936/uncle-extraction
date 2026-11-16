@@ -230,6 +230,9 @@ namespace UncleExtraction.EditorTools
             auto.npc = brain; auto.body = body; auto.cart = cart; auto.zone = zone; auto.round = round;
             hud.autopilot = auto;
 
+            // Materiales del kit (escenario principal): solo visual; el laboratorio conserva colores lisos de diagnostico
+            if (spec.kitVisuals) foreach (var rootGo in scene.GetRootGameObjects()) KitMaterials.ApplyToLevel(rootGo.transform, floorM, wallM, woodM);
+
             EditorSceneManager.SaveScene(scene, spec.scenePath);
             // NGO genera GlobalObjectIdHash en OnValidate, que en modo batch no siempre corre: forzarlo y guardar de nuevo.
             int hashed = ForceNetworkIds(UnityEngine.Object.FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None));
