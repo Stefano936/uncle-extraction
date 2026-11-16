@@ -128,8 +128,12 @@ namespace UncleExtraction.Tests
             yield return HoldClose(new Vector3(0f, 0f, -8.6f), 1.6f);
             Assert.AreEqual(RoundState.Running, round.State, "con un jugador en la puerta no se cierra");
 
-            // Desde afuera, mantener E 1 s cierra y asegura
-            yield return HoldClose(new Vector3(0.3f, 0f, -7.3f), VanDoors.CloseHold + 0.4f);
+            // Desde afuera, mantener E 1 s inicia el cierre; la ronda NO se asegura hasta que las hojas cierran
+            var van = Object.FindAnyObjectByType<VanDoors>();
+            yield return HoldClose(new Vector3(0.3f, 0f, -7.3f), VanDoors.CloseHold + 0.15f);
+            Assert.AreEqual(VanDoors.Phase.Closing, van.CurrentPhase, "tras 1 s de E empieza a cerrar");
+            Assert.AreEqual(RoundState.Running, round.State, "no se gana antes del cierre efectivo");
+            yield return new WaitForSeconds(VanDoors.SwingTime + 0.2f);
             Assert.IsTrue(zone.Secured);
             Assert.AreEqual(RoundState.Success, round.State);
             Assert.AreEqual(NpcState.Secured, npc.State);
@@ -165,6 +169,7 @@ namespace UncleExtraction.Tests
             // Apoyar el vaso a la vista
             var grb = glass.GetComponent<Rigidbody>();
             grb.position = new Vector3(1.5f, 0.1f, 5.2f); grb.linearVelocity = Vector3.zero; glass.transform.position = grb.position;
+            glass.MarkPlaced(); // equivale a que un jugador lo trajo y lo apoyo
             for (float t = 0; t < 2.5f && npc.State != NpcState.Distracted; t += Time.deltaTime) yield return null;
             Assert.AreEqual(NpcState.Distracted, npc.State, "un vaso apoyado y visible distrae");
             Assert.IsFalse(npc.IsAnchored, "la distraccion suelta el anclaje (GDD 06)");
@@ -198,6 +203,64 @@ namespace UncleExtraction.Tests
             Object.Destroy(other.gameObject);
             Assert.Greater(other.AssistedTime, 0.3f, "la ayuda se aplico");
             Assert.Less(fallen, LabBalance.FallLockMax * 0.75f, $"con ayuda se levanta antes ({fallen:0.00}s vs {LabBalance.FallLockMax}s)");
+        }
+
+        [UnityTest]
+        public IEnumerator Close_TwoHolders_DoNotAccelerate_AndAbortWhenDoorwayBlocked()
+        {
+            var zone = Object.FindAnyObjectByType<ExtractionZone>(); var van = Object.FindAnyObjectByType<VanDoors>();
+            LayUncleInVan(0f);
+            yield return new WaitForSeconds(LabBalance.ExtractionHold + 0.3f);
+            Assert.IsTrue(zone.PoseReady);
+            // Dos jugadores manteniendo E en el mismo frame: el progreso avanza una sola vez
+            PlacePlayer(new Vector3(0.3f, 0f, -7.3f), 180f);
+            float t0 = Time.time;
+            while (van.CurrentPhase != VanDoors.Phase.Closing && Time.time - t0 < 3f)
+            {
+                van.HoldClose(hands, Time.deltaTime); van.HoldClose(null, Time.deltaTime);
+                yield return null;
+            }
+            float took = Time.time - t0;
+            Assert.GreaterOrEqual(took, VanDoors.CloseHold * 0.9f, $"con dos jugadores no se cierra mas rapido ({took:0.00}s)");
+            // Alguien entra en la abertura durante el cierre: se cancela y se reabre
+            PlacePlayer(new Vector3(0f, 0f, -8.7f), 180f);
+            yield return new WaitForSeconds(VanDoors.SwingTime + 0.3f);
+            Assert.AreEqual(1, van.Aborts, "el cierre se cancela");
+            Assert.AreEqual(RoundState.Running, round.State);
+            Assert.IsFalse(zone.Secured);
+            yield return new WaitForSeconds(0.6f);
+            Assert.Less(van.Closed01, 0.05f, "las hojas se reabren");
+        }
+
+        [UnityTest]
+        public IEnumerator Restart_DuringClosingAndCartLoading_LeavesCleanState()
+        {
+            var zone = Object.FindAnyObjectByType<ExtractionZone>(); var van = Object.FindAnyObjectByType<VanDoors>();
+            var cart = Object.FindAnyObjectByType<TransportCart>();
+            // 1) reiniciar a mitad del cierre
+            LayUncleInVan(0f);
+            yield return new WaitForSeconds(LabBalance.ExtractionHold + 0.3f);
+            PlacePlayer(new Vector3(0.3f, 0f, -7.3f), 180f);
+            for (float t = 0; t < VanDoors.CloseHold + 0.1f; t += Time.deltaTime) { van.HoldClose(hands, Time.deltaTime); yield return null; }
+            Assert.AreEqual(VanDoors.Phase.Closing, van.CurrentPhase);
+            round.Restart();
+            yield return new WaitForSeconds(VanDoors.SwingTime + 0.3f);
+            Assert.AreEqual(VanDoors.Phase.Open, van.CurrentPhase); Assert.Less(van.Closed01, 0.05f);
+            Assert.IsFalse(zone.Secured); Assert.AreEqual(RoundState.Running, round.State);
+            // 2) reiniciar a mitad de la carga del carrito
+            Vector3 c = cart.transform.position + cart.transform.right * 0.9f; c.y = 0f;
+            body.Body.position = c; body.transform.position = c; body.Body.linearVelocity = Vector3.zero;
+            yield return new WaitForFixedUpdate();
+            Assert.IsTrue(cart.Strap(), $"deberia poder cargarlo: {cart.LastFailure}");
+            yield return new WaitForSeconds(0.15f);
+            Assert.IsTrue(cart.IsLoading);
+            round.Restart();
+            yield return new WaitForSeconds(0.6f);
+            Assert.IsFalse(cart.IsLoading); Assert.IsFalse(cart.IsStrapped);
+            Assert.IsFalse(body.Body.isKinematic, "el tio vuelve a ser dinamico");
+            Assert.AreEqual(0, RoundDirector.CountGameplayJoints(), "sin uniones huerfanas");
+            var uc = body.GetComponent<Collider>();
+            foreach (var cc in cart.GetComponentsInChildren<Collider>()) Assert.IsFalse(Physics.GetIgnoreCollision(uc, cc), "sin colisiones ignoradas residuales");
         }
     }
 }

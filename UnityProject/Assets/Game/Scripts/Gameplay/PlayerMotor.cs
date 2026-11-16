@@ -96,7 +96,8 @@ namespace UncleExtraction
             {
                 if (canLook && Cursor.lockState == CursorLockMode.Locked)
                 {
-                    Vector2 look = LabInput.Look() * mouseSensitivity;
+                    Vector2 look = LabInput.Look() * GameSettings.MouseSensitivity;
+                    if (GameSettings.InvertY) look.y = -look.y;
                     yaw += look.x; pitch = Mathf.Clamp(pitch - look.y, -85f, 85f);
                 }
             }
@@ -283,9 +284,12 @@ namespace UncleExtraction
             return true;
         }
 
+        Camera ownCam;
         void UpdateCamera(float dt)
         {
             if (!cameraPivot) return;
+            if (!ownCam) ownCam = cameraPivot.GetComponentInChildren<Camera>();
+            if (ownCam && ownCam.enabled) ownCam.fieldOfView = GameSettings.FieldOfView;
             var st = State;
             float targetRoll = st == PlayerState.Fallen ? 65f : 0f;
             float targetEye = st == PlayerState.Fallen ? 0.45f : (Crouching ? crouchEyeHeight : standEyeHeight);

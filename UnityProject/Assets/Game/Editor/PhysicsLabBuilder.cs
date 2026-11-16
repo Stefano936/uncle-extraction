@@ -123,6 +123,7 @@ namespace UncleExtraction.EditorTools
             Transform Leaf(string n, float hingeX, float dir)
             {
                 var hinge = new GameObject(n).transform; hinge.SetParent(doorsGo.transform, false); hinge.position = new Vector3(hingeX, 0, rearZ + 0.02f);
+                var hrb = hinge.gameObject.AddComponent<Rigidbody>(); hrb.isKinematic = true; // colisionador que se mueve: cinematico, no estatico
                 var panel = LocalBox(n + "_Panel", hinge, new Vector3(dir * 0.6f, floorY + 0.9f, 0.03f), new Vector3(1.18f, 1.75f, 0.05f), vanM);
                 return hinge;
             }
@@ -187,6 +188,7 @@ namespace UncleExtraction.EditorTools
             var session = sys.AddComponent<NetSession>(); session.playerPrefab = playerPrefab;
             var round = sys.AddComponent<RoundDirector>();
             var rig = sys.AddComponent<LabForceRig>(); rig.npc = body; rig.pullTarget = zoneGo.transform;
+            var flow = sys.AddComponent<GameFlowUI>(); flow.round = round; flow.npc = brain;
             var hud = sys.AddComponent<LabDebugHud>();
             hud.npc = brain; hud.npcBody = body; hud.cart = cart; hud.zone = zone; hud.round = round; hud.rig = rig;
             var auto = sys.AddComponent<LabAutopilot>();
@@ -201,7 +203,8 @@ namespace UncleExtraction.EditorTools
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[LabBuilder] network ids: {hashed}");
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+            FrontendBuilder.Build();
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(FrontendBuilder.ScenePath, true), new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
             Debug.Log($"[LabBuilder] PhysicsLab saved: {ScenePath} sockets={UnityEngine.Object.FindObjectsByType<GrabSocket>(FindObjectsSortMode.None).Length}");
         }

@@ -62,6 +62,13 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Ahora: valida el volumen del tío acostado (`OverlapCapsule`, ignorando al tío y al carrito) y, si está ocupado, no carga y avisa por qué. La subida dura 0,45 s y es cinemática, con un arco corto; el destino sigue al carrito. Las colisiones tío-carrito se ignoran mientras sube y está asegurado, y se restauran al soltarlo o reiniciar. Se conserva la ayuda para jugar solo: E carga y asegura en un paso.
 - Pendiente: animación del tío; ragdoll reducido.
 
+## 2026-11-15 — M3: camioneta, cierre, señuelo y red degradada
+
+- Camioneta hueca con el tamaño del kit (2,5 × 5,4 m), piso de carga a 0,30 m y rampa de 2,4 m (7°). Con 0,45 m y 1,5 m (16,7°), subir al tío arrastrándolo exigía ~750 N, más que el tope de un jugador (700 N); el bot quedaba al pie de la rampa. Ahora hacen falta ~570 N. La rampa es una ayuda de prototipo; revisar con el arte final.
+- Cierre en fases (Open → Holding → Closing → Closed): E acumula una vez por frame aunque lo mantengan varios jugadores. La victoria se declara con las hojas efectivamente cerradas y las condiciones todavía válidas; si fallan durante el cierre, se aborta y se reabre. Las hojas tienen Rigidbody cinemático (colisionador que se mueve).
+- Vaso señuelo: solo atrae si un jugador lo movió (`Placed`). Antes, el vaso sobre la mesa distraía al tío al empezar la ronda y consumía el enfriamiento. La distracción se evalúa también durante Recover (GDD: «si no está atacando»), pero no durante la apertura forzada ni en el carrito.
+- Red degradada: el simulador integrado de UTP quedó obsoleto en NGO 2.14. Se usa Multiplayer Tools 2.2.12 (NetworkSimulator), que NGO solo compila en editor y builds de desarrollo; por eso hay una build de desarrollo separada (`-ueDev`). La build de distribución no lleva simulador.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.

@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Game/Scenes/Frontend.unity
+    guid: 6f6eb9df629469b4abca509245706267
+  - enabled: 1
     path: Assets/Game/Scenes/PhysicsLab.unity
     guid: f1e95bd7a6f9fc245b00c4d465cf30a8
   m_configObjects: {}

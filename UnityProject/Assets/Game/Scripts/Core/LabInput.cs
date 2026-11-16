@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 namespace UncleExtraction
 {
-    public enum Act { GrabLeft, GrabRight, Interact, ReleaseAll, Effort, Crouch, Dodge, Restart, ToggleCursor }
+    public enum Act { GrabLeft, GrabRight, Interact, ReleaseAll, Effort, Crouch, Dodge, Restart, ToggleCursor, Pause }
 
     /// Entrada del laboratorio. Usa Input System si el paquete esta instalado; si no, el Input Manager clasico.
     /// TODO M1+: migrar a un InputActionAsset remapeable (GDD 04).
@@ -81,6 +81,7 @@ namespace UncleExtraction
                 case Act.Dodge: return (k != null && k.spaceKey.isPressed) || (g != null && g.buttonWest.isPressed);
                 case Act.Restart: return k != null && k.rKey.isPressed;
                 case Act.ToggleCursor: return k != null && k.tabKey.isPressed;
+                case Act.Pause: return (k != null && k.escapeKey.isPressed) || (g != null && g.startButton.isPressed);
             }
             return false;
 #elif ENABLE_LEGACY_INPUT_MANAGER
@@ -95,6 +96,7 @@ namespace UncleExtraction
                 case Act.Dodge: return Input.GetKey(KeyCode.Space);
                 case Act.Restart: return Input.GetKey(KeyCode.R);
                 case Act.ToggleCursor: return Input.GetKey(KeyCode.Tab);
+                case Act.Pause: return Input.GetKey(KeyCode.Escape);
             }
             return false;
 #else
@@ -112,7 +114,7 @@ namespace UncleExtraction
             if (lastFrame != Time.frameCount)
             {
                 lastFrame = Time.frameCount;
-                for (int i = 0; i <= (int)Act.ToggleCursor; i++)
+                for (int i = 0; i <= (int)Act.Pause; i++)
                 {
                     bool h = Held((Act)i);
                     down[i] = h && !prev[i];

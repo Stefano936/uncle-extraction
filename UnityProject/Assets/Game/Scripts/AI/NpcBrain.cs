@@ -171,6 +171,8 @@ namespace UncleExtraction
         void Decide()
         {
             RefreshPlayers(); // entran y salen jugadores durante la ronda (red)
+            // Distraccion: «si lo ve y no esta atacando» (GDD 09). Tambien durante Recover/apertura; nunca en el carrito.
+            if (!AttackPending && State != NpcState.Distracted && State != NpcState.ForcedRecovery && !Strapped && Now >= distractionReadyAt && TryDistract()) return;
             if (AttackPending || State == NpcState.Recover || State == NpcState.ForcedRecovery) return;
 
             if (Strapped)
@@ -184,7 +186,6 @@ namespace UncleExtraction
 
             // Jerarquia (GDD 06): Secured > ataque iniciado > Recover > distraccion > anclaje > escape > protesta
             if (State == NpcState.Distracted) return;
-            if (Now >= distractionReadyAt && TryDistract()) return;
 
             if (body.Posture == NpcPosture.Fallen)
             {

@@ -32,6 +32,8 @@ namespace UncleExtraction
         public static NetSession Instance { get; private set; }
 
         static bool argsParsed;
+        /// Red degradada para pruebas (-ueNetSim latencia_ms jitter_ms perdida_%). Solo tiene efecto en editor y builds de desarrollo.
+        public static int SimDelayMs, SimJitterMs, SimLossPct;
         const ushort SoloPortBase = 7790;
 
         void Awake() { Instance = this; ParseArgsOnce(); }
@@ -47,12 +49,12 @@ namespace UncleExtraction
             nextDiag = Time.unscaledTime + 5f;
             var utp = nm.GetComponent<UnityTransport>();
             if (!nm.IsServer && nm.IsConnectedClient)
-                Debug.Log($"[NetDiag] cliente {nm.LocalClientId}: rtt={utp.GetCurrentRtt(NetworkManager.ServerClientId)}ms ronda={(RoundDirector.Instance ? RoundDirector.Instance.State.ToString() : "-")} t={(RoundDirector.Instance ? RoundDirector.Instance.Elapsed : 0f):0.0}");
+                Debug.Log($"[NetDiag] cliente {nm.LocalClientId}: rtt={utp.GetCurrentRtt(NetworkManager.ServerClientId)}ms {WorldState()}");
             else if (nm.IsServer && Mode != NetMode.Solo)
             {
                 string rtts = "";
                 foreach (var id in nm.ConnectedClientsIds) if (id != NetworkManager.ServerClientId) rtts += $" c{id}={utp.GetCurrentRtt(id)}ms";
-                Debug.Log($"[NetDiag] anfitrion: jugadores={nm.ConnectedClientsIds.Count}{rtts} agarres={GrabRegistry.Count} ronda={(RoundDirector.Instance ? RoundDirector.Instance.State.ToString() : "-")}");
+                Debug.Log($"[NetDiag] anfitrion: jugadores={nm.ConnectedClientsIds.Count}{rtts} agarres={GrabRegistry.Count} {WorldState()}");
             }
         }
 
@@ -66,6 +68,8 @@ namespace UncleExtraction
                 else if (a[i] == "-ueClient") { Mode = NetMode.Client; if (i + 1 < a.Length && !a[i + 1].StartsWith("-")) Address = a[i + 1]; }
                 else if (a[i] == "-uePort" && i + 1 < a.Length && ushort.TryParse(a[i + 1], out var p)) Port = p;
                 else if (a[i] == "-ueListen" && i + 1 < a.Length) ListenAddress = a[i + 1];
+                else if (a[i] == "-ueNetSim" && i + 3 < a.Length)
+                { int.TryParse(a[i + 1], out SimDelayMs); int.TryParse(a[i + 2], out SimJitterMs); int.TryParse(a[i + 3], out SimLossPct); }
             }
         }
 
@@ -117,7 +121,7 @@ namespace UncleExtraction
             {
                 NetAuth.Frozen = true;
                 string reason = string.IsNullOrEmpty(nm.DisconnectReason) ? "Se perdio la conexion con el anfitrion" : nm.DisconnectReason;
-                Say(reason + ". Volviendo a jugar solo.", 6f);
+                Say(reason + ". Volviendo al menu.", 10f);
             }
         }
 
@@ -127,13 +131,47 @@ namespace UncleExtraction
             NetAuth.Frozen = true;
             // Sin migracion de anfitrion (especificacion 07): la partida termina y se vuelve a un estado seguro.
             Mode = NetMode.Solo;
-            Instance.StartCoroutine(Instance.BackToSolo());
+            Instance.StartCoroutine(Instance.BackToMenu());
         }
 
-        IEnumerator BackToSolo()
+        IEnumerator BackToMenu()
         {
             yield return new WaitForSecondsRealtime(2f);
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            LeaveToMenu();
+        }
+
+        public const string MenuScenePath = "Assets/Game/Scenes/Frontend.unity";
+        /// Cierra la sesion y vuelve al menu (sin menu en la build, por ejemplo en pruebas, vuelve a jugar solo).
+        public static void LeaveToMenu()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm != null && (nm.IsListening || nm.IsClient)) nm.Shutdown();
+            Time.timeScale = 1f;
+            int menu = SceneUtility.GetBuildIndexByScenePath(MenuScenePath);
+            Mode = NetMode.Solo;
+            if (menu >= 0) SceneManager.LoadScene(menu);
+            else SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        /// Resumen del estado replicado para comparar anfitrion y cliente en los registros.
+        public static string WorldState()
+        {
+            var r = RoundDirector.Instance; var n = NpcBrain.Instance; var v = VanDoors.Instance; var z = ExtractionZone.Instance;
+            return $"ronda={(r ? r.State.ToString() : "-")} t={(r ? r.Elapsed : 0f):0.0} reinicios={(r ? r.Restarts : 0)} tio={(n ? n.State.ToString() : "-")} " +
+                   $"puertas={(v ? v.CurrentPhase.ToString() : "-")}/{(v ? v.Closed01 : 0f):0.00} pose={(z ? z.Progress01 : 0f):0.00} asegurado={(z && z.Secured)}";
+        }
+
+        /// Fuerza un diagnostico ya (por ejemplo al terminar una ronda).
+        public static void LogWorldNow(string tag) => Debug.Log($"[NetDiag] {tag}: {WorldState()}");
+
+        static void ApplyNetSim(NetworkManager nm)
+        {
+            var sim = nm.GetComponent<Unity.Multiplayer.Tools.NetworkSimulator.Runtime.NetworkSimulator>();
+            if (!sim) sim = nm.gameObject.AddComponent<Unity.Multiplayer.Tools.NetworkSimulator.Runtime.NetworkSimulator>();
+            var preset = Unity.Multiplayer.Tools.NetworkSimulator.Runtime.NetworkSimulatorPreset.Create("UE prueba", "latencia y perdida simuladas", SimDelayMs, SimJitterMs, 0, SimLossPct);
+            sim.ChangeConnectionPreset(preset);
+            bool active = Debug.isDebugBuild || Application.isEditor;
+            Debug.Log($"[Net] simulador de red: {SimDelayMs} ms +-{SimJitterMs} ms, perdida {SimLossPct}% (activo={active}; en builds de release no tiene efecto)");
         }
 
         public IEnumerator Begin(NetMode mode)
@@ -175,6 +213,7 @@ namespace UncleExtraction
                     break;
             }
             Debug.Log($"[Net] begin {mode} ok={ok} protocol={ProtocolVersion}");
+            if (ok && (SimDelayMs > 0 || SimLossPct > 0) && mode != NetMode.Solo) ApplyNetSim(nm);
             if (!ok)
             {
                 Say($"No se pudo iniciar {mode}. Jugando solo.");

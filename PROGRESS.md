@@ -1,89 +1,73 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-15 (Claude Code local, sesión 4: M2 red temprana).
+Última actualización: 2026-11-15 (sesión 5: estabilización de M3 con la camioneta real; red repetida; flujo de menús).
 
-## Hito actual
+Build de referencia vigente: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe` (release, Mono) y `Builds/PhysicsLab_Dev/UncleExtraction_PhysicsLab.exe` (desarrollo, con simulador de red), generadas desde el árbol de trabajo del commit que sigue a `f1728e0` (ver el log de Git). Las pruebas anteriores a la camioneta nueva (commits ≤ `c27d209`) **no** validan la versión actual.
 
-**M2 — red temprana: núcleo implementado y verificado con dos procesos en localhost.** Host autoritativo con Netcode for GameObjects 2.14.0 + Unity Transport 2.7.5. El modo individual es un anfitrión en loopback (mismo camino de autoridad). Pendiente de M2: prueba en LAN real y medición con latencia simulada. Internet (Relay) es M4.
+## 1. Implementado y verificado (versión actual)
 
-Siguiente hito en curso: interacciones y recorrido (M1/M3 pendientes) — ver «Próxima acción exacta».
+| Función | Verificación | Evidencia |
+| --- | --- | --- |
+| Extracción real dentro de la camioneta: volumen de carga interior, pose válida (torso/pelvis/hombros dentro + sin solapes con sólidos) sostenida 1,5 s, abertura libre, un jugador mantiene E 1 s desde afuera, cierre de hojas y recién entonces Secured | PlayMode PASS (editor, anfitrión loopback) | `PhysicsLabPlayTests`: cierre necesario; jugador en la abertura bloquea; a medio entrar no vale; la victoria llega con las hojas cerradas (no al terminar el E) |
+| Cierre robusto | PlayMode PASS | dos jugadores manteniendo E no aceleran (una acumulación por frame); si alguien entra en la abertura durante el cierre, se cancela y las hojas se reabren |
+| Reinicio limpio durante el cierre y durante la carga del carrito | PlayMode PASS | sin corutinas activas, sin uniones, tío dinámico, sin colisiones ignoradas residuales |
+| Vaso señuelo: atrae solo si un jugador lo colocó, está apoyado y a la vista; 2,5 s (mitad desde el 3.er uso); 12 s de enfriamiento; suelta el anclaje | PlayMode PASS | `Decoy_ReleasesAnchor_DistractsAndHasCooldown` |
+| Ayuda de compañero para levantarse (mirar y mantener E: se levanta al doble de velocidad) | PlayMode PASS | `Teammate_HelpsFallenPlayer_GetUpFaster` (2.º jugador local sin red) |
+| Intentos individuales completos con la camioneta nueva (autopiloto con entradas de jugador; sin teletransportes ni `Secure()` directo) | PlayMode PASS 3/3 | arrastre Normal 26,3 s, arrastre Difícil 17,7 s, carrito Normal 23,5 s (`85_solo.log`). Antes de la corrección: 1/3 |
+| Pruebas de laboratorio | PlayMode PASS 9/9 en 2 corridas | `84_lab_{1,2}.xml` |
+| Cooperativo en red con extracción real | localhost, 2 procesos: PASS | anfitrión y cliente terminan con el mismo estado: `Success t=23,1 puertas=Closed tío=Secured` (`net_smoke.ps1 -Scenario coop`). RTT 5–6 ms |
+| Base de red (M2) | localhost, 2 procesos | carrera por el mismo socket, desconexión del cliente agarrando, salida del anfitrión: PASS en `c27d209`; se repiten con la versión actual (ver tabla de red) |
 
-## Verificación M2 (2026-11-15)
+## 2. Implementado con fallos u observaciones abiertas
 
-| Prueba | Condición | Resultado | Evidencia |
-| --- | --- | --- | --- |
-| Compilación | Unity 6000.3.28f1 | PASS, 0 errores | build `51_build.log` (1 warning de Unity, no de código del juego) |
-| EditMode | — | PASS 9/9 | `47_editmode.xml` |
-| PlayMode (modo individual = anfitrión loopback) | tiempo real | PASS 7/7 | `50_playmode.xml`: 4 de laboratorio + arrastre Normal 55,8 s, Difícil 42,8 s, carrito Normal 25,8 s |
-| Cooperativo 2 jugadores reales (anfitrión + cliente, cada uno con autopiloto) | **localhost**, 2 procesos | PASS 2/3; 1 BLOCKED (crash del driver NVIDIA al crear D3D11 en el arranque simultáneo, antes de cargar el juego) | `net_smoke.ps1`: éxito en anfitrión 21,5 s / cliente 21,4 s; 15,6 / 15,6 s; RTT anfitrión→cliente 5–7 ms. Antes: 16,4 s (`64_*`) |
-| Carrera por el mismo socket (cinturón) en el mismo instante de reloj | localhost | PASS 2/2 | nunca dos agarres vivos sobre `belt`; gana uno (anfitrión), el otro recibe `SocketBusy` / «Ocupado» |
-| Desconexión del cliente mientras agarra | localhost (proceso matado) | PASS 2/2 | el anfitrión detecta la salida y queda en 0 agarres |
-| Salida del anfitrión a mitad de ronda | localhost | PASS 2/2 | el cliente recibe la desconexión, no simula por su cuenta ni «gana», vuelve a jugar solo |
-| Cliente solo contra tío escalado a 2 jugadores (anfitrión quieto) | localhost | NO TERMINA en 280 s | esperable: N=2 → resistencia ×1,55; el bot avanza lento en la puerta (`63_*`). No es fallo de red |
-| Golpes, caída y liberación vistos desde un cliente | localhost | PASS parcial | el cliente ve preparación/ataque replicados (`62_client.log`: MANOTAZO); impactos y caída se resuelven en el anfitrión. Sin verificación visual humana |
-| LAN (dos PCs) | — | NOT_RUN | requiere otra PC; usar `-ueHost` (escucha 0.0.0.0, aviso del firewall de Windows) y `-ueClient <IP>` |
-| Latencia simulada | — | NOT_RUN | pendiente: simulador de red de UTP |
-| Internet (Sessions/Relay) | — | NOT_RUN (M4) | requiere proyecto de Unity Cloud vinculado (cuenta de Stefano) |
-| Jugado a mano | — | NOT_RUN | sin control de pantalla en la sesión |
+- **Autopiloto (no es juego):** en una pasada el tío quedó caído en el umbral, con los tobillos del lado del bar y la hoja de la puerta tapando la visión. El bot alternaba entre los dos tobillos inalcanzables. Se corrigió con un descarte de 12 s y un rodeo, verificado después en 3/3. Si reaparece, conviene un rodeo más inteligente antes de tocar el juego.
+- **Tío caído en el umbral:** no puede levantarse si su cápsula se solapa con el marco o la hoja. Es comportamiento de juego válido (hay que moverlo), pero sin el rescate técnico de la especificación 08 (watchdog). Pendiente: rescate solo ante condiciones técnicas (no finitos, bajo el mapa, sin progreso por atasco técnico).
+- **Balance:** con la camioneta nueva, el carrito en solitario sigue siendo la vía más estable (~23–73 s). Medirlo a mano.
+- **Crash del driver NVIDIA** (`nvwgf2umx`, creación de D3D11) en 1 de 16 arranques simultáneos (sesión 4). El script ahora escalona 4 s los arranques, conserva el registro y reintenta una vez antes de marcar BLOCKED.
 
-Comando de las pruebas de red: `powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 -Scenario all -Runs 2` → `.local-setup/logs/net/net_smoke_results.csv`.
+## 3. Pendiente de implementar (en orden)
 
-## Arquitectura de red implementada (M2)
+1. M3 restante: fuga mejorada (rutas hacia la salida o el banco cuando está libre), derrota y reintento ya funcionan por tiempo; revisar escalado efectivo al cambiar jugadores y el rescate técnico (watchdog).
+2. Flujo completo: **escrito y compilado, sin verificar en uso** → escena `Frontend` (menú: solo con dificultad, con amigos (anfitrión o IP), opciones con sensibilidad, invertir Y, FOV y volumen, salir), pausa con Esc (detiene el tiempo solo en solitario), resultados con reintentar o menú, vuelta al menú si se va el anfitrión. Falta: prueba de navegación en la build y prueba automática del flujo.
+3. Escenario `Bar_LastRound` con el kit 3D (FBX copiados en `Assets/Game/Art/Kit3D/` y `Kit3DImporter` escrito; falta ejecutar el informe de importación y armar la escena). PhysicsLab queda para diagnóstico.
+4. Ragdoll reducido del tío (11 cuerpos), con estabilidad y replicación antes de reemplazar el cuerpo central.
+5. URP, interfaz con el kit de UI, animaciones, audio, localización EN/es_UY y controles remapeables (InputActionAsset).
+6. Sessions/Relay (M4), QA, rendimiento y build reproducible.
 
-- `Scripts/Net/NetSession.cs`: crea y reutiliza el NetworkManager en tiempo de ejecución. Modos: Solo (host 127.0.0.1, puertos 7790+), Host (`-ueHost`, `-ueListen`, `-uePort`), Client (`-ueClient <ip>`). Aprobación con tope de 4 y `ProtocolVersion` (compatibilidad de versión). Gestión de escenas de NGO activada. Si se va el anfitrión: aviso, el cliente queda congelado (`NetAuth.Frozen`) y vuelve a jugar solo. Diagnóstico `[NetDiag]` cada 5 s (RTT, jugadores, agarres, ronda).
-- `Scripts/Net/PlayerControls.cs`: separa la entrada del jugador local (dueño) de los personajes remotos. El dueño envía intenciones secuenciadas (RPC no fiable, la identidad sale del canal); el anfitrión las aplica; sin intención 0,5 s cancela esfuerzo y 1 s suelta las manos.
-- `NetAuth`: el anfitrión simula; los clientes leen estado replicado. `PlayerMotor`, `PlayerHands`, `NpcBrain`, `NpcBody`, `TransportCart`, `ExtractionZone` y `RoundDirector` son NetworkBehaviours con NetworkVariables (estados, finales de estados en tiempo de servidor, sockets por mano, tensión, textos de interacción, ronda, dificultad y N).
-- Jugador = prefab de red (`Assets/Game/Prefabs/Player.prefab`) generado por conexión; cámara y oído solo del dueño. Tío, carrito, puerta y silla: NetworkObjects de escena con NetworkTransform (servidor) + NetworkRigidbody (cinemáticos en clientes).
-- Escalado por número efectivo de jugadores conectados (`autoPartySize`; el panel puede fijarlo). Un cliente pide reiniciar con R y decide el anfitrión. En el laboratorio se admite unirse con la ronda en curso (el lobby de M4 lo bloqueará).
+## 4. Bloqueado por cuentas, equipos o participantes
 
-## Correcciones de juego encontradas en M2
+| Bloqueo | Qué tiene que hacer Stefano |
+| --- | --- |
+| Internet (Sessions/Relay, M4) | Crear o elegir una organización y un proyecto en Unity Cloud (cloud.unity.com) con la cuenta de Unity, habilitar Multiplayer Services (Relay) y pasarme el Project ID, o vincularlo desde Edit → Project Settings → Services en el editor. |
+| Prueba LAN | Una segunda PC en la misma red: correr `UncleExtraction_PhysicsLab.exe -ueHost` en una (aceptar el aviso del firewall de Windows) y `-ueClient <IP de la primera>` en la otra. |
+| Steam | Cuenta de Steamworks, pago de Steam Direct y App ID. |
+| IL2CPP | Instalar Visual Studio 2022 con «Desarrollo de juegos con C++». |
+| Prueba manual y playtest | Jugar la build; no bloquea el desarrollo. |
 
-- El tío cacheaba la lista de jugadores en `Start`, antes de que la red los genere, y los ataques directos no tenían objetivo. Ahora usa un registro vivo (`PlayerMotor.All`).
-- Carga del carrito: `Strap` ya no recoloca a ciegas. Valida el volumen del tío acostado contra paredes, jugadores y objetos («No hay lugar para acostarlo (…)»). Lo sube en 0,45 s (cinemático, el destino sigue al carrito) y, mientras sube y está asegurado, ignora las colisiones tío-carrito. Antes, con alguien o una pared en el volumen, la física despedía al carrito o al jugador a través de la pared.
-- El autopiloto maneja al jugador local con entrada simulada, así que sirve igual en el anfitrión que en un cliente. Modos `drag`, `cart` y `race`. En modo carrito, si no hay lugar, lleva el carrito a un espacio abierto.
+## Red: resultados con la versión actual
 
-## Estado de M0/M1 (sesión 3, sigue vigente)
+Ver la última ejecución de `powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 -Scenario all` en `.local-setup/logs/net/net_smoke_results.csv`. Todo es **localhost** (2 procesos en la misma PC). La red degradada usa el simulador de red oficial (Multiplayer Tools 2.2.12) en la build de desarrollo: 120 ms ±20 ms y 3 % de pérdida en el cliente. LAN e internet: NOT_RUN.
 
-- Laboratorio completo: jugador de dos manos, agarre con resorte limitado, tío de cuerpo central con 4 ataques anunciados, anclaje a la barra, fatiga y apertura, carrito con correa, zona de extracción provisional, HUD de depuración, 10 reinicios sin huérfanos.
-- Build Windows Mono: `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe`. Con autopiloto, completa arrastre y carrito sola (sesión 3: arrastre 4/4, carrito 3/3).
-- Hallazgos para el playtest: una mano no alcanza para arrastrar al tío caído (fricción ~460 N > 420 N); la puerta de 1,5 m es un cuello de botella; hay que entrarlo de costado a la zona; el carrito podría ser demasiado fácil en solitario; la varianza del arrastre es alta.
+## Arquitectura y decisiones
 
-## Pendientes (trabajo propio, en orden)
+- Red: `docs/DECISIONES_IMPLEMENTACION.md` (M2) y `Scripts/Net/`. Anfitrión autoritativo con NGO 2.14.0 + UTP 2.7.5; individual = anfitrión en loopback; gestión de escenas de NGO activada; clientes desconectados congelados; sin migración de anfitrión.
+- Extracción: `ExtractionZone` (pose) + `VanDoors` (fases Open → Holding → Closing → Closed; aborta y reabre si fallan las condiciones durante el cierre).
+- Carga del carrito validada: `TransportCart` (volumen libre, subida de 0,45 s, colisiones tío-carrito ignoradas solo mientras sube y está asegurado).
 
-1. Extracción real: el tío **dentro** de la camioneta (volumen interior, pose válida, sin solapes con sólidos, puertas traseras que se cierran con progreso). Reemplaza a la zona provisional delante del vehículo.
-2. Interacciones: vaso señuelo y distracciones (`DistractionService`), ayuda de un compañero para levantarse, derrota y reintento completos, fuga mejorada.
-3. Ragdoll reducido del tío (11 cuerpos), verificando estabilidad y replicación antes de reemplazar el cuerpo central.
-4. Flujo completo: escena Frontend (menú, individual, cooperativo directo, dificultad, opciones, pausa, resultados, volver) y escena Bar_LastRound con el kit 3D.
-5. Presentación: URP, kits de modelos/materiales/UI, señales de ataque, feedback de agarre/golpe, audio, EN/es_UY, controles remapeables (InputActionAsset).
-6. M2 restante: latencia simulada; prueba LAN cuando haya otra PC.
-7. M4 internet (Sessions/Relay), M5–M8 QA, rendimiento, Steam, build reproducible.
+## Comandos verificados
 
-## Bloqueos externos
-
-- **Unity Cloud (Relay/Sessions):** requiere vincular el proyecto a una organización de Unity Cloud con la cuenta de Stefano (dashboard de Unity). Bloquea M4 internet.
-- **LAN real:** requiere una segunda PC en la misma red.
-- **Steam:** requiere cuenta Steamworks (pago de Steam Direct) y App ID.
-- **IL2CPP:** requiere Visual Studio 2022 con «Desarrollo de juegos con C++».
-- **Prueba manual:** la hace Stefano; no bloquea la implementación.
-- **Entorno:** crash ocasional del driver NVIDIA (`nvwgf2umx`) al arrancar dos instancias a la vez; no involucra código del juego.
-
-## Faltantes y contradicciones de la preproducción
-
-- `preproduction/uncle_extraction/data/asset_manifest.csv` marca los modelos como `pending/TBD`, pero el kit 3D entregó prototipos de 8 (bar, barra, puerta, camioneta, banqueta, mesa, carrito, tío). Actualizar al importarlos.
-- Sin modelo: cuerpo/brazos del jugador, marco de puerta, vaso señuelo, vereda. Audio pendiente. Texturas solo Base Color 1254 px. Arte entregado = prototipo; los GLB no importan sin paquete extra (usar FBX). El kit no trae ragdoll ni triggers.
-- `ENTREGA_SHA256.json` es una foto del empaquetado. `00_EMPEZAR_AQUI.md` y `docs/GUIA_GITHUB.md` describen la vinculación con GitHub ya realizada.
+Ver `CLAUDE.md` («Entorno y comandos verificados»). Novedades: `-ueDev` en `BuildTools.BuildWindows` (build de desarrollo), `-ueNetSim ms jitter %`, `-ueRepeat N` y `-ueAutopilot race -ueRaceAt <ms Unix>`.
 
 ## Ubicación y versionado
 
-- Carpeta principal `C:\Users\stuff\OneDrive\Escritorio\uncle-extraction`; `origin` = `Stefano936/uncle-extraction` (privado), rama `main`.
-- OneDrive sincroniza `UnityProject/Library` (ignorado por Git, pesado): conviene excluirlo de OneDrive.
-- Builds locales (no versionadas): `Builds/PhysicsLab/UncleExtraction_PhysicsLab.exe`.
+- Carpeta principal `C:\Users\stuff\OneDrive\Escritorio\uncle-extraction`; `origin` = `Stefano936/uncle-extraction` (privado), rama `main`. Builds locales no versionadas en `Builds/`.
+- OneDrive sincroniza `UnityProject/Library` (ignorado por Git): conviene excluirlo de OneDrive.
 
 ## Próxima acción exacta
 
-1. Claude: extracción real dentro de la camioneta (pendiente 1). Construir la camioneta con interior hueco y puertas traseras con bisagra en `PhysicsLabBuilder`, una `ExtractionZone` interior con pose y solapes, y el cierre de puertas con progreso. Adaptar el autopiloto y las pruebas sin debilitar las condiciones.
-2. Después, pendientes 2 → 4 en orden. Repetir `net_smoke.ps1` tras cada cambio de red o de autoridad.
-3. Stefano, cuando pueda: jugar la build (`-ueHost -ueListen 127.0.0.1` en una ventana y `-ueClient 127.0.0.1` en otra para probar el cooperativo en la misma PC) y anotar sensaciones.
+1. Leer `net_smoke_results.csv` de la corrida completa y registrar PASS/FAIL por escenario arriba; corregir lo que falle.
+2. Verificar el flujo de menús en la build (Frontend → solo → resultados → menú) y agregar una prueba PlayMode del flujo.
+3. Ejecutar `Kit3DImporter.ImportAndReport`, registrar medidas reales y armar `Bar_LastRound`.
 
 ## Al cerrar una sesión
 

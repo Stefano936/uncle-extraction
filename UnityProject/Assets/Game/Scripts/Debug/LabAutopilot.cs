@@ -47,7 +47,7 @@ namespace UncleExtraction
             door = FindAnyObjectByType<HingeJoint>();
         }
 
-        long raceAtUnixMs; bool quitOnEnd; float quitAt = -1f; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
+        long raceAtUnixMs; int repeatLeft; AutopilotMode lastMode; bool quitOnEnd; float quitAt = -1f; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
         static readonly Vector3 OpenSpot = new Vector3(1.5f, 0f, 2.6f);
 
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
@@ -61,6 +61,7 @@ namespace UncleExtraction
                     pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart
                                 : args[i + 1].Equals("race", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Race : AutopilotMode.Drag;
                 if (args[i] == "-ueRaceAt" && i + 1 < args.Length) long.TryParse(args[i + 1], out raceAtUnixMs);
+                if (args[i] == "-ueRepeat" && i + 1 < args.Length) int.TryParse(args[i + 1], out repeatLeft);
                 if (args[i] == "-ueAutopilotDelay" && i + 1 < args.Length) float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out pendingDelay);
             }
         }
@@ -68,11 +69,27 @@ namespace UncleExtraction
         void Update()
         {
             // El jugador local aparece cuando la red lo genera (en un cliente, al conectarse).
-            if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay) { var m = pendingMode.Value; pendingMode = null; StartRun(m); }
-            if (quitOnEnd && round && round.State != RoundState.Running)
-            {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre
-                if (quitAt < 0f) { quitAt = Time.unscaledTime + 3f; Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; saliendo en 3 s"); }
-                else if (Time.unscaledTime >= quitAt) { quitOnEnd = false; Application.Quit(round.State == RoundState.Success ? 0 : 3); }
+            if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay && round && round.State == RoundState.Running)
+            { var m = pendingMode.Value; pendingMode = null; lastMode = m; StartRun(m); }
+            if ((quitOnEnd || repeatLeft > 0) && round && round.State != RoundState.Running && !pendingMode.HasValue)
+            {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre o reinicie
+                if (quitAt < 0f)
+                {
+                    quitAt = Time.unscaledTime + 3f; NetSession.LogWorldNow("final");
+                    Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; {(repeatLeft > 0 ? "reinicia en 3 s" : "saliendo en 3 s")}");
+                }
+                else if (Time.unscaledTime >= quitAt)
+                {
+                    quitAt = -1f;
+                    if (repeatLeft > 0)
+                    {   // reintento despues de ganar o perder: el anfitrion reinicia; el cliente espera la ronda nueva
+                        repeatLeft--; StopRun();
+                        if (NetAuth.IsServer) round.Restart();
+                        pendingMode = lastMode; pendingDelay = 0f;
+                        Debug.Log($"[Autopilot] reintento (quedan {repeatLeft})");
+                    }
+                    else { quitOnEnd = false; Application.Quit(round.State == RoundState.Success ? 0 : 3); }
+                }
             }
         }
 
@@ -143,7 +160,7 @@ namespace UncleExtraction
         GrabSocket BestFreeUncleSocket(GrabSocket exclude, bool nearestOnly = false)
         {
             string pref = body.Posture == NpcPosture.Upright ? "forearm" : "ankle";
-            return GrabSocket.All.Where(s => s.body == body.Body && s != exclude && Occupancy(s) < s.capacity)
+            return GrabSocket.All.Where(s => s.body == body.Body && s != exclude && Occupancy(s) < s.capacity && !(unreachable.TryGetValue(s, out float until) && Time.time < until))
                                  .OrderBy(s => (!nearestOnly && s.socketId.StartsWith(pref) ? 0f : 3f) + Vector3.Distance(s.Position, Eye))
                                  .FirstOrDefault();
         }
@@ -189,8 +206,20 @@ namespace UncleExtraction
         }
 
         /// Acercarse y agarrar un punto con una mano, como un jugador: mantener el clic solo si el punto apuntado es el elegido.
+        readonly Dictionary<GrabSocket, float> unreachable = new Dictionary<GrabSocket, float>();
+        float detourUntil; Vector3 detourGoal;
+
         void ApproachAndGrab(int hand, GrabSocket target, float stopAt)
         {
+            // Atascado apuntando a un punto que no se puede tomar (puerta o pared en la linea de vision): descartarlo un rato y rodear
+            if (target == lastTarget && Time.time - aimSince > 2.5f)
+            {
+                unreachable[target] = Time.time + 12f; aimSince = Time.time;
+                Vector3 pel = Flat(body.pelvis.position), side = Vector3.Cross(Vector3.up, Flat(pel - Me)).normalized;
+                detourGoal = pel + side * (UnityEngine.Random.value < 0.5f ? 1.2f : -1.2f); detourUntil = Time.time + 1.5f;
+                Log($"no alcanza {target.socketId}: lo descarta 12 s y rodea");
+            }
+            if (Time.time < detourUntil) { LookAt(target.Position); MoveWorld(detourGoal - Me); SetHold(hand, false); return; }
             LabInput.Simulated[(int)Act.Crouch] = target.Position.y < 0.7f;
             LookAt(target.Position);
             float d = Vector3.Distance(Eye, target.Position);
@@ -458,6 +487,8 @@ namespace UncleExtraction
                 $"caidas jugador={player.FallCount} caidas tio={body.FallCount} correas={cart.StrapCount}");
             Debug.Log("[Autopilot] TIMELINE\n" + string.Join("\n", Timeline));
             StopRun();
+            // Cliente con -ueRepeat: espera la ronda nueva que reinicia el anfitrion y vuelve a jugar
+            if (repeatLeft > 0 && !NetAuth.IsServer) { repeatLeft--; pendingMode = lastMode; pendingDelay = 0f; Debug.Log($"[Autopilot] cliente espera el reintento (quedan {repeatLeft})"); }
         }
     }
 }

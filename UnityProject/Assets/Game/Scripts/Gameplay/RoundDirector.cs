@@ -15,6 +15,8 @@ namespace UncleExtraction
         [Range(1, 4)] public int partySize = 1;
         /// El escalado usa el numero efectivo de jugadores conectados; el panel de laboratorio puede fijarlo a mano.
         public bool autoPartySize = true;
+        /// Dificultad elegida en el menu; la aplica el anfitrion al empezar.
+        public static Difficulty? RequestedDifficulty;
 
         readonly NetworkVariable<RoundState> nState = new NetworkVariable<RoundState>(RoundState.Running);
         readonly NetworkVariable<float> nElapsed = new NetworkVariable<float>();
@@ -35,6 +37,7 @@ namespace UncleExtraction
         public string LastStressReport { get; private set; } = "";
         public bool StressRunning { get; private set; }
 
+        void Start() { if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; }
         void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); }
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
 

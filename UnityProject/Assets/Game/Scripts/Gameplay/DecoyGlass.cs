@@ -15,8 +15,12 @@ namespace UncleExtraction
         float stillSince;
 
         public Vector3 Position => transform.position;
-        /// Apoyado: no lo sostiene nadie y lleva 0,4 s casi quieto.
-        public bool Resting => (socket == null || GrabRegistry.OccupancyOf(socket) == 0) && Time.time - stillSince > 0.4f;
+        /// Colocado por un jugador (GDD 06: «colocar una distraccion valida»): el vaso en su lugar de origen no atrae.
+        public bool Placed { get; private set; }
+        /// Apoyado: colocado, no lo sostiene nadie y lleva 0,4 s casi quieto.
+        public bool Resting => Placed && (socket == null || GrabRegistry.OccupancyOf(socket) == 0) && Time.time - stillSince > 0.4f;
+        /// Para pruebas y depuracion: marcarlo como colocado (equivale a que un jugador lo haya llevado y soltado).
+        public void MarkPlaced() { Placed = true; stillSince = Time.time; }
 
         void Awake() { rb = GetComponent<Rigidbody>(); socket = GetComponentInChildren<GrabSocket>(); spawnPos = transform.position; spawnRot = transform.rotation; }
         void OnEnable() { if (!All.Contains(this)) All.Add(this); }
@@ -25,6 +29,7 @@ namespace UncleExtraction
         void FixedUpdate()
         {
             bool held = socket != null && GrabRegistry.OccupancyOf(socket) > 0;
+            if (held) Placed = true;
             if (held || rb.linearVelocity.sqrMagnitude > 0.04f) stillSince = Time.time;
         }
 
@@ -44,7 +49,7 @@ namespace UncleExtraction
             if (!NetAuth.IsServer) return;
             rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
             rb.position = spawnPos; rb.rotation = spawnRot; transform.SetPositionAndRotation(spawnPos, spawnRot);
-            stillSince = Time.time;
+            stillSince = Time.time; Placed = false;
         }
     }
 }

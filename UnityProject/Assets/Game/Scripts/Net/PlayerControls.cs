@@ -47,7 +47,7 @@ namespace UncleExtraction
 
         public bool Held(Act a)
         {
-            if (IsLocal) return LabInput.HeldForGameplay(a);
+            if (IsLocal) return !GameFlowUI.BlockingInput && LabInput.HeldForGameplay(a);
             if (Time.time - lastRemoteAt > ReleaseTimeout) return false;               // sin noticias: soltar todo
             if (a == Act.Effort && Time.time - lastRemoteAt > EffortTimeout) return false;
             return remote.Has(a);
@@ -68,7 +68,7 @@ namespace UncleExtraction
 
         public Vector2 Move()
         {
-            if (IsLocal) return LabInput.Move();
+            if (IsLocal) return GameFlowUI.BlockingInput ? Vector2.zero : LabInput.Move();
             return Time.time - lastRemoteAt > EffortTimeout ? Vector2.zero : remote.move;
         }
 
@@ -83,8 +83,9 @@ namespace UncleExtraction
             if (!IsSpawned || !IsOwner || IsServer) return; // el anfitrion lee su propio teclado directamente
             if (Time.unscaledTime < nextSend) return;
             nextSend = Time.unscaledTime + SendInterval;
-            var i = new PlayerIntent { seq = ++sendSeq, move = LabInput.Move(), yaw = motor ? motor.Yaw : 0f, pitch = motor ? motor.Pitch : 0f };
-            for (int a = 0; a <= (int)Act.ToggleCursor; a++) if (LabInput.HeldForGameplay((Act)a)) i.buttons |= (ushort)(1 << a);
+            bool blocked = GameFlowUI.BlockingInput;
+            var i = new PlayerIntent { seq = ++sendSeq, move = blocked ? Vector2.zero : LabInput.Move(), yaw = motor ? motor.Yaw : 0f, pitch = motor ? motor.Pitch : 0f };
+            for (int a = 0; a <= (int)Act.ToggleCursor; a++) if (!blocked && LabInput.HeldForGameplay((Act)a)) i.buttons |= (ushort)(1 << a);
             SubmitIntentRpc(i);
         }
 
