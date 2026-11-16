@@ -13,7 +13,7 @@ namespace UncleExtraction
     {
         public RectTransform Root { get; private set; }
         readonly Action onClose;
-        struct Draft { public float mouse, fov, volume, textScale; public bool invertY, subtitles, profanity; public string lang; }
+        struct Draft { public float mouse, fov, volume, textScale; public bool invertY, subtitles, profanity; public string lang, name; }
         Draft saved, draft;
         readonly List<Action> refresh = new List<Action>();
         Text status; RectTransform confirm; IDisposable listening; Act listeningFor;
@@ -24,7 +24,7 @@ namespace UncleExtraction
         {
             this.onClose = onClose;
             saved = Capture(); draft = saved;
-            Root = Ui.PanelBox("Options", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 860));
+            Root = Ui.PanelBox("Options", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 980));
             var title = Ui.Label(Root, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(title, 0, 24, 0, 0);
             refresh.Add(() => title.text = Loc.T("button.settings"));
             float y = -120;
@@ -38,6 +38,7 @@ namespace UncleExtraction
             Toggle(Root, "settings.invert_y", new Vector2(48, y - 400), () => draft.invertY, v => draft.invertY = v);
             Toggle(Root, "settings.attack_subtitles", new Vector2(48, y - 460), () => draft.subtitles, v => draft.subtitles = v);
             Toggle(Root, "settings.profanity", new Vector2(48, y - 580), () => draft.profanity, v => draft.profanity = v);
+            NameField(Root, new Vector2(48, y - 650));
             Choice(Root, "settings.text_size", new Vector2(48, y - 520), new[] { "100%", "125%", "150%" }, () => draft.textScale >= 1.4f ? 2 : draft.textScale >= 1.2f ? 1 : 0, i => draft.textScale = i == 2 ? 1.5f : i == 1 ? 1.25f : 1f, "percent");
             // columna derecha: controles
             Section(Root, "settings.controls", new Vector2(620, y));
@@ -57,11 +58,11 @@ namespace UncleExtraction
             UnityEngine.EventSystems.EventSystem.current?.SetSelectedGameObject(apply.gameObject);
         }
 
-        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, profanity = GameSettings.ProfanityFilter, textScale = Ui.TextScale, lang = Loc.Language };
+        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, profanity = GameSettings.ProfanityFilter, name = GameSettings.PlayerName ?? "", textScale = Ui.TextScale, lang = Loc.Language };
         static void Store(Draft d)
         {
             GameSettings.MouseSensitivity = d.mouse; GameSettings.FieldOfView = d.fov; GameSettings.MasterVolume = d.volume; GameSettings.InvertY = d.invertY;
-            GameHud.AttackSubtitles = d.subtitles; GameSettings.AttackSubtitles = d.subtitles; GameSettings.ProfanityFilter = d.profanity; UncleDialogue.ProfanityFilter = d.profanity; GameSettings.TextScale = d.textScale; Ui.TextScale = d.textScale;
+            GameHud.AttackSubtitles = d.subtitles; GameSettings.AttackSubtitles = d.subtitles; GameSettings.ProfanityFilter = d.profanity; UncleDialogue.ProfanityFilter = d.profanity; GameSettings.PlayerName = PlayerMotor.Sanitize(d.name); GameSettings.TextScale = d.textScale; Ui.TextScale = d.textScale;
             if (Loc.Language != d.lang) Loc.SetLanguage(d.lang);
         }
 
@@ -109,6 +110,18 @@ namespace UncleExtraction
                 string opt = Loc.Has(options[get()]) ? Loc.T(options[get()]) : options[get()];
                 t.text = token != "" ? Loc.T(key, (token, opt.TrimEnd('%'))) : $"{Loc.T(key)}: {opt}";
             });
+        }
+
+        void NameField(Transform p, Vector2 pos)
+        {
+            var rt = Ui.Rect("Name", p, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), pos, new Vector2(520, 56));
+            var lab = Ui.Label(rt, "Label", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleLeft); lab.rectTransform.offsetMax = new Vector2(-300, 0);
+            var box = Ui.Rect("Box", rt, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), Vector2.zero, new Vector2(290, 0));
+            var img = box.gameObject.AddComponent<Image>(); img.sprite = UiSkin.Load()?.keycap; img.type = Image.Type.Sliced; img.color = img.sprite ? Color.white : Ui.Panel;
+            var txt = Ui.Label(box, "Text", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleCenter); txt.supportRichText = false;
+            var f = box.gameObject.AddComponent<InputField>(); f.textComponent = txt; f.targetGraphic = img; f.characterLimit = 20;
+            f.SetTextWithoutNotify(draft.name); f.onValueChanged.AddListener(v => draft.name = v);
+            refresh.Add(() => { lab.text = Loc.T("settings.name"); if (!f.isFocused) f.SetTextWithoutNotify(draft.name); });
         }
 
         void Rebind(Transform p, Act a, Vector2 pos)

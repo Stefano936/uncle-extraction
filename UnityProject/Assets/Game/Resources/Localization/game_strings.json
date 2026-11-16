@@ -371,6 +371,11 @@
    "key": "dialogue.bartender",
    "en": "BARTENDER",
    "es_UY": "CANTINERO"
+  },
+  {
+   "key": "settings.name",
+   "en": "Player name",
+   "es_UY": "Nombre"
   }
  ]
 }

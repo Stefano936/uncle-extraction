@@ -22,6 +22,16 @@ namespace UncleExtraction
 
         // Estado replicado (escribe solo el anfitrion).
         readonly NetworkVariable<PlayerState> nState = new NetworkVariable<PlayerState>(PlayerState.Active);
+        readonly NetworkVariable<Unity.Collections.FixedString32Bytes> nName = new NetworkVariable<Unity.Collections.FixedString32Bytes>();
+        /// Nombre elegido en Opciones: lo sanea el anfitrion (sin etiquetas, maximo 20) y lo replica; vacio = «Jugador N».
+        public static string Sanitize(string n)
+        {
+            if (string.IsNullOrWhiteSpace(n)) return "";
+            n = n.Replace("<", "").Replace(">", "").Replace('\n', ' ').Trim();
+            return n.Length > 20 ? n.Substring(0, 20) : n;
+        }
+        [Rpc(SendTo.Server)]
+        void NameRpc(string name, RpcParams p = default) { if (p.Receive.SenderClientId == OwnerClientId) { string s = Sanitize(name); if (s != "") nName.Value = s; } }
         readonly NetworkVariable<float> nComposure = new NetworkVariable<float>(LabBalance.ComposureMax);
         readonly NetworkVariable<float> nEnergy = new NetworkVariable<float>(LabBalance.EnergyMax);
         readonly NetworkVariable<bool> nCrouch = new NetworkVariable<bool>(false);
@@ -73,6 +83,9 @@ namespace UncleExtraction
         public override void OnNetworkSpawn()
         {
             playerName = $"Jugador {OwnerClientId + 1}";
+            if (IsOwner && Sanitize(GameSettings.PlayerName) != "") { if (IsServer) nName.Value = Sanitize(GameSettings.PlayerName); else NameRpc(GameSettings.PlayerName); }
+            nName.OnValueChanged += (_, v) => { if (v.Length > 0) playerName = v.ToString(); };
+            if (nName.Value.Length > 0) playerName = nName.Value.ToString();
             if (IsServer)
             {
                 var layout = LevelLayout.Current;

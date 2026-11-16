@@ -12,6 +12,7 @@ namespace UncleExtraction
         public static Difficulty SoloDifficulty = Difficulty.Normal;
         public static bool AttackSubtitles = true;
         public static bool ProfanityFilter;
+        public static string PlayerName = "";
         public static float TextScale = 1f;
         static bool loaded;
 
@@ -27,6 +28,7 @@ namespace UncleExtraction
                 SoloDifficulty = (Difficulty)PlayerPrefs.GetInt("ue.difficulty", (int)SoloDifficulty);
                 AttackSubtitles = PlayerPrefs.GetInt("ue.attackSubs", 1) == 1;
                 ProfanityFilter = PlayerPrefs.GetInt("ue.profanity", 0) == 1;
+                PlayerName = PlayerPrefs.GetString("ue.name", "");
                 TextScale = Mathf.Clamp(PlayerPrefs.GetFloat("ue.textScale", 1f), 1f, 1.5f);
             }
             catch { /* preferencias corruptas: valores por defecto */ }
@@ -42,6 +44,7 @@ namespace UncleExtraction
             PlayerPrefs.SetInt("ue.difficulty", (int)SoloDifficulty);
             PlayerPrefs.SetInt("ue.attackSubs", AttackSubtitles ? 1 : 0);
             PlayerPrefs.SetInt("ue.profanity", ProfanityFilter ? 1 : 0);
+            PlayerPrefs.SetString("ue.name", PlayerName ?? "");
             PlayerPrefs.SetFloat("ue.textScale", TextScale);
             PlayerPrefs.Save();
             Apply();

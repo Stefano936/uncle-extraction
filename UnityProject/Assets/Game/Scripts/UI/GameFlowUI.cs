@@ -22,7 +22,8 @@ namespace UncleExtraction
         /// Pausa o resultados en pantalla, o escuchando una tecla para remapear: no se controla al personaje.
         public static bool BlockingInput => InputBindings.Listening || (Instance && Instance.isActiveAndEnabled && (Instance.paused || (Instance.round && (Instance.round.State != RoundState.Running || Instance.round.InLobby))));
         public bool LobbyVisible => lobby != null && lobby.Root && lobby.Root.gameObject.activeSelf;
-        LobbyView lobby;
+        LobbyView lobby; RectTransform connecting; Text connectingText;
+        public bool ConnectingVisible => connecting && connecting.gameObject.activeSelf;
         public bool ResultsVisible => resultsRoot && resultsRoot.gameObject.activeSelf;
         public string ResultsTitle => resTitle ? resTitle.text : "";
 
@@ -35,6 +36,12 @@ namespace UncleExtraction
             if (!GetComponent<UncleDialogue>()) gameObject.AddComponent<UncleDialogue>();
             canvas = Ui.Canvas("FlowUI", 20);
             BuildPause(); BuildResults(); lobby = new LobbyView(canvas.transform, round);
+            // conectando (cliente): con salida controlada (UI_SPEC 3: un spinner tiene cancelacion)
+            connecting = Ui.PanelBox("Connecting", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760, 280));
+            connectingText = Ui.Label(connecting, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.UpperCenter, true); Inset(connectingText, 30, 40, 30, 0);
+            var cancel = Ui.Button(connecting, "Cancel", "", new Vector2(0.5f, 0f), new Vector2(0, 40), new Vector2(420, Ui.ButtonH), NetSession.LeaveToMenu);
+            cancel.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0f); cancel.gameObject.AddComponent<LocText>().key = "button.cancel";
+            connecting.gameObject.SetActive(false);
             Loc.Changed += Relabel; Relabel();
         }
         void OnDisable() { if (Time.timeScale == 0f) Time.timeScale = 1f; }
@@ -92,6 +99,9 @@ namespace UncleExtraction
             if (BlockingInput) { Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
             UpdateResults(ended);
             lobby?.Update();
+            bool conn = NetSession.Mode == NetMode.Client && PlayerControls.Local == null;
+            if (connecting.gameObject.activeSelf != conn) { connecting.gameObject.SetActive(conn); if (conn) EventSystem.current?.SetSelectedGameObject(connecting.Find("Cancel").gameObject); }
+            if (conn) { connectingText.text = Loc.T("lobby.connecting") + "\n" + NetSession.Address + ":" + NetSession.Port; Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
         }
 
         void CloseOverlays()

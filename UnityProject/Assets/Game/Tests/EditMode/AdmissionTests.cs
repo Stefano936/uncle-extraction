@@ -10,6 +10,13 @@ namespace UncleExtraction.Tests
         [Test] public void Full_IsRejected_WithFullReason() => Assert.AreEqual("error.full", NetSession.Decide(4, 4, V, V, true));
         [Test] public void OtherVersion_IsRejected_WithVersionReason() => Assert.AreEqual("error.version", NetSession.Decide(1, 4, "0.0/1", V, true));
         [Test] public void RoundStarted_IsRejected_WithAlreadyStartedReason() => Assert.AreEqual("error.already_started", NetSession.Decide(1, 4, V, V, false));
+        [Test] public void PlayerNames_AreSanitized()
+        {
+            Assert.AreEqual("Ana", PlayerMotor.Sanitize("  Ana "));
+            Assert.AreEqual("bAna/b", PlayerMotor.Sanitize("<b>Ana</b>"), "sin etiquetas de texto enriquecido");
+            Assert.AreEqual(20, PlayerMotor.Sanitize(new string('x', 40)).Length, "largo limitado");
+            Assert.AreEqual("", PlayerMotor.Sanitize("   "), "vacio = nombre por defecto");
+        }
         [Test] public void Reasons_AreLocalized()
         {
             foreach (var k in new[] { "error.full", "error.version", "error.already_started", "error.host_left" })

@@ -89,7 +89,8 @@
 
 ## Próxima acción exacta
 
-2. Pantalla de conexión con cancelación y nombres de jugador elegibles.
+1. Pantalla de conexión con cancelación y nombres de jugador elegibles.
+2. Validación humana de la build (LEEME.txt) y LAN con dos PC cuando haya una segunda PC.
 
 ## Historial (resultados de sesiones anteriores, sin reescribir)
 
