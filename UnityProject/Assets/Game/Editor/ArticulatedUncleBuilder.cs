@@ -99,9 +99,10 @@ namespace UncleExtraction.EditorTools
             // Visual: malla con rig del kit girada 180 grados; si falta, capsulas de color de respaldo
             pres = go.AddComponent<NpcPresentation>(); pres.brain = brain;
             var kit = PhysicsLabBuilder.KitVisual("uncle_prototype", t, Vector3.zero, Quaternion.Euler(0, 180, 0));
+            RagdollVisual visRef = null;
             if (kit)
             {
-                var vis = go.AddComponent<RagdollVisual>();
+                var vis = go.AddComponent<RagdollVisual>(); visRef = vis;
                 var bones = new Dictionary<string, Transform>();
                 foreach (var b in kit.GetComponentsInChildren<Transform>()) bones[b.name] = b;
                 if (bones.TryGetValue("pelvis", out var pb)) vis.Bind(pb, t);
@@ -129,6 +130,8 @@ namespace UncleExtraction.EditorTools
             ind.GetComponent<Renderer>().sharedMaterial = PhysicsLabBuilder.Mat("Indicator", Color.yellow);
             pres.indicator = ind.transform; pres.indicatorRenderer = ind.GetComponent<Renderer>(); ind.SetActive(false);
 
+            // Poses de preparacion y golpe (clips del kit muestreados y poses autorizadas), todavia mirando a +z
+            AttackPoseBuilder.Build(go, body, brain, visRef, kit, t);
             go.transform.rotation = Quaternion.Euler(0, 180, 0); // mirando a -z en el mundo, como el tio central
             return go;
         }

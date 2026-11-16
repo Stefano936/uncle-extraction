@@ -164,6 +164,7 @@ namespace UncleExtraction
 
         /// Fuerza un diagnostico ya (por ejemplo al terminar una ronda).
         public static void LogWorldNow(string tag) => Debug.Log($"[NetDiag] {tag}: {WorldState()}");
+        public static void LogWorldNow(string tag, string extra) => Debug.Log($"[NetDiag] {tag}: {WorldState()} {extra}");
 
         static void ApplyNetSim(NetworkManager nm)
         {

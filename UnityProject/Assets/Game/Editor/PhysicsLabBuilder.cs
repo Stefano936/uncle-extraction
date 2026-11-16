@@ -41,6 +41,7 @@ namespace UncleExtraction.EditorTools
         public static void Build()
         {
             UrpSetup.Ensure(); // pipeline de render antes de crear materiales y escenas
+            UiKitImporter.Import(); // sprites, fuentes y catalogos EN/es_UY del kit de UI
             Directory.CreateDirectory("Assets/Game/Scenes"); Directory.CreateDirectory(MatDir); Directory.CreateDirectory("Assets/Game/Prefabs");
             builtPlayerPrefab = null;
             BuildLevel(LevelSpecs.Lab());
@@ -198,6 +199,8 @@ namespace UncleExtraction.EditorTools
                 ? ArticulatedUncleBuilder.Build(spec.home, uncleM, skinM, unclePM, out body, out brain, out pres)
                 : BuildUncle(uncleM, skinM, unclePM, spec.home, out body, out brain, out pres);
             brain.anchorRail = rail.GetComponent<Collider>();
+            // Aviso de ataque en el piso y nombre sobre la cabeza (ambas variantes del tio)
+            var telegraph = npcGo.AddComponent<AttackTelegraph>(); telegraph.brain = brain; telegraph.body = body; telegraph.material = AttackPoseBuilder.TelegraphMaterial();
             var home = new GameObject("Uncle_Home").transform; home.position = spec.home; brain.home = home;
             cart.npc = body; zone.npc = body;
 
@@ -312,6 +315,7 @@ namespace UncleExtraction.EditorTools
             go.AddComponent<PlayerControls>();
             motor = go.AddComponent<PlayerMotor>(); motor.cameraPivot = pivot;
             hands = go.AddComponent<PlayerHands>(); hands.cam = cam; hands.leftHandVisual = hl.transform; hands.rightHandVisual = hr.transform;
+            var feedback = go.AddComponent<GrabFeedback>(); feedback.hands = hands; feedback.material = AttackPoseBuilder.TelegraphMaterial(); // aviso de agarre y tension (solo local)
             return go;
         }
 

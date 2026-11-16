@@ -44,9 +44,11 @@ namespace UncleExtraction
 
         static readonly Collider[] buf = new Collider[16];
         /// Algo en la franja de barrido de las hojas: jugadores, carrito, tio u objetos.
+        /// Donde esta lo que bloqueo la abertura en la ultima consulta (para marcarlo en pantalla); null si estaba libre.
+        public Vector3? BlockPoint { get; private set; }
         public bool DoorwayBlocked(out string what)
         {
-            what = "";
+            what = ""; BlockPoint = null;
             int n = Physics.OverlapBoxNonAlloc(doorwayCenter, doorwayHalf, buf, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++)
             {
@@ -54,6 +56,7 @@ namespace UncleExtraction
                 if (c.transform.IsChildOf(transform)) continue; // las propias hojas
                 var rb = c.attachedRigidbody;
                 if (!rb) continue;                              // piso, rampa y paredes no bloquean
+                BlockPoint = c.bounds.center;
                 if (rb.GetComponent<PlayerMotor>()) { what = "Hay alguien en la puerta"; return true; }
                 if (NpcBody.Of(rb)) { what = $"Le queda {NpcBody.PartLabel(rb)} afuera: empujalo adentro"; return true; }
                 what = $"{rb.name} bloquea la puerta"; return true;
@@ -76,6 +79,7 @@ namespace UncleExtraction
         public string BlockReason()
         {
             var zone = ExtractionZone.Instance;
+            BlockPoint = null;
             if (!zone || zone.Secured) return "";
             if (CurrentPhase == Phase.Closing) return "Cerrando...";
             string f = ConditionsFail(); if (f != "") return f;

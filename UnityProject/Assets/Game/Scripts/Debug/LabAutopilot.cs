@@ -53,7 +53,9 @@ namespace UncleExtraction
 
         string dropAt = ""; bool noClose, menuAtEnd;
         bool cartTargetsSet; Vector3 cartRef, cartUncleTarget, cartStand;
-        long raceAtUnixMs; int repeatLeft; AutopilotMode lastMode; bool quitOnEnd; float quitAt = -1f, finalLogAt; bool finalLogged; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
+        long raceAtUnixMs; int repeatLeft; AutopilotMode lastMode; bool quitOnEnd; float quitAt = -1f, endSeenAt; bool finalLogged; int endAttempt; RoundState endResult;
+        AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
+        const float FinalMaxWait = 2.0f; // menos que los 3 s en que el anfitrion reinicia o cierra
 
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
         void Start()
@@ -76,6 +78,7 @@ namespace UncleExtraction
 
         void Update()
         {
+            CheckFinal(); // tambien despues de un reinicio que llego antes de converger
             // El jugador local aparece cuando la red lo genera (en un cliente, al conectarse).
             // Ronda nueva: esperar 0,5 s de ronda para tener las posiciones reiniciadas replicadas (en un cliente)
             if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay && round && round.State == RoundState.Running && (NetAuth.IsServer || round.Elapsed > 0.5f))
@@ -84,15 +87,12 @@ namespace UncleExtraction
             {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre o reinicie
                 if (quitAt < 0f)
                 {   // el cliente sale antes que el anfitrion: si el anfitrion cierra primero, el cliente veria una desconexion
-                    quitAt = Time.unscaledTime + (NetAuth.IsServer ? 3f : 1f); finalLogAt = Time.unscaledTime + 0.5f; finalLogged = false;
+                    quitAt = Time.unscaledTime + (NetAuth.IsServer ? 3f : 1f); finalLogged = false;
+                    endSeenAt = Time.unscaledTime; endAttempt = round.Restarts; endResult = round.State;
                     Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; {(repeatLeft > 0 ? "reinicia en 3 s" : "saliendo en 3 s")}");
+                    CheckFinal();
                 }
-                else if (!finalLogged && Time.unscaledTime >= finalLogAt)
-                {   // estado final 0,5 s despues de terminar (antes de salir o reiniciar, 1 s/3 s): con perdida de paquetes, la
-                    // ronda y la zona replican en mensajes distintos y el primer cuadro podia no tener la zona asegurada
-                    finalLogged = true; NetSession.LogWorldNow("final");
-                }
-                else if (Time.unscaledTime >= quitAt)
+                else if (finalLogged && Time.unscaledTime >= quitAt)
                 {
                     quitAt = -1f;
                     if (repeatLeft > 0)
@@ -106,6 +106,37 @@ namespace UncleExtraction
                     else { quitOnEnd = false; Application.Quit(round.State == RoundState.Success ? 0 : 3); }
                 }
             }
+        }
+
+        /// Estado final por CONVERGENCIA (no por una espera fija): resultado, tio asegurado y puertas coherentes entre si
+        /// dentro del mismo intento. Con perdida de paquetes la ronda, la zona y las puertas replican en mensajes distintos.
+        /// Si llega el reinicio o vence el plazo, se registra que falto (sin mezclar con la ronda siguiente).
+        void CheckFinal()
+        {
+            if (quitAt < 0f || finalLogged || !round) return;
+            string missing = FinalMissing();
+            bool restarted = round.Restarts != endAttempt || round.State == RoundState.Running;
+            float waited = Time.unscaledTime - endSeenAt;
+            if (missing == "" && !restarted) { finalLogged = true; NetSession.LogWorldNow("final", $"convergencia={waited:0.00}s"); }
+            else if (restarted) { finalLogged = true; NetSession.LogWorldNow("final", $"convergencia=reinicio({waited:0.00}s) faltan={missing}"); }
+            else if (waited >= FinalMaxWait) { finalLogged = true; NetSession.LogWorldNow("final", $"convergencia=TIMEOUT({FinalMaxWait:0.0}s) faltan={missing}"); }
+            if (finalLogged && !NetAuth.IsServer) quitAt = Mathf.Max(quitAt, Time.unscaledTime + 0.3f); // el cliente sale despues de registrarlo
+        }
+
+        /// Que le falta al estado replicado para ser coherente con el resultado de la ronda ("" = convergio).
+        string FinalMissing()
+        {
+            var faltan = new List<string>();
+            var v = VanDoors.Instance;
+            if (endResult == RoundState.Success)
+            {
+                if (!zone || !zone.Secured) faltan.Add("asegurado");
+                if (!v || v.CurrentPhase != VanDoors.Phase.Closed) faltan.Add("puertas");
+                if (!npc || npc.State != NpcState.Secured) faltan.Add("tio");
+            }
+            else if (zone && zone.Secured) faltan.Add("asegurado_sin_victoria");
+            if (round.State != endResult) faltan.Add("ronda");
+            return string.Join(",", faltan);
         }
 
         public void StartRun(AutopilotMode mode)
@@ -399,6 +430,7 @@ namespace UncleExtraction
         }
 
         // ---------- modo carrito ----------
+        float handleBestDist = 99f, handleProgressAt, handleAroundUntil, handleLastSeen = -99f; Vector3 handleAround;
         bool realignLogged; float cartBestDist = 99f, cartProgressAt; float handleAimFailSince, handleSidestepUntil, handlePhaseSeen = -99f, handleSide = 1f; bool handleOccludedLogged;
 
         IEnumerator CartRun()
@@ -506,6 +538,21 @@ namespace UncleExtraction
                     handlePhaseSeen = Time.time;
                     if (hands.Candidate == handle) handleAimFailSince = Time.time;              // la ve: no esta tapada
                     bool occluded = Time.time - handleAimFailSince > 0.8f;
+                    // Sin acercarse al asa en 1,5 s (el carrito en el medio, con el asa contra una pared): rodear hasta un costado
+                    // libre del asa. Antes caminaba contra el carrito para siempre (pt_s8, 2026-11-16: 280 s quieto).
+                    float dH = Vector3.Distance(Me, Flat(handle.Position));
+                    if (dH < handleBestDist - 0.1f || Time.time - handleLastSeen > 0.5f) { handleBestDist = dH; handleProgressAt = Time.time; }
+                    handleLastSeen = Time.time;
+                    if (Time.time < handleAroundUntil) { LookAt(handle.Position); MoveWorld(handleAround - Me); SetHold(0, false); SetHold(1, false); yield return null; continue; }
+                    if (dH > LabBalance.GrabReach - 0.3f && Time.time - handleProgressAt > 1.5f)
+                    {
+                        Vector3 hf = Flat(handle.Position), across = Flat(cart.transform.right).normalized;
+                        Vector3 a = hf + across * 0.9f, b = hf - across * 0.9f;
+                        bool Free(Vector3 q) => !Physics.CheckCapsule(q + Vector3.up * 0.4f, q + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
+                        handleAround = Free(a) && (!Free(b) || Vector3.Distance(Me, a) <= Vector3.Distance(Me, b)) ? a : b;
+                        handleAroundUntil = Time.time + 2.5f; handleProgressAt = Time.time; handleBestDist = 99f;
+                        Log($"no se acerca al asa desde {Me}: rodea el carrito hasta {handleAround}");
+                    }
                     if (Vector3.Distance(Eye, handle.Position) > LabBalance.GrabReach - 0.2f || occluded)
                     {   // acercarse por detras del asa si ese lado esta libre; si no (pared), directo al asa
                         bool behindFree = !Physics.CheckCapsule(behind + Vector3.up * 0.4f, behind + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);

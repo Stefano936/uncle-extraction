@@ -37,6 +37,19 @@ namespace UncleExtraction
         public bool AnyHeld => HeldSocketId(0) != "" || HeldSocketId(1) != "";
         public bool EffortActive => Mirror ? nEffort.Value : effortActive;
         public GrabSocket Candidate { get; private set; }
+        /// Punto apuntado (en el cono y a la vista) pero fuera de alcance, hasta 1,5 m mas alla: solo para el aviso «acercate».
+        public GrabSocket AimedOutOfReach { get; private set; }
+        public Transform HandVisual(int hand) => hand == 0 ? leftHandVisual : rightHandVisual;
+
+        /// Ocupacion de un punto: en el anfitrion, el registro; en un cliente, las manos replicadas de todos los jugadores.
+        public static int OccupancyOf(GrabSocket s)
+        {
+            if (!s) return 0;
+            if (NetAuth.IsServer) return GrabRegistry.OccupancyOf(s);
+            int n = 0;
+            foreach (var pm in PlayerMotor.All) { if (!pm) continue; var h = pm.GetComponent<PlayerHands>(); if (!h) continue; for (int k = 0; k < 2; k++) if (h.HeldSocketId(k) == s.socketId) n++; }
+            return n;
+        }
         public string LastFeedback { get; private set; } = "";
         public float FeedbackUntil { get; private set; }
         public float InteractProgress01 => Mirror ? nInteractProgress.Value : interactProgress;
@@ -140,6 +153,7 @@ namespace UncleExtraction
             if (!cam) return null;
             Vector3 o = cam.transform.position, f = cam.transform.forward;
             GrabSocket best = null; float bestScore = float.MaxValue;
+            GrabSocket far = null; float farScore = float.MaxValue;
             string h0 = HeldSocketId(0), h1 = HeldSocketId(1);
             foreach (var s in GrabSocket.All)
             {
@@ -147,13 +161,15 @@ namespace UncleExtraction
                 // (el hombro ya tomado le ganaba al otro hombro). El asa del carrito (capacidad 2) sigue disponible.
                 if (s.capacity < 2 && (s.socketId == h0 || s.socketId == h1)) continue;
                 Vector3 to = s.Position - o; float d = to.magnitude;
-                if (d > LabBalance.GrabReach || d < 0.05f) continue;
+                if (d > LabBalance.GrabReach + 1.5f || d < 0.05f) continue;
                 float ang = Vector3.Angle(f, to);
                 if (ang > aimConeDeg) continue;
                 if (Blocked(o, s)) continue;
                 float score = ang + d * 4f;
+                if (d > LabBalance.GrabReach) { if (score < farScore) { farScore = score; far = s; } continue; }
                 if (score < bestScore) { bestScore = score; best = s; }
             }
+            AimedOutOfReach = best ? null : far;
             return best;
         }
 

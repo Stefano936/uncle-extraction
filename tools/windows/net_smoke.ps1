@@ -29,7 +29,11 @@ function Start-Game($name, [string[]]$extra, [string]$exe = $Exe) {
 function Stop-Game($g) { if (-not $g.p.HasExited) { $g.p.CloseMainWindow() | Out-Null; if (-not $g.p.WaitForExit(8000)) { $g.p.Kill() } } }
 function Grep($g, $pat) { if (Test-Path $g.log) { Select-String -Path $g.log -Pattern $pat | ForEach-Object { $_.Line } } }
 function Crashed($g) { (Grep $g 'Crash!!!').Count -gt 0 }
-function Record($name, $state, $detail) { $script:results += [pscustomobject]@{ Escenario = $name; Escena = $Scene; Resultado = $state; Detalle = $detail }; Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail) }
+# Version de la build realmente usada (VERSION.txt lo escribe BuildTools con el commit de origen)
+function BuildVer($exe) { $v = Join-Path (Split-Path -Parent $exe) 'VERSION.txt'; if (Test-Path $v) { ((Get-Content $v -Raw) -replace '\s+', ' ').Trim() } else { 'sin VERSION.txt' } }
+$BuildTag = BuildVer $Exe; $BuildTagDev = BuildVer $ExeDev; $Stamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+Write-Host "build: $BuildTag | dev: $BuildTagDev"
+function Record($name, $state, $detail) { $script:results += [pscustomobject]@{ Fecha = $Stamp; Escenario = $name; Escena = $Scene; Resultado = $state; Build = $(if ($name -like 'netsim*') { $BuildTagDev } else { $BuildTag }); Detalle = $detail }; Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail) }
 function Finals($g) { @(Grep $g '\[NetDiag\] final:') }
 function Field($line, $k) { [regex]::Match("$line", "$k=(\S+)").Groups[1].Value }
 function Last($g, $pat) { (Grep $g $pat) | Select-Object -Last 1 }
@@ -59,10 +63,13 @@ function PairRetry($label, $tag, [string[]]$h, [string[]]$c, [int]$timeout, [str
   if ($null -eq $r) { Record $label 'BLOCKED' "crash al arrancar dos veces; ver $Log\${tag}*_*.log" }
   return $r
 }
+# El estado final lo registra cada proceso al converger (LabAutopilot): resultado, tio asegurado y puertas coherentes entre
+# si dentro del MISMO intento (reinicios), con tiempo maximo. "convergencia=TIMEOUT(...) faltan=..." = no convergio.
+function Converged($l) { $c = Field $l 'convergencia'; $c -ne '' -and $c -notmatch 'TIMEOUT|reinicio' }
 function SameFinal($a, $b) {
-  $a -and $b -and ((Field $a 'ronda') -eq (Field $b 'ronda')) -and ((Field $a 'asegurado') -eq (Field $b 'asegurado')) -and ((Field $a 'tio') -eq (Field $b 'tio')) -and (((Field $a 'puertas') -split '/')[0] -eq ((Field $b 'puertas') -split '/')[0])
+  $a -and $b -and (Converged $a) -and (Converged $b) -and ((Field $a 'reinicios') -eq (Field $b 'reinicios')) -and ((Field $a 'ronda') -eq (Field $b 'ronda')) -and ((Field $a 'asegurado') -eq (Field $b 'asegurado')) -and ((Field $a 'tio') -eq (Field $b 'tio')) -and (((Field $a 'puertas') -split '/')[0] -eq ((Field $b 'puertas') -split '/')[0])
 }
-function Brief($l) { "$(Field $l 'ronda') t=$(Field $l 't') puertas=$(Field $l 'puertas') tio=$(Field $l 'tio') escena=$(Field $l 'escena')" }
+function Brief($l) { "$(Field $l 'ronda') t=$(Field $l 't') intento=$(Field $l 'reinicios') puertas=$(Field $l 'puertas') tio=$(Field $l 'tio') asegurado=$(Field $l 'asegurado') escena=$(Field $l 'escena') conv=$(Field $l 'convergencia')$(if ((Field $l 'faltan') -ne '') { ' faltan=' + (Field $l 'faltan') })" }
 
 for ($run = 1; $run -le $Runs; $run++) {
   foreach ($sc in $Wanted) {
@@ -78,16 +85,16 @@ for ($run = 1; $run -le $Runs; $run++) {
         $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd','-ueRepeat','1') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd','-ueRepeat','1') 420
         if ($r) { $fh = @(Finals $r.h); $fc = @(Finals $r.c); $wins = (Grep $r.h '\[Round\] SUCCESS').Count
           $ok = $wins -ge 2 -and (Field $fh[-1] 'reinicios') -eq '1' -and (Field $fc[-1] 'reinicios') -eq '1' -and (SameFinal $fh[0] $fc[0])
-          Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "victorias=$wins reinicios anfitrion=$(Field $fh[-1] 'reinicios') cliente=$(Field $fc[-1] 'reinicios')" }
+          Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "victorias=$wins reinicios anfitrion=$(Field $fh[-1] 'reinicios') cliente=$(Field $fc[-1] 'reinicios') intento1 anfitrion[$(Brief $fh[0])] cliente[$(Brief $fc[0])]" }
       }
       'lose' {
         # Derrota por tiempo (limite de prueba de 20 s), reintento decidido por el anfitrion y regreso del cliente al menu.
         $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueRoundTime','20','-ueRepeat','1','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueRepeat','1','-ueMenuAtEnd') 150 -waitHost
         if ($r) { $fh = @(Finals $r.h); $fc = @(Finals $r.c)
-          $lostBoth = (Field $fh[0] 'ronda') -eq 'Timeout' -and (Field $fc[0] 'ronda') -eq 'Timeout'
+          $lostBoth = (Field $fh[0] 'ronda') -eq 'Timeout' -and (Field $fc[0] 'ronda') -eq 'Timeout' -and (Converged $fh[0]) -and (Converged $fc[0]) -and (Field $fh[0] 'reinicios') -eq (Field $fc[0] 'reinicios')
           $retried = (Grep $r.h '\[Round\] restart #1').Count -gt 0
           $menu = (Grep $r.c '\[Menu\] en el menu').Count -ge 2   # el menu al arrancar + el regreso
-          Record $label $(if ($lostBoth -and $retried -and $menu) { 'PASS' } else { 'FAIL' }) "derrota_ambos=$lostBoth reintento=$retried cliente_vuelve_al_menu=$menu" }
+          Record $label $(if ($lostBoth -and $retried -and $menu) { 'PASS' } else { 'FAIL' }) "derrota_ambos=$lostBoth reintento=$retried cliente_vuelve_al_menu=$menu anfitrion[$(Brief $fh[0])] cliente[$(Brief $fc[0])]" }
       }
       'netsim' {
         if (-not (Test-Path $ExeDev)) { Record $label 'NOT_RUN' "falta la build de desarrollo $ExeDev"; break }
@@ -151,6 +158,8 @@ for ($run = 1; $run -le $Runs; $run++) {
 }
 $results | Format-Table -AutoSize | Out-String -Width 260
 $results | Export-Csv -NoTypeInformation -Encoding UTF8 (Join-Path $Log "net_smoke_results_$Scene.csv")
+# Historial acumulado: conserva los fallos iniciales y las repeticiones (una repeticion aprobada no borra un FAIL anterior)
+$results | Export-Csv -NoTypeInformation -Encoding UTF8 -Append (Join-Path $Log "net_smoke_history.csv")
 $fail = @($results | Where-Object Resultado -eq 'FAIL').Count
 $incomplete = @($results | Where-Object { $_.Resultado -in 'BLOCKED','NOT_RUN' }).Count
 if ($results.Count -eq 0) { Write-Host 'Sin resultados: ejecucion incompleta' -ForegroundColor Yellow; exit 2 }

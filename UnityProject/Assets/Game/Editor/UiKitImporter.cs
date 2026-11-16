@@ -1,0 +1,76 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
+
+namespace UncleExtraction.EditorTools
+{
+    /// Importa el kit de UI (preproduction/uncle_extraction_kit_UI, INTEGRAR_UI.md) de forma reproducible:
+    /// - sprites de assets/sprites como Sprite (2D and UI) con los bordes 9-slice de data/sprite_import.json;
+    /// - iconos PNG de 64 px como Sprite;
+    /// - fuentes DejaVu (TTF sin modificar + FONT_LICENSE.txt), usadas como Font dinamica de uGUI;
+    /// - catalogos de idioma a Resources/Localization (ui_strings.json = localization_en_es.json sin cambios).
+    /// Las fuentes originales quedan en preproduction/. No se inventan .meta: Unity los genera al importar.
+    public static class UiKitImporter
+    {
+        const string Kit = "../preproduction/uncle_extraction_kit_UI";
+        public const string UiDir = "Assets/Game/Art/UI";
+        public const string LocDir = "Assets/Game/Resources/Localization";
+        // Fuentes: los TTF DejaVu se usan como Font dinamica con UnityEngine.UI.Text (glifos con acentos bajo demanda).
+        // No se crea un TMP_FontAsset: el proyecto no tiene TMP Essentials (TMP_Settings) y su importacion es interactiva.
+        public const string FontPath = UiDir + "/Fonts/DejaVuSans.ttf";
+        public const string FontBoldPath = UiDir + "/Fonts/DejaVuSans-Bold.ttf";
+
+        [System.Serializable] class SpriteRecipe { public string id, file; public int[] border_lbrt_px; public int ppu; }
+        [System.Serializable] class SpriteList { public List<SpriteRecipe> sprites; }
+
+        [MenuItem("Uncle Extraction/Importar kit de UI")]
+        public static void Import()
+        {
+            foreach (var d in new[] { UiDir + "/Sprites", UiDir + "/Icons", UiDir + "/Fonts", LocDir }) Directory.CreateDirectory(d);
+            int n = 0;
+            var recipes = JsonUtility.FromJson<SpriteList>(File.ReadAllText(Path.Combine(Kit, "data/sprite_import.json"))).sprites;
+            foreach (var r in recipes)
+            {
+                string dst = $"{UiDir}/Sprites/{Path.GetFileName(r.file)}";
+                CopyIfChanged(Path.Combine(Kit, r.file), dst);
+                var b = r.border_lbrt_px ?? new int[4];
+                ConfigureSprite(dst, new Vector4(b[0], b[1], b[2], b[3]), r.ppu > 0 ? r.ppu : 100); n++;
+            }
+            foreach (var f in Directory.GetFiles(Path.Combine(Kit, "assets/icons_png"), "*.png"))
+            {
+                string dst = $"{UiDir}/Icons/{Path.GetFileName(f)}";
+                CopyIfChanged(f, dst); ConfigureSprite(dst, Vector4.zero, 100); n++;
+            }
+            foreach (var f in new[] { "DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "FONT_LICENSE.txt" })
+                CopyIfChanged(Path.Combine(Kit, "assets/fonts", f), $"{UiDir}/Fonts/{f}");
+            CopyIfChanged(Path.Combine(Kit, "data/localization_en_es.json"), $"{LocDir}/ui_strings.json");
+            AssetDatabase.Refresh();
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[UiKit] {n} sprites e iconos importados; fuentes DejaVu y catalogo EN/es_UY en {LocDir}");
+        }
+
+        static void CopyIfChanged(string src, string dst)
+        {
+            if (!File.Exists(src)) { Debug.LogWarning($"[UiKit] falta {src}"); return; }
+            if (File.Exists(dst) && new FileInfo(dst).Length == new FileInfo(src).Length && File.ReadAllBytes(dst).SequenceEqual(File.ReadAllBytes(src))) return;
+            File.Copy(src, dst, true); AssetDatabase.ImportAsset(dst);
+        }
+
+        static void ConfigureSprite(string path, Vector4 border, int ppu)
+        {
+            AssetDatabase.ImportAsset(path);
+            var ti = (TextureImporter)AssetImporter.GetAtPath(path); if (!ti) return;
+            bool dirty = ti.textureType != TextureImporterType.Sprite || ti.spriteBorder != border || ti.mipmapEnabled || !ti.alphaIsTransparency
+                         || ti.spritePixelsPerUnit != ppu || ti.textureCompression != TextureImporterCompression.Uncompressed;
+            if (!dirty) return;
+            ti.textureType = TextureImporterType.Sprite; ti.spriteImportMode = SpriteImportMode.Single;
+            ti.spriteBorder = border; ti.spritePixelsPerUnit = ppu; ti.mipmapEnabled = false; ti.alphaIsTransparency = true;
+            ti.sRGBTexture = true; ti.filterMode = FilterMode.Bilinear; ti.textureCompression = TextureImporterCompression.Uncompressed;
+            var settings = new TextureImporterSettings(); ti.ReadTextureSettings(settings); settings.spriteMeshType = SpriteMeshType.FullRect; ti.SetTextureSettings(settings);
+            ti.SaveAndReimport();
+        }
+
+    }
+}

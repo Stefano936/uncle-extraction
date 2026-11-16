@@ -1,0 +1,341 @@
+{
+ "schema": "ui.localization.v0.1",
+ "locale_notes": "Textos propios del juego (no del kit de UI): motivos de bloqueo, partes, avisos de interaccion, menu y controles. Mismo formato que localization_en_es.json.",
+ "strings": [
+  {
+   "key": "part.foot",
+   "en": "foot",
+   "es_UY": "un pie"
+  },
+  {
+   "key": "part.leg",
+   "en": "leg",
+   "es_UY": "una pierna"
+  },
+  {
+   "key": "part.hand",
+   "en": "hand",
+   "es_UY": "una mano"
+  },
+  {
+   "key": "part.arm",
+   "en": "arm",
+   "es_UY": "un brazo"
+  },
+  {
+   "key": "part.head",
+   "en": "head",
+   "es_UY": "la cabeza"
+  },
+  {
+   "key": "part.torso",
+   "en": "torso",
+   "es_UY": "el torso"
+  },
+  {
+   "key": "part.hip",
+   "en": "hip",
+   "es_UY": "la cadera"
+  },
+  {
+   "key": "part.body",
+   "en": "body",
+   "es_UY": "una parte del cuerpo"
+  },
+  {
+   "key": "van.part_outside",
+   "en": "His {part} is still outside: push it in",
+   "es_UY": "Le queda {part} afuera: empujalo adentro"
+  },
+  {
+   "key": "van.player_in_door",
+   "en": "Someone is standing in the van door",
+   "es_UY": "Hay alguien en la puerta"
+  },
+  {
+   "key": "van.object_in_door",
+   "en": "{object} is blocking the van door",
+   "es_UY": "{object} bloquea la puerta"
+  },
+  {
+   "key": "van.not_inside",
+   "en": "He is not inside the van yet",
+   "es_UY": "El tío no está adentro"
+  },
+  {
+   "key": "van.stuck",
+   "en": "He is stuck on something: adjust him",
+   "es_UY": "Está trabado con algo: acomodalo"
+  },
+  {
+   "key": "van.settling",
+   "en": "Settling him in... {percent}%",
+   "es_UY": "Acomodándolo... {percent}%"
+  },
+  {
+   "key": "van.closing",
+   "en": "Closing...",
+   "es_UY": "Cerrando..."
+  },
+  {
+   "key": "van.hold_close",
+   "en": "Hold {key}: close the van",
+   "es_UY": "Mantené {key}: cerrar la camioneta"
+  },
+  {
+   "key": "van.aborted",
+   "en": "The doors reopened: {reason}",
+   "es_UY": "Se reabrieron las puertas: {reason}"
+  },
+  {
+   "key": "cart.strap",
+   "en": "{key}: load him and strap him to the cart",
+   "es_UY": "{key}: subir y asegurar al tío en el carrito"
+  },
+  {
+   "key": "cart.unstrap",
+   "en": "{key}: undo the cart strap",
+   "es_UY": "{key}: soltar la correa del carrito"
+  },
+  {
+   "key": "cart.no_room",
+   "en": "No room to lay him down ({blocker})",
+   "es_UY": "No hay lugar para acostarlo ({blocker})"
+  },
+  {
+   "key": "cart.anchor_first",
+   "en": "First pry his hand off the bar",
+   "es_UY": "Primero soltale la mano de la barra"
+  },
+  {
+   "key": "cart.wriggle",
+   "en": "HE IS WRIGGLING OFF THE CART",
+   "es_UY": "SE QUIERE SOLTAR DEL CARRITO"
+  },
+  {
+   "key": "blocker.player",
+   "en": "a player",
+   "es_UY": "un jugador"
+  },
+  {
+   "key": "blocker.wall",
+   "en": "a wall",
+   "es_UY": "una pared"
+  },
+  {
+   "key": "blocker.object",
+   "en": "an object",
+   "es_UY": "un objeto"
+  },
+  {
+   "key": "interact.help_up",
+   "en": "Hold {key}: help {player} up",
+   "es_UY": "Mantené {key}: ayudar a {player} a levantarse"
+  },
+  {
+   "key": "interact.unanchor",
+   "en": "Hold {key}: pry his hand off",
+   "es_UY": "Mantené {key}: soltarle la mano"
+  },
+  {
+   "key": "grab.lost_distance",
+   "en": "Lost the grip (too far)",
+   "es_UY": "Se soltó (distancia)"
+  },
+  {
+   "key": "grab.socket.belt",
+   "en": "belt",
+   "es_UY": "cinturón"
+  },
+  {
+   "key": "grab.socket.belt_alt",
+   "en": "belt (back)",
+   "es_UY": "cinturón (atrás)"
+  },
+  {
+   "key": "grab.socket.shoulder_l",
+   "en": "left shoulder",
+   "es_UY": "hombro izquierdo"
+  },
+  {
+   "key": "grab.socket.shoulder_r",
+   "en": "right shoulder",
+   "es_UY": "hombro derecho"
+  },
+  {
+   "key": "grab.socket.forearm_l",
+   "en": "left forearm",
+   "es_UY": "antebrazo izquierdo"
+  },
+  {
+   "key": "grab.socket.forearm_r",
+   "en": "right forearm",
+   "es_UY": "antebrazo derecho"
+  },
+  {
+   "key": "grab.socket.ankle_l",
+   "en": "left ankle",
+   "es_UY": "tobillo izquierdo"
+  },
+  {
+   "key": "grab.socket.ankle_r",
+   "en": "right ankle",
+   "es_UY": "tobillo derecho"
+  },
+  {
+   "key": "grab.socket.cart_handle",
+   "en": "cart handle",
+   "es_UY": "asa del carrito"
+  },
+  {
+   "key": "grab.socket.door_handle",
+   "en": "door handle",
+   "es_UY": "manija de la puerta"
+  },
+  {
+   "key": "grab.socket.chair",
+   "en": "chair",
+   "es_UY": "silla"
+  },
+  {
+   "key": "grab.socket.glass",
+   "en": "decoy glass",
+   "es_UY": "vaso señuelo"
+  },
+  {
+   "key": "grab.aim_valid",
+   "en": "{key}: grab the {socket}",
+   "es_UY": "{key}: agarrar {socket}"
+  },
+  {
+   "key": "grab.aim_busy",
+   "en": "{socket}: already taken",
+   "es_UY": "{socket}: ocupado"
+  },
+  {
+   "key": "grab.aim_far",
+   "en": "{socket}: move closer",
+   "es_UY": "{socket}: acercate"
+  },
+  {
+   "key": "hud.tension",
+   "en": "TENSION",
+   "es_UY": "TENSIÓN"
+  },
+  {
+   "key": "menu.lab",
+   "en": "PHYSICS LAB (TEST)",
+   "es_UY": "LABORATORIO (PRUEBA)"
+  },
+  {
+   "key": "menu.lab_articulated",
+   "en": "LAB: ARTICULATED UNCLE (TEST)",
+   "es_UY": "LABORATORIO: TÍO ARTICULADO (PRUEBA)"
+  },
+  {
+   "key": "menu.host_lan",
+   "en": "HOST ON LAN",
+   "es_UY": "CREAR PARTIDA EN LA RED LOCAL"
+  },
+  {
+   "key": "menu.join_lan",
+   "en": "JOIN BY IP",
+   "es_UY": "UNIRSE POR IP"
+  },
+  {
+   "key": "menu.ip",
+   "en": "Host IP",
+   "es_UY": "IP del anfitrión"
+  },
+  {
+   "key": "menu.port",
+   "en": "Port",
+   "es_UY": "Puerto"
+  },
+  {
+   "key": "menu.online_pending",
+   "en": "Online rooms (Relay) need the Unity Cloud project link. LAN works now.",
+   "es_UY": "Las salas online (Relay) necesitan vincular el proyecto de Unity Cloud. La red local ya funciona."
+  },
+  {
+   "key": "settings.controls",
+   "en": "CONTROLS",
+   "es_UY": "CONTROLES"
+  },
+  {
+   "key": "settings.rebind",
+   "en": "Press a key for {action}... (Esc cancels)",
+   "es_UY": "Pulsá una tecla para {action}... (Esc cancela)"
+  },
+  {
+   "key": "settings.conflict",
+   "en": "{key} was used by {action}: swapped",
+   "es_UY": "{key} lo usaba {action}: se intercambiaron"
+  },
+  {
+   "key": "settings.reset_controls",
+   "en": "RESET CONTROLS",
+   "es_UY": "RESTABLECER CONTROLES"
+  },
+  {
+   "key": "settings.mouse",
+   "en": "Mouse sensitivity",
+   "es_UY": "Sensibilidad del mouse"
+  },
+  {
+   "key": "settings.invert_y",
+   "en": "Invert Y",
+   "es_UY": "Invertir eje Y"
+  },
+  {
+   "key": "settings.fov",
+   "en": "Field of view",
+   "es_UY": "Campo de visión"
+  },
+  {
+   "key": "action.GrabLeft",
+   "en": "Grab left",
+   "es_UY": "Agarrar izquierda"
+  },
+  {
+   "key": "action.GrabRight",
+   "en": "Grab right",
+   "es_UY": "Agarrar derecha"
+  },
+  {
+   "key": "action.Interact",
+   "en": "Interact",
+   "es_UY": "Interactuar"
+  },
+  {
+   "key": "action.ReleaseAll",
+   "en": "Release all",
+   "es_UY": "Soltar todo"
+  },
+  {
+   "key": "action.Effort",
+   "en": "Effort",
+   "es_UY": "Esfuerzo"
+  },
+  {
+   "key": "action.Crouch",
+   "en": "Crouch",
+   "es_UY": "Agacharse"
+  },
+  {
+   "key": "action.Dodge",
+   "en": "Dodge",
+   "es_UY": "Esquivar"
+  },
+  {
+   "key": "action.Pause",
+   "en": "Pause",
+   "es_UY": "Pausa"
+  },
+  {
+   "key": "action.Restart",
+   "en": "Restart (lab)",
+   "es_UY": "Reiniciar (laboratorio)"
+  }
+ ]
+}
