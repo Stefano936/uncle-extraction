@@ -9,7 +9,9 @@ namespace UncleExtraction
     /// Con argumentos de linea de comandos de prueba (-ueHost, -ueClient, -ueAutopilot) entra directo al laboratorio.
     public class FrontendMenu : MonoBehaviour
     {
-        public const string GameScene = "PhysicsLab";
+        public const string GameScene = "Bar_LastRound";   // escenario principal
+        public const string LabScene = "PhysicsLab";       // laboratorio de diagnostico
+        public static string SelectedScene = GameScene;
         static bool argsForwarded;
         enum Page { Main, Solo, Friends, Options }
         Page page = Page.Main;
@@ -19,13 +21,16 @@ namespace UncleExtraction
         void Start()
         {
             GameSettings.Load();
+            Debug.Log("[Menu] en el menu");
             Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
             NetAuth.Frozen = false;
             var a = Environment.GetCommandLineArgs();
             if (!argsForwarded)
             {   // argumentos de prueba: entrar directo una sola vez por proceso (al volver al menu, quedarse en el menu)
                 argsForwarded = true;
-                foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueAutopilot") { SceneManager.LoadScene(GameScene); return; }
+                string scene = GameScene;
+                for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueScene") scene = a[i + 1];
+                foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueAutopilot") { SceneManager.LoadScene(scene); return; }
             }
             port = NetSession.Port.ToString();
         }
@@ -47,7 +52,7 @@ namespace UncleExtraction
             if (ushort.TryParse(port, out var p)) NetSession.Port = p;
             RoundDirector.RequestedDifficulty = GameSettings.SoloDifficulty;
             GameSettings.Save();
-            SceneManager.LoadScene(GameScene);
+            SceneManager.LoadScene(SelectedScene);
         }
 
         void OnGUI()
@@ -67,18 +72,19 @@ namespace UncleExtraction
                     if (GUILayout.Button("Opciones", big, GUILayout.Height(52))) page = Page.Options;
                     if (GUILayout.Button("Salir", big, GUILayout.Height(52))) Application.Quit();
                     GUILayout.Space(12);
-                    GUILayout.Label("Prototipo jugable (PhysicsLab). Arte, sonido y escenario definitivos pendientes.", small);
+                    GUILayout.Label("Prototipo jugable: The Last Round con modelos de prototipo. Arte final, sonido y UI definitiva pendientes.", small);
                     break;
                 case Page.Solo:
                     DifficultyPicker();
-                    if (GUILayout.Button("Empezar", big, GUILayout.Height(52))) Play(NetMode.Solo);
+                    if (GUILayout.Button("Empezar: The Last Round", big, GUILayout.Height(52))) { SelectedScene = GameScene; Play(NetMode.Solo); }
+                    if (GUILayout.Button("Laboratorio (diagnostico)", big, GUILayout.Height(40))) { SelectedScene = LabScene; Play(NetMode.Solo); }
                     if (GUILayout.Button("Volver", big, GUILayout.Height(44))) page = Page.Main;
                     break;
                 case Page.Friends:
                     GUILayout.Label("Conexion directa (LAN o misma PC). Internet con codigo: proximamente.", small);
                     DifficultyPicker();
                     GUILayout.BeginHorizontal(); GUILayout.Label("Puerto", label, GUILayout.Width(110)); port = GUILayout.TextField(port, 6, GUILayout.Height(30)); GUILayout.EndHorizontal();
-                    if (GUILayout.Button("Crear partida (anfitrion)", big, GUILayout.Height(50))) Play(NetMode.Host);
+                    if (GUILayout.Button("Crear partida (anfitrion)", big, GUILayout.Height(50))) { SelectedScene = GameScene; Play(NetMode.Host); }
                     GUILayout.Space(10);
                     GUILayout.BeginHorizontal(); GUILayout.Label("IP del anfitrion", label, GUILayout.Width(170)); ip = GUILayout.TextField(ip, 40, GUILayout.Height(30)); GUILayout.EndHorizontal();
                     if (GUILayout.Button("Unirse", big, GUILayout.Height(50))) Play(NetMode.Client);

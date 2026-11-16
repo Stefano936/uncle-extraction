@@ -81,7 +81,7 @@ namespace UncleExtraction
             if (zone && zone.Progress01 > 0f && !zone.Secured) GUI.Label(new Rect(0, H * 0.6f, W, 30), $"Cargando en la camioneta {zone.Progress01 * 100f:0}%", mid);
 
             string timer = round ? (round.TimeLimit > 0 ? $"{Mathf.Max(0, round.TimeLimit - round.Elapsed):0}s" : "sin limite") : "";
-            GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"PhysicsLab  {timer}", mid);
+            GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"{(LevelLayout.Current ? LevelLayout.Current.displayName : "")}  {timer}", mid);
 
             if (autopilot && autopilot.Running) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
             if (Time.unscaledTime < NetSession.StatusUntil) GUI.Label(new Rect(0, H * 0.72f, W, 30), NetSession.StatusMessage, mid);

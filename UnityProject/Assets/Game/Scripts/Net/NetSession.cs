@@ -158,7 +158,8 @@ namespace UncleExtraction
         {
             var r = RoundDirector.Instance; var n = NpcBrain.Instance; var v = VanDoors.Instance; var z = ExtractionZone.Instance;
             return $"ronda={(r ? r.State.ToString() : "-")} t={(r ? r.Elapsed : 0f):0.0} reinicios={(r ? r.Restarts : 0)} tio={(n ? n.State.ToString() : "-")} " +
-                   $"puertas={(v ? v.CurrentPhase.ToString() : "-")}/{(v ? v.Closed01 : 0f):0.00} pose={(z ? z.Progress01 : 0f):0.00} asegurado={(z && z.Secured)}";
+                   $"puertas={(v ? v.CurrentPhase.ToString() : "-")}/{(v ? v.Closed01 : 0f):0.00} pose={(z ? z.Progress01 : 0f):0.00} asegurado={(z && z.Secured)} " +
+                   $"carrito={(TransportCart.Instance ? (TransportCart.Instance.IsLoading ? "Cargando" : TransportCart.Instance.IsStrapped ? "Asegurado" : "Vacio") : "-")} escena={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}";
         }
 
         /// Fuerza un diagnostico ya (por ejemplo al terminar una ronda).

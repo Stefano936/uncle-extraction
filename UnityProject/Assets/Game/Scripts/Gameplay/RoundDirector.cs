@@ -30,7 +30,15 @@ namespace UncleExtraction
         public float Elapsed { get => Mirror ? nElapsed.Value : elapsed; private set => elapsed = value; }
         public Difficulty CurrentDifficulty => Mirror ? nDifficulty.Value : difficulty;
         public int PartySize => Mirror ? nParty.Value : partySize;
-        public float TimeLimit => LabBalance.RoundTime(PartySize, CurrentDifficulty);
+        public float TimeLimit => TimeLimitOverride > 0f ? TimeLimitOverride : LabBalance.RoundTime(PartySize, CurrentDifficulty);
+        /// Solo pruebas: -ueRoundTime s en el anfitrion (verificar derrota y reintento sin esperar 10 minutos).
+        public static float TimeLimitOverride = ParseRoundTime();
+        static float ParseRoundTime()
+        {
+            var a = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueRoundTime" && float.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var t)) return t;
+            return -1f;
+        }
         public float Resistance => LabBalance.Resistance(PartySize, CurrentDifficulty);
         public float AttackInterval => LabBalance.AttackInterval(PartySize, CurrentDifficulty);
         public int Restarts { get => Mirror ? nRestarts.Value : restarts; private set => restarts = value; }
@@ -57,7 +65,7 @@ namespace UncleExtraction
             if (State == RoundState.Running)
             {
                 Elapsed += Time.deltaTime;
-                if (TimeLimit > 0f && Elapsed >= TimeLimit) { State = RoundState.Timeout; GrabRegistry.ReleaseEverything(ReleaseReason.Reset); Debug.Log("[Round] TIMEOUT"); }
+                if (TimeLimit > 0f && Elapsed >= TimeLimit) { State = RoundState.Timeout; GrabRegistry.ReleaseEverything(ReleaseReason.Reset); Debug.Log($"[Round] TIMEOUT at {Elapsed:0.0}s"); }
             }
         }
 

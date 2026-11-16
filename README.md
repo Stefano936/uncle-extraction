@@ -1,36 +1,35 @@
 # UNCLE EXTRACTION
 
-Juego cooperativo de comedia física para 1–4 jugadores: sacar del bar a un tío controlado por el juego que se resiste, golpea, empuja y se aferra al entorno. Objetivo futuro: Windows y Steam.
+Juego cooperativo de comedia física en primera persona, de 1 a 4 jugadores: sacar de un bar a un tío controlado por el juego, que se resiste, se aferra, escapa, golpea y empuja, y meterlo en una camioneta. Unity 6.3 LTS, C#, Windows; Steam más adelante.
 
-**Estado actual: preproducción.** Esta entrega contiene diseño, datos, modelos 3D, interfaz y texturas. Todavía no contiene un proyecto Unity ni una build jugable.
+**Estado: prototipo jugable.** Hay proyecto Unity (`UnityProject/`) y builds de Windows que se generan localmente:
+- Escenario principal **The Last Round** (`Bar_LastRound`) con modelos de prototipo del kit 3D.
+- Laboratorio de diagnóstico (`PhysicsLab`).
+- Menú, partida individual y cooperativo directo en LAN o la misma PC: anfitrión autoritativo con Netcode for GameObjects.
+- Extracción real dentro de la camioneta con cierre de puertas, carrito, cuatro ataques anunciados, vaso señuelo y ayuda para levantarse.
 
-## Empezar
+Pendiente: arte, sonido y UI finales, ragdoll, internet (Relay) y Steam. El estado exacto y la evidencia están en [PROGRESS.md](PROGRESS.md).
 
-1. Leer [00_EMPEZAR_AQUI.md](00_EMPEZAR_AQUI.md).
-2. Claude debe leer [CLAUDE.md](CLAUDE.md) y [PROGRESS.md](PROGRESS.md).
-3. Para incorporar esta entrega al repositorio, seguir [docs/GUIA_GITHUB.md](docs/GUIA_GITHUB.md).
+## Probar
+
+[docs/COMO_PROBAR.md](docs/COMO_PROBAR.md): abrir la build, controles y qué anotar.
+
+## Desarrollar
+
+1. Leer [CLAUDE.md](CLAUDE.md), que tiene las instrucciones vigentes, el entorno y los comandos verificados, y [PROGRESS.md](PROGRESS.md).
+2. Regenerar las escenas, el prefab y las Build Settings: `PhysicsLabBuilder.BuildFromCommandLine`. Build: `BuildTools.BuildWindows` (`-ueDev` para la de desarrollo).
+3. Pruebas: EditMode y PlayMode con el Test Framework de Unity, más la red en dos procesos con `tools/windows/net_smoke.ps1`.
 
 ## Contenido
 
 | Ruta | Uso |
 | --- | --- |
-| `CLAUDE.md` | Instrucciones breves y mapa de lectura por tarea. |
-| `PROGRESS.md` | Estado real y siguiente objetivo. |
-| `PROMPT_MAESTRO_CLAUDE_UNCLE_EXTRACTION.md` | Prompt detallado original, conservado como referencia. |
-| `preproduction/uncle_extraction/` | GDD, especificación técnica, dirección artística, plan, datos, PDF y prompts por hito. |
-| `preproduction/uncle_extraction_kit_3D/` | Ocho modelos en FBX/GLB, Blender, animaciones y guía. |
-| `preproduction/uncle_extraction_kit_UI/` | Pantallas, componentes, iconos, fuentes, localización y reglas. |
-| `preproduction/uncle_extraction_kit_materiales/` | Texturas, modelos con UV, Blender y fichas de interacción. |
-| `DEPENDENCIES.md` | Versiones a fijar durante M0. |
-| `docs/DECISIONES_IMPLEMENTACION.md` | Registro de decisiones nuevas. |
-| `ENTREGA_SHA256.json` | Tamaños y hashes de los archivos entregados. |
+| `UnityProject/` | Proyecto Unity: `Assets/Game` (código, escenas, prefabs, arte importado), `Packages/`, `ProjectSettings/`. |
+| `CLAUDE.md` / `PROGRESS.md` | Instrucciones y estado real (implementado, verificado, pendiente, bloqueado). |
+| `DEPENDENCIES.md` | Versiones fijadas del editor y los paquetes. |
+| `docs/` | Decisiones de implementación, catálogo de recursos integrados y guía de prueba. |
+| `tools/windows/` | Scripts de preparación, pruebas de red y subida. |
+| `preproduction/` | Documentación y kits originales (GDD, especificación, datos, modelos, UI y materiales). Se conservan sin modificar. |
+| `PROMPT_MAESTRO_CLAUDE_UNCLE_EXTRACTION.md`, `00_EMPEZAR_AQUI.md`, `ENTREGA_SHA256.json` | Antecedentes de la entrega inicial (históricos). |
 
-`UnityProject/` será creado por Claude en M0. Cuando exista, se versionarán `Assets/` con sus `.meta`, `Packages/` y `ProjectSettings/`. El `.gitignore` excluye cachés, temporales y builds locales.
-
-## Primera entrega esperada
-
-`PhysicsLab`: movimiento, cámara, dos manos, agarre, liberación, empujón anunciado, caída, recuperación, carrito y extracción de prueba. Después, host y segundo cliente temprano.
-
-La base propuesta es Unity, C#, URP y física autoritativa del anfitrión. La versión exacta del editor y los paquetes se comprobarán y fijarán en M0. Los informes de Blender y validación documental son antecedentes; importación, físicas y red en Unity siguen pendientes.
-
-Los materiales fuente se conservan sin modificaciones dentro de `preproduction/`. Sus manifiestos describen sus paquetes originales; `ENTREGA_SHA256.json` describe esta entrega conjunta al momento de empaquetarla.
+Las builds (`Builds/`), `Library/` y los registros (`.local-setup/`) no se versionan.

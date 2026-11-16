@@ -14,6 +14,7 @@ namespace UncleExtraction.Tests
         const float TimeScale = 1f;   // tiempo real: con 4x el autopiloto controla mas grueso y el carrito pasaba en falso
         const float SimBudget = 300f; // segundos de juego (la ronda Normal individual dura 645 s; Dificil, 525 s)
 
+        protected virtual string Scene => "PhysicsLab";
         NpcBrain npc; NpcBody body; RoundDirector round; ExtractionZone zone; TransportCart cart; LabAutopilot auto;
 
         [UnitySetUp]
@@ -21,7 +22,7 @@ namespace UncleExtraction.Tests
         {
             GrabRegistry.Verbose = false;
             LabInput.ClearSimulated();
-            SceneManager.LoadScene("PhysicsLab");
+            SceneManager.LoadScene(Scene);
             yield return null; yield return new WaitForFixedUpdate();
             for (float t = 0; t < 5f && PlayerControls.Local == null; t += Time.unscaledDeltaTime) yield return null;
             Assert.IsNotNull(PlayerControls.Local, "el anfitrion local deberia generar al jugador");
@@ -53,7 +54,7 @@ namespace UncleExtraction.Tests
             auto.StartRun(mode);
             while (round.State == RoundState.Running && Time.time - start < SimBudget) yield return null;
             if (auto.Running) { auto.StopRun(); Debug.Log("[Autopilot] TIMELINE (sin terminar)\n" + string.Join("\n", auto.Timeline)); }
-            Debug.Log($"[Solo] {mode}/{diff}: {round.State} en {round.Elapsed:0.0}s, ataques={npc.AttacksStarted}, correas={cart.StrapCount}");
+            Debug.Log($"[Solo] {Scene} {mode}/{diff}: {round.State} en {round.Elapsed:0.0}s, ataques={npc.AttacksStarted}, correas={cart.StrapCount}");
             Assert.AreEqual(RoundState.Success, round.State, $"{mode}/{diff}: el intento no termino (tio en {body.Body.position})");
             Assert.IsTrue(zone.Secured);
             Assert.AreEqual(NpcState.Secured, npc.State);
@@ -70,5 +71,12 @@ namespace UncleExtraction.Tests
             yield return Attempt(AutopilotMode.Cart, Difficulty.Normal);
             Assert.Greater(cart.StrapCount, 0, "el modo carrito debe asegurar al tio con la correa (E)");
         }
+    }
+
+    /// Los mismos intentos completos en el escenario principal (no se valida Bar_LastRound con resultados de PhysicsLab).
+    [Timeout(330000)] // los atributos de la clase base no se heredan en NUnit
+    public class SoloAttemptTests_Bar : SoloAttemptTests
+    {
+        protected override string Scene => "Bar_LastRound";
     }
 }

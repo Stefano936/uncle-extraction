@@ -22,13 +22,17 @@ namespace UncleExtraction
         public string Status { get; private set; } = "";
         public readonly List<string> Timeline = new List<string>();
 
+        // Todas las posiciones vienen del escenario (LevelLayout): nada de coordenadas fijas de PhysicsLab.
+        LevelLayout L => LevelLayout.Current;
+        Vector3[] DragPath => L.uncleDragPath;
+        Vector3 DragFinalStand => L.dragFinalStand;
+        Vector3[] CartPullPath => L.cartPullPath;
+        Vector3 OpenSpot => L.cartOpenSpot;
+
         // Ruta del TIO hacia la camioneta: barra -> centro -> puerta (centrado) -> vereda -> costado de la zona.
         // Ruta del TIO: barra -> centro -> puerta (centrado) -> vereda -> pie de la rampa -> dentro de la camioneta.
-        static readonly Vector3[] DragPath = { new Vector3(0, 0, 6.0f), new Vector3(0, 0, 3.0f), new Vector3(0, 0, 1.0f), new Vector3(0, 0, -1.0f), new Vector3(0, 0, -3.5f), new Vector3(0, 0, -6.5f), new Vector3(0, 0, -8.3f), new Vector3(0, 0, -10.6f) };
-        static readonly Vector3 DragFinalStand = new Vector3(0f, 0, -11.95f); // el jugador entra de espaldas hasta la mampara; el tio, pies primero
         // Ruta del JUGADOR tirando del asa (el carrito va detras): recto por el centro de la puerta y,
         // al final, de costado para que el carrito quede atravesado dentro de la zona.
-        static readonly Vector3[] CartPullPath = { new Vector3(0, 0, 2.8f), new Vector3(0, 0, 1.2f), new Vector3(0, 0, -0.4f), new Vector3(0, 0, -3.5f), new Vector3(0, 0, -6.5f), new Vector3(0, 0, -8.2f), new Vector3(0, 0, -11.95f) };
 
         Coroutine routine; HingeJoint door; Vector3 stuckRef; float stuckSince; bool zigLogged, cartClearedDoor;
         NpcState lastNpc; int lastFalls;
@@ -47,8 +51,9 @@ namespace UncleExtraction
             door = FindAnyObjectByType<HingeJoint>();
         }
 
+        string dropAt = ""; bool noClose, menuAtEnd;
+        bool cartTargetsSet; Vector3 cartRef, cartUncleTarget, cartStand;
         long raceAtUnixMs; int repeatLeft; AutopilotMode lastMode; bool quitOnEnd; float quitAt = -1f; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
-        static readonly Vector3 OpenSpot = new Vector3(1.5f, 0f, 2.6f);
 
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
         void Start()
@@ -62,6 +67,9 @@ namespace UncleExtraction
                                 : args[i + 1].Equals("race", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Race : AutopilotMode.Drag;
                 if (args[i] == "-ueRaceAt" && i + 1 < args.Length) long.TryParse(args[i + 1], out raceAtUnixMs);
                 if (args[i] == "-ueRepeat" && i + 1 < args.Length) int.TryParse(args[i + 1], out repeatLeft);
+                if (args[i] == "-ueDropAt" && i + 1 < args.Length) dropAt = args[i + 1];   // prueba: salir del juego en "strap" o "closing"
+                if (args[i] == "-ueNoClose") noClose = true;
+                if (args[i] == "-ueMenuAtEnd") menuAtEnd = true;                           // prueba: al terminar, volver al menu                               // prueba: este jugador nunca cierra la camioneta
                 if (args[i] == "-ueAutopilotDelay" && i + 1 < args.Length) float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out pendingDelay);
             }
         }
@@ -72,7 +80,7 @@ namespace UncleExtraction
             // Ronda nueva: esperar 0,5 s de ronda para tener las posiciones reiniciadas replicadas (en un cliente)
             if (pendingMode.HasValue && PlayerControls.Local && Time.timeSinceLevelLoad >= pendingDelay && round && round.State == RoundState.Running && (NetAuth.IsServer || round.Elapsed > 0.5f))
             { var m = pendingMode.Value; pendingMode = null; lastMode = m; quitAt = -1f; StartRun(m); }
-            if ((quitOnEnd || repeatLeft > 0) && round && round.State != RoundState.Running && !pendingMode.HasValue)
+            if ((quitOnEnd || repeatLeft > 0 || menuAtEnd) && round && round.State != RoundState.Running && !pendingMode.HasValue)
             {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre o reinicie
                 if (quitAt < 0f)
                 {   // el cliente sale antes que el anfitrion: si el anfitrion cierra primero, el cliente veria una desconexion
@@ -89,6 +97,7 @@ namespace UncleExtraction
                         pendingMode = lastMode; pendingDelay = 0f;
                         Debug.Log($"[Autopilot] reintento (quedan {repeatLeft})");
                     }
+                    else if (menuAtEnd) { quitOnEnd = false; Debug.Log("[Autopilot] vuelve al menu"); NetSession.LeaveToMenu(); }
                     else { quitOnEnd = false; Application.Quit(round.State == RoundState.Success ? 0 : 3); }
                 }
             }
@@ -100,7 +109,7 @@ namespace UncleExtraction
             if (PlayerControls.Local) { player = PlayerControls.Local.GetComponent<PlayerMotor>(); hands = PlayerControls.Local.GetComponent<PlayerHands>(); }
             if (!player || !hands) { Debug.LogWarning("[Autopilot] sin jugador local todavia"); return; }
             Mode = mode; Running = true; Timeline.Clear();
-            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
+            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; cartTargetsSet = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
             aimSince = Time.time; nextReport = Time.time + 10f;
             Log($"inicio modo {mode}: tio en {body.Body.position}, jugador en {player.transform.position}");
             routine = StartCoroutine(mode == AutopilotMode.Drag ? DragRun() : mode == AutopilotMode.Cart ? CartRun() : RaceRun());
@@ -171,8 +180,8 @@ namespace UncleExtraction
         {
             // Diagnostico: salto de posicion del jugador (tunel fisico o recolocacion) o cruce de la pared del frente
             if (lastMeAt > 0f && Vector3.Distance(Me, lastMe) > 0.8f) Log($"SALTO jugador {lastMe} -> {Me} en {Time.time - lastMeAt:0.000}s");
-            bool wasIn = lastMe.z > -2f, isIn = Me.z > -2f;
-            if (lastMeAt > 0f && wasIn != isIn && Mathf.Abs(Me.x) > 0.75f) Log($"CRUCE de pared fuera de la puerta: {lastMe} -> {Me}");
+            bool wasIn = lastMe.z > L.doorZ, isIn = Me.z > L.doorZ;
+            if (lastMeAt > 0f && wasIn != isIn && Mathf.Abs(Me.x - L.doorX) > 0.75f) Log($"CRUCE de pared fuera de la puerta: {lastMe} -> {Me}");
             lastMe = Me; lastMeAt = Time.time;
             if (npc.State != lastNpc) { Log($"tio {lastNpc}->{npc.State} '{npc.Intent}'"); lastNpc = npc.State; }
             if (player.FallCount > lastFalls) { Log($"jugador derribado (caidas={player.FallCount})"); lastFalls = player.FallCount; }
@@ -291,11 +300,11 @@ namespace UncleExtraction
 
             Vector3 next = path[wp];
             Vector3 goal = wp == path.Length - 1 ? finalStand : next + (next - uFlat).normalized * 1.1f;
-            if (uFlat.z < -8.0f && Mathf.Abs(uFlat.x) > 1.3f)
+            if (uFlat.z < L.vanRearZ + 1.25f && Mathf.Abs(uFlat.x - L.vanAxisX) > 1.3f)
             {   // quedo al costado de la camioneta: primero volver al eje frente a la rampa
-                next = new Vector3(0f, 0f, -7.4f); goal = next + (next - uFlat).normalized * 1.1f;
+                next = new Vector3(L.vanAxisX, 0f, L.vanRearZ + 1.85f); goal = next + (next - uFlat).normalized * 1.1f;
             }
-            goal.z = Mathf.Max(goal.z, -12.0f); // mampara de la cabina
+            goal.z = Mathf.Max(goal.z, L.vanCabZ + 0.4f); // mampara de la cabina
             float gap = Vector3.Distance(Me, uFlat);
             LabInput.Simulated[(int)Act.Effort] = gap > 1.5f;
             if (gap > 1.8f || Vector3.Distance(Me, goal) < 0.3f) LabInput.SimulatedMove = Vector2.zero; // dejar que el resorte lo traiga
@@ -314,13 +323,16 @@ namespace UncleExtraction
             Status = "cerrando la camioneta";
             if (Holding(0) || Holding(1)) { Log("tio adentro de la camioneta: suelta (Q) y sale a cerrar"); Idle(); yield return Tap(Act.ReleaseAll); yield break; }
             var van = VanDoors.Instance;
-            float side = body.pelvis.position.x > 0f ? -0.8f : 0.8f;
+            float side = body.pelvis.position.x > L.vanAxisX ? -0.8f : 0.8f;
             LabInput.Simulated[(int)Act.Crouch] = false;
-            if (Me.z < -9.0f && Mathf.Abs(Me.x - side) > 0.25f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(side, 1.5f, Me.z)); MoveWorld(new Vector3(side, 0, Me.z) - Me); yield return null; yield break; }
-            if (Me.z < -7.45f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(side, 1.5f, -6f)); MoveWorld(new Vector3(side * 0.5f, 0, -7.25f) - Me); yield return null; yield break; }
+            float laneX = L.vanAxisX + side;
+            if (Me.z < L.vanRearZ + 0.25f && Mathf.Abs(Me.x - laneX) > 0.25f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(laneX, 1.5f, Me.z)); MoveWorld(new Vector3(laneX, 0, Me.z) - Me); yield return null; yield break; }
+            if (Me.z < L.vanRearZ + 1.8f) { LabInput.Simulated[(int)Act.Interact] = false; LookAt(new Vector3(laneX, 1.5f, L.vanRearZ + 3.25f)); MoveWorld(L.CloseStand(side) - Me); yield return null; yield break; }
             LabInput.SimulatedMove = Vector2.zero;
             LookAt(van.closePoint);
+            if (noClose) { Status = "esperando (no cierra)"; LabInput.Simulated[(int)Act.Interact] = false; yield return null; yield break; }
             LabInput.Simulated[(int)Act.Interact] = true;
+            if (dropAt == "closing" && hands.InteractProgress01 > 0.4f) { Drop($"durante el cierre ({hands.InteractProgress01 * 100f:0}%)"); yield break; }
             if (Time.time >= nextCloseLog) { nextCloseLog = Time.time + 2f; Log($"cierre: '{hands.InteractLabel}' {hands.InteractProgress01 * 100f:0}%"); }
             yield return null;
         }
@@ -340,7 +352,7 @@ namespace UncleExtraction
         {
             var belt = GrabSocket.ById("belt");
             bool second = player.Controls && player.Controls.IsSpawned && player.Controls.OwnerClientId % 2 == 1;
-            Vector3 stand = new Vector3(second ? 0.35f : -0.35f, 0f, 5.85f);
+            Vector3 stand = second ? L.raceStandR : L.raceStandL;
             while (Vector3.Distance(Me, stand) > 0.15f) { Status = "yendo al punto de carrera"; MoveWorld(stand - Me); LookAt(belt.Position); yield return null; }
             LabInput.SimulatedMove = Vector2.zero;
             long now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -410,6 +422,7 @@ namespace UncleExtraction
                         Idle(); yield return Tap(Act.ReleaseAll);
                         LookAt(cart.transform.position + Vector3.up * 0.6f);
                         yield return Tap(Act.Interact);
+                        if (dropAt == "strap") { yield return null; Drop("durante la carga del carrito"); yield break; }
                         for (float w = 0; w < 0.8f && !cart.IsStrapped; w += Time.deltaTime) yield return null; // la subida dura 0,45 s
                         if (cart.IsStrapped) Log($"asegura al tio en el carrito (correas={cart.StrapCount})");
                         else
@@ -424,9 +437,16 @@ namespace UncleExtraction
                     }
                     if (HoldingCart()) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
                     Vector3 c = Flat(cart.transform.position), pel = Flat(body.pelvis.position);
-                    Vector3 fromCart = (pel - c).sqrMagnitude > 0.01f ? (pel - c).normalized : Vector3.forward;
-                    Vector3 uncleTarget = c + fromCart * 0.9f;                                   // junto a la caja, del lado del tio
-                    Vector3 stand = c + Vector3.Cross(Vector3.up, fromCart).normalized * 1.3f;     // el jugador, al costado del carrito
+                    // Objetivos fijados al empezar (o si el carrito se movio de verdad): recalcularlos cada frame con la
+                    // posicion actual del carrito hacia que el jugador lo fuera empujando con el cuerpo hasta una pared.
+                    if (!cartTargetsSet || Vector3.Distance(c, cartRef) > 0.6f)
+                    {
+                        Vector3 fromCart = (pel - c).sqrMagnitude > 0.01f ? (pel - c).normalized : Vector3.forward;
+                        cartRef = c; cartTargetsSet = true;
+                        cartUncleTarget = c + fromCart * 0.9f;                                         // junto a la caja, del lado del tio
+                        cartStand = c + fromCart * 0.9f + Vector3.Cross(Vector3.up, fromCart).normalized * 1.6f; // al costado, sin tocar el carrito
+                    }
+                    Vector3 uncleTarget = cartUncleTarget, stand = cartStand;
                     Status = "llevando al tio al carrito";
                     yield return DragToPoint(uncleTarget, stand);
                     continue;
@@ -460,15 +480,15 @@ namespace UncleExtraction
                     if (!Holding(0)) SetHold(0, aimed); if (!Holding(1)) SetHold(1, aimed);
                     yield return null; continue;
                 }
-                while (cartWp < CartPullPath.Length - 1 && (cartWp < 3 || cartClearedDoor) && Vector3.Distance(Me, CartPullPath[cartWp]) < 0.6f) { cartWp++; Log($"jugador hacia el punto {cartWp}/{CartPullPath.Length - 1} con el carrito en {Flat(cart.transform.position)}"); }
+                while (cartWp < CartPullPath.Length - 1 && (cartWp < L.cartPathDoorIndex || cartClearedDoor) && Vector3.Distance(Me, CartPullPath[cartWp]) < 0.6f) { cartWp++; Log($"jugador hacia el punto {cartWp}/{CartPullPath.Length - 1} con el carrito en {Flat(cart.transform.position)}"); }
                 Vector3 goal = CartPullPath[cartWp];
                 // Mientras el carrito no cruzo la puerta (z = -2), tirar recto por el centro: en diagonal se traba en el marco.
-                if (cc.z < -4.0f) cartClearedDoor = true;          // carrito + tio que sobresale, del todo afuera
-                else if (cc.z > -1.0f) cartClearedDoor = false;
-                if (!cartClearedDoor && Me.z < 0.8f)
+                if (cc.z < L.doorZ - 2.0f) cartClearedDoor = true;          // carrito + tio que sobresale, del todo afuera
+                else if (cc.z > L.doorZ + 1.0f) cartClearedDoor = false;
+                if (!cartClearedDoor && Me.z < L.doorZ + 2.8f)
                 {   // antes de la puerta, recentrar el carrito en x; dentro del marco, tirar recto
-                    float gx = cc.z > -0.6f ? Mathf.Clamp(-cc.x, -0.6f, 0.6f) : 0f;
-                    goal = new Vector3(gx, 0f, Mathf.Max(Me.z - 1.0f, -6.5f));
+                    float gx = L.doorX + (cc.z > L.doorZ + 1.4f ? Mathf.Clamp(L.doorX - cc.x, -0.6f, 0.6f) : 0f);
+                    goal = new Vector3(gx, 0f, Mathf.Max(Me.z - 1.0f, L.doorZ - 4.5f));
                 }
 
                 float gap = Vector3.Distance(Me, Flat(handle.Position));
@@ -496,6 +516,13 @@ namespace UncleExtraction
 
         /// Arrastra al tio hasta un punto; en el ultimo tramo el jugador se para en 'stand'.
         IEnumerator DragToPoint(Vector3 uncleTarget, Vector3 stand) => DragStep(new[] { uncleTarget, uncleTarget }, stand, false);
+
+        /// Prueba de desconexion en un momento preciso: registra el estado y cierra el proceso (el anfitrion ve la salida).
+        void Drop(string when)
+        {
+            Log($"DROP {when}"); NetSession.LogWorldNow("drop");
+            Application.Quit(5);
+        }
 
         void Finish()
         {

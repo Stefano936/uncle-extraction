@@ -19,7 +19,6 @@ namespace UncleExtraction
         public float getUpDuration = 0.6f;
         public string playerName = "Jugador 1";
 
-        static readonly Vector3[] SpawnPoints = { new Vector3(0, 0, 2f), new Vector3(1.1f, 0, 2f), new Vector3(-1.1f, 0, 2f), new Vector3(2.2f, 0, 2f) };
 
         // Estado replicado (escribe solo el anfitrion).
         readonly NetworkVariable<PlayerState> nState = new NetworkVariable<PlayerState>(PlayerState.Active);
@@ -76,7 +75,9 @@ namespace UncleExtraction
             playerName = $"Jugador {OwnerClientId + 1}";
             if (IsServer)
             {
-                spawnPos = SpawnPoints[(int)(OwnerClientId % (ulong)SpawnPoints.Length)];
+                var layout = LevelLayout.Current;
+                spawnPos = layout ? layout.Spawn(OwnerClientId) : transform.position;
+                if (layout) { spawnRot = Quaternion.Euler(0f, layout.playerSpawnYaw, 0f); yaw = layout.playerSpawnYaw; rb.rotation = spawnRot; }
                 rb.position = spawnPos; transform.position = spawnPos;
             }
             if (!IsOwner)

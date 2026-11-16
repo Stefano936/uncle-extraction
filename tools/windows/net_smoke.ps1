@@ -1,115 +1,154 @@
 # UNCLE EXTRACTION - pruebas de humo de red con DOS PROCESOS en la misma PC (localhost, 127.0.0.1).
 # No es una prueba LAN ni de internet: registrar esos resultados por separado.
-# Uso: powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 [-Scenario coop|race|repeat|netsim|hostleave|clientdrop|all] [-Runs 1]
-# netsim usa la build de desarrollo (Builds\PhysicsLab_Dev): el simulador de red de NGO solo existe en editor y builds de desarrollo.
-param([string]$Scenario = 'all', [int]$Runs = 1)
+# Uso: powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 [-Scenario <lista separada por comas>|all] [-Scene Bar_LastRound|PhysicsLab] [-Runs 1]
+#   Escenarios: coop, repeat, lose, netsim, race, hostleave, clientdrop, loaddrop, closedrop
+#   netsim usa la build de desarrollo: el simulador de red de NGO solo existe en editor y builds de desarrollo.
+# Codigo de salida: 0 = TODOS los escenarios pedidos dieron PASS; 1 = hubo algun FAIL; 2 = ejecucion incompleta
+#   (algun BLOCKED o NOT_RUN, o no se ejecuto nada). Un 0 nunca encubre escenarios sin correr.
+param([string]$Scenario = 'all', [string]$Scene = 'Bar_LastRound', [int]$Runs = 1)
 $ErrorActionPreference = 'Continue'
 $Repo   = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$Exe    = Join-Path $Repo 'Builds\PhysicsLab\UncleExtraction_PhysicsLab.exe'
-$ExeDev = Join-Path $Repo 'Builds\PhysicsLab_Dev\UncleExtraction_PhysicsLab.exe'
+$Exe    = Join-Path $Repo 'Builds\UncleExtraction\UncleExtraction.exe'
+$ExeDev = Join-Path $Repo 'Builds\UncleExtraction_Dev\UncleExtraction.exe'
 $Log    = Join-Path $Repo '.local-setup\logs\net'
 New-Item -ItemType Directory -Force -Path $Log | Out-Null
 if (-not (Test-Path $Exe)) { Write-Host "Falta la build: $Exe" -ForegroundColor Red; exit 2 }
 $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
+$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop')
+$Wanted = if ($Scenario -eq 'all') { $All } else { $Scenario -split ',' | ForEach-Object { $_.Trim() } }
 $results = @()
 
 function Start-Game($name, [string[]]$extra, [string]$exe = $Exe) {
   $f = Join-Path $Log "$name.log"; if (Test-Path $f) { Remove-Item $f }
-  $p = Start-Process $exe -ArgumentList ($Win + $extra + @('-logFile', "`"$f`"")) -PassThru
+  $p = Start-Process $exe -ArgumentList ($Win + @('-ueScene', $Scene) + $extra + @('-logFile', "`"$f`"")) -PassThru
   return @{ p = $p; log = $f; name = $name }
 }
 function Stop-Game($g) { if (-not $g.p.HasExited) { $g.p.CloseMainWindow() | Out-Null; if (-not $g.p.WaitForExit(8000)) { $g.p.Kill() } } }
 function Grep($g, $pat) { if (Test-Path $g.log) { Select-String -Path $g.log -Pattern $pat | ForEach-Object { $_.Line } } }
 function Crashed($g) { (Grep $g 'Crash!!!').Count -gt 0 }
-function Record($name, $state, $detail) { $script:results += [pscustomobject]@{ Escenario = $name; Resultado = $state; Detalle = $detail }; Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail) }
-function Final($g) { (Grep $g '\[NetDiag\] final:') | Select-Object -First 1 }  # el primer final: lo que vio cada proceso al terminar la ronda en red
+function Record($name, $state, $detail) { $script:results += [pscustomobject]@{ Escenario = $name; Escena = $Scene; Resultado = $state; Detalle = $detail }; Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail) }
+function Finals($g) { @(Grep $g '\[NetDiag\] final:') }
 function Field($line, $k) { [regex]::Match("$line", "$k=(\S+)").Groups[1].Value }
-
-# Cooperativo hasta la extraccion real (camioneta, cierre). Devuelve $null si un proceso crasheo al arrancar.
-function Coop($tag, [string[]]$hostExtra, [string[]]$clientExtra, [string]$exe = $Exe, [int]$timeout = 330) {
-  $h = Start-Game "${tag}_host" (@('-ueHost','-ueListen','127.0.0.1','-uePort','7777','-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd') + $hostExtra) $exe
-  Start-Sleep 4  # arranque escalonado: dos inicializaciones D3D simultaneas ya provocaron un crash del driver
-  $c = Start-Game "${tag}_client" (@('-ueClient','127.0.0.1','-uePort','7777','-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd') + $clientExtra) $exe
-  $null = $c.p.WaitForExit($timeout * 1000); $null = $h.p.WaitForExit(25000); Stop-Game $c; Stop-Game $h
-  if ((Crashed $h) -or (Crashed $c)) { return $null }
-  return @{ h = $h; c = $c }
-}
-function CompareFinal($r) {
-  $fh = Final $r.h; $fc = Final $r.c
-  $same = $fh -and $fc -and ((Field $fh 'ronda') -eq (Field $fc 'ronda')) -and ((Field $fh 'asegurado') -eq (Field $fc 'asegurado')) -and ((Field $fh 'tio') -eq (Field $fc 'tio')) -and (((Field $fh 'puertas') -split '/')[0] -eq ((Field $fc 'puertas') -split '/')[0])
-  $win = ((Field $fh 'ronda') -eq 'Success') -and ((Field $fh 'asegurado') -eq 'True')
-  return @{ ok = ($same -and $win); txt = "anfitrion[$(Field $fh 'ronda') t=$(Field $fh 't') puertas=$(Field $fh 'puertas') tio=$(Field $fh 'tio')] cliente[$(Field $fc 'ronda') t=$(Field $fc 't') puertas=$(Field $fc 'puertas') tio=$(Field $fc 'tio')]" }
-}
-function RunCoop($label, $tag, [string[]]$hostExtra, [string[]]$clientExtra, [string]$exe = $Exe) {
-  $r = Coop $tag $hostExtra $clientExtra $exe
-  if ($null -eq $r) { Write-Host "$label : un proceso crasheo al arrancar (log conservado en $Log\${tag}_*.log). Reintento una vez." -ForegroundColor Yellow; $r = Coop "${tag}_retry" $hostExtra $clientExtra $exe }
-  if ($null -eq $r) { Record $label 'BLOCKED' "crash al arrancar dos veces; ver $Log\${tag}*_*.log"; return $null }
-  return $r
-}
+function Last($g, $pat) { (Grep $g $pat) | Select-Object -Last 1 }
 function RttRange($g, $pat) {
   $v = (Grep $g $pat) | ForEach-Object { [int]([regex]::Match($_, $pat).Groups[1].Value) }
   if ($v) { return "{0}-{1} ms" -f ($v | Measure-Object -Minimum).Minimum, ($v | Measure-Object -Maximum).Maximum } else { return '-' }
 }
+function HostArgs([string[]]$x) { @('-ueHost','-ueListen','127.0.0.1','-uePort','7777') + $x }
+function ClientArgs([string[]]$x) { @('-ueClient','127.0.0.1','-uePort','7777') + $x }
+
+# Dos procesos: anfitrion y cliente. Devuelve $null si alguno crasheo al arrancar (registro conservado).
+function Pair($tag, [string[]]$h, [string[]]$c, [int]$timeout, [string]$exe = $Exe, [switch]$waitHost) {
+  $H = Start-Game "${tag}_host" (HostArgs $h) $exe
+  Start-Sleep 4   # arranque escalonado: dos inicializaciones D3D simultaneas provocaron un crash del driver NVIDIA
+  $C = Start-Game "${tag}_client" (ClientArgs $c) $exe
+  if ($waitHost) { $null = $H.p.WaitForExit($timeout * 1000); $null = $C.p.WaitForExit(15000) }
+  else { $null = $C.p.WaitForExit($timeout * 1000); $null = $H.p.WaitForExit(25000) }
+  Stop-Game $C; Stop-Game $H
+  if ((Crashed $H) -or (Crashed $C)) { return $null }
+  return @{ h = $H; c = $C }
+}
+function PairRetry($label, $tag, [string[]]$h, [string[]]$c, [int]$timeout, [string]$exe = $Exe, [switch]$waitHost) {
+  $r = Pair $tag $h $c $timeout $exe -waitHost:$waitHost
+  if ($null -eq $r) { Write-Host "$label : crash al arrancar (registro en $Log\${tag}_*.log); reintento una vez" -ForegroundColor Yellow; $r = Pair "${tag}_retry" $h $c $timeout $exe -waitHost:$waitHost }
+  if ($null -eq $r) { Record $label 'BLOCKED' "crash al arrancar dos veces; ver $Log\${tag}*_*.log" }
+  return $r
+}
+function SameFinal($a, $b) {
+  $a -and $b -and ((Field $a 'ronda') -eq (Field $b 'ronda')) -and ((Field $a 'asegurado') -eq (Field $b 'asegurado')) -and ((Field $a 'tio') -eq (Field $b 'tio')) -and (((Field $a 'puertas') -split '/')[0] -eq ((Field $b 'puertas') -split '/')[0])
+}
+function Brief($l) { "$(Field $l 'ronda') t=$(Field $l 't') puertas=$(Field $l 'puertas') tio=$(Field $l 'tio') escena=$(Field $l 'escena')" }
 
 for ($run = 1; $run -le $Runs; $run++) {
-  if ($Scenario -in 'coop','all') {
-    $r = RunCoop "coop #$run" "coop_$run" @() @()
-    if ($r) { $cmp = CompareFinal $r; Record "coop #$run" $(if ($cmp.ok) { 'PASS' } else { 'FAIL' }) "$($cmp.txt); rtt anfitrion $(RttRange $r.h 'c1=(\d+)ms')" }
-  }
-  if ($Scenario -in 'repeat','all') {
-    # Ganar, reiniciar (decide el anfitrion) y volver a ganar; los dos procesos deben ver los mismos reinicios.
-    $r = RunCoop "repeat #$run" "repeat_$run" @('-ueRepeat','1') @('-ueRepeat','1')
-    if ($r) { $cmp = CompareFinal $r; $wins = (Grep $r.h '\[Round\] SUCCESS').Count
-      $fh = (Grep $r.h '\[NetDiag\] final:') | Select-Object -Last 1; $fc = (Grep $r.c '\[NetDiag\] final:') | Select-Object -Last 1
-      Record "repeat #$run" $(if ($cmp.ok -and $wins -ge 2 -and (Field $fh 'reinicios') -eq '1' -and (Field $fc 'reinicios') -eq '1') { 'PASS' } else { 'FAIL' }) "victorias=$wins reinicios anfitrion=$(Field $fh 'reinicios') cliente=$(Field $fc 'reinicios'); $($cmp.txt)" }
-  }
-  if ($Scenario -in 'netsim','all') {
-    if (-not (Test-Path $ExeDev)) { Record "netsim #$run" 'NOT_RUN' "falta la build de desarrollo $ExeDev" }
-    else {
-      # Red degradada simulada en el CLIENTE sobre localhost: 120 ms +-20 ms, 3% de perdida (no es LAN ni internet).
-      $r = RunCoop "netsim #$run" "netsim_$run" @() @('-ueNetSim','120','20','3') $ExeDev
-      if ($r) { $cmp = CompareFinal $r; $sim = (Grep $r.c 'simulador de red') | Select-Object -First 1
-        $simTxt = [regex]::Match("$sim", 'simulador de red: [^\(]*').Value; $rttC = RttRange $r.c 'rtt=(\d+)ms'
-        $ok = $cmp.ok -and ("$sim" -match 'activo=True')
-        Record "netsim #$run" $(if ($ok) { 'PASS' } else { 'FAIL' }) ($cmp.txt + "; rtt cliente " + $rttC + "; " + $simTxt) }
+  foreach ($sc in $Wanted) {
+    $label = "$sc #$run"; $tag = "${sc}_${Scene}_$run"
+    switch ($sc) {
+      'coop' {
+        $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd') 330
+        if ($r) { $fh = (Finals $r.h)[0]; $fc = (Finals $r.c)[0]
+          $ok = (SameFinal $fh $fc) -and (Field $fh 'ronda') -eq 'Success' -and (Field $fh 'escena') -eq $Scene
+          Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "anfitrion[$(Brief $fh)] cliente[$(Brief $fc)] rtt $(RttRange $r.h 'c1=(\d+)ms')" }
+      }
+      'repeat' {
+        $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd','-ueRepeat','1') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd','-ueRepeat','1') 420
+        if ($r) { $fh = Finals $r.h; $fc = Finals $r.c; $wins = (Grep $r.h '\[Round\] SUCCESS').Count
+          $ok = $wins -ge 2 -and (Field $fh[-1] 'reinicios') -eq '1' -and (Field $fc[-1] 'reinicios') -eq '1' -and (SameFinal $fh[0] $fc[0])
+          Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "victorias=$wins reinicios anfitrion=$(Field $fh[-1] 'reinicios') cliente=$(Field $fc[-1] 'reinicios')" }
+      }
+      'lose' {
+        # Derrota por tiempo (limite de prueba de 20 s), reintento decidido por el anfitrion y regreso del cliente al menu.
+        $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueRoundTime','20','-ueRepeat','1','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueRepeat','1','-ueMenuAtEnd') 150 -waitHost
+        if ($r) { $fh = Finals $r.h; $fc = Finals $r.c
+          $lostBoth = (Field $fh[0] 'ronda') -eq 'Timeout' -and (Field $fc[0] 'ronda') -eq 'Timeout'
+          $retried = (Grep $r.h '\[Round\] restart #1').Count -gt 0
+          $menu = (Grep $r.c '\[Menu\] en el menu').Count -ge 2   # el menu al arrancar + el regreso
+          Record $label $(if ($lostBoth -and $retried -and $menu) { 'PASS' } else { 'FAIL' }) "derrota_ambos=$lostBoth reintento=$retried cliente_vuelve_al_menu=$menu" }
+      }
+      'netsim' {
+        if (-not (Test-Path $ExeDev)) { Record $label 'NOT_RUN' "falta la build de desarrollo $ExeDev"; break }
+        $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd','-ueNetSim','120','20','3') 330 $ExeDev
+        if ($r) { $fh = (Finals $r.h)[0]; $fc = (Finals $r.c)[0]; $sim = Last $r.c 'simulador de red'
+          $ok = (SameFinal $fh $fc) -and (Field $fh 'ronda') -eq 'Success' -and ("$sim" -match 'activo=True')
+          Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ("anfitrion[" + (Brief $fh) + "] cliente[" + (Brief $fc) + "] rtt cliente " + (RttRange $r.c 'rtt=(\d+)ms') + " (simulado 120 ms +-20, 3% perdida)") }
+      }
+      'race' {
+        $at = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + 17000
+        $r = PairRetry $label $tag @('-ueAutopilot','race','-ueRaceAt',"$at") @('-ueAutopilot','race','-ueRaceAt',"$at",'-ueAutopilotDelay','2') 24 -waitHost
+        if ($r) { $seq = @(Grep $r.h '\[Grab\] (create .*-> belt$|release .*-> belt reason)')
+          $live = 0; $maxLive = 0; foreach ($l in $seq) { if ($l -match 'create') { $live++ } else { $live-- }; if ($live -gt $maxLive) { $maxLive = $live } }
+          $busy = (Grep $r.h '\[Grab\] reject .*socket=belt: SocketBusy').Count
+          $winners = @((Last $r.h 'resultado carrera'), (Last $r.c 'resultado carrera')) | Where-Object { $_ -match "mano izq = 'belt'" }
+          Record $label $(if ($maxLive -eq 1 -and $busy -ge 1 -and $winners.Count -eq 1) { 'PASS' } else { 'FAIL' }) "max_simultaneos=$maxLive rechazos=$busy ganadores=$($winners.Count)" }
+      }
+      'hostleave' {
+        $H = Start-Game "${tag}_host" (HostArgs @()); Start-Sleep 4
+        $C = Start-Game "${tag}_client" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3'))
+        Start-Sleep 14; Stop-Game $H; Start-Sleep 9; Stop-Game $C
+        if ((Crashed $H) -or (Crashed $C)) { Record $label 'BLOCKED' "crash al arrancar; ver $Log\${tag}_*.log"; break }
+        $disc = (Grep $C 'Disconnect Event').Count -gt 0; $menu = (Grep $C '\[Menu\] en el menu').Count -ge 2; $fake = (Grep $C '\[Round\] SUCCESS').Count -gt 0
+        Record $label $(if ($disc -and $menu -and -not $fake) { 'PASS' } else { 'FAIL' }) "desconexion=$disc vuelve_al_menu=$menu victoria_falsa=$fake"
+      }
+      'clientdrop' {
+        $H = Start-Game "${tag}_host" (HostArgs @()); Start-Sleep 4
+        $C = Start-Game "${tag}_client" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3'))
+        Start-Sleep 16; $C.p.Kill(); Start-Sleep 9; Stop-Game $H
+        if ((Crashed $H) -or (Crashed $C)) { Record $label 'BLOCKED' "crash al arrancar; ver $Log\${tag}_*.log"; break }
+        $held = (Grep $H 'NetDiag\] anfitrion: jugadores=2.*agarres=[1-9]').Count -gt 0
+        $after = Last $H 'NetDiag\] anfitrion: jugadores=1 agarres='
+        Record $label $(if ($held -and "$after" -match 'agarres=0') { 'PASS' } elseif (-not $held) { 'NOT_RUN' } else { 'FAIL' }) "agarraba=$held despues=$([regex]::Match("$after",'agarres=\d+').Value)"
+      }
+      'loaddrop' {
+        # El cliente sale del juego en el instante en que pide cargar al tio en el carrito (E): el anfitrion termina o
+        # descarta la carga sin quedar "Cargando", sin agarres huerfanos y sin excepciones.
+        $r = PairRetry $label $tag @() @('-ueAutopilot','cart','-ueAutopilotDelay','3','-ueDropAt','strap') 240
+        if ($r) { $drop = (Grep $r.c 'DROP durante la carga').Count -gt 0
+          Start-Sleep 0
+          $after = Last $r.h 'NetDiag\] anfitrion: jugadores=1 '
+          $exc = (Grep $r.h 'Exception').Count
+          if (-not $drop) { Record $label 'NOT_RUN' "el cliente no llego a cargar al tio en $(240) s (sin desconexion en el momento pedido)" }
+          else { $ok = "$after" -match 'agarres=0' -and "$after" -notmatch 'carrito=Cargando' -and $exc -eq 0
+            Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "anfitrion despues: $([regex]::Match("$after",'agarres=\d+').Value) $([regex]::Match("$after",'carrito=\S+').Value) excepciones=$exc" } }
+      }
+      'closedrop' {
+        # El cliente sale a mitad del cierre de puertas (E mantenida 40 %); el anfitrion (que no cierra) debe cancelar el
+        # cierre: puertas Open, sin asegurar, sin excepciones.
+        $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueNoClose') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueDropAt','closing') 330
+        if ($r) { $drop = (Grep $r.c 'DROP durante el cierre').Count -gt 0
+          $after = Last $r.h 'NetDiag\] anfitrion: jugadores=1 '
+          $exc = (Grep $r.h 'Exception').Count
+          if (-not $drop) { Record $label 'NOT_RUN' "el cliente no llego a cerrar (sin desconexion en el momento pedido)" }
+          else { $ok = "$after" -match 'puertas=Open' -and "$after" -match 'asegurado=False' -and $exc -eq 0
+            Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "anfitrion despues: $([regex]::Match("$after",'puertas=\S+').Value) $([regex]::Match("$after",'asegurado=\S+').Value) excepciones=$exc" } }
+      }
+      default { Record $label 'NOT_RUN' "escenario desconocido" }
     }
   }
-  if ($Scenario -in 'race','all') {
-    $at = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + 16000
-    $h = Start-Game "race_host_$run" @('-ueHost','-ueListen','127.0.0.1','-uePort','7777','-ueAutopilot','race','-ueRaceAt',"$at")
-    Start-Sleep 4
-    $c = Start-Game "race_client_$run" @('-ueClient','127.0.0.1','-uePort','7777','-ueAutopilot','race','-ueRaceAt',"$at",'-ueAutopilotDelay','2')
-    Start-Sleep 21; Stop-Game $c; Stop-Game $h
-    $seq = @(Grep $h '\[Grab\] (create .*-> belt$|release .*-> belt reason)')
-    $live = 0; $maxLive = 0; foreach ($l in $seq) { if ($l -match 'create') { $live++ } else { $live-- }; if ($live -gt $maxLive) { $maxLive = $live } }
-    $busy = (Grep $h '\[Grab\] reject .*socket=belt: SocketBusy').Count
-    $rh = (Grep $h 'resultado carrera') | Select-Object -First 1; $rc = (Grep $c 'resultado carrera') | Select-Object -First 1
-    $winners = @($rh, $rc) | Where-Object { $_ -match "mano izq = 'belt'" }
-    $state = if ((Crashed $h) -or (Crashed $c)) { 'BLOCKED' } elseif (($maxLive -eq 1) -and ($busy -ge 1) -and ($winners.Count -eq 1)) { 'PASS' } else { 'FAIL' }
-    Record "race #$run" $state "max_simultaneos=$maxLive rechazos=$busy ganadores=$($winners.Count)"
-  }
-  if ($Scenario -in 'hostleave','all') {
-    # El anfitrion se va con el cliente agarrando: el cliente no simula ni gana por su cuenta y vuelve al menu.
-    $h = Start-Game "hostleave_host_$run" @('-ueHost','-ueListen','127.0.0.1','-uePort','7777')
-    Start-Sleep 4
-    $c = Start-Game "hostleave_client_$run" @('-ueClient','127.0.0.1','-uePort','7777','-ueAutopilot','drag','-ueAutopilotDelay','3')
-    Start-Sleep 14; Stop-Game $h; Start-Sleep 9; Stop-Game $c
-    $disc = Grep $c 'Disconnect Event|Volviendo al menu'
-    $falseWin = Grep $c '\[Round\] SUCCESS'
-    Record "hostleave #$run" $(if (($disc.Count -gt 0) -and ($falseWin.Count -eq 0)) { 'PASS' } else { 'FAIL' }) "desconexion=$($disc.Count -gt 0) victoria_falsa=$($falseWin.Count -gt 0)"
-  }
-  if ($Scenario -in 'clientdrop','all') {
-    # El cliente se cierra mientras agarra al tio: el anfitrion libera sus agarres (cero huerfanos).
-    $h = Start-Game "clientdrop_host_$run" @('-ueHost','-ueListen','127.0.0.1','-uePort','7777')
-    Start-Sleep 4
-    $c = Start-Game "clientdrop_client_$run" @('-ueClient','127.0.0.1','-uePort','7777','-ueAutopilot','drag','-ueAutopilotDelay','3')
-    Start-Sleep 16; $c.p.Kill(); Start-Sleep 9; Stop-Game $h
-    $held = (Grep $h 'NetDiag\] anfitrion: jugadores=2.*agarres=([1-9])').Count
-    $after = Grep $h 'NetDiag\] anfitrion: jugadores=1 agarres=(\d+)' | Select-Object -Last 1
-    $left = Grep $h 'Se fue el jugador 2'
-    Record "clientdrop #$run" $(if (($held -gt 0) -and ($left.Count -gt 0) -and ("$after" -match 'agarres=0')) { 'PASS' } else { 'FAIL' }) "agarraba=$($held -gt 0) salida_detectada=$($left.Count -gt 0) despues=$([regex]::Match("$after",'agarres=\d+').Value)"
-  }
 }
-$results | Format-Table -AutoSize | Out-String -Width 240
-$results | Export-Csv -NoTypeInformation -Encoding UTF8 (Join-Path $Log 'net_smoke_results.csv')
-if ($results | Where-Object Resultado -eq 'FAIL') { exit 1 } else { exit 0 }
+$results | Format-Table -AutoSize | Out-String -Width 260
+$results | Export-Csv -NoTypeInformation -Encoding UTF8 (Join-Path $Log "net_smoke_results_$Scene.csv")
+$fail = @($results | Where-Object Resultado -eq 'FAIL').Count
+$incomplete = @($results | Where-Object { $_.Resultado -in 'BLOCKED','NOT_RUN' }).Count
+if ($results.Count -eq 0) { Write-Host 'Sin resultados: ejecucion incompleta' -ForegroundColor Yellow; exit 2 }
+if ($fail -gt 0) { Write-Host "FALLARON $fail escenario(s)" -ForegroundColor Red; exit 1 }
+if ($incomplete -gt 0) { Write-Host "Ejecucion incompleta: $incomplete escenario(s) BLOCKED/NOT_RUN" -ForegroundColor Yellow; exit 2 }
+Write-Host "Todos los escenarios pedidos: PASS" -ForegroundColor Green; exit 0

@@ -12,12 +12,12 @@ namespace UncleExtraction.EditorTools
     public static class BuildTools
     {
         [MenuItem("Uncle Extraction/Build Windows PhysicsLab (Mono)")]
-        public static void BuildWindowsMenu() => Build("Mono", "Builds/PhysicsLab");
+        public static void BuildWindowsMenu() => Build("Mono", "Builds/UncleExtraction");
 
         public static void BuildWindows()
         {
             int code = 1;
-            try { code = Build(Arg("-ueBackend") ?? "Mono", Arg("-ueOut") ?? "Builds/PhysicsLab", System.Array.IndexOf(Environment.GetCommandLineArgs(), "-ueDev") >= 0) ? 0 : 1; }
+            try { code = Build(Arg("-ueBackend") ?? "Mono", Arg("-ueOut") ?? "Builds/UncleExtraction", System.Array.IndexOf(Environment.GetCommandLineArgs(), "-ueDev") >= 0) ? 0 : 1; }
             catch (Exception e) { Debug.LogException(e); }
             if (Application.isBatchMode) EditorApplication.Exit(code);
         }
@@ -27,17 +27,22 @@ namespace UncleExtraction.EditorTools
             var impl = backend.Equals("IL2CPP", StringComparison.OrdinalIgnoreCase) ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, impl);
             PlayerSettings.runInBackground = true; // el anfitrion (M2) no debe congelarse sin foco; tambien las pruebas de humo
-            if (!File.Exists(PhysicsLabBuilder.ScenePath) || !File.Exists(FrontendBuilder.ScenePath)) PhysicsLabBuilder.Build();
+            if (!File.Exists(PhysicsLabBuilder.ScenePath) || !File.Exists(PhysicsLabBuilder.BarScenePath) || !File.Exists(FrontendBuilder.ScenePath)) PhysicsLabBuilder.Build();
             var opts = new BuildPlayerOptions
             {
-                scenes = new[] { FrontendBuilder.ScenePath, PhysicsLabBuilder.ScenePath },
+                scenes = new[] { FrontendBuilder.ScenePath, PhysicsLabBuilder.BarScenePath, PhysicsLabBuilder.ScenePath },
                 target = BuildTarget.StandaloneWindows64,
-                locationPathName = Path.Combine(outDir, "UncleExtraction_PhysicsLab.exe"),
+                locationPathName = Path.Combine(outDir, "UncleExtraction.exe"),
                 options = dev ? BuildOptions.Development : BuildOptions.None // dev: simulador de red y logs de depuracion
             };
             var report = BuildPipeline.BuildPlayer(opts);
             var s = report.summary;
             Debug.Log($"[Build] dev={dev} backend={impl} result={s.result} errors={s.totalErrors} warnings={s.totalWarnings} size={s.totalSize} time={s.totalTime} path={opts.locationPathName}");
+            if (s.result == BuildResult.Succeeded)
+            {   // instrucciones junto al ejecutable (docs/COMO_PROBAR.md)
+                var guide = Path.Combine(Directory.GetParent(Application.dataPath).Parent.FullName, "docs", "COMO_PROBAR.md");
+                if (File.Exists(guide)) File.Copy(guide, Path.Combine(outDir, "LEEME.txt"), true);
+            }
             return s.result == BuildResult.Succeeded;
         }
 

@@ -33,15 +33,33 @@ namespace UncleExtraction.EditorTools
             if (Application.isBatchMode) EditorApplication.Exit(code);
         }
 
+        public const string BarScenePath = "Assets/Game/Scenes/Bar_LastRound.unity";
+
+        /// Reconstruye TODO lo reproducible: prefab del jugador, PhysicsLab (diagnostico), Bar_LastRound (principal),
+        /// menu y Build Settings (Frontend, Bar_LastRound, PhysicsLab).
         public static void Build()
         {
             Directory.CreateDirectory("Assets/Game/Scenes"); Directory.CreateDirectory(MatDir); Directory.CreateDirectory("Assets/Game/Prefabs");
+            builtPlayerPrefab = null;
+            BuildLevel(LevelSpecs.Lab());
+            BuildLevel(LevelSpecs.Bar());
+            FrontendBuilder.Build();
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(FrontendBuilder.ScenePath, true), new EditorBuildSettingsScene(BarScenePath, true), new EditorBuildSettingsScene(ScenePath, true) };
+            AssetDatabase.SaveAssets();
+            Debug.Log("[LabBuilder] escenas: Frontend, Bar_LastRound, PhysicsLab");
+        }
+
+        static GameObject builtPlayerPrefab;
+        internal static Material floorM, wallM, woodM, metalM;
+
+        static void BuildLevel(LevelSpec spec)
+        {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            var floorM = Mat("Floor", new Color(0.35f, 0.3f, 0.27f));
-            var wallM = Mat("Wall", new Color(0.62f, 0.52f, 0.4f));
-            var woodM = Mat("Wood", new Color(0.45f, 0.27f, 0.15f));
-            var metalM = Mat("Metal", new Color(0.6f, 0.62f, 0.65f));
+            floorM = Mat("Floor", new Color(0.35f, 0.3f, 0.27f));
+            wallM = Mat("Wall", new Color(0.62f, 0.52f, 0.4f));
+            woodM = Mat("Wood", new Color(0.45f, 0.27f, 0.15f));
+            metalM = Mat("Metal", new Color(0.6f, 0.62f, 0.65f));
             var cartM = Mat("Cart", new Color(0.15f, 0.45f, 0.85f));
             var vanM = Mat("Van", new Color(0.9f, 0.9f, 0.85f));
             var walkM = Mat("Sidewalk", new Color(0.55f, 0.55f, 0.55f));
@@ -68,34 +86,31 @@ namespace UncleExtraction.EditorTools
             NoRenderer(Box("Bound_W", bounds, new Vector3(-8.5f, 1.5f, -9f), new Vector3(0.2f, 3f, 14f), wallM));
             NoRenderer(Box("Bound_E", bounds, new Vector3(8.5f, 1.5f, -9f), new Vector3(0.2f, 3f, 14f), wallM));
             NoRenderer(Box("Bound_S", bounds, new Vector3(0f, 1.5f, -16.2f), new Vector3(17f, 3f, 0.2f), wallM));
-            Box("Wall_Back", env, new Vector3(0, 1.5f, 10.1f), new Vector3(14.4f, 3, 0.2f), wallM);
-            Box("Wall_L", env, new Vector3(-7.1f, 1.5f, 4), new Vector3(0.2f, 3, 12.4f), wallM);
-            Box("Wall_R", env, new Vector3(7.1f, 1.5f, 4), new Vector3(0.2f, 3, 12.4f), wallM);
-            Box("Wall_Front_L", env, new Vector3(-3.875f, 1.5f, -2), new Vector3(6.25f, 3, 0.2f), wallM);
-            Box("Wall_Front_R", env, new Vector3(3.875f, 1.5f, -2), new Vector3(6.25f, 3, 0.2f), wallM);
-            Box("Door_Lintel", env, new Vector3(0, 2.6f, -2), new Vector3(1.5f, 0.8f, 0.2f), wallM);
-            NoCollider(Box("Sidewalk", env, new Vector3(0, 0.01f, -5.5f), new Vector3(14, 0.02f, 6), walkM));
-            Box("Low_Obstacle", env, new Vector3(3, 0.15f, 3.5f), new Vector3(1.5f, 0.3f, 0.6f), woodM);
-            Box("Ramp", env, new Vector3(-5, 0.3f, 0.5f), new Vector3(2, 0.1f, 3), woodM).transform.rotation = Quaternion.Euler(-12, 0, 0);
-            Box("Table_Fixed", env, new Vector3(-3.5f, 0.4f, 4), new Vector3(1.2f, 0.8f, 1.2f), woodM);
-            Box("Bar_Counter", env, new Vector3(0, 0.55f, 8.6f), new Vector3(6, 1.1f, 0.8f), woodM);
-            var rail = Prim(PrimitiveType.Cylinder, "Anchor_Rail", env, new Vector3(0, 0.95f, 8.12f), new Vector3(0.06f, 3f, 0.06f), metalM);
-            rail.transform.rotation = Quaternion.Euler(0, 0, 90);
-            NoCollider(Prim(PrimitiveType.Cylinder, "Stool_Home", env, new Vector3(0.9f, 0.37f, 7.4f), new Vector3(0.4f, 0.37f, 0.4f), metalM));
+            // Paredes del bar: interior x[-halfX, halfX], z[doorZ, backZ]; abertura de 1,5 m en el muro frontal (GDD: puertas de 1,5 x 2,2 m)
+            float hx = spec.halfX, bz = spec.backZ, dz = spec.doorZ, dx = spec.doorX, depth = bz - dz, midZ = (bz + dz) * 0.5f;
+            Box("Wall_Back", env, new Vector3(0, 1.5f, bz + 0.1f), new Vector3(hx * 2f + 0.4f, 3, 0.2f), wallM);
+            Box("Wall_L", env, new Vector3(-hx - 0.1f, 1.5f, midZ), new Vector3(0.2f, 3, depth + 0.4f), wallM);
+            Box("Wall_R", env, new Vector3(hx + 0.1f, 1.5f, midZ), new Vector3(0.2f, 3, depth + 0.4f), wallM);
+            float leftLen = (dx - 0.75f) + hx, rightLen = hx - (dx + 0.75f);
+            Box("Wall_Front_L", env, new Vector3(-hx + leftLen * 0.5f, 1.5f, dz), new Vector3(leftLen, 3, 0.2f), wallM);
+            Box("Wall_Front_R", env, new Vector3(hx - rightLen * 0.5f, 1.5f, dz), new Vector3(rightLen, 3, 0.2f), wallM);
+            Box("Door_Lintel", env, new Vector3(dx, 2.6f, dz), new Vector3(1.5f, 0.8f, 0.2f), wallM);
+            NoCollider(Box("Sidewalk", env, new Vector3(0, 0.01f, dz - 3.5f), new Vector3(14, 0.02f, 6), walkM));
+            var rail = spec.furnish(env);
 
             // Silla liviana (objeto dinamico)
-            var chair = Box("Chair_Light", env, new Vector3(-2.3f, 0.3f, 4), new Vector3(0.45f, 0.6f, 0.45f), woodM);
+            var chair = Box("Chair_Light", env, spec.chairPos, new Vector3(0.45f, 0.6f, 0.45f), woodM);
             var chairRb = chair.AddComponent<Rigidbody>(); chairRb.mass = 6f;
             Socket(chair.transform, "chair", "silla", Vector3.zero, chairRb, 1);
 
             // Vaso senuelo sobre la mesa fija (GDD 09): se lleva con una mano y distrae al tio si esta apoyado y a la vista
-            var glass = Prim(PrimitiveType.Cylinder, "Decoy_Glass", env, new Vector3(-3.5f, 0.9f, 4f), new Vector3(0.09f, 0.08f, 0.09f), Mat("Beer", new Color(0.95f, 0.7f, 0.15f)));
+            var glass = Prim(PrimitiveType.Cylinder, "Decoy_Glass", env, spec.glassPos, new Vector3(0.09f, 0.08f, 0.09f), Mat("Beer", new Color(0.95f, 0.7f, 0.15f)));
             var glassRb = glass.AddComponent<Rigidbody>(); glassRb.mass = 0.4f; glassRb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             Socket(glass.transform, "glass", "vaso senuelo", Vector3.zero, glassRb, 1);
             glass.AddComponent<DecoyGlass>();
 
             // Puerta con bisagra (origen en la bisagra, abertura 1,5 m)
-            var door = new GameObject("Exit_Door"); door.transform.SetParent(env); door.transform.position = new Vector3(-0.75f, 0, -2);
+            var door = new GameObject("Exit_Door"); door.transform.SetParent(env); door.transform.position = new Vector3(dx - 0.75f, 0, dz);
             var doorRb = door.AddComponent<Rigidbody>(); doorRb.mass = 25f; doorRb.angularDamping = 2f;
             var panel = Box("Door_Panel", door.transform, new Vector3(0, 0, 0), new Vector3(1.46f, 2.1f, 0.06f), woodM);
             panel.transform.localPosition = new Vector3(0.75f, 1.06f, 0);
@@ -103,6 +118,8 @@ namespace UncleExtraction.EditorTools
             hinge.anchor = Vector3.zero; hinge.axis = Vector3.up; hinge.useLimits = true;
             hinge.limits = new JointLimits { min = -100, max = 100 };
             hinge.useSpring = true; hinge.spring = new JointSpring { spring = 15, damper = 4, targetPosition = 0 };
+            if (spec.kitVisuals && KitVisual("exit_door", door.transform, Vector3.zero, Quaternion.Euler(0, 180, 0)))
+                HideRenderer(panel); // visual del kit (origen en la bisagra, hoja hacia -x: girada 180 grados); colision: el panel primitivo
 
             // Camioneta fija y zona de extraccion (detras de las puertas traseras)
             // Camioneta de pasajeros hueca (kit 3D: 2,52 x 5,38 x 2,33 m). Abertura trasera en z = -9,25 con dos hojas;
@@ -144,7 +161,7 @@ namespace UncleExtraction.EditorTools
             var zone = zoneGo.AddComponent<ExtractionZone>();
 
             // Carrito
-            var cartGo = new GameObject("Transport_Cart"); cartGo.transform.position = new Vector3(2.5f, 0, 1f);
+            var cartGo = new GameObject("Transport_Cart"); cartGo.transform.SetPositionAndRotation(spec.cartPos, Quaternion.Euler(0, spec.cartYaw, 0));
             var cartRb = cartGo.AddComponent<Rigidbody>(); cartRb.mass = 30f; cartRb.linearDamping = 0.3f; cartRb.angularDamping = 3f;
             cartRb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             cartRb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -168,16 +185,20 @@ namespace UncleExtraction.EditorTools
             var cart = cartGo.AddComponent<TransportCart>(); cart.bed = bed; cart.strapPoint = strapPt;
 
             // Tio
-            var npcGo = BuildUncle(uncleM, skinM, unclePM, out var body, out var brain, out var pres);
+            var npcGo = BuildUncle(uncleM, skinM, unclePM, spec.home, out var body, out var brain, out var pres);
             brain.anchorRail = rail.GetComponent<Collider>();
-            var home = new GameObject("Uncle_Home").transform; home.position = new Vector3(0, 0, 7.0f); brain.home = home;
+            var home = new GameObject("Uncle_Home").transform; home.position = spec.home; brain.home = home;
             cart.npc = body; zone.npc = body;
 
             // Jugador
             // Jugador: prefab de red que el anfitrion genera por cada conexion (no vive en la escena).
-            var playerGo = BuildPlayer(handM, playerPM, out var motor, out var hands);
-            var playerPrefab = PrefabUtility.SaveAsPrefabAsset(playerGo, PlayerPrefabPath);
-            UnityEngine.Object.DestroyImmediate(playerGo);
+            if (!builtPlayerPrefab)
+            {
+                var playerGo = BuildPlayer(handM, playerPM, out var motor, out var hands);
+                builtPlayerPrefab = PrefabUtility.SaveAsPrefabAsset(playerGo, PlayerPrefabPath);
+                UnityEngine.Object.DestroyImmediate(playerGo);
+            }
+            var playerPrefab = builtPlayerPrefab;
 
             // Objetos de escena replicados (fisica del anfitrion; clientes cinematicos e interpolados)
             Networked(npcGo); Networked(cartGo); Networked(door); Networked(chair); Networked(glass);
@@ -185,10 +206,12 @@ namespace UncleExtraction.EditorTools
 
             // Camara general mientras no hay jugador local (conectando)
             var overview = new GameObject("Overview_Camera").AddComponent<Camera>();
-            overview.transform.SetPositionAndRotation(new Vector3(6f, 6f, -9f), Quaternion.Euler(28f, -35f, 0f)); overview.depth = -10;
+            overview.transform.SetPositionAndRotation(spec.overviewPos, Quaternion.Euler(spec.overviewEuler)); overview.depth = -10;
 
             // Sistemas
             var sys = new GameObject("Systems");
+            var layout = sys.AddComponent<LevelLayout>(); spec.layout(layout);
+            layout.doorX = dx; layout.doorZ = dz; layout.vanAxisX = 0f; layout.vanRearZ = rearZ; layout.vanCabZ = cabZ;
             sys.AddComponent<NetworkObject>();
             var session = sys.AddComponent<NetSession>(); session.playerPrefab = playerPrefab;
             var round = sys.AddComponent<RoundDirector>();
@@ -201,24 +224,20 @@ namespace UncleExtraction.EditorTools
             auto.npc = brain; auto.body = body; auto.cart = cart; auto.zone = zone; auto.round = round;
             hud.autopilot = auto;
 
-            EditorSceneManager.SaveScene(scene, ScenePath);
+            EditorSceneManager.SaveScene(scene, spec.scenePath);
             // NGO genera GlobalObjectIdHash en OnValidate, que en modo batch no siempre corre: forzarlo y guardar de nuevo.
             int hashed = ForceNetworkIds(UnityEngine.Object.FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None));
-            hashed += ForceNetworkIds(new[] { playerPrefab.GetComponent<NetworkObject>() });
+            if (spec.scenePath == ScenePath) hashed += ForceNetworkIds(new[] { playerPrefab.GetComponent<NetworkObject>() });
             EditorUtility.SetDirty(playerPrefab); AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"[LabBuilder] network ids: {hashed}");
-            FrontendBuilder.Build();
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(FrontendBuilder.ScenePath, true), new EditorBuildSettingsScene(ScenePath, true) };
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[LabBuilder] PhysicsLab saved: {ScenePath} sockets={UnityEngine.Object.FindObjectsByType<GrabSocket>(FindObjectsSortMode.None).Length}");
+            EditorSceneManager.SaveScene(scene, spec.scenePath);
+            Debug.Log($"[LabBuilder] {spec.name}: network ids {hashed}, sockets={UnityEngine.Object.FindObjectsByType<GrabSocket>(FindObjectsSortMode.None).Length}, guardada en {spec.scenePath}");
         }
 
-        static GameObject BuildUncle(Material uncleM, Material skinM, PhysicsMaterial pm, out NpcBody body, out NpcBrain brain, out NpcPresentation pres)
+        static GameObject BuildUncle(Material uncleM, Material skinM, PhysicsMaterial pm, Vector3 at, out NpcBody body, out NpcBrain brain, out NpcPresentation pres)
         {
             var go = new GameObject("Uncle");
-            go.transform.SetPositionAndRotation(new Vector3(0, 0, 7.0f), Quaternion.Euler(0, 180, 0));
+            go.transform.SetPositionAndRotation(at, Quaternion.Euler(0, 180, 0));
             var rb = go.AddComponent<Rigidbody>();
             var cap = go.AddComponent<CapsuleCollider>(); cap.center = new Vector3(0, 0.95f, 0); cap.height = 1.9f; cap.radius = 0.33f; cap.sharedMaterial = pm;
             var t = go.transform;
@@ -317,13 +336,13 @@ namespace UncleExtraction.EditorTools
             return s;
         }
 
-        static GameObject Box(string n, Transform parent, Vector3 worldPos, Vector3 size, Material m)
+        internal static GameObject Box(string n, Transform parent, Vector3 worldPos, Vector3 size, Material m)
         {
             var g = GameObject.CreatePrimitive(PrimitiveType.Cube); g.name = n; g.transform.SetParent(parent, true);
             g.transform.position = worldPos; g.transform.localScale = size; g.GetComponent<Renderer>().sharedMaterial = m; return g;
         }
         static GameObject LocalBox(string n, Transform parent, Vector3 localPos, Vector3 size, Material m) => LocalPrim(PrimitiveType.Cube, n, parent, localPos, size, m);
-        static GameObject Prim(PrimitiveType p, string n, Transform parent, Vector3 worldPos, Vector3 scale, Material m)
+        internal static GameObject Prim(PrimitiveType p, string n, Transform parent, Vector3 worldPos, Vector3 scale, Material m)
         {
             var g = GameObject.CreatePrimitive(p); g.name = n; g.transform.SetParent(parent, true);
             g.transform.position = worldPos; g.transform.localScale = scale; g.GetComponent<Renderer>().sharedMaterial = m; return g;
@@ -333,10 +352,23 @@ namespace UncleExtraction.EditorTools
             var g = GameObject.CreatePrimitive(p); g.name = n; g.transform.SetParent(parent, false);
             g.transform.localPosition = localPos; g.transform.localScale = scale; g.GetComponent<Renderer>().sharedMaterial = m; return g;
         }
-        static GameObject NoRenderer(GameObject g) { var r = g.GetComponent<Renderer>(); if (r) UnityEngine.Object.DestroyImmediate(r); return g; }
-        static GameObject NoCollider(GameObject g) { var c = g.GetComponent<Collider>(); if (c) UnityEngine.Object.DestroyImmediate(c); return g; }
+        internal static GameObject NoRenderer(GameObject g) { var r = g.GetComponent<Renderer>(); if (r) UnityEngine.Object.DestroyImmediate(r); return g; }
+        internal static void HideRenderer(GameObject g) { var r = g.GetComponent<Renderer>(); if (r) r.enabled = false; }
 
-        static Material Mat(string name, Color c)
+        /// Instancia un FBX del kit 3D como visual (sin colisiones: la colision la ponen primitivas simples). null si falta.
+        internal static GameObject KitVisual(string id, Transform parent, Vector3 localPos, Quaternion localRot)
+        {
+            var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{Kit3DImporter.Folder}/{id}.fbx");
+            if (!src) { Debug.LogWarning($"[LabBuilder] falta el FBX del kit: {id}"); return null; }
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(src);
+            go.name = "Kit_" + id; go.transform.SetParent(parent, false); go.transform.localPosition = localPos; go.transform.localRotation = localRot;
+            foreach (var c in go.GetComponentsInChildren<Collider>()) UnityEngine.Object.DestroyImmediate(c);
+            return go;
+        }
+
+        internal static GameObject NoCollider(GameObject g) { var c = g.GetComponent<Collider>(); if (c) UnityEngine.Object.DestroyImmediate(c); return g; }
+
+        internal static Material Mat(string name, Color c)
         {
             string path = $"{MatDir}/{name}.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(path);
