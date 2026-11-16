@@ -157,6 +157,16 @@ namespace UncleExtraction
         }
 
         /// Mueve al jugador en direccion mundial 'dir' (sin importar hacia donde mira).
+        /// Destino intermedio si el destino esta del otro lado del muro frontal: primero alinearse con la puerta de este lado,
+        /// despues cruzarla recto. Sin esto, desde la vereda caminaba en linea recta contra la pared hacia el tio.
+        Vector3 Via(Vector3 dest)
+        {
+            float dz = L.doorZ; bool meOut = Me.z < dz - 0.15f, destOut = dest.z < dz - 0.15f;
+            if (meOut == destOut) return dest;
+            if (Mathf.Abs(Me.x - L.doorX) > 0.45f) return new Vector3(L.doorX, 0f, dz + (meOut ? -0.9f : 0.9f));
+            return new Vector3(L.doorX, 0f, dz + (meOut ? 0.9f : -0.9f));
+        }
+
         void MoveWorld(Vector3 dir)
         {
             dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; return; }
@@ -209,7 +219,7 @@ namespace UncleExtraction
                 Status = "desanclando";
                 Vector3 hp = npc.AnchorHandSocket.Position; LookAt(hp);
                 bool near = Vector3.Distance(Eye, hp) <= LabBalance.GrabReach;
-                MoveWorld(near ? Vector3.zero : hp - player.transform.position);
+                MoveWorld(near ? Vector3.zero : Via(hp) - player.transform.position);
                 LabInput.Simulated[(int)Act.Interact] = near;
                 return true;
             }
@@ -238,7 +248,7 @@ namespace UncleExtraction
             float flat = Vector3.Distance(Flat(Eye), Flat(target.Position));
             if (d > LabBalance.GrabReach || target != lastTarget) aimSince = Time.time;
             lastTarget = target;
-            MoveWorld(flat > stopAt ? target.Position - player.transform.position : Vector3.zero);
+            MoveWorld(flat > stopAt ? Via(target.Position) - player.transform.position : Vector3.zero);
             bool press = d <= LabBalance.GrabReach && (hands.Candidate == target || (hands.Candidate && Time.time - aimSince > 1.5f));
             if (hand == 0) SetHold(0, press); else SetHold(1, press);
         }
@@ -274,7 +284,7 @@ namespace UncleExtraction
                     LabInput.Simulated[(int)Act.Crouch] = second.Position.y < 0.7f;
                     LookAt(second.Position);
                     bool near = Vector3.Distance(Flat(Eye), Flat(second.Position)) <= 0.9f;
-                    MoveWorld(near ? Vector3.zero : second.Position - player.transform.position);
+                    MoveWorld(near ? Vector3.zero : Via(second.Position) - player.transform.position);
                     SetHold(1, near && hands.Candidate == second);
                     yield return null;
                     if (Holding(1)) Log($"agarra {Held(1).socketId} con la derecha"); else SetHold(1, false);
@@ -413,7 +423,7 @@ namespace UncleExtraction
                         if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
                         LookAt(h.Position);
                         bool reach = Vector3.Distance(Eye, h.Position) <= LabBalance.GrabReach - 0.2f;
-                        MoveWorld(reach ? Vector3.zero : h.Position - player.transform.position);
+                        MoveWorld(reach ? Vector3.zero : Via(h.Position) - player.transform.position);
                         SetHold(0, reach && hands.Candidate == h); SetHold(1, reach && hands.Candidate == h);
                         yield return null; continue;
                     }
@@ -504,7 +514,7 @@ namespace UncleExtraction
                             Log($"asa sin linea de vision desde {Me} (mira: {(hands.Candidate ? hands.Candidate.socketId : "nada")}): se corre de costado");
                         }
                         else if (!handleOccludedLogged) { handleOccludedLogged = true; Log($"asa tapada desde {Me}: rodea hasta {Flat(dest)}"); }
-                        LookAt(handle.Position); MoveWorld(dest - player.transform.position); SetHold(0, false); SetHold(1, false); yield return null; continue; }
+                        LookAt(handle.Position); MoveWorld(Via(dest) - player.transform.position); SetHold(0, false); SetHold(1, false); yield return null; continue; }
                     LookAt(handle.Position); LabInput.SimulatedMove = Vector2.zero;
                     bool aimed = hands.Candidate == handle;
                     if (aimed) { handleAimFailSince = Time.time; handleOccludedLogged = false; }
