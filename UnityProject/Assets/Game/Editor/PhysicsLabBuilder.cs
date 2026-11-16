@@ -121,8 +121,13 @@ namespace UncleExtraction.EditorTools
             hinge.anchor = Vector3.zero; hinge.axis = Vector3.up; hinge.useLimits = true;
             hinge.limits = new JointLimits { min = -100, max = 100 };
             hinge.useSpring = true; hinge.spring = new JointSpring { spring = 15, damper = 4, targetPosition = 0 };
-            if (spec.kitVisuals && KitVisual("exit_door", door.transform, Vector3.zero, Quaternion.Euler(0, 180, 0)))
-                HideRenderer(panel); // visual del kit (origen en la bisagra, hoja hacia -x: girada 180 grados); colision: el panel primitivo
+            bool kitDoor = spec.kitVisuals && KitVisual("exit_door", door.transform, Vector3.zero, Quaternion.Euler(0, 180, 0));
+            if (kitDoor) HideRenderer(panel); // visual del kit (origen en la bisagra, hoja hacia -x: girada 180 grados); colision: el panel primitivo
+            // Manija agarrable cerca del borde libre (abrir, sostener o cerrar la hoja) y reten de apertura (ExitDoor)
+            Socket(door.transform, "door_handle", "manija de la puerta", new Vector3(1.3f, 1.0f, 0f), doorRb, 1);
+            if (!kitDoor) foreach (var side in new[] { -1f, 1f })
+                NoCollider(LocalPrim(PrimitiveType.Cube, "Door_Knob", door.transform, new Vector3(1.3f, 1.0f, side * 0.06f), new Vector3(0.12f, 0.03f, 0.05f), metalM));
+            door.AddComponent<ExitDoor>();
 
             // Camioneta fija y zona de extraccion (detras de las puertas traseras)
             // Camioneta de pasajeros hueca (kit 3D: 2,52 x 5,38 x 2,33 m). Abertura trasera en z = -9,25 con dos hojas;

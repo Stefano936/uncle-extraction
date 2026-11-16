@@ -55,7 +55,7 @@ namespace UncleExtraction
                 var rb = c.attachedRigidbody;
                 if (!rb) continue;                              // piso, rampa y paredes no bloquean
                 if (rb.GetComponent<PlayerMotor>()) { what = "Hay alguien en la puerta"; return true; }
-                if (NpcBody.Of(rb)) { what = "Le queda algo afuera"; return true; }
+                if (NpcBody.Of(rb)) { what = $"Le queda {NpcBody.PartLabel(rb)} afuera: empujalo adentro"; return true; }
                 what = $"{rb.name} bloquea la puerta"; return true;
             }
             return false;

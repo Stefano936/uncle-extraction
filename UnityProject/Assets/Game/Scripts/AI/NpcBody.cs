@@ -100,6 +100,21 @@ namespace UncleExtraction
         // ---------- contrato comun ----------
         public bool Owns(Rigidbody b) => b && bodies.Contains(b);
         public static NpcBody Of(Rigidbody b) { if (!b) return null; var n = b.GetComponent<NpcBody>(); return n ? n : b.GetComponentInParent<NpcBody>(); }
+        /// Nombre para el jugador de la parte del tio a la que pertenece un cuerpo ("un pie", "la cabeza"...). Lo usan los
+        /// avisos de cierre y carga para decir que hay que acomodar. Sin lado izquierdo/derecho: depende de donde se mire.
+        public static string PartLabel(Rigidbody b)
+        {
+            var part = b ? b.GetComponent<RagdollPart>() : null;
+            if (!part) return Of(b) && Of(b).Articulated ? "la cadera" : "una parte del cuerpo";
+            string r = part.role ?? "";
+            if (r.StartsWith("calf")) return "un pie";
+            if (r.StartsWith("thigh")) return "una pierna";
+            if (r.StartsWith("forearm")) return "una mano";
+            if (r.StartsWith("upper_arm")) return "un brazo";
+            if (r == "head") return "la cabeza";
+            if (r == "chest") return "el torso";
+            return "una parte del cuerpo";
+        }
         public int GrabCount() { int n = 0; foreach (var b in bodies) n += GrabRegistry.CountOnBody(b); return n; }
         public void ReleaseAllGrabs(ReleaseReason r) { foreach (var b in bodies) GrabRegistry.ReleaseAllOnBody(b, r); }
         public void OwnersOnBody(List<IGrabOwner> result)

@@ -565,7 +565,9 @@ namespace UncleExtraction
                     yield return null; continue;
                 }
                 realignLogged = false;
-                if (Time.time - stuckSince > 2f)
+                // Junto a la puerta no zigzaguear: tirar recto por el eje la saca aun atravesada (StuckRecoveryTests, poses de
+                // 45 y 90 grados); el zigzag era lo que terminaba de girarla contra la pared.
+                if (Time.time - stuckSince > 2f && Mathf.Abs(cc.z - L.doorZ) > 1.6f)
                 {
                     float phase = Mathf.Repeat(Time.time - stuckSince - 2f, 2.4f);
                     if (!zigLogged) { zigLogged = true; Log($"carrito trabado en {cc}: zigzag"); }

@@ -140,8 +140,12 @@ namespace UncleExtraction
             if (!cam) return null;
             Vector3 o = cam.transform.position, f = cam.transform.forward;
             GrabSocket best = null; float bestScore = float.MaxValue;
+            string h0 = HeldSocketId(0), h1 = HeldSocketId(1);
             foreach (var s in GrabSocket.All)
             {
+                // un punto que ya sostiene la otra mano no compite: sin esto no se podia elegir un segundo punto cercano
+                // (el hombro ya tomado le ganaba al otro hombro). El asa del carrito (capacidad 2) sigue disponible.
+                if (s.capacity < 2 && (s.socketId == h0 || s.socketId == h1)) continue;
                 Vector3 to = s.Position - o; float d = to.magnitude;
                 if (d > LabBalance.GrabReach || d < 0.05f) continue;
                 float ang = Vector3.Angle(f, to);
