@@ -5,7 +5,7 @@
 ## Estado vigente
 
 **Build de referencia** (local, no versionada): `Builds/UncleExtraction/UncleExtraction.exe` (release Mono) y `Builds/UncleExtraction_Dev/` (desarrollo, con el simulador de red).
-- Ambas salen del commit **`ba443bf`**. `VERSION.txt` lo genera `BuildTools` en cada build: commit, si había cambios sin commitear, fecha y tipo.
+- Ambas salen del commit **`14a8c6c`**. `VERSION.txt` lo genera `BuildTools` en cada build: commit, si había cambios sin commitear, fecha y tipo.
 - `LEEME.txt` es una copia de `docs/COMO_PROBAR.md`.
 
 **Qué se puede jugar:**
@@ -43,6 +43,7 @@
 | Regresión anterior (atascos) | `a68a318` | PM **61/62**. FAIL del bot de carrito en el laboratorio articulado: el asa quedó contra la pared y el bot caminó contra el carrito 280 s. Corregido en el bot (`dfedb95`): ahora rodea hasta un costado libre del asa. |
 | Regresión completa (lobby) | `9dc24c6` | PM **86 pasadas, 0 fallas, 1 omitida** (pie en la abertura con el cuerpo central: no aplica), EditMode 14/14. AUTO 12/12: Bar carrito 92,0 s, arrastre 21,2/69,8 s; laboratorio carrito 27,4 s, arrastre 49,7/84,6 s; articulado carrito 34,1 s, arrastre 18,9/60,8 s. |
 | Sonido y subtítulos (`AudioDialogueTests`, `UiTests`) | commit siguiente | EditMode 16/16. La prueba encontró saturación en el impacto (pico 1,13), corregida normalizando los clips. Las cuatro señales de ataque son distintas entre sí. Catálogo: 54 líneas del perfil alcohol, columnas limpias con el filtro, enfriamiento respetado. PM interfaz y flujo 5/5, con líneas reales en el registro (`round_start`, `grab_first`, `round_timeout`). Sin prueba de escucha humana. |
+| **Red completa con sala, sonido y subtítulos** (`-Scenario all`, 12 escenarios) | build `14a8c6c` | NET **12/12 PASS en la primera tanda, sin repeticiones**: coop, repeat, lose (derrota a los 10 s), netsim, race, hostleave, clientdrop, loaddrop, closedrop, **party3** (3 procesos), **party4** (4 procesos), latejoin. Todos los finales convergieron dentro del mismo intento. Solo localhost: no es LAN ni internet. |
 | **Red con sala previa, 3 y 4 procesos** (`-Scenario all`, 12 escenarios) | build `f2b4ebc` | NET primera tanda: **10/12**. Pasaron coop, netsim (RTT ~252 ms), race, hostleave, clientdrop, loaddrop, closedrop, **party3** (3 procesos, inicio desde la sala con 3, los tres con victoria y mismo final convergido), **party4** (4 procesos, ídem con 4) y **latejoin** (cliente que llega con la ronda iniciada: el anfitrión lo rechaza y el cliente ve `error.already_started`). **FAIL `repeat` y `lose`, los dos de instrumentación:** iniciar desde la sala cuenta un reinicio (el script esperaba `reinicios=1`) y el límite de prueba de 20 s ahora corre desde el inicio en la sala (el bot ganó a los 16,6 s). Script corregido (intento inicial + 1; límite de 10 s). Repetición de esos dos: PASS (2/2). Una tanda completa nueva sigue pendiente. Todo en localhost: no es LAN ni internet. |
 | Red en Bar_LastRound, `-Scenario all` | build `ba443bf` | NET **9/9 PASS en la primera tanda, sin repeticiones**: coop, repeat, lose, netsim (RTT del cliente ~255 ms, 3 % de pérdida), race, hostleave, clientdrop, loaddrop, closedrop. Todos los finales convergieron dentro del mismo intento (`convergencia=0,00s`). Historial en `.local-setup/logs/net/net_smoke_history.csv`. |
 | **Atascos abiertos** (`StuckRecoveryTests`, jugador guionado con entradas normales) | `a68a318` y siguientes | PM 5/5. Pie en la abertura: el HUD dice «Le queda un pie afuera: empujalo adentro» y el jugador lo resuelve. Jugador detrás del tío: sale por el costado. Carrito torcido en la puerta (45° y 90°) con el tío atado: sale tirando recto del asa. Fuerza de la puerta medida. |
@@ -88,7 +89,6 @@
 
 ## Próxima acción exacta
 
-1. Tanda completa nueva de `net_smoke -Scenario all` (12 escenarios) con el script corregido; regresión completa PlayMode sobre el código del lobby.
 2. Pantalla de conexión con cancelación y nombres de jugador elegibles.
 
 ## Historial (resultados de sesiones anteriores, sin reescribir)
