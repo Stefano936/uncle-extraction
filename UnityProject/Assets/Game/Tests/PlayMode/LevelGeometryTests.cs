@@ -11,7 +11,7 @@ namespace UncleExtraction.Tests
     /// y sin tramos de la ruta principal bloqueados por geometria fija (recorridos imposibles).
     public class LevelGeometryTests
     {
-        static IEnumerable<string> Scenes() { yield return "Bar_LastRound"; yield return "PhysicsLab"; }
+        static IEnumerable<string> Scenes() { yield return "Bar_LastRound"; yield return "PhysicsLab"; yield return "PhysicsLab_Articulated"; }
 
         static bool IsStatic(Collider c) => c.attachedRigidbody == null && !c.isTrigger;
 

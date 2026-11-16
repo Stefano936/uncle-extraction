@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-15 (sesión 6: escenario principal `Bar_LastRound`, `LevelLayout`, red en el escenario principal, fuga).
+Última actualización: 2026-11-16 (sesión 7: tío articulado como variante de prueba en `PhysicsLab_Articulated`; pruebas de resistencia separadas por modo).
 
 **Builds de referencia** (locales, no versionadas), generadas desde el commit de esta actualización:
 - `Builds/UncleExtraction/UncleExtraction.exe`: release Mono, para jugar. Incluye `LEEME.txt` con controles e instrucciones (`docs/COMO_PROBAR.md`).
@@ -21,6 +21,7 @@ Los niveles de evidencia son: **PM** = PlayMode en el editor (anfitrión en loop
 | Vaso señuelo, ayuda para levantarse, rescate técnico | PM. |
 | Fuga: libre, vuelve a su banco **por la puerta** (no contra el muro); más rápido (2,2 m/s) si hay alguien a menos de 3 m | PM: `Uncle_Escapes_BackInsideThroughTheDoor`. |
 | Red en **Bar_LastRound** (NET, `tools/windows/net_smoke.ps1 -Scene Bar_LastRound`) | coop PASS (24,1/24,0 s, mismo estado final en ambos); reintento tras ganar PASS (2 victorias, `reinicios=1` en ambos); derrota por tiempo → reintento → cliente al menú PASS; red simulada 120 ms ±20 ms y 3 % de pérdida PASS (59,0/58,9 s, RTT del cliente ~246 ms); carrera por el socket PASS; salida del anfitrión PASS (el cliente vuelve al menú sin ganar solo); desconexión del cliente agarrando PASS (0 agarres); **desconexión durante la carga del carrito** PASS (anfitrión con 0 agarres, carrito «Vacío», sin excepciones); **desconexión durante el cierre** PASS (puertas `Open`, sin asegurar, sin excepciones). |
+| **Tío articulado (ragdoll reducido), variante de prueba** en `PhysicsLab_Articulated` (11 cuerpos, 110 kg en total, malla del kit ligada; el central sigue en PhysicsLab y Bar_LastRound) | PM: las 18 pruebas de laboratorio corren en las dos variantes (`PhysicsLabPlayTests` y `PhysicsLabPlayTests_Articulated`): agarres y 10 reinicios sin huérfanos, arrastre, empujón y caída del jugador, cierre con dos jugadores y abortos, extracción por partes (medio afuera no cierra), reinicio a mitad del cierre y de la carga (sin colisiones ignoradas residuales tío-carrito ni tío-jugador), señuelo, ayuda, fuga por la puerta, rescate técnico de todo el cuerpo, intento de soltarse del carrito con señal, masa 110 kg, quieto sin temblor ni uniones estiradas, empujón leve sin caída, se levanta pegado a la baranda. NET (localhost, `-Scene PhysicsLab_Articulated`): coop, carrera por el socket, desconexión agarrando, durante la carga, durante el cierre y salida del anfitrión PASS. |
 | `net_smoke.ps1` con códigos estrictos | 0 solo si todos los escenarios pedidos dieron PASS; 1 si hubo FAIL; 2 si algo quedó BLOCKED o NOT_RUN. Cierra procesos previos del juego y marca BLOCKED si el puerto está ocupado. |
 
 Los fallos de esta etapa ya están corregidos y se verificaron después:

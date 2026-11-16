@@ -78,6 +78,17 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Prueba de intento completo: la condición «el tío atacó» pasó a «atacó **o** intentó soltarse del carrito». Asegurado en el carrito, el tío no ataca: su resistencia según el GDD 05 son los intentos de soltarse. Las condiciones de extracción no cambiaron.
 - `net_smoke.ps1`: código 0 solo si todos los escenarios pedidos dieron PASS.
 
+## 2026-11-16 — Tío articulado (ragdoll reducido) como variante de prueba
+
+- Pruebas de resistencia separadas por modo: en arrastre se exige que el tío **ataque** (`AttacksStarted > 0`); en carrito, que **intente soltarse** (`WrigglesStarted > 0`). Además hay una prueba específica (`Cart_StrappedUncle_SignalsAndTriesToWriggleFree`) que exige la señal visible antes del intento. Reemplaza el «atacó o intentó soltarse» anterior, que podía ocultar que uno de los dos fallara.
+- `NpcBody` es ahora un contrato común a las dos variantes: `AllBodies`, `Colliders`, `Owns`, `Of`, `GrabCount`, `ReleaseAllGrabs`, `SetKinematic`, `TeleportTo`, `MoveKinematic`, `TotalMass`. Carrito, extracción, puertas, manos, rescate técnico, director y autopiloto usan solo el contrato; el cuerpo central (una cápsula) sigue en PhysicsLab y Bar_LastRound como respaldo.
+- Variante articulada (`ArticulatedUncleBuilder`, escena `PhysicsLab_Articulated`): pelvis raíz + pecho, cabeza, brazos, antebrazos, muslos y pantorrillas (11 cuerpos) sobre las posiciones de reposo medidas del rig del kit. Masa total 110 kg repartida (20/30/7/2×4/2×3/2×11/2×8,5), no 110 por parte. `ConfigurableJoint` con traslación bloqueada, límites angulares, proyección (3 cm / 5°) contra estiramientos y slerp drive hacia la pose de reposo (fuerte de pie, flojo caído). Colisiones internas ignoradas entre todas las partes del tío; `maxDepenetrationVelocity` 3 m/s y 12 iteraciones del solver para evitar explosiones.
+- Equilibrio: resorte de altura sobre la pelvis (raycast desde el centro de masa total, fuerza limitada a 1,6× el peso) + el par de equilibrio existente en pelvis y pecho. No es un ragdoll activo con pasos de piernas: el tío se desliza como el central, con la pose reducida encima. Alternativa descartada por ahora: locomoción con piernas, costosa y frágil para el alcance inicial.
+- Sockets con los mismos ids sobre la parte que corresponde (antebrazos, tobillos en las pantorrillas, hombros en el pecho, cinturón en la pelvis). El ancla del tío a la baranda se crea en la parte de la mano.
+- Extracción: en lugar de una cápsula única, cada collider del tío se verifica contra sólidos con `ComputePenetration` (tolerancia 4 cm). Rescate técnico: vigila todas las partes (posición no finita, bajo el mapa, velocidad) y devuelve el cuerpo entero a la última pose segura; no interviene por jugar mal.
+- Red: el anfitrión simula; cada parte tiene `NetworkTransform` de autoridad del servidor y en clientes las partes son cinemáticas (pose reducida replicada).
+- Malla del kit: `uncle_prototype.fbx` girado 180° y ligado a las partes con `RagdollVisual` (cada hueso copia la pose de su parte con el desfase medido en reposo). El lado de cada hueso se elige por cercanía, no por el sufijo `.L/.R`.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.

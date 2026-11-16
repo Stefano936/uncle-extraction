@@ -50,6 +50,10 @@ namespace UncleExtraction
         int attacksStarted, hitsLanded, wrigglesStarted;
         /// Intentos de soltarse del carrito (su forma de resistencia mientras esta asegurado). Solo anfitrion.
         public int WrigglesStarted => wrigglesStarted;
+        /// Presupuesto minimo (fraccion) para intentar soltarse del carrito: agotado no lo intenta (GDD 05, fatiga).
+        public const float WriggleMinBudget01 = 0.4f;
+        /// Intervalo maximo entre intentos de soltarse (7 + 0..3 s).
+        public const float WriggleMaxInterval = 10f;
         public int AttacksStarted { get => Mirror ? nAttacks.Value : attacksStarted; private set => attacksStarted = value; }
         public int HitsLanded { get => Mirror ? nHits.Value : hitsLanded; private set => hitsLanded = value; }
         public string LastRejection { get; private set; } = "";
@@ -69,7 +73,7 @@ namespace UncleExtraction
 
         public void RefreshPlayers() { players.Clear(); players.AddRange(PlayerMotor.All); }
 
-        int GrabCount => GrabRegistry.CountOnBody(body.Body);
+        int GrabCount => body.GrabCount();
         bool Grabbed => GrabCount > 0;
         float Now => Time.time;
 
@@ -197,7 +201,7 @@ namespace UncleExtraction
             if (Strapped)
             {
                 if (State != NpcState.Carried) Enter(NpcState.Carried, 0f, "en el carrito");
-                if (Now >= nextWriggleAt && Budget > BudgetMax * 0.4f) { StartWriggle(); return; }
+                if (Now >= nextWriggleAt && Budget > BudgetMax * WriggleMinBudget01) { StartWriggle(); return; }
                 if (Grabbed && Now >= nextAttackAt) TryStartAttack();
                 return;
             }
@@ -299,7 +303,7 @@ namespace UncleExtraction
 
             if (CurrentAttack.id == AttackId.Shake)
             {
-                GrabRegistry.OwnersOnBody(body.Body, owners);
+                body.OwnersOnBody(owners);
                 int max = LabBalance.ShakeMaxTargets(diff);
                 foreach (var o in owners)
                 {
@@ -377,9 +381,11 @@ namespace UncleExtraction
                 if (d < best) { best = d; hand = s; bestPt = pt; }
             }
             if (!hand) { LastRejection = "sin anclaje al alcance"; return false; }
-            anchorJoint = gameObject.AddComponent<ConfigurableJoint>();
+            // la union sale de la parte que tiene la mano (antebrazo en el cuerpo articulado; la raiz en el central)
+            var handBody = hand.body && body.Owns(hand.body) ? hand.body : body.Body;
+            anchorJoint = handBody.gameObject.AddComponent<ConfigurableJoint>();
             anchorJoint.autoConfigureConnectedAnchor = false;
-            anchorJoint.anchor = transform.InverseTransformPoint(hand.Position);
+            anchorJoint.anchor = handBody.transform.InverseTransformPoint(hand.Position);
             anchorJoint.connectedAnchor = bestPt; // connectedBody null = mundo
             anchorJoint.xMotion = anchorJoint.yMotion = anchorJoint.zMotion = ConfigurableJointMotion.Limited;
             anchorJoint.linearLimit = new SoftJointLimit { limit = 0.12f };

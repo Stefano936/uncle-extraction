@@ -72,7 +72,7 @@ namespace UncleExtraction
             Vector3 pelvisLocal = npc.pelvis ? npc.transform.InverseTransformPoint(npc.pelvis.position) : new Vector3(0f, 0.95f, 0f);
             Vector3 rootPos = bedPt - lying * pelvisLocal;
             if (!LyingVolumeFree(rootPos, lying, out string blocker)) { LastFailure = "No hay lugar para acostarlo (" + blocker + ")"; Debug.Log($"[Cart] strap bloqueado por {blocker}"); return false; }
-            GrabRegistry.ReleaseAllOnBody(npc.Body, ReleaseReason.Secured); // nadie lo sostiene mientras sube
+            npc.ReleaseAllGrabs(ReleaseReason.Secured); // nadie lo sostiene mientras sube
             StartCoroutine(LoadRoutine(rootPos, lying, bedPt, pelvisLocal));
             LastFailure = "";
             return true;
@@ -94,7 +94,7 @@ namespace UncleExtraction
             for (int i = 0; i < n; i++)
             {
                 var col = overlap[i]; var arb = col.attachedRigidbody;
-                if (arb == npc.Body || arb == rb) continue;
+                if (npc.Owns(arb) || arb == rb) continue;
                 blocker = arb && arb.GetComponent<PlayerMotor>() ? "un jugador" : arb ? arb.name : col.name; return false;
             }
             return true;
@@ -105,22 +105,22 @@ namespace UncleExtraction
             loading = true;
             var nb = npc.Body;
             IgnoreUncle(true); // el tio cinematico atravesaria las barandas y despediria al carrito
+            IgnorePlayers(true); // ni barre a los jugadores (las extremidades del articulado los lanzaban por el aire)
             Vector3 p0 = nb.position; Quaternion r0 = nb.rotation;
-            nb.linearVelocity = Vector3.zero; nb.angularVelocity = Vector3.zero; nb.isKinematic = true;
+            nb.linearVelocity = Vector3.zero; nb.angularVelocity = Vector3.zero; npc.SetKinematic(true); // todas las partes
             const float dur = 0.45f;
             for (float t = 0; t < dur; t += Time.fixedDeltaTime)
             {
                 float k = Mathf.SmoothStep(0f, 1f, t / dur);
                 // el destino sigue al carrito si se mueve durante la subida
                 Vector3 bp = transform.TransformPoint(new Vector3(0f, 0.72f, 0f)); Quaternion lr = Quaternion.LookRotation(Vector3.up, transform.forward);
-                nb.MovePosition(Vector3.Lerp(p0, bp - lr * pelvisLocal, k) + Vector3.up * Mathf.Sin(k * Mathf.PI) * 0.25f);
-                nb.MoveRotation(Quaternion.Slerp(r0, lr, k));
+                npc.MoveKinematic(Vector3.Lerp(p0, bp - lr * pelvisLocal, k) + Vector3.up * Mathf.Sin(k * Mathf.PI) * 0.25f, Quaternion.Slerp(r0, lr, k));
                 yield return new WaitForFixedUpdate();
             }
             bedPt = transform.TransformPoint(new Vector3(0f, 0.72f, 0f)); lying = Quaternion.LookRotation(Vector3.up, transform.forward);
-            nb.position = bedPt - lying * pelvisLocal; nb.rotation = lying;
-            nb.isKinematic = false;
-            loading = false;
+            npc.TeleportTo(bedPt - lying * pelvisLocal, lying);
+            npc.SetKinematic(false);
+            loading = false; IgnorePlayers(false);
             if (npc == null || (NpcBrain.Instance && NpcBrain.Instance.State == NpcState.Secured)) { IgnoreUncle(false); yield break; }
 
             strap = gameObject.AddComponent<ConfigurableJoint>();
@@ -135,6 +135,16 @@ namespace UncleExtraction
             strap.enableCollision = false; // el tio acostado se superpone con las barandas del carrito de prototipo
             StrapCount++;
             Debug.Log("[Cart] strapped");
+        }
+
+        readonly System.Collections.Generic.List<Collider> ignoredPlayers = new System.Collections.Generic.List<Collider>();
+        /// Colisiones tio-jugadores solo durante la subida cinematica (0,45 s). Se restauran siempre al terminar o cancelar.
+        void IgnorePlayers(bool ignore)
+        {
+            if (!npc) return;
+            if (ignore) { ignoredPlayers.Clear(); foreach (var pm in PlayerMotor.All) if (pm) ignoredPlayers.AddRange(pm.GetComponentsInChildren<Collider>()); }
+            foreach (var a in ignoredPlayers) foreach (var b in npc.Colliders) if (a && b) Physics.IgnoreCollision(a, b, ignore);
+            if (!ignore) ignoredPlayers.Clear();
         }
 
         /// Colisiones tio-carrito: ignoradas mientras sube y esta asegurado (el prototipo se superpone con las barandas).
@@ -154,8 +164,8 @@ namespace UncleExtraction
 
         public void ResetState()
         {
-            StopAllCoroutines(); loading = false; IgnoreUncle(false);
-            if (npc && npc.Body) npc.Body.isKinematic = false;
+            StopAllCoroutines(); loading = false; IgnoreUncle(false); IgnorePlayers(false);
+            if (npc) npc.SetKinematic(false);
             if (strap) DestroyImmediate(strap); strap = null;
             foreach (var j in GetComponents<ConfigurableJoint>()) DestroyImmediate(j);
             rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;

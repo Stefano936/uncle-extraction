@@ -46,21 +46,23 @@ namespace UncleExtraction
         /// estatica u objetos que no sean el propio tio, el carrito que lo lleva o los jugadores.
         bool OverlapsSolid(out string what)
         {
+            // Cada collider del tio (cuerpo central o las 11 partes del articulado): ninguna parte principal puede
+            // atravesar un solido. Se mide la penetracion real (no una capsula unica), con 4 cm de tolerancia de contacto.
             what = "";
-            var cap = npc ? npc.GetComponent<CapsuleCollider>() : null;
-            if (!cap) return false;
-            Transform t = npc.transform;
-            float r = cap.radius * 0.8f, h = cap.height * 0.92f;
-            Vector3 axis = t.up, c = t.TransformPoint(cap.center);
-            Vector3 p0 = c - axis * (h * 0.5f - r), p1 = c + axis * (h * 0.5f - r);
-            int n = Physics.OverlapCapsuleNonAlloc(p0, p1, r, overlap, ~0, QueryTriggerInteraction.Ignore);
-            for (int i = 0; i < n; i++)
+            if (!npc) return false;
+            foreach (var own in npc.Colliders)
             {
-                var col = overlap[i]; var arb = col.attachedRigidbody;
-                if (arb == npc.Body) continue;
-                if (arb && (arb.GetComponent<PlayerMotor>() || arb.GetComponent<TransportCart>())) continue;
-                if (VanDoors.Instance && col.transform.IsChildOf(VanDoors.Instance.transform)) continue; // hojas de la puerta
-                what = arb ? arb.name : col.name; return true;
+                var bb = own.bounds; bb.Expand(-0.02f);
+                int n = Physics.OverlapBoxNonAlloc(bb.center, bb.extents, overlap, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < n; i++)
+                {
+                    var col = overlap[i]; var arb = col.attachedRigidbody;
+                    if (npc.Owns(arb)) continue;
+                    if (arb && (arb.GetComponent<PlayerMotor>() || arb.GetComponent<TransportCart>())) continue;
+                    if (VanDoors.Instance && col.transform.IsChildOf(VanDoors.Instance.transform)) continue; // hojas de la puerta
+                    if (Physics.ComputePenetration(own, own.transform.position, own.transform.rotation, col, col.transform.position, col.transform.rotation, out _, out float dist) && dist > 0.04f)
+                    { what = $"{own.name} atraviesa {(arb ? arb.name : col.name)}"; return true; }
+                }
             }
             return false;
         }
@@ -89,7 +91,7 @@ namespace UncleExtraction
         {
             if (!NetAuth.IsServer || secured) return;
             secured = true;
-            GrabRegistry.ReleaseAllOnBody(npc.Body, ReleaseReason.Secured);
+            npc.ReleaseAllGrabs(ReleaseReason.Secured);
             if (TransportCart.Instance) TransportCart.Instance.Unstrap("asegurado");
             if (NpcBrain.Instance) NpcBrain.Instance.Secure();
             if (RoundDirector.Instance) RoundDirector.Instance.OnExtracted();

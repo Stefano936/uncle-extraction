@@ -11,6 +11,7 @@ namespace UncleExtraction
     {
         public const string GameScene = "Bar_LastRound";   // escenario principal
         public const string LabScene = "PhysicsLab";       // laboratorio de diagnostico
+        public const string LabArticulatedScene = "PhysicsLab_Articulated"; // laboratorio con el tio articulado (ragdoll reducido)
         public static string SelectedScene = GameScene;
         static bool argsForwarded;
         enum Page { Main, Solo, Friends, Options }
@@ -78,6 +79,7 @@ namespace UncleExtraction
                     DifficultyPicker();
                     if (GUILayout.Button("Empezar: The Last Round", big, GUILayout.Height(52))) { SelectedScene = GameScene; Play(NetMode.Solo); }
                     if (GUILayout.Button("Laboratorio (diagnostico)", big, GUILayout.Height(40))) { SelectedScene = LabScene; Play(NetMode.Solo); }
+                    if (GUILayout.Button("Laboratorio: tio articulado (prueba)", big, GUILayout.Height(40))) { SelectedScene = LabArticulatedScene; Play(NetMode.Solo); }
                     if (GUILayout.Button("Volver", big, GUILayout.Height(44))) page = Page.Main;
                     break;
                 case Page.Friends:

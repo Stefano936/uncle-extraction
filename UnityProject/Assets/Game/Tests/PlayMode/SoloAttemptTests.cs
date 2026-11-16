@@ -52,14 +52,28 @@ namespace UncleExtraction.Tests
             yield return new WaitForFixedUpdate();
             float start = Time.time;
             auto.StartRun(mode);
-            while (round.State == RoundState.Running && Time.time - start < SimBudget) yield return null;
+            float wriggleEligible = 0f; // tiempo atado al carrito con fuerzas para intentar soltarse (regla del cerebro)
+            while (round.State == RoundState.Running && Time.time - start < SimBudget)
+            {
+                if (cart.IsStrapped && npc.Budget > npc.BudgetMax * NpcBrain.WriggleMinBudget01) wriggleEligible += Time.deltaTime;
+                yield return null;
+            }
             if (auto.Running) { auto.StopRun(); Debug.Log("[Autopilot] TIMELINE (sin terminar)\n" + string.Join("\n", auto.Timeline)); }
             Debug.Log($"[Solo] {Scene} {mode}/{diff}: {round.State} en {round.Elapsed:0.0}s, ataques={npc.AttacksStarted}, correas={cart.StrapCount}");
-            Assert.AreEqual(RoundState.Success, round.State, $"{mode}/{diff}: el intento no termino (tio en {body.Body.position})");
+            Assert.AreEqual(RoundState.Success, round.State, $"{mode}/{diff}: el intento no termino (tio en {body.pelvis.position})");
             Assert.IsTrue(zone.Secured);
             Assert.AreEqual(NpcState.Secured, npc.State);
-            // Resistencia activa: ataques o, asegurado en el carrito, intentos de soltarse (GDD 05). Comprueba el cerebro encendido.
-            Assert.Greater(npc.AttacksStarted + npc.WrigglesStarted, 0, "el tio deberia haber resistido (atacar o intentar soltarse) durante el intento");
+            // Resistencia activa, separada por modo: arrastrandolo, el tio TIENE que atacar; en el carrito, TIENE que intentar
+            // soltarse (GDD 05). Aceptar una u otra en general ocultaria que alguna dejo de funcionar.
+            if (mode == AutopilotMode.Drag) Assert.Greater(npc.AttacksStarted, 0, "arrastrandolo, el tio deberia haber atacado");
+            else
+            {   // Agotado (presupuesto < 40 %) el tio no intenta soltarse: es la regla de fatiga, no un fallo. Si estuvo atado
+                // con fuerzas mas que el intervalo maximo entre intentos, TIENE que haberlo intentado. La conducta en si la
+                // exige siempre Cart_StrappedUncle_SignalsAndTriesToWriggleFree.
+                Debug.Log($"[Solo] {Scene} carrito: atado con fuerzas {wriggleEligible:0.0}s, intentos de soltarse={npc.WrigglesStarted}");
+                if (wriggleEligible > NpcBrain.WriggleMaxInterval + 0.5f)
+                    Assert.Greater(npc.WrigglesStarted, 0, $"atado {wriggleEligible:0.0}s con fuerzas, el tio deberia haber intentado soltarse");
+            }
             Assert.AreEqual(0, GrabRegistry.Count, "asegurar suelta todos los agarres");
         }
 
@@ -79,5 +93,12 @@ namespace UncleExtraction.Tests
     public class SoloAttemptTests_Bar : SoloAttemptTests
     {
         protected override string Scene => "Bar_LastRound";
+    }
+
+    /// Intentos completos con el tio articulado en el laboratorio.
+    [Timeout(330000)]
+    public class SoloAttemptTests_Articulated : SoloAttemptTests
+    {
+        protected override string Scene => "PhysicsLab_Articulated";
     }
 }

@@ -30,7 +30,7 @@ namespace UncleExtraction.EditorTools
             if (!File.Exists(PhysicsLabBuilder.ScenePath) || !File.Exists(PhysicsLabBuilder.BarScenePath) || !File.Exists(FrontendBuilder.ScenePath)) PhysicsLabBuilder.Build();
             var opts = new BuildPlayerOptions
             {
-                scenes = new[] { FrontendBuilder.ScenePath, PhysicsLabBuilder.BarScenePath, PhysicsLabBuilder.ScenePath },
+                scenes = new[] { FrontendBuilder.ScenePath, PhysicsLabBuilder.BarScenePath, PhysicsLabBuilder.ScenePath, PhysicsLabBuilder.ArticulatedLabScenePath },
                 target = BuildTarget.StandaloneWindows64,
                 locationPathName = Path.Combine(outDir, "UncleExtraction.exe"),
                 options = dev ? BuildOptions.Development : BuildOptions.None // dev: simulador de red y logs de depuracion

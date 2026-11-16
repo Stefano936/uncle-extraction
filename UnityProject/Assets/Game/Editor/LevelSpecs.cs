@@ -10,6 +10,7 @@ namespace UncleExtraction.EditorTools
         public string name, scenePath;
         public float halfX = 7f, backZ = 10f, doorX = 0f, doorZ = -2f;
         public bool kitVisuals;
+        public bool articulatedUncle;                // variante de ragdoll reducido (11 cuerpos) en lugar del cuerpo central
         public Vector3 home, chairPos, glassPos, cartPos; public float cartYaw;
         public Vector3 overviewPos, overviewEuler;
         public Func<Transform, GameObject> furnish;  // mobiliario fijo; devuelve la baranda de anclaje
@@ -53,6 +54,14 @@ namespace UncleExtraction.EditorTools
                 L.raceStandL = new Vector3(-0.35f, 0, 5.85f); L.raceStandR = new Vector3(0.35f, 0, 5.85f);
             },
         };
+
+        /// PhysicsLab_Articulated: el mismo laboratorio con el tio articulado (ragdoll reducido). Variante de prueba; el
+        /// cuerpo central queda como respaldo en PhysicsLab y Bar_LastRound hasta verificar estabilidad e interacciones.
+        public static LevelSpec LabArticulated()
+        {
+            var s = Lab(); s.name = "PhysicsLab_Articulated"; s.scenePath = PhysicsLabBuilder.ArticulatedLabScenePath; s.articulatedUncle = true;
+            return s;
+        }
 
         /// Bar_LastRound (GDD 13): salon de 18 x 12 m, barra al fondo a la derecha con baranda (anclaje) y banco del tio,
         /// mesas y banquetas fuera del corredor principal, rincon de karaoke, salida de 1,5 m, vereda de 14 m y camioneta.

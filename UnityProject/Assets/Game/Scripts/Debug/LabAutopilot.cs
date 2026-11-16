@@ -170,7 +170,7 @@ namespace UncleExtraction
         GrabSocket BestFreeUncleSocket(GrabSocket exclude, bool nearestOnly = false)
         {
             string pref = pushingIn ? "shoulder" : body.Posture == NpcPosture.Upright ? "forearm" : "ankle"; // acomodar: tirar del torso hacia la cabina
-            return GrabSocket.All.Where(s => s.body == body.Body && s != exclude && Occupancy(s) < s.capacity && !(unreachable.TryGetValue(s, out float until) && Time.time < until))
+            return GrabSocket.All.Where(s => body.Owns(s.body) && s != exclude && Occupancy(s) < s.capacity && !(unreachable.TryGetValue(s, out float until) && Time.time < until))
                                  .OrderBy(s => (!nearestOnly && s.socketId.StartsWith(pref) ? 0f : 3f) + Vector3.Distance(s.Position, Eye))
                                  .FirstOrDefault();
         }
@@ -378,8 +378,11 @@ namespace UncleExtraction
         }
 
         // ---------- modo carrito ----------
+        bool realignLogged; float handleAimFailSince, handleSidestepUntil, handlePhaseSeen = -99f, handleSide = 1f; bool handleOccludedLogged;
+
         IEnumerator CartRun()
         {
+            handleAimFailSince = Time.time;
             cartNeedsSpace = Vector3.Distance(Flat(cart.transform.position), OpenSpot) > 0.6f; // primero llevar el carrito vacio al punto de carga
             int cartWp = 0;
             while (!Finished)
@@ -464,13 +467,31 @@ namespace UncleExtraction
                     if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
                     Status = "tomando el asa";
                     Vector3 behind = cart.transform.TransformPoint(new Vector3(0, 0, -1.5f));
-                    if (Vector3.Distance(Eye, handle.Position) > LabBalance.GrabReach - 0.2f)
+                    if (Time.time < handleSidestepUntil)
+                    {
+                        Vector3 toH = Flat(handle.Position) - Me; Vector3 sideDir = Vector3.Cross(Vector3.up, toH.sqrMagnitude > 1e-4f ? toH.normalized : Vector3.forward) * handleSide;
+                        LookAt(handle.Position); MoveWorld(sideDir); SetHold(0, false); SetHold(1, false); yield return null; continue;
+                    }
+                    // Al alcance pero sin linea de vision al asa (el tio acostado la tapa desde adelante): rodear hasta atras.
+                    if (Time.time - handlePhaseSeen > 0.25f) handleAimFailSince = Time.time; // recien entra en esta fase
+                    handlePhaseSeen = Time.time;
+                    if (hands.Candidate == handle) handleAimFailSince = Time.time;              // la ve: no esta tapada
+                    bool occluded = Time.time - handleAimFailSince > 0.8f;
+                    if (Vector3.Distance(Eye, handle.Position) > LabBalance.GrabReach - 0.2f || occluded)
                     {   // acercarse por detras del asa si ese lado esta libre; si no (pared), directo al asa
                         bool behindFree = !Physics.CheckCapsule(behind + Vector3.up * 0.4f, behind + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
                         Vector3 dest = behindFree && Vector3.Distance(Me, Flat(behind)) > 0.5f ? behind : handle.Position;
+                        if (!occluded) handleAimFailSince = Time.time; // todavia lejos: el plazo cuenta desde que llega al alcance
+                        else if (Vector3.Distance(Me, Flat(behind)) < 0.6f || !behindFree)
+                        {   // ya rodeo (o no se puede) y sigue sin verla: correrse de costado, alternando, y volver a apuntar
+                            handleAimFailSince = Time.time; handleSide = -handleSide; handleSidestepUntil = Time.time + 0.7f;
+                            Log($"asa sin linea de vision desde {Me} (mira: {(hands.Candidate ? hands.Candidate.socketId : "nada")}): se corre de costado");
+                        }
+                        else if (!handleOccludedLogged) { handleOccludedLogged = true; Log($"asa tapada desde {Me}: rodea hasta {Flat(dest)}"); }
                         LookAt(handle.Position); MoveWorld(dest - player.transform.position); SetHold(0, false); SetHold(1, false); yield return null; continue; }
                     LookAt(handle.Position); LabInput.SimulatedMove = Vector2.zero;
                     bool aimed = hands.Candidate == handle;
+                    if (aimed) { handleAimFailSince = Time.time; handleOccludedLogged = false; }
                     SetHold(0, aimed); SetHold(1, aimed);
                     yield return null;
                     if (HoldingCart()) Log("toma el asa");
@@ -502,6 +523,17 @@ namespace UncleExtraction
                 // de espaldas hacia el punto; si el carrito se queda atras, esperar a que el resorte lo traiga
                 // Destrabar: si el carrito no avanza en 2 s, zigzaguear de costado (como sacudir un changuito trabado).
                 if (Vector3.Distance(cc, stuckRef) > 0.15f) { stuckRef = cc; stuckSince = Time.time; zigLogged = false; }
+                // Carrito atravesado (la hoja de la puerta o una pared lo giro): realinearlo tirando del asa hacia adelante, en la
+                // direccion de la ruta, como un changuito; el zigzag lo terminaba de girar 90 grados contra la pared.
+                Vector3 pullDir = Flat(goal - cc); Vector3 cartBack = Flat(-cart.transform.forward);
+                if (cc.z < L.doorZ - 0.3f && pullDir.sqrMagnitude > 0.25f && Vector3.Angle(cartBack, pullDir) > 50f) // ya afuera (vereda)
+                {
+                    if (!realignLogged) { realignLogged = true; Log($"carrito atravesado en {cc} ({Vector3.Angle(cartBack, pullDir):0} grados): lo realinea"); }
+                    Vector3 lead = cc + pullDir.normalized * 1.7f;
+                    if (gap > 1.25f) LabInput.SimulatedMove = Vector2.zero; else MoveWorld(lead - Me);
+                    stuckSince = Time.time; yield return null; continue;
+                }
+                realignLogged = false;
                 if (Time.time - stuckSince > 2f)
                 {
                     float phase = Mathf.Repeat(Time.time - stuckSince - 2f, 2.4f);

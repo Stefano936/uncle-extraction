@@ -35,6 +35,28 @@ namespace UncleExtraction.EditorTools
             mi.clipAnimations = clips;                           // sin root motion para esta prueba (INTEGRAR_KIT.md)
         }
 
+        /// Pose de reposo del rig del tio en Unity: posicion, ejes y largo de cada hueso (para el cuerpo articulado).
+        public static void ReportUncleRig()
+        {
+            int code = 0;
+            try
+            {
+                var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{Folder}/uncle_prototype.fbx");
+                var inst = (GameObject)Object.Instantiate(src);
+                foreach (var t in inst.GetComponentsInChildren<Transform>())
+                {
+                    if (t.parent == null) continue;
+                    string kids = string.Join(",", Enumerable.Range(0, t.childCount).Select(i => t.GetChild(i).name));
+                    Debug.Log($"[KitRig] {t.name} parent={t.parent.name} pos={t.position:F3} rot={t.rotation.eulerAngles:F1} up={t.up:F2} fwd={t.forward:F2} right={t.right:F2} kids=[{kids}]");
+                }
+                var smr = inst.GetComponentInChildren<SkinnedMeshRenderer>();
+                Debug.Log($"[KitRig] mesh bounds={smr.bounds.size:F2} rootBone={(smr.rootBone ? smr.rootBone.name : "-")} bones={smr.bones.Length}");
+                Object.DestroyImmediate(inst);
+            }
+            catch (System.Exception e) { Debug.LogException(e); code = 1; }
+            if (Application.isBatchMode) EditorApplication.Exit(code);
+        }
+
         public static void ImportAndReport()
         {
             int code = 0;

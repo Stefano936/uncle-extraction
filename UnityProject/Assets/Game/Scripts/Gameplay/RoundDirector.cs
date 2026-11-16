@@ -89,7 +89,9 @@ namespace UncleExtraction
         public static int CountGameplayJoints()
         {
             int n = 0;
-            foreach (var j in FindObjectsByType<ConfigurableJoint>(FindObjectsSortMode.None)) n++;
+            var ragdoll = new System.Collections.Generic.HashSet<Joint>();
+            foreach (var p in FindObjectsByType<RagdollPart>(FindObjectsSortMode.None)) if (p.joint) ragdoll.Add(p.joint);
+            foreach (var j in FindObjectsByType<ConfigurableJoint>(FindObjectsSortMode.None)) if (!ragdoll.Contains(j)) n++; // las articulaciones del tio no son de juego
             return n;
         }
 

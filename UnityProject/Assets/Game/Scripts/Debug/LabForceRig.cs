@@ -33,7 +33,7 @@ namespace UncleExtraction
             pullers.Clear();
             if (!npc || count <= 0 || !grab) return;
             var free = new List<GrabSocket>();
-            foreach (var s in GrabSocket.All) if (s.body == npc.Body && GrabRegistry.OccupancyOf(s) < s.capacity) free.Add(s);
+            foreach (var s in GrabSocket.All) if (npc.Owns(s.body) && GrabRegistry.OccupancyOf(s) < s.capacity) free.Add(s);
             int si = 0;
             for (int i = 0; i < count; i++)
             {

@@ -162,6 +162,7 @@ namespace UncleExtraction
             {
                 var hrb = hits[i].collider.attachedRigidbody;
                 if (hrb == rb || hrb == s.body) continue;
+                var owner = NpcBody.Of(s.body); if (owner && owner.Owns(hrb)) continue; // otras partes del mismo tio no tapan
                 return true;
             }
             return false;

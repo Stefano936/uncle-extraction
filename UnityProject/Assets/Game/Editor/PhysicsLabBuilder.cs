@@ -34,6 +34,7 @@ namespace UncleExtraction.EditorTools
         }
 
         public const string BarScenePath = "Assets/Game/Scenes/Bar_LastRound.unity";
+        public const string ArticulatedLabScenePath = "Assets/Game/Scenes/PhysicsLab_Articulated.unity";
 
         /// Reconstruye TODO lo reproducible: prefab del jugador, PhysicsLab (diagnostico), Bar_LastRound (principal),
         /// menu y Build Settings (Frontend, Bar_LastRound, PhysicsLab).
@@ -43,10 +44,11 @@ namespace UncleExtraction.EditorTools
             builtPlayerPrefab = null;
             BuildLevel(LevelSpecs.Lab());
             BuildLevel(LevelSpecs.Bar());
+            BuildLevel(LevelSpecs.LabArticulated());
             FrontendBuilder.Build();
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(FrontendBuilder.ScenePath, true), new EditorBuildSettingsScene(BarScenePath, true), new EditorBuildSettingsScene(ScenePath, true) };
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(FrontendBuilder.ScenePath, true), new EditorBuildSettingsScene(BarScenePath, true), new EditorBuildSettingsScene(ScenePath, true), new EditorBuildSettingsScene(ArticulatedLabScenePath, true) };
             AssetDatabase.SaveAssets();
-            Debug.Log("[LabBuilder] escenas: Frontend, Bar_LastRound, PhysicsLab");
+            Debug.Log("[LabBuilder] escenas: Frontend, Bar_LastRound, PhysicsLab, PhysicsLab_Articulated");
         }
 
         static GameObject builtPlayerPrefab;
@@ -185,7 +187,10 @@ namespace UncleExtraction.EditorTools
             var cart = cartGo.AddComponent<TransportCart>(); cart.bed = bed; cart.strapPoint = strapPt;
 
             // Tio
-            var npcGo = BuildUncle(uncleM, skinM, unclePM, spec.home, out var body, out var brain, out var pres);
+            NpcBody body; NpcBrain brain; NpcPresentation pres;
+            var npcGo = spec.articulatedUncle
+                ? ArticulatedUncleBuilder.Build(spec.home, uncleM, skinM, unclePM, out body, out brain, out pres)
+                : BuildUncle(uncleM, skinM, unclePM, spec.home, out body, out brain, out pres);
             brain.anchorRail = rail.GetComponent<Collider>();
             var home = new GameObject("Uncle_Home").transform; home.position = spec.home; brain.home = home;
             cart.npc = body; zone.npc = body;
