@@ -84,11 +84,13 @@ namespace UncleExtraction
             {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre o reinicie
                 if (quitAt < 0f)
                 {   // el cliente sale antes que el anfitrion: si el anfitrion cierra primero, el cliente veria una desconexion
-                    quitAt = Time.unscaledTime + (NetAuth.IsServer ? 3f : 1f); NetSession.LogWorldNow("final");
+                    quitAt = Time.unscaledTime + (NetAuth.IsServer ? 3f : 1f);
                     Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; {(repeatLeft > 0 ? "reinicia en 3 s" : "saliendo en 3 s")}");
                 }
                 else if (Time.unscaledTime >= quitAt)
-                {
+                {   // estado final al salir: con perdida de paquetes, la ronda y la zona replican en mensajes distintos y el
+                    // primer cuadro con la ronda terminada podia no tener todavia la zona asegurada
+                    NetSession.LogWorldNow("final");
                     quitAt = -1f;
                     if (repeatLeft > 0)
                     {   // reintento despues de ganar o perder: el anfitrion reinicia; el cliente espera la ronda nueva
