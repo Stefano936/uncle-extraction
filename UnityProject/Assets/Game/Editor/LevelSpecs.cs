@@ -49,7 +49,7 @@ namespace UncleExtraction.EditorTools
                 L.uncleDragPath = new[] { new Vector3(0, 0, 6.0f), new Vector3(0, 0, 3.0f), new Vector3(0, 0, 1.0f), new Vector3(0, 0, -1.0f), new Vector3(0, 0, -3.5f), new Vector3(0, 0, -6.5f), new Vector3(0, 0, -8.3f), new Vector3(0, 0, -10.6f) };
                 L.dragFinalStand = new Vector3(0f, 0, -11.95f);
                 L.cartPullPath = new[] { new Vector3(0, 0, 2.8f), new Vector3(0, 0, 1.2f), new Vector3(0, 0, -0.4f), new Vector3(0, 0, -3.5f), new Vector3(0, 0, -6.5f), new Vector3(0, 0, -8.2f), new Vector3(0, 0, -11.95f) };
-                L.cartPathDoorIndex = 3; L.cartOpenSpot = new Vector3(1.5f, 0f, 2.6f);
+                L.cartPathDoorIndex = 3; L.cartOpenSpot = new Vector3(1.1f, 0f, 2.6f); // a 1,1 m de la ruta del tio: al alcance de la correa
                 L.raceStandL = new Vector3(-0.35f, 0, 5.85f); L.raceStandR = new Vector3(0.35f, 0, 5.85f);
             },
         };

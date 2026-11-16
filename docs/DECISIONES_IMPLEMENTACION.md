@@ -69,6 +69,15 @@ Motivo: facilitar lectura selectiva, continuidad y primer import sin obligar a c
 - Vaso señuelo: solo atrae si un jugador lo movió (`Placed`). Antes, el vaso sobre la mesa distraía al tío al empezar la ronda y consumía el enfriamiento. La distracción se evalúa también durante Recover (GDD: «si no está atacando»), pero no durante la apertura forzada ni en el carrito.
 - Red degradada: el simulador integrado de UTP quedó obsoleto en NGO 2.14. Se usa Multiplayer Tools 2.2.12 (NetworkSimulator), que NGO solo compila en editor y builds de desarrollo; por eso hay una build de desarrollo separada (`-ueDev`). La build de distribución no lleva simulador.
 
+## 2026-11-15 — Escenario principal, LevelLayout, freno del carrito y fuga
+
+- `LevelLayout` (componente de escena escrito por el constructor) concentra apariciones, ejes de puerta y camioneta, rutas de prueba y puntos de interacción. Ningún sistema usa coordenadas fijas de PhysicsLab.
+- Constructor por especificación (`LevelSpecs`): PhysicsLab sin cambios para diagnóstico; `Bar_LastRound` como escenario principal con los FBX del kit como visuales sobre cajas del tamaño medido. No se colocan la camioneta, el carrito ni el tío del kit, ni el cascarón del bar (ver `docs/CATALOGO_RECURSOS.md`).
+- Freno de estacionamiento del carrito: sin nadie en el asa (y sin el tío asegurado) tiene amortiguación alta. Sin freno, el tío arrastrado hacia él lo empujaba varios metros y lo encajaba contra una pared con el asa inaccesible.
+- Fuga: si está libre, vuelve a su banco pasando por la puerta del escenario (antes iba en línea recta contra el muro frontal). Si hay alguien a menos de 3 m, va a 2,2 m/s (`EscapeSpeedCap` del balance); si no, a 1,4 m/s.
+- Prueba de intento completo: la condición «el tío atacó» pasó a «atacó **o** intentó soltarse del carrito». Asegurado en el carrito, el tío no ataca: su resistencia según el GDD 05 son los intentos de soltarse. Las condiciones de extracción no cambiaron.
+- `net_smoke.ps1`: código 0 solo si todos los escenarios pedidos dieron PASS.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.

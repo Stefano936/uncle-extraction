@@ -24,6 +24,20 @@ namespace UncleExtraction
         void Awake() { Instance = this; rb = GetComponent<Rigidbody>(); spawnPos = transform.position; spawnRot = transform.rotation; }
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
 
+        GrabSocket handle;
+        /// Freno de estacionamiento: sin nadie en el asa (y sin el tio asegurado), el carrito no rueda. Sin freno, el tio
+        /// arrastrado hacia el lo empujaba varios metros hasta encajarlo contra una pared (decision 2026-11-15).
+        public bool Braked { get; private set; } = true;
+        void FixedUpdate()
+        {
+            if (!NetAuth.IsServer || !rb || rb.isKinematic) return;
+            if (!handle) foreach (var s in GetComponentsInChildren<GrabSocket>()) if (s.socketId == "cart_handle") handle = s;
+            bool held = handle && GrabRegistry.OccupancyOf(handle) > 0;
+            Braked = !held && !IsStrapped && !loading;
+            rb.linearDamping = Braked ? 12f : 0.3f;
+            rb.angularDamping = Braked ? 12f : 3f;
+        }
+
         void Update()
         {
             if (!IsSpawned || !IsServer) return;

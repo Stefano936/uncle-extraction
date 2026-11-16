@@ -58,7 +58,8 @@ namespace UncleExtraction.Tests
             Assert.AreEqual(RoundState.Success, round.State, $"{mode}/{diff}: el intento no termino (tio en {body.Body.position})");
             Assert.IsTrue(zone.Secured);
             Assert.AreEqual(NpcState.Secured, npc.State);
-            Assert.Greater(npc.AttacksStarted, 0, "el tio deberia haber atacado durante el intento");
+            // Resistencia activa: ataques o, asegurado en el carrito, intentos de soltarse (GDD 05). Comprueba el cerebro encendido.
+            Assert.Greater(npc.AttacksStarted + npc.WrigglesStarted, 0, "el tio deberia haber resistido (atacar o intentar soltarse) durante el intento");
             Assert.AreEqual(0, GrabRegistry.Count, "asegurar suelta todos los agarres");
         }
 

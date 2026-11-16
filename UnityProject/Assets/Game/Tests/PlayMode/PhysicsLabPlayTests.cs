@@ -280,5 +280,20 @@ namespace UncleExtraction.Tests
             Assert.AreEqual(0, GrabRegistry.CountOnBody(body.Body), "suelta los vinculos del cuerpo rescatado");
             hands.DebugHoldLeft = false;
         }
+
+        [UnityTest]
+        public IEnumerator Uncle_Escapes_BackInsideThroughTheDoor()
+        {
+            var L = LevelLayout.Current;
+            npc.brainEnabled = true;
+            PlacePlayer(new Vector3(-5f, 0f, 6f), 0f); // lejos: sin agarres ni ataques
+            Vector3 start = new Vector3(L.doorX + 3f, 0f, L.doorZ - 3f); // en la vereda, fuera del eje de la puerta
+            body.Body.position = start; body.Body.rotation = Quaternion.identity; body.transform.SetPositionAndRotation(start, Quaternion.identity);
+            body.Body.linearVelocity = Vector3.zero;
+            float t0 = Time.time;
+            while (body.transform.position.z < L.doorZ + 0.5f && Time.time - t0 < 15f) yield return null;
+            Assert.Greater(body.transform.position.z, L.doorZ + 0.5f, $"el tio deberia volver a entrar por la puerta (quedo en {body.transform.position})");
+            Assert.Less(Mathf.Abs(body.transform.position.x - L.doorX), 1.5f, "entra por la abertura, no atraviesa el muro");
+        }
     }
 }

@@ -47,7 +47,9 @@ namespace UncleExtraction
         public GrabSocket AnchorHandSocket { get => Mirror ? GrabSocket.ById(nAnchorHand.Value.ToString()) : anchorHand; private set => anchorHand = value; }
         public bool Strapped => TransportCart.Instance && TransportCart.Instance.IsStrapped;
         public Vector3 AttackDirection { get; private set; }
-        int attacksStarted, hitsLanded;
+        int attacksStarted, hitsLanded, wrigglesStarted;
+        /// Intentos de soltarse del carrito (su forma de resistencia mientras esta asegurado). Solo anfitrion.
+        public int WrigglesStarted => wrigglesStarted;
         public int AttacksStarted { get => Mirror ? nAttacks.Value : attacksStarted; private set => attacksStarted = value; }
         public int HitsLanded { get => Mirror ? nHits.Value : hitsLanded; private set => hitsLanded = value; }
         public string LastRejection { get; private set; } = "";
@@ -156,9 +158,12 @@ namespace UncleExtraction
                 case NpcState.Recover: f = 0.3f; break;
                 case NpcState.ForcedRecovery: f = LabBalance.ForcedRecoveryResistance; break;
             }
-            Vector3 toHome = home ? Flat(home.position - transform.position) : Vector3.zero;
+            Vector3 toHome = EscapeDirection();
             body.resistForce = (Grabbed || Strapped) && f > 0f ? toHome * (LabBalance.NpcResistanceForceCap * r * f) : Vector3.zero;
-            body.desiredWalkVelocity = State == NpcState.Escape ? toHome * 1.4f : Vector3.zero;
+            // Fuga: vuelve a su banco por la puerta (no en linea recta contra el muro). Si hay alguien cerca y nadie lo agarra,
+            // arranca mas rapido (tope de balance: EscapeSpeedCap 2,2 m/s); si no, camina a 1,4 m/s.
+            float escapeSpeed = NearestPlayer(out float nearD) && nearD < 3f ? LabBalance.EscapeSpeedCap : 1.4f;
+            body.desiredWalkVelocity = State == NpcState.Escape ? toHome * escapeSpeed : Vector3.zero;
             body.desiredFacing = AttackPending ? AttackDirection : (State == NpcState.Escape ? toHome : Vector3.zero);
             if (State == NpcState.Distracted && currentDecoy)
             {   // mira el vaso y, si nadie lo sostiene, camina despacio hacia el
@@ -166,6 +171,20 @@ namespace UncleExtraction
                 body.desiredFacing = toDecoy;
                 body.desiredWalkVelocity = !Grabbed && !Strapped && Flat3(currentDecoy.Position - transform.position).magnitude > 0.8f ? toDecoy * 0.8f : Vector3.zero;
             }
+        }
+
+        /// Direccion hacia el banco pasando por la puerta del escenario cuando esta afuera (vereda, rampa, camioneta).
+        Vector3 EscapeDirection()
+        {
+            if (!home) return Vector3.zero;
+            var L = LevelLayout.Current;
+            Vector3 p = transform.position, target = home.position;
+            if (L && p.z < L.doorZ + 0.4f)
+            {   // afuera: primero alinearse con la puerta y despues cruzarla
+                Vector3 outside = new Vector3(L.doorX, 0f, L.doorZ - 1.2f), inside = new Vector3(L.doorX, 0f, L.doorZ + 1.2f);
+                target = Mathf.Abs(p.x - L.doorX) > 0.45f && p.z < L.doorZ - 0.6f ? outside : inside;
+            }
+            return Flat(target - p);
         }
 
         void Decide()
@@ -253,6 +272,7 @@ namespace UncleExtraction
             currentAttack = LabBalance.Attack(AttackId.Shake); WriggleAttempt = true;
             AttackDirection = lockedDir = body.Forward;
             Enter(NpcState.Windup, 1.4f, "SE QUIERE SOLTAR DEL CARRITO");
+            wrigglesStarted++;
             nextWriggleAt = Now + 7f + (float)rng.NextDouble() * 3f;
         }
 

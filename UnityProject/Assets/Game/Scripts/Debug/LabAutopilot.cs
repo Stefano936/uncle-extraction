@@ -256,6 +256,7 @@ namespace UncleExtraction
                 Status = "agarrando al tio";
                 SetHold(1, false);
                 var target = BestFreeUncleSocket(null);
+                if (!target && unreachable.Count > 0) { unreachable.Clear(); target = BestFreeUncleSocket(null); } // todos descartados: volver a intentar, no quedarse quieto
                 if (target) ApproachAndGrab(0, target, LabBalance.GrabReach - 0.35f);
                 yield return null;
                 if (Holding(0)) Log($"agarra {Held(0).socketId} con la izquierda");
@@ -379,6 +380,7 @@ namespace UncleExtraction
         // ---------- modo carrito ----------
         IEnumerator CartRun()
         {
+            cartNeedsSpace = Vector3.Distance(Flat(cart.transform.position), OpenSpot) > 0.6f; // primero llevar el carrito vacio al punto de carga
             int cartWp = 0;
             while (!Finished)
             {
@@ -448,7 +450,10 @@ namespace UncleExtraction
                     }
                     Vector3 uncleTarget = cartUncleTarget, stand = cartStand;
                     Status = "llevando al tio al carrito";
-                    yield return DragToPoint(uncleTarget, stand);
+                    // Estrategia de un jugador solo: el carrito ya espera en un punto abierto junto a la ruta; arrastrar al tio por
+                    // la ruta normal y cargarlo con E apenas pasa al lado (el control de arriba lo detecta cada frame).
+                    if (Vector3.Distance(pel, c) < 3.0f) yield return DragToPoint(uncleTarget, stand); // ultimos metros: al costado de la caja (frenada)
+                    else yield return DragStep(DragPath, DragFinalStand, false);
                     continue;
                 }
 
