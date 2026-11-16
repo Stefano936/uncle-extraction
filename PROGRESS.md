@@ -17,7 +17,13 @@
 - **Señales de ataque** sobre el cuerpo y en el piso.
 - **Feedback de agarre** y motivos visibles de bloqueo.
 
-**Sin audio. Sin lobby. Sin internet.**
+- **Sala previa (lobby) en red local** (desde `f2b4ebc`):
+  - confirmación «listo» por jugador; dificultad solo del anfitrión;
+  - inicio solo con todos listos, con el motivo visible si no se puede;
+  - el reintento en red vuelve a la sala;
+  - rechazo con motivo (sala llena, otra versión, ronda iniciada).
+
+**Sin audio. Sin internet.**
 
 **Evidencia de esta sesión:**
 - **PM** = PlayMode en el editor (anfitrión en loopback).
@@ -27,11 +33,13 @@
 
 | Función | Código / build | Resultado |
 | --- | --- | --- |
+| Regresión completa (arreglos del bot en la puerta) | `ddecaf2` | PM **84/86**, EditMode 9/9. AUTO **12/12** (los tres intentos de carrito pasaron: Bar 57,8 s, laboratorio 52,2 s, articulado 33,2 s). **FAIL 1** `PhysicsLabPlayTests_Articulated.Uncle_Escapes_BackInsideThroughTheDoor`: el tío quedó en el umbral (z = −1,50 con la condición > −1,5) a los 15 s; aislada pasó 2/2, así que es intermitente (1 de 3 corridas). **FAIL 2** prueba nueva mal planteada: el caso «pie en la abertura» no aplica al cuerpo central (una cápsula, motivo «una parte del cuerpo»); se marca como no aplicable (Ignore) en esa variante. |
 | Regresión completa (interfaz del kit) | `ba443bf` | PM **75/77**, EditMode 9/9. **FAIL 1** (`SoloAttemptTests_Bar` carrito): el bot quedó 150 s sosteniendo el asa del carrito cargado trabado en la puerta (yaw −38°, hoja a 52°) a 1,8 m, esperando que el agarre lo trajera. **FAIL 2** (`SoloAttemptTests_Articulated` carrito): el bot no llegó a cargarlo en el carrito y lo arrastró a mano hasta la camioneta (ganó, pero la prueba exige el carrito). Resto: Bar arrastre Normal 21,4 s y Difícil 81,0 s; laboratorio central carrito 31,6 s y arrastre 174,4/53,6 s; laboratorio articulado arrastre 18,9/41,8 s. |
 | Pose del FAIL 1 reproducida (`StuckRecoveryTests`, pose `bar_fail_m38`) | código siguiente a `ba443bf` | PM: un jugador que tira caminando del asa la saca. **Causa: punto muerto del bot**, no la geometría: con el asa a más de 1,25 m se quedaba quieto esperando. Corregido: si el carrito no avanza en 1,5 s, el bot se acerca al asa y vuelve a tirar. El FAIL 2 queda abierto como fallo intermitente del bot. |
 | Bot de carrito en la puerta: tres modos más (código posterior a `ba443bf`) | ver commit siguiente | Partidas completas (AUTO) tras el arreglo de la espera: **14/15**. FAIL: laboratorio central, carrito a −28° en el marco. **Reproducido** (`lab_fail_m28`, en el bar y en el laboratorio): tirar recto **no** lo saca. Un jugador lo resuelve empujándolo hacia adentro, alineándose y volviendo a tirar (3,7–3,9 s, un intento); no hay cambio de juego. El bot ahora hace esa maniobra. Tanda siguiente **8/9**: laboratorio central, carrito derecho pero corrido 1,37 m del eje contra la pared interior; el bot ahora también se recentra. Tanda siguiente de los tres intentos de carrito: **3/3** (Bar 63,9 s, laboratorio 29,9 s, articulado 33,9 s). Una tanda no prueba que la intermitencia desapareció. |
 | Regresión completa (señales de ataque, convergencia, desvío del bot) | `dfedb95` | PM **74/74**, EditMode 9/9. AUTO 12/12: Bar carrito 51,3 s; arrastre Normal 17,7 s y Difícil 52,3 s; laboratorio articulado carrito 37,2 s y arrastre 30,7/26,9 s; laboratorio central carrito 27,7 s y arrastre 23,8/17,4 s. |
 | Regresión anterior (atascos) | `a68a318` | PM **61/62**. FAIL del bot de carrito en el laboratorio articulado: el asa quedó contra la pared y el bot caminó contra el carrito 280 s. Corregido en el bot (`dfedb95`): ahora rodea hasta un costado libre del asa. |
+| **Red con sala previa, 3 y 4 procesos** (`-Scenario all`, 12 escenarios) | build `f2b4ebc` | NET primera tanda: **10/12**. Pasaron coop, netsim (RTT ~252 ms), race, hostleave, clientdrop, loaddrop, closedrop, **party3** (3 procesos, inicio desde la sala con 3, los tres con victoria y mismo final convergido), **party4** (4 procesos, ídem con 4) y **latejoin** (cliente que llega con la ronda iniciada: el anfitrión lo rechaza y el cliente ve `error.already_started`). **FAIL `repeat` y `lose`, los dos de instrumentación:** iniciar desde la sala cuenta un reinicio (el script esperaba `reinicios=1`) y el límite de prueba de 20 s ahora corre desde el inicio en la sala (el bot ganó a los 16,6 s). Script corregido (intento inicial + 1; límite de 10 s). Repetición de esos dos: PASS (2/2). Una tanda completa nueva sigue pendiente. Todo en localhost: no es LAN ni internet. |
 | Red en Bar_LastRound, `-Scenario all` | build `ba443bf` | NET **9/9 PASS en la primera tanda, sin repeticiones**: coop, repeat, lose, netsim (RTT del cliente ~255 ms, 3 % de pérdida), race, hostleave, clientdrop, loaddrop, closedrop. Todos los finales convergieron dentro del mismo intento (`convergencia=0,00s`). Historial en `.local-setup/logs/net/net_smoke_history.csv`. |
 | **Atascos abiertos** (`StuckRecoveryTests`, jugador guionado con entradas normales) | `a68a318` y siguientes | PM 5/5. Pie en la abertura: el HUD dice «Le queda un pie afuera: empujalo adentro» y el jugador lo resuelve. Jugador detrás del tío: sale por el costado. Carrito torcido en la puerta (45° y 90°) con el tío atado: sale tirando recto del asa. Fuerza de la puerta medida. |
 | **Señales de ataque** (`AttackSignalTests`, 3 variantes × 4 ataques) | `dfedb95` | PM 12/12. En el articulado, la preparación mueve una extremidad 0,13–0,51 m y el golpe, 0,16–0,24 m más; sigue de pie y sin uniones estiradas. El aviso del piso es visible y se llena con la preparación. VIS: patada con el sector del piso apuntando al jugador y «VA A PATEAR». |
@@ -58,8 +66,8 @@
 
 ## Pendiente (en orden)
 
-1. **Lobby y preparación de jugadores:** sala previa con miembros presentes, listo/no listo, dificultad solo editable por el anfitrión, Start con motivo cuando está deshabilitado, rechazo de unirse con la ronda iniciada, compatibilidad de versión. Pantallas de error y pérdida del anfitrión con el kit.
-2. Pruebas con **3 y 4 clientes** en procesos separados (localhost).
+1. Lobby: falta la pantalla de conexión con cancelación y la pérdida del anfitrión con el kit (hoy, mensaje localizado en el menú). Nombres de jugador elegibles (hoy, «Jugador N»).
+2. 3 y 4 procesos verificados en localhost (`party3`/`party4`). Falta LAN con varias PC.
 3. **Audio y diálogos** con procedencia y licencia (catálogo `dialogue_en_es.csv` del paquete; voz y efectos sin fuente todavía).
 4. Validación de la interfaz a 720p, ultrawide y texto al 150 % (necesita una persona). Navegación con mando.
 5. Rendimiento, sesiones largas, las tres dificultades, QA, build reproducible.
@@ -76,9 +84,8 @@
 
 ## Próxima acción exacta
 
-1. Lobby local/LAN con preparación: estado de sala replicado (NGO), pantalla del kit y rechazo de unirse en curso. Primero el modelo de datos y las pruebas de red (`net_smoke` con un escenario `lobby`).
-2. `net_smoke`: escenario con 3 y 4 procesos (un anfitrión y dos o tres clientes con autopiloto).
-3. Audio: buscar recursos con licencia compatible y registrar la procedencia en el catálogo; si no hay, dejar el sistema de eventos de sonido con el catálogo de diálogos como subtítulos.
+1. Tanda completa nueva de `net_smoke -Scenario all` (12 escenarios) con el script corregido; regresión completa PlayMode sobre el código del lobby.
+2. Audio: buscar recursos con licencia compatible y registrar la procedencia en el catálogo; si no hay, dejar el sistema de eventos de sonido con el catálogo de diálogos como subtítulos.
 
 ## Historial (resultados de sesiones anteriores, sin reescribir)
 

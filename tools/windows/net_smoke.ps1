@@ -97,12 +97,13 @@ for ($run = 1; $run -le $Runs; $run++) {
       'repeat' {
         $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd','-ueRepeat','1') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd','-ueRepeat','1') 420
         if ($r) { $fh = @(Finals $r.h); $fc = @(Finals $r.c); $wins = (Grep $r.h '\[Round\] SUCCESS').Count
-          $ok = $wins -ge 2 -and (Field $fh[-1] 'reinicios') -eq '1' -and (Field $fc[-1] 'reinicios') -eq '1' -and (SameFinal $fh[0] $fc[0])
+          # iniciar desde la sala ya cuenta un reinicio: el segundo intento es el primero + 1, en ambos procesos
+          $i0 = [int](Field $fh[0] 'reinicios'); $ok = $wins -ge 2 -and [int](Field $fh[-1] 'reinicios') -eq ($i0 + 1) -and [int](Field $fc[-1] 'reinicios') -eq ($i0 + 1) -and (SameFinal $fh[0] $fc[0])
           Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "victorias=$wins reinicios anfitrion=$(Field $fh[-1] 'reinicios') cliente=$(Field $fc[-1] 'reinicios') intento1 anfitrion[$(Brief $fh[0])] cliente[$(Brief $fc[0])]" }
       }
       'lose' {
-        # Derrota por tiempo (limite de prueba de 20 s), reintento decidido por el anfitrion y regreso del cliente al menu.
-        $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueRoundTime','20','-ueRepeat','1','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueRepeat','1','-ueMenuAtEnd') 150 -waitHost
+        # Derrota por tiempo (limite de prueba de 10 s desde el inicio en la sala), reintento decidido por el anfitrion y regreso del cliente al menu.
+        $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueRoundTime','10','-ueRepeat','1','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueRepeat','1','-ueMenuAtEnd') 150 -waitHost
         if ($r) { $fh = @(Finals $r.h); $fc = @(Finals $r.c)
           $lostBoth = (Field $fh[0] 'ronda') -eq 'Timeout' -and (Field $fc[0] 'ronda') -eq 'Timeout' -and (Converged $fh[0]) -and (Converged $fc[0]) -and (Field $fh[0] 'reinicios') -eq (Field $fc[0] 'reinicios')
           $retried = (Grep $r.h '\[Round\] restart #1').Count -gt 0

@@ -4,7 +4,7 @@
 
 1. Doble clic en `Builds\UncleExtraction\UncleExtraction.exe` (se genera en la PC de desarrollo; no está en Git).
 2. Menú: **Jugar solo** → tocar **Dificultad** hasta la deseada → **Iniciar extracción**. El **Laboratorio** es la escena de diagnóstico. El escenario principal usa el tío de 11 cuerpos (ragdoll reducido, malla del kit). **Laboratorio** conserva el tío anterior de primitivas (un solo cuerpo) para comparar, y **Laboratorio: tío articulado (prueba)** es el laboratorio con el tío nuevo.
-3. Cooperativo en la misma PC o LAN: en una ventana **Jugar con amigos → Crear partida en la red local**; en otra **Unirse por IP** con la IP del anfitrión (`127.0.0.1` en la misma PC). Windows puede pedir permiso de firewall al anfitrión. Las salas por internet (Relay) todavía no están disponibles.
+3. Cooperativo en la misma PC o LAN: en una ventana **Jugar con amigos → Crear partida en la red local**; en otra **Unirse por IP** con la IP del anfitrión (`127.0.0.1` en la misma PC). Windows puede pedir permiso de firewall al anfitrión. Primero se abre la **sala**: cada jugador pulsa **LISTO** y el anfitrión, que elige la dificultad, pulsa **INICIAR EXTRACCIÓN**. No se puede entrar con la ronda ya empezada; al reintentar se vuelve a la sala. Las salas por internet (Relay) todavía no están disponibles.
 4. **Opciones** (en el menú o en la pausa):
    - idioma (español rioplatense o inglés), volumen, sensibilidad del mouse, campo de visión, eje Y invertido, subtítulos de ataques y tamaño del texto;
    - **controles**: elegir una acción y pulsar la tecla nueva. Esc cancela. Si la tecla ya estaba en uso, las dos acciones se intercambian;
