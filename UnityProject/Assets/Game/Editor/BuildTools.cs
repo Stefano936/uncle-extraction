@@ -45,10 +45,7 @@ namespace UncleExtraction.EditorTools
                 // version de origen: commit, si habia cambios sin commitear y cuando se genero (cada resultado se asocia a esto)
                 string head = Git("rev-parse --short HEAD"), dirty = Git("status --porcelain --untracked-files=no");
                 File.WriteAllText(Path.Combine(outDir, "VERSION.txt"),
-                    $"Commit de origen: {head}{(dirty != "" ? " + cambios sin commitear" : "")}
-Generada: {DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}
-Tipo: {(dev ? "desarrollo" : "release")} {impl}
-");
+                    $"Commit de origen: {head}{(dirty != "" ? " + cambios sin commitear" : "")}\nGenerada: {DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}\nTipo: {(dev ? "desarrollo" : "release")} {impl}\n");
             }
             return s.result == BuildResult.Succeeded;
         }
