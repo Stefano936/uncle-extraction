@@ -61,7 +61,7 @@ namespace UncleExtraction
             Current = p;
             if (pageRoot) Destroy(pageRoot.gameObject);
             options?.Close(); options = null;
-            pageRoot = Ui.Rect("Page", canvas.transform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(Ui.Margin, -40), new Vector2(620, -360));
+            pageRoot = Ui.Rect("Page", canvas.transform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(Ui.Margin, -70), new Vector2(620, -480));
             GameObject first = null;
             float y = 0;
             Button B(string key, Action a, float h = Ui.ButtonH)
