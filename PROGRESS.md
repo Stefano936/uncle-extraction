@@ -23,7 +23,9 @@
   - el reintento en red vuelve a la sala;
   - rechazo con motivo (sala llena, otra versión, ronda iniciada).
 
-**Sin audio. Sin internet.**
+- **Sonido provisional sintetizado** (señal distinta por ataque, impactos, agarres, puertas, fin de ronda) y **subtítulos del tío** del catálogo de diálogos, con filtro de insultos. Sin voz grabada ni música; origen y licencias en `CREDITS_ASSETS.md`.
+
+**Sin internet.**
 
 **Evidencia de esta sesión:**
 - **PM** = PlayMode en el editor (anfitrión en loopback).
@@ -39,6 +41,8 @@
 | Bot de carrito en la puerta: tres modos más (código posterior a `ba443bf`) | ver commit siguiente | Partidas completas (AUTO) tras el arreglo de la espera: **14/15**. FAIL: laboratorio central, carrito a −28° en el marco. **Reproducido** (`lab_fail_m28`, en el bar y en el laboratorio): tirar recto **no** lo saca. Un jugador lo resuelve empujándolo hacia adentro, alineándose y volviendo a tirar (3,7–3,9 s, un intento); no hay cambio de juego. El bot ahora hace esa maniobra. Tanda siguiente **8/9**: laboratorio central, carrito derecho pero corrido 1,37 m del eje contra la pared interior; el bot ahora también se recentra. Tanda siguiente de los tres intentos de carrito: **3/3** (Bar 63,9 s, laboratorio 29,9 s, articulado 33,9 s). Una tanda no prueba que la intermitencia desapareció. |
 | Regresión completa (señales de ataque, convergencia, desvío del bot) | `dfedb95` | PM **74/74**, EditMode 9/9. AUTO 12/12: Bar carrito 51,3 s; arrastre Normal 17,7 s y Difícil 52,3 s; laboratorio articulado carrito 37,2 s y arrastre 30,7/26,9 s; laboratorio central carrito 27,7 s y arrastre 23,8/17,4 s. |
 | Regresión anterior (atascos) | `a68a318` | PM **61/62**. FAIL del bot de carrito en el laboratorio articulado: el asa quedó contra la pared y el bot caminó contra el carrito 280 s. Corregido en el bot (`dfedb95`): ahora rodea hasta un costado libre del asa. |
+| Regresión completa (lobby) | `9dc24c6` | PM **86 pasadas, 0 fallas, 1 omitida** (pie en la abertura con el cuerpo central: no aplica), EditMode 14/14. AUTO 12/12: Bar carrito 92,0 s, arrastre 21,2/69,8 s; laboratorio carrito 27,4 s, arrastre 49,7/84,6 s; articulado carrito 34,1 s, arrastre 18,9/60,8 s. |
+| Sonido y subtítulos (`AudioDialogueTests`, `UiTests`) | commit siguiente | EditMode 16/16. La prueba encontró saturación en el impacto (pico 1,13), corregida normalizando los clips. Las cuatro señales de ataque son distintas entre sí. Catálogo: 54 líneas del perfil alcohol, columnas limpias con el filtro, enfriamiento respetado. PM interfaz y flujo 5/5, con líneas reales en el registro (`round_start`, `grab_first`, `round_timeout`). Sin prueba de escucha humana. |
 | **Red con sala previa, 3 y 4 procesos** (`-Scenario all`, 12 escenarios) | build `f2b4ebc` | NET primera tanda: **10/12**. Pasaron coop, netsim (RTT ~252 ms), race, hostleave, clientdrop, loaddrop, closedrop, **party3** (3 procesos, inicio desde la sala con 3, los tres con victoria y mismo final convergido), **party4** (4 procesos, ídem con 4) y **latejoin** (cliente que llega con la ronda iniciada: el anfitrión lo rechaza y el cliente ve `error.already_started`). **FAIL `repeat` y `lose`, los dos de instrumentación:** iniciar desde la sala cuenta un reinicio (el script esperaba `reinicios=1`) y el límite de prueba de 20 s ahora corre desde el inicio en la sala (el bot ganó a los 16,6 s). Script corregido (intento inicial + 1; límite de 10 s). Repetición de esos dos: PASS (2/2). Una tanda completa nueva sigue pendiente. Todo en localhost: no es LAN ni internet. |
 | Red en Bar_LastRound, `-Scenario all` | build `ba443bf` | NET **9/9 PASS en la primera tanda, sin repeticiones**: coop, repeat, lose, netsim (RTT del cliente ~255 ms, 3 % de pérdida), race, hostleave, clientdrop, loaddrop, closedrop. Todos los finales convergieron dentro del mismo intento (`convergencia=0,00s`). Historial en `.local-setup/logs/net/net_smoke_history.csv`. |
 | **Atascos abiertos** (`StuckRecoveryTests`, jugador guionado con entradas normales) | `a68a318` y siguientes | PM 5/5. Pie en la abertura: el HUD dice «Le queda un pie afuera: empujalo adentro» y el jugador lo resuelve. Jugador detrás del tío: sale por el costado. Carrito torcido en la puerta (45° y 90°) con el tío atado: sale tirando recto del asa. Fuerza de la puerta medida. |
@@ -68,7 +72,7 @@
 
 1. Lobby: falta la pantalla de conexión con cancelación y la pérdida del anfitrión con el kit (hoy, mensaje localizado en el menú). Nombres de jugador elegibles (hoy, «Jugador N»).
 2. 3 y 4 procesos verificados en localhost (`party3`/`party4`). Falta LAN con varias PC.
-3. **Audio y diálogos** con procedencia y licencia (catálogo `dialogue_en_es.csv` del paquete; voz y efectos sin fuente todavía).
+3. Audio de producción: voz del tío (actor o voz licenciada), música de bar ficticia, efectos grabados por material. Hoy: efectos sintetizados y subtítulos.
 4. Validación de la interfaz a 720p, ultrawide y texto al 150 % (necesita una persona). Navegación con mando.
 5. Rendimiento, sesiones largas, las tres dificultades, QA, build reproducible.
 
@@ -85,7 +89,7 @@
 ## Próxima acción exacta
 
 1. Tanda completa nueva de `net_smoke -Scenario all` (12 escenarios) con el script corregido; regresión completa PlayMode sobre el código del lobby.
-2. Audio: buscar recursos con licencia compatible y registrar la procedencia en el catálogo; si no hay, dejar el sistema de eventos de sonido con el catálogo de diálogos como subtítulos.
+2. Pantalla de conexión con cancelación y nombres de jugador elegibles.
 
 ## Historial (resultados de sesiones anteriores, sin reescribir)
 

@@ -361,6 +361,16 @@
    "key": "input.mouse_forwardButton",
    "en": "Mouse 5",
    "es_UY": "Botón 5"
+  },
+  {
+   "key": "dialogue.uncle",
+   "en": "UNCLE",
+   "es_UY": "TÍO"
+  },
+  {
+   "key": "dialogue.bartender",
+   "en": "BARTENDER",
+   "es_UY": "CANTINERO"
   }
  ]
 }

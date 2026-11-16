@@ -11,6 +11,7 @@ namespace UncleExtraction
         public static float MasterVolume = 0.8f;
         public static Difficulty SoloDifficulty = Difficulty.Normal;
         public static bool AttackSubtitles = true;
+        public static bool ProfanityFilter;
         public static float TextScale = 1f;
         static bool loaded;
 
@@ -25,6 +26,7 @@ namespace UncleExtraction
                 MasterVolume = PlayerPrefs.GetFloat("ue.volume", MasterVolume);
                 SoloDifficulty = (Difficulty)PlayerPrefs.GetInt("ue.difficulty", (int)SoloDifficulty);
                 AttackSubtitles = PlayerPrefs.GetInt("ue.attackSubs", 1) == 1;
+                ProfanityFilter = PlayerPrefs.GetInt("ue.profanity", 0) == 1;
                 TextScale = Mathf.Clamp(PlayerPrefs.GetFloat("ue.textScale", 1f), 1f, 1.5f);
             }
             catch { /* preferencias corruptas: valores por defecto */ }
@@ -39,11 +41,12 @@ namespace UncleExtraction
             PlayerPrefs.SetFloat("ue.volume", MasterVolume);
             PlayerPrefs.SetInt("ue.difficulty", (int)SoloDifficulty);
             PlayerPrefs.SetInt("ue.attackSubs", AttackSubtitles ? 1 : 0);
+            PlayerPrefs.SetInt("ue.profanity", ProfanityFilter ? 1 : 0);
             PlayerPrefs.SetFloat("ue.textScale", TextScale);
             PlayerPrefs.Save();
             Apply();
         }
 
-        public static void Apply() { AudioListener.volume = Mathf.Clamp01(MasterVolume); GameHud.AttackSubtitles = AttackSubtitles; Ui.TextScale = TextScale; }
+        public static void Apply() { AudioListener.volume = Mathf.Clamp01(MasterVolume); GameHud.AttackSubtitles = AttackSubtitles; Ui.TextScale = TextScale; UncleDialogue.ProfanityFilter = ProfanityFilter; }
     }
 }

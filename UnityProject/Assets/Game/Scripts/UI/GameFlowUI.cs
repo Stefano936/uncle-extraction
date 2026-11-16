@@ -31,6 +31,8 @@ namespace UncleExtraction
         {
             GameSettings.Load(); if (!round) round = FindAnyObjectByType<RoundDirector>(); if (!npc) npc = FindAnyObjectByType<NpcBrain>();
             if (!GetComponent<GameHud>()) gameObject.AddComponent<GameHud>();
+            if (!GetComponent<GameAudio>()) gameObject.AddComponent<GameAudio>();
+            if (!GetComponent<UncleDialogue>()) gameObject.AddComponent<UncleDialogue>();
             canvas = Ui.Canvas("FlowUI", 20);
             BuildPause(); BuildResults(); lobby = new LobbyView(canvas.transform, round);
             Loc.Changed += Relabel; Relabel();

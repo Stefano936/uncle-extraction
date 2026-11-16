@@ -13,7 +13,7 @@ namespace UncleExtraction
     {
         public RectTransform Root { get; private set; }
         readonly Action onClose;
-        struct Draft { public float mouse, fov, volume, textScale; public bool invertY, subtitles; public string lang; }
+        struct Draft { public float mouse, fov, volume, textScale; public bool invertY, subtitles, profanity; public string lang; }
         Draft saved, draft;
         readonly List<Action> refresh = new List<Action>();
         Text status; RectTransform confirm; IDisposable listening; Act listeningFor;
@@ -37,6 +37,7 @@ namespace UncleExtraction
             Slider(Root, "settings.fov", new Vector2(48, y - 330), 65f, 100f, () => draft.fov, v => draft.fov = v, v => $"{v:0}");
             Toggle(Root, "settings.invert_y", new Vector2(48, y - 400), () => draft.invertY, v => draft.invertY = v);
             Toggle(Root, "settings.attack_subtitles", new Vector2(48, y - 460), () => draft.subtitles, v => draft.subtitles = v);
+            Toggle(Root, "settings.profanity", new Vector2(48, y - 580), () => draft.profanity, v => draft.profanity = v);
             Choice(Root, "settings.text_size", new Vector2(48, y - 520), new[] { "100%", "125%", "150%" }, () => draft.textScale >= 1.4f ? 2 : draft.textScale >= 1.2f ? 1 : 0, i => draft.textScale = i == 2 ? 1.5f : i == 1 ? 1.25f : 1f, "percent");
             // columna derecha: controles
             Section(Root, "settings.controls", new Vector2(620, y));
@@ -56,11 +57,11 @@ namespace UncleExtraction
             UnityEngine.EventSystems.EventSystem.current?.SetSelectedGameObject(apply.gameObject);
         }
 
-        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, textScale = Ui.TextScale, lang = Loc.Language };
+        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, profanity = GameSettings.ProfanityFilter, textScale = Ui.TextScale, lang = Loc.Language };
         static void Store(Draft d)
         {
             GameSettings.MouseSensitivity = d.mouse; GameSettings.FieldOfView = d.fov; GameSettings.MasterVolume = d.volume; GameSettings.InvertY = d.invertY;
-            GameHud.AttackSubtitles = d.subtitles; GameSettings.AttackSubtitles = d.subtitles; GameSettings.TextScale = d.textScale; Ui.TextScale = d.textScale;
+            GameHud.AttackSubtitles = d.subtitles; GameSettings.AttackSubtitles = d.subtitles; GameSettings.ProfanityFilter = d.profanity; UncleDialogue.ProfanityFilter = d.profanity; GameSettings.TextScale = d.textScale; Ui.TextScale = d.textScale;
             if (Loc.Language != d.lang) Loc.SetLanguage(d.lang);
         }
 

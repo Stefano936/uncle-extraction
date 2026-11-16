@@ -46,6 +46,7 @@ namespace UncleExtraction.EditorTools
             foreach (var f in new[] { "DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "FONT_LICENSE.txt" })
                 CopyIfChanged(Path.Combine(Kit, "assets/fonts", f), $"{UiDir}/Fonts/{f}");
             CopyIfChanged(Path.Combine(Kit, "data/localization_en_es.json"), $"{LocDir}/ui_strings.json");
+            CopyIfChanged("../preproduction/uncle_extraction/data/dialogue_en_es.csv", $"{LocDir}/dialogue_en_es.csv"); // catalogo de dialogos original (subtitulos)
             Directory.CreateDirectory(UiDir + "/Backgrounds");
             CopyIfChanged(Path.Combine(Kit, "assets/backgrounds/bar_idle.png"), $"{UiDir}/Backgrounds/bar_idle.png");
             ConfigureSprite($"{UiDir}/Backgrounds/bar_idle.png", Vector4.zero, 100);

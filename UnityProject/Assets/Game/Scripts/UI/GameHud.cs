@@ -19,7 +19,8 @@ namespace UncleExtraction
         readonly HandUi[] hand = new HandUi[2];
         Image energy, composure; RectTransform composureBox; float composureShowUntil, lastComposure = 100f;
         Text timer, objective, objectiveDetail, prompt, toast, fallTitle, fallDetail, attackTitle, attackHint, attackSub, effortHint;
-        Image promptBar, attackIcon, fallBar; RectTransform attackBox, promptBox, fallBox, toastBox;
+        Image promptBar, attackIcon, fallBar; RectTransform attackBox, promptBox, fallBox, toastBox, subBox; Text subtitle;
+        public string SubtitleText => subBox && subBox.gameObject.activeSelf ? subtitle.text : "";
         float objectiveUntil;
 
         public HandState StateOf(int h) => hand[h] != null ? hand[h].s : HandState.Unavailable;
@@ -72,6 +73,9 @@ namespace UncleExtraction
             promptBox = Ui.PanelBox("Prompt", root, new Vector2(0.5f, 0f), new Vector2(0, 300), new Vector2(820, 80));
             prompt = Ui.Label(promptBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter, true); Inset(prompt, 20, 4, 20, 18);
             promptBar = Ui.Bar(promptBox, "Progress", new Vector2(0.5f, 0f), Vector2.zero, new Vector2(820, 12), true, out _);
+            // subtitulos del tio (catalogo de dialogos; sin voz grabada)
+            subBox = Ui.PanelBox("Subtitle", root, new Vector2(0.5f, 0f), new Vector2(0, 460), new Vector2(980, 64));
+            subtitle = Ui.Label(subBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter); Inset(subtitle, 20, 4, 20, 4);
             toastBox = Ui.PanelBox("Toast", root, new Vector2(0.5f, 0f), new Vector2(0, 390), new Vector2(620, 56));
             toast = Ui.Label(toastBox, "Text", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleCenter);
             // caida
@@ -152,6 +156,9 @@ namespace UncleExtraction
             string label = control ? hands.InteractLabel : "";
             promptBox.gameObject.SetActive(label != "" && !fallen);
             if (label != "") { prompt.text = Key(Loc.Coded(label)); promptBar.fillAmount = hands.InteractProgress01; promptBar.transform.parent.gameObject.SetActive(hands.InteractProgress01 > 0.01f); }
+            var dlg = UncleDialogue.Instance; string line = dlg ? dlg.Current : "";
+            subBox.gameObject.SetActive(line != "");
+            if (line != "") subtitle.text = $"<b>{Loc.T(dlg.CurrentSpeaker == "bartender" ? "dialogue.bartender" : "dialogue.uncle")}:</b> {line}";
             bool toastOn = Time.time < hands.FeedbackUntil && hands.LastFeedback != "" && !fallen;
             toastBox.gameObject.SetActive(toastOn);
             if (toastOn) toast.text = Key(Loc.Coded(hands.LastFeedback));

@@ -37,5 +37,5 @@ Importación verificada con `Kit3DImporter.ImportAndReport`: metros, Y arriba, s
 - Pantallas en uso: HUD, menú, pausa, resultados y opciones.
 - Pendiente: lobby, pantalla de errores de conexión y pérdida del anfitrión con el kit; validación a 720p, ultrawide y texto al 150 % por una persona.
 - Las capturas de `screens/` no se importan. |
-| Audio y diálogos | Pendiente: no hay sonido. Los textos EN/es están en `preproduction/uncle_extraction/data/dialogue_en_es.csv` (sin integrar). |
+| Audio y diálogos | **En uso, provisional:** efectos sintetizados por el juego (`SfxSynth`; señal distinta por ataque, impactos, agarres, puertas y fin de ronda), con origen propio y sin archivos de terceros. Diálogos del catálogo original (`dialogue_en_es.csv`, 54 líneas del perfil alcohol) como **subtítulos** ligados a eventos reales, con prioridad, enfriamiento, idioma y filtro de insultos. **Sin voz grabada ni música.** Origen y licencias: `CREDITS_ASSETS.md`. |
 | Materiales de color de las primitivas (`Assets/Game/Materials/`) | Placeholders generados por el constructor. |
