@@ -3,7 +3,7 @@
 ## Abrir
 
 1. Doble clic en `Builds\UncleExtraction\UncleExtraction.exe` (se genera en la PC de desarrollo; no está en Git).
-2. Menú: **Jugar solo** → elegir dificultad → **Empezar: The Last Round**. El **Laboratorio** es la escena de diagnóstico. **Laboratorio: tío articulado (prueba)** es el mismo laboratorio con el tío de 11 cuerpos (ragdoll reducido, malla del kit); está en prueba y todavía no reemplaza al tío del escenario principal.
+2. Menú: **Jugar solo** → elegir dificultad → **Empezar: The Last Round**. El **Laboratorio** es la escena de diagnóstico. El escenario principal usa el tío de 11 cuerpos (ragdoll reducido, malla del kit). **Laboratorio** conserva el tío anterior de primitivas (un solo cuerpo) para comparar, y **Laboratorio: tío articulado (prueba)** es el laboratorio con el tío nuevo.
 3. Cooperativo en la misma PC o LAN: en una ventana **Jugar con amigos → Crear partida**; en otra **Unirse** con la IP del anfitrión (`127.0.0.1` en la misma PC). Windows puede pedir permiso de firewall al anfitrión.
 
 ## Objetivo

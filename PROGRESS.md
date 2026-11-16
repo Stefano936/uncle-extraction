@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-16 (sesión 7: tío articulado como variante de prueba en `PhysicsLab_Articulated`; pruebas de resistencia separadas por modo).
+Última actualización: 2026-11-16 (sesión 7: tío articulado en Bar_LastRound y `PhysicsLab_Articulated`; pruebas de resistencia separadas por modo).
 
-**Builds de referencia** (locales, no versionadas), generadas desde el commit de esta actualización:
+**Builds de referencia** (locales, no versionadas). Cada carpeta tiene `VERSION.txt` con el commit de origen; las actuales salen de `a0309d7`:
 - `Builds/UncleExtraction/UncleExtraction.exe`: release Mono, para jugar. Incluye `LEEME.txt` con controles e instrucciones (`docs/COMO_PROBAR.md`).
 - `Builds/UncleExtraction_Dev/UncleExtraction.exe`: desarrollo, con el simulador de red. Solo para pruebas.
 
@@ -21,7 +21,8 @@ Los niveles de evidencia son: **PM** = PlayMode en el editor (anfitrión en loop
 | Vaso señuelo, ayuda para levantarse, rescate técnico | PM. |
 | Fuga: libre, vuelve a su banco **por la puerta** (no contra el muro); más rápido (2,2 m/s) si hay alguien a menos de 3 m | PM: `Uncle_Escapes_BackInsideThroughTheDoor`. |
 | Red en **Bar_LastRound** (NET, `tools/windows/net_smoke.ps1 -Scene Bar_LastRound`) | coop PASS (24,1/24,0 s, mismo estado final en ambos); reintento tras ganar PASS (2 victorias, `reinicios=1` en ambos); derrota por tiempo → reintento → cliente al menú PASS; red simulada 120 ms ±20 ms y 3 % de pérdida PASS (59,0/58,9 s, RTT del cliente ~246 ms); carrera por el socket PASS; salida del anfitrión PASS (el cliente vuelve al menú sin ganar solo); desconexión del cliente agarrando PASS (0 agarres); **desconexión durante la carga del carrito** PASS (anfitrión con 0 agarres, carrito «Vacío», sin excepciones); **desconexión durante el cierre** PASS (puertas `Open`, sin asegurar, sin excepciones). |
-| **Tío articulado (ragdoll reducido), variante de prueba** en `PhysicsLab_Articulated` (11 cuerpos, 110 kg en total, malla del kit ligada; el central sigue en PhysicsLab y Bar_LastRound) | PM: las 18 pruebas de laboratorio corren en las dos variantes (`PhysicsLabPlayTests` y `PhysicsLabPlayTests_Articulated`): agarres y 10 reinicios sin huérfanos, arrastre, empujón y caída del jugador, cierre con dos jugadores y abortos, extracción por partes (medio afuera no cierra), reinicio a mitad del cierre y de la carga (sin colisiones ignoradas residuales tío-carrito ni tío-jugador), señuelo, ayuda, fuga por la puerta, rescate técnico de todo el cuerpo, intento de soltarse del carrito con señal, masa 110 kg, quieto sin temblor ni uniones estiradas, empujón leve sin caída, se levanta pegado a la baranda. NET (localhost, `-Scene PhysicsLab_Articulated`): coop, carrera por el socket, desconexión agarrando, durante la carga, durante el cierre y salida del anfitrión PASS. |
+| **Tío articulado (ragdoll reducido)** en **Bar_LastRound** y `PhysicsLab_Articulated` (11 cuerpos, 110 kg en total, malla del kit ligada; PhysicsLab conserva el cuerpo central como respaldo; volver atrás en el bar: `LevelSpecs.Bar()` → `articulatedUncle = false`) | PM: las 18 pruebas de laboratorio corren en las dos variantes (`PhysicsLabPlayTests` y `PhysicsLabPlayTests_Articulated`): agarres y 10 reinicios sin huérfanos, arrastre, empujón y caída del jugador, cierre con dos jugadores y abortos, extracción por partes (medio afuera no cierra), reinicio a mitad del cierre y de la carga (sin colisiones ignoradas residuales tío-carrito ni tío-jugador), señuelo, ayuda, fuga por la puerta, rescate técnico de todo el cuerpo, intento de soltarse del carrito con señal, masa 110 kg, quieto sin temblor ni uniones estiradas, empujón leve sin caída, se levanta pegado a la baranda. NET (localhost, `-Scene PhysicsLab_Articulated`): coop, carrera por el socket, desconexión agarrando, durante la carga, durante el cierre y salida del anfitrión PASS. |
+| **Red con el tío articulado en Bar_LastRound** (NET localhost, build `a0309d7`) | `-Scenario all`: coop (22,0/21,9 s), reintento, derrota → reintento → menú, red simulada 120 ms ±20/3 % (26,0 s), carrera, salida del anfitrión, desconexión agarrando y durante el cierre PASS; **desconexión durante la carga: NOT_RUN** en la corrida completa (el bot cliente no llegó a cargar en 240 s) y **PASS** al repetirla sola. `PhysicsLab_Articulated`: `lose` y `coop` PASS. Sin LAN ni internet. |
 | `net_smoke.ps1` con códigos estrictos | 0 solo si todos los escenarios pedidos dieron PASS; 1 si hubo FAIL; 2 si algo quedó BLOCKED o NOT_RUN. Cierra procesos previos del juego y marca BLOCKED si el puerto está ocupado. |
 
 Los fallos de esta etapa ya están corregidos y se verificaron después:
@@ -32,6 +33,8 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
 
 ## 2. Implementado con observaciones
 
+- **Batería con `a0309d7`** (PM, bar con el tío articulado): PlayMode **57/57** (`pt_full_f4.xml`), EditMode 9/9. Intentos: Bar carrito 43,1 s, arrastre Normal 20,7 s, Difícil 52,0 s; laboratorio articulado carrito 67,4 s, arrastre 41,6/37,2 s; laboratorio central carrito 27,5 s, arrastre 43,4/105,1 s.
+- **Observación (playtest):** con el tío atado y nadie en el asa, el carrito no tiene freno y un jugador que lo choca caminando lo empuja varios metros. Se probó frenarlo también atado y se revirtió (la amortiguación sobre los 30 kg del carrito no alcanza: 3–4 m en 2 s, y empeoró al bot).
 - **Batería con `724ffe1`** (PM): PlayMode **50/50** (`pt_full_art3.xml`), EditMode 9/9. Intentos completos: PhysicsLab carrito 84,7 s, arrastre Normal 41,5 s, arrastre Difícil 78,1 s; Bar_LastRound carrito 30,5 s, arrastre Normal 30,5 s, arrastre Difícil 53,6 s; PhysicsLab_Articulated carrito 24,6 s, arrastre Normal 12,0 s, arrastre Difícil 14,5 s. En esa misma sesión, corridas anteriores dieron FAIL y se corrigieron antes de esta batería (detalle abajo); ninguna se cuenta como PASS.
 - **Fallos encontrados y corregidos en la sesión 7:**
   - *Juego:* la carga cinemática del tío articulado en el carrito lanzaba al jugador (~3 m en 0,45 s). Ahora las colisiones tío-jugador se ignoran solo durante la subida y se restauran siempre (prueba de reinicio a mitad de la carga lo verifica).
@@ -41,7 +44,7 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
   - *Build:* `PhysicsLab_Articulated` no estaba en la lista de escenas de `BuildTools` (la primera corrida de red dio FAIL/NOT_RUN por eso).
 - **FAIL intermitente conocido — bot del modo carrito en PhysicsLab con el tío central.** En la sesión 7 el intento `SoloAttemptTests.SoloAttempt_Cart_Normal_Succeeds` pasó 5 de 8 corridas. Los tres fallos son de navegación del bot con el carrito por la puerta (carrito girado o atravesado en el marco; en el último, el tío se soltó en la puerta, volvió al bar y el bot trabó el carrito vacío en el marco). Ninguno es una regla del juego, pero un jugador también puede trabar el carrito ahí: revisarlo en el playtest. Última corrida de intentos completos sobre el código del commit que agrega esta nota (`pt_solo_cs2`): **8/9**; el fallo es este (Lab carrito central). Los demás: Lab arrastre Normal 51,3 s y Difícil 53,6 s; articulado carrito 22,4 s, arrastre 12,0/13,6 s; Bar carrito 30,2 s, arrastre Normal 31,7 s y Difícil 87,9 s. No se debilitó ninguna condición.
 - **Prueba de carrito en partida completa:** exige que el tío intente soltarse cuando la regla lo permite (atado con más de 40 % de presupuesto por más que el intervalo máximo de 10 s). Agotado no lo intenta (fatiga, GDD 05); eso pasó en una corrida del articulado y es conducta correcta. La conducta en sí la exige siempre `Cart_StrappedUncle_SignalsAndTriesToWriggleFree`.
-- **Tío articulado: demasiado fácil (bloquea pasarlo a Bar_LastRound).** Arrastre Difícil 14,5 s con 1 ataque frente a 53–78 s con 6–9 del central; en la red, `lose` (límite de 20 s) dio FAIL porque el bot ganó en 17,4 s. Hipótesis sin verificar: al tirar de hombros o antebrazos se levanta el torso y solo rozan las piernas, así que baja la fricción; el central es un tronco rígido apoyado entero. Hay que medirlo e igualar la dificultad sin cambiar la masa total.
+- **Dificultad del articulado (resuelto con evidencia automática, falta prueba humana):** de pie lo sostiene un resorte de altura que reemplazaba el apoyo de los pies pero no su fricción; se deslizaba (arrastre Difícil 14,5 s con 1 ataque). Primero se agregó fricción repartida por masa y quedó inamovible para un jugador (no se inclinaba nunca); finalmente se aplica en el punto de apoyo, como los pies del central. Con `a0309d7`: arrastre Difícil 37–55 s con 4–7 ataques en el laboratorio y 52,0 s con 6 en el bar (central: 52–120 s con 6–13). Arrastre del tío caído (`Measure_DragFallenUncle`): hombros 2,45 vs 2,60 m/s, tobillos 1,29 vs 1,11 m/s. Si se siente distinto al jugarlo, revisar `footFriction` y `hoverHeight`.
 - **Red con el articulado** (NET localhost, build de `724ffe1`, `-Scene PhysicsLab_Articulated`): coop, reintento, red simulada (RTT ~209 ms), carrera, salida del anfitrión, desconexión agarrando, durante la carga y durante el cierre PASS; `lose` FAIL (ver arriba).
 - **Red en Bar_LastRound** (build de `724ffe1`): coop, reintento, derrota, red simulada (RTT ~236 ms), carrera, salida del anfitrión, desconexión agarrando y durante la carga PASS; `closedrop` NOT_RUN (bot). Con la corrección del bot (commit siguiente): `closedrop` y `coop` PASS 2/2.
 - **Balance:** el carrito en solitario sigue siendo probablemente demasiado fácil; revisar en el playtest antes de tocar valores.
@@ -49,7 +52,6 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
 
 ## 3. Pendiente de implementar (en orden)
 
-1. Ragdoll reducido: igualar la dificultad del articulado con la del central y recién después pasarlo a Bar_LastRound (el central queda como respaldo).
 2. URP, materiales y texturas del kit, animaciones del kit (Idle/Push/Kick) y feedback visual de agarres y golpes.
 3. Interfaz con el kit de UI (hoy IMGUI provisional), localización EN/es_UY, controles remapeables (InputActionAsset) y opciones completas.
 4. Sonido y diálogos con procedencia y licencia registradas.
@@ -75,9 +77,8 @@ Los fallos de esta etapa ya están corregidos y se verificaron después:
 
 ## Próxima acción exacta
 
-1. Medir con una prueba la fuerza o el tiempo para arrastrar 3 m al tío caído, central y articulado, tomándolo del cinturón, de los hombros y de los tobillos. Igualar la dificultad (fricción por parte, resistencia activa caído, rigidez de las uniones caído) sin cambiar los 110 kg. Repetir `lose` en red.
-2. Con la dificultad pareja: `LevelSpecs.Bar()` con `articulatedUncle = true`, batería completa y `net_smoke -Scenario all` en Bar_LastRound. Conservar el central como respaldo.
-3. Presentación: URP, materiales del kit, señales de ataque sobre la malla del kit y el resto de los pendientes 2 y 3.
+1. Presentación, etapa URP: agregar `com.unity.render-pipelines.universal` 17.3.0 (incluido en el editor, sin descarga), crear el asset de URP y su renderer por código (reproducible), pasar `PhysicsLabBuilder.Mat` a `Universal Render Pipeline/Lit` y convertir los materiales importados del kit 3D. Verificar build, escenas y pruebas; guardar capturas.
+2. Después: materiales y texturas del kit de materiales, señales de ataque sobre la malla del kit, UI del kit, EN/es_UY, controles remapeables, sonido con licencia.
 
 ## Al cerrar una sesión
 
