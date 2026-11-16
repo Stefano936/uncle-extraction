@@ -53,7 +53,7 @@ namespace UncleExtraction
 
         string dropAt = ""; bool noClose, menuAtEnd;
         bool cartTargetsSet; Vector3 cartRef, cartUncleTarget, cartStand;
-        long raceAtUnixMs; int repeatLeft; AutopilotMode lastMode; bool quitOnEnd; float quitAt = -1f; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
+        long raceAtUnixMs; int repeatLeft; AutopilotMode lastMode; bool quitOnEnd; float quitAt = -1f, finalLogAt; bool finalLogged; AutopilotMode? pendingMode; float pendingDelay; bool cartNeedsSpace;
 
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
         void Start()
@@ -84,13 +84,16 @@ namespace UncleExtraction
             {   // 3 s de "resultados": los clientes reciben el final antes de que el anfitrion cierre o reinicie
                 if (quitAt < 0f)
                 {   // el cliente sale antes que el anfitrion: si el anfitrion cierra primero, el cliente veria una desconexion
-                    quitAt = Time.unscaledTime + (NetAuth.IsServer ? 3f : 1f);
+                    quitAt = Time.unscaledTime + (NetAuth.IsServer ? 3f : 1f); finalLogAt = Time.unscaledTime + 0.5f; finalLogged = false;
                     Debug.Log($"[Autopilot] build: ronda {round.State} en {round.Elapsed:0.0}s; {(repeatLeft > 0 ? "reinicia en 3 s" : "saliendo en 3 s")}");
                 }
+                else if (!finalLogged && Time.unscaledTime >= finalLogAt)
+                {   // estado final 0,5 s despues de terminar (antes de salir o reiniciar, 1 s/3 s): con perdida de paquetes, la
+                    // ronda y la zona replican en mensajes distintos y el primer cuadro podia no tener la zona asegurada
+                    finalLogged = true; NetSession.LogWorldNow("final");
+                }
                 else if (Time.unscaledTime >= quitAt)
-                {   // estado final al salir: con perdida de paquetes, la ronda y la zona replican en mensajes distintos y el
-                    // primer cuadro con la ronda terminada podia no tener todavia la zona asegurada
-                    NetSession.LogWorldNow("final");
+                {
                     quitAt = -1f;
                     if (repeatLeft > 0)
                     {   // reintento despues de ganar o perder: el anfitrion reinicia; el cliente espera la ronda nueva
