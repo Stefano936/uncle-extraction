@@ -35,6 +35,7 @@ namespace UncleExtraction
             if (!GetComponent<GameAudio>()) gameObject.AddComponent<GameAudio>();
             if (!GetComponent<UncleDialogue>()) gameObject.AddComponent<UncleDialogue>();
             if (!GetComponent<FirstSteps>()) gameObject.AddComponent<FirstSteps>(); // guia de la primera partida (local)
+            if (!GetComponent<CoopMarkers>()) gameObject.AddComponent<CoopMarkers>(); // marcador contextual y nombres de compañeros
             canvas = Ui.Canvas("FlowUI", 20);
             BuildPanels();
             Loc.Changed += Relabel; Relabel();

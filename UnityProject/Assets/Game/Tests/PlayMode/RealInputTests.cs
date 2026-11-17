@@ -201,6 +201,25 @@ namespace UncleExtraction.Tests
         }
 
         [UnityTest]
+        public IEnumerator Mark_MiddleClickOnUncle_ShowsOneMarkerThatExpires()
+        {
+            yield return FaceUncle(); yield return Frames(3);
+            var cm = CoopMarkers.Instance; Assert.IsNotNull(cm, "marcadores presentes en la partida");
+            var st = new MouseState().WithButton(MouseButton.Middle); InputSystem.QueueStateEvent(mouse, st); yield return Frames(3);
+            InputSystem.QueueStateEvent(mouse, new MouseState()); yield return Frames(3);
+            Assert.AreEqual(1, cm.ActiveCount, "un marcador por jugador");
+            Assert.IsTrue(cm.TryGet(PlayerControls.Local.OwnerClientId, out var kind, out _));
+            Assert.AreEqual(MarkKind.Uncle, kind, "apuntando al tio marca al tio");
+            var label = GameObject.Find("CoopMarkers/Mark" + PlayerControls.Local.OwnerClientId + "/Text")?.GetComponent<Text>();
+            Assert.IsNotNull(label); StringAssert.Contains(Loc.T("mark.uncle"), label.text);
+            // un segundo clic enseguida no crea otro (frecuencia limitada) y el marcador sigue siendo uno
+            InputSystem.QueueStateEvent(mouse, st); yield return Frames(3); InputSystem.QueueStateEvent(mouse, new MouseState()); yield return Frames(3);
+            Assert.AreEqual(1, cm.ActiveCount);
+            yield return new WaitForSeconds(CoopMarkers.Lifetime + 0.3f);
+            Assert.AreEqual(0, cm.ActiveCount, "vence solo");
+        }
+
+        [UnityTest]
         public IEnumerator TextSizeAndLanguage_ChangeDuringMatch_UpdateHud()
         {
             float s0 = Ui.TextScale; string l0 = Loc.Language;

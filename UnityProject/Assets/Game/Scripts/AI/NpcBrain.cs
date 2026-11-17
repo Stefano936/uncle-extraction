@@ -243,14 +243,43 @@ namespace UncleExtraction
         // ---------- Ataques ----------
         public bool ForceAttack(AttackId id) => StartAttack(id, true);
 
-        bool TryStartAttack()
+        /// Extremidades controladas por jugadores (GDD: un brazo sujeto no puede dar manotazos; con los dos brazos sujetos no
+        /// hay empujon; con los tobillos sujetos no hay patada). Se mira la ocupacion real de los puntos de este tio.
+        public struct Limbs { public bool leftArm, rightArm, leftLeg, rightLeg; }
+        public Limbs HeldLimbs()
+        {
+            var r = new Limbs();
+            foreach (var s in GrabSocket.All)
+            {
+                if (!s || !s.body || GrabRegistry.OccupancyOf(s) == 0 || !body.Owns(s.body)) continue;
+                string id = s.socketId;
+                if (id == "forearm_l" || id == "shoulder_l") r.leftArm = true;
+                else if (id == "forearm_r" || id == "shoulder_r") r.rightArm = true;
+                else if (id == "ankle_l") r.leftLeg = true;
+                else if (id == "ankle_r") r.rightLeg = true;
+            }
+            return r;
+        }
+
+        /// Regla pura (probada en EditMode): ataques posibles segun agarres, postura, distancia y extremidades libres.
+        public static List<AttackId> AvailableAttacks(bool grabbed, bool upright, bool playerInReach, Limbs held)
         {
             var valid = new List<AttackId>();
-            bool upright = body.Posture == NpcPosture.Upright;
+            if (grabbed) valid.Add(AttackId.Shake);
+            if (upright && playerInReach)
+            {
+                if (!held.leftArm || !held.rightArm) valid.Add(AttackId.Slap);
+                if (!held.leftArm && !held.rightArm) valid.Add(AttackId.Push);
+                if (!held.leftLeg || !held.rightLeg) valid.Add(AttackId.Kick);
+            }
+            return valid;
+        }
+
+        bool TryStartAttack()
+        {
             var near = NearestPlayer(out float d);
-            if (Grabbed) valid.Add(AttackId.Shake);
-            if (upright && near && d <= 1.6f) { valid.Add(AttackId.Slap); valid.Add(AttackId.Push); valid.Add(AttackId.Kick); }
-            if (valid.Count == 0) { LastRejection = "sin ataque valido (postura/espacio)"; return false; }
+            var valid = AvailableAttacks(Grabbed, body.Posture == NpcPosture.Upright, near && d <= 1.6f, HeldLimbs());
+            if (valid.Count == 0) { LastRejection = "sin ataque valido (postura/espacio/extremidades)"; return false; }
             return StartAttack(valid[rng.Next(valid.Count)], false);
         }
 
@@ -260,6 +289,12 @@ namespace UncleExtraction
             if (AttackPending && !forced) return false;
             if (id == AttackId.Shake && !Grabbed && !forced) { LastRejection = "sacudida sin agarres"; return false; }
             if ((id == AttackId.Push || id == AttackId.Kick) && body.Posture != NpcPosture.Upright && !forced) { LastRejection = "requiere postura de pie"; return false; }
+            if (id != AttackId.Shake && !forced)
+            {
+                var held = HeldLimbs();
+                bool ok = id == AttackId.Slap ? !(held.leftArm && held.rightArm) : id == AttackId.Push ? !(held.leftArm || held.rightArm) : !(held.leftLeg && held.rightLeg);
+                if (!ok) { LastRejection = "extremidad sujeta"; return false; }
+            }
             currentAttack = LabBalance.Attack(id); WriggleAttempt = false;
             var t = NearestPlayer(out _);
             lockedDir = t ? Flat(t.transform.position - transform.position) : body.Forward;

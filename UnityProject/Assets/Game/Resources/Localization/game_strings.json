@@ -450,7 +450,7 @@
   {
    "key": "settings.reduce_motion",
    "en": "Reduce camera tilt",
-   "es_UY": "Reducir inclinación de cámara"
+   "es_UY": "Reducir inclinación"
   },
   {
    "key": "settings.reserved",
@@ -566,6 +566,41 @@
    "key": "howto.move",
    "en": "move",
    "es_UY": "moverse"
+  },
+  {
+   "key": "action.Mark",
+   "en": "Mark",
+   "es_UY": "Marcar"
+  },
+  {
+   "key": "mark.point",
+   "en": "here",
+   "es_UY": "acá"
+  },
+  {
+   "key": "mark.uncle",
+   "en": "UNCLE",
+   "es_UY": "TÍO"
+  },
+  {
+   "key": "mark.cart",
+   "en": "CART",
+   "es_UY": "CARRITO"
+  },
+  {
+   "key": "mark.van",
+   "en": "VAN",
+   "es_UY": "CAMIONETA"
+  },
+  {
+   "key": "mark.fallen",
+   "en": "DOWN: help them up",
+   "es_UY": "CAÍDO: ayudalo"
+  },
+  {
+   "key": "howto.mark",
+   "en": "mark for your team",
+   "es_UY": "marcar para el equipo"
   }
  ]
 }

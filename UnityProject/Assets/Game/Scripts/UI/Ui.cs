@@ -20,7 +20,7 @@ namespace UncleExtraction
         /// Hay un campo de texto con foco: las teclas son texto, no acciones de juego (R, E, Espacio...).
         public static bool Typing { get { var es = EventSystem.current; var go = es ? es.currentSelectedGameObject : null; var f = go ? go.GetComponent<InputField>() : null; return f && f.isFocused; } }
 
-        static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out var c); return c; }
+        public static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out var c); return c; }
         static UiSkin S => UiSkin.Load();
 
         public static Canvas Canvas(string name, int order)

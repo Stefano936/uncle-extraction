@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 namespace UncleExtraction
 {
-    public enum Act { GrabLeft, GrabRight, Interact, ReleaseAll, Effort, Crouch, Dodge, Restart, ToggleCursor, Pause }
+    public enum Act { GrabLeft, GrabRight, Interact, ReleaseAll, Effort, Crouch, Dodge, Restart, ToggleCursor, Pause, Mark }
 
     /// Entrada del laboratorio. Usa Input System si el paquete esta instalado; si no, el Input Manager clasico.
     /// TODO M1+: migrar a un InputActionAsset remapeable (GDD 04).
@@ -81,7 +81,7 @@ namespace UncleExtraction
             if (rawFrame != Time.frameCount)
             {
                 rawFrame = Time.frameCount;
-                for (int i = 0; i <= (int)Act.Pause; i++) { bool h = Focused && RealHeld((Act)i); rawDown[i] = h && !rawPrev[i]; rawPrev[i] = h; }
+                for (int i = 0; i <= (int)Act.Mark; i++) { bool h = Focused && RealHeld((Act)i); rawDown[i] = h && !rawPrev[i]; rawPrev[i] = h; }
             }
             return rawDown[(int)a];
         }
@@ -104,6 +104,7 @@ namespace UncleExtraction
                 case Act.Restart: return InputBindings.KeyHeld(a);
                 case Act.ToggleCursor: return InputBindings.KeyHeld(a);
                 case Act.Pause: return InputBindings.KeyHeld(a) || (g != null && g.startButton.isPressed);
+                case Act.Mark: return InputBindings.KeyHeld(a) || (g != null && g.dpad.up.isPressed);
             }
             return false;
 #elif ENABLE_LEGACY_INPUT_MANAGER
@@ -119,6 +120,7 @@ namespace UncleExtraction
                 case Act.Restart: return Input.GetKey(KeyCode.R);
                 case Act.ToggleCursor: return Input.GetKey(KeyCode.Tab);
                 case Act.Pause: return Input.GetKey(KeyCode.Escape);
+                case Act.Mark: return Input.GetMouseButton(2);
             }
             return false;
 #else
@@ -136,7 +138,7 @@ namespace UncleExtraction
             if (lastFrame != Time.frameCount)
             {
                 lastFrame = Time.frameCount;
-                for (int i = 0; i <= (int)Act.Pause; i++)
+                for (int i = 0; i <= (int)Act.Mark; i++)
                 {
                     bool h = Held((Act)i);
                     down[i] = h && !prev[i];

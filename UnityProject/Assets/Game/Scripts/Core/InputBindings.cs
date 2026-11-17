@@ -23,13 +23,13 @@ namespace UncleExtraction
     /// - Los cambios son un borrador: Set no guarda; SaveAll guarda (Aplicar) y Restore vuelve a una instantanea (Descartar).
     public static class InputBindings
     {
-        public static readonly Act[] Remappable = { Act.GrabLeft, Act.GrabRight, Act.Interact, Act.ReleaseAll, Act.Effort, Act.Crouch, Act.Dodge };
+        public static readonly Act[] Remappable = { Act.GrabLeft, Act.GrabRight, Act.Interact, Act.ReleaseAll, Act.Effort, Act.Crouch, Act.Dodge, Act.Mark };
         public static readonly MoveKey[] MoveKeys = { MoveKey.Forward, MoveKey.Back, MoveKey.Left, MoveKey.Right };
         static readonly Dictionary<string, string> defaults = new Dictionary<string, string>
         {
             { "GrabLeft", "<Mouse>/leftButton" }, { "GrabRight", "<Mouse>/rightButton" }, { "Interact", "<Keyboard>/e" },
             { "ReleaseAll", "<Keyboard>/q" }, { "Effort", "<Keyboard>/leftShift" }, { "Crouch", "<Keyboard>/leftCtrl" },
-            { "Dodge", "<Keyboard>/space" }, { "Restart", "<Keyboard>/r" }, { "ToggleCursor", "<Keyboard>/tab" }, { "Pause", "<Keyboard>/escape" },
+            { "Dodge", "<Keyboard>/space" }, { "Restart", "<Keyboard>/r" }, { "ToggleCursor", "<Keyboard>/tab" }, { "Pause", "<Keyboard>/escape" }, { "Mark", "<Mouse>/middleButton" },
             { "MoveForward", "<Keyboard>/w" }, { "MoveBack", "<Keyboard>/s" }, { "MoveLeft", "<Keyboard>/a" }, { "MoveRight", "<Keyboard>/d" },
         };
         public static readonly string[] Reserved = { "<Keyboard>/escape", "<Keyboard>/tab", "<Keyboard>/upArrow", "<Keyboard>/downArrow", "<Keyboard>/leftArrow", "<Keyboard>/rightArrow" };

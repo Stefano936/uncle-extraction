@@ -16,6 +16,20 @@ namespace UncleExtraction
             s.SerializeValue(ref seq); s.SerializeValue(ref move); s.SerializeValue(ref yaw); s.SerializeValue(ref pitch); s.SerializeValue(ref buttons);
         }
         public bool Has(Act a) => (buttons & (1 << (int)a)) != 0;
+
+        /// Bits que un invitado puede pedir (acciones de juego; R, Tab, Esc y Marcar no viajan en la intencion).
+        public const ushort GameplayMask = (1 << ((int)Act.Dodge + 1)) - 1;
+        /// Validacion del anfitrion (sesion 13): descarta valores no finitos y acota el resto; nunca confia en el payload.
+        public static bool Sanitize(ref PlayerIntent i)
+        {
+            if (!Finite(i.move.x) || !Finite(i.move.y) || !Finite(i.yaw) || !Finite(i.pitch)) return false;
+            i.move = Vector2.ClampMagnitude(i.move, 1f);
+            i.yaw = Mathf.Repeat(i.yaw, 360f);
+            i.pitch = Mathf.Clamp(i.pitch, -89f, 89f);
+            i.buttons &= GameplayMask;
+            return true;
+        }
+        static bool Finite(float f) => !float.IsNaN(f) && !float.IsInfinity(f);
     }
 
     /// Fuente de controles de UN jugador. Separa la entrada del jugador local (dueno) de los personajes remotos:
@@ -89,12 +103,13 @@ namespace UncleExtraction
 
         void Update()
         {
+            if (this == Local && Pressed(Act.Mark)) TryMark();
             if (!IsSpawned || !IsOwner || IsServer) return; // el anfitrion lee su propio teclado directamente
             if (Time.unscaledTime < nextSend) return;
             nextSend = Time.unscaledTime + SendInterval;
             bool blocked = GameFlowUI.BlockingInput;
             var i = new PlayerIntent { seq = ++sendSeq, move = blocked ? Vector2.zero : LabInput.Move(), yaw = motor ? motor.Yaw : 0f, pitch = motor ? motor.Pitch : 0f };
-            for (int a = 0; a <= (int)Act.ToggleCursor; a++) if (!blocked && LabInput.HeldForGameplay((Act)a)) i.buttons |= (ushort)(1 << a);
+            for (int a = 0; a <= (int)Act.Dodge; a++) if (!blocked && LabInput.HeldForGameplay((Act)a)) i.buttons |= (ushort)(1 << a);
             SubmitIntentRpc(i);
         }
 
@@ -103,7 +118,43 @@ namespace UncleExtraction
         {
             if (p.Receive.SenderClientId != OwnerClientId) return; // la identidad sale del canal, no del payload
             if (i.seq <= lastSeq) return;                          // fuera de orden o duplicado
+            if (!PlayerIntent.Sanitize(ref i)) { rejectedIntents++; if (rejectedIntents == 1 || rejectedIntents % 100 == 0) Debug.LogWarning($"[Net] intencion invalida de {OwnerClientId} descartada (x{rejectedIntents})"); return; }
             lastSeq = i.seq; remote = i; lastRemoteAt = Time.time;
         }
+        int rejectedIntents;
+
+        // ---------- Marcador contextual ----------
+        float lastMarkAt = -99f;
+        /// Dueño: marca lo que hay bajo la mira (hasta CoopMarkers.MaxRange). Solo con la ronda en curso.
+        void TryMark()
+        {
+            var round = RoundDirector.Instance; var cam = Camera.main;
+            if (!round || round.InLobby || round.State != RoundState.Running || !cam || !motor || motor.State != PlayerState.Active) return;
+            var ray = new Ray(cam.transform.position, cam.transform.forward);
+            Vector3 pos = ray.origin + ray.direction * CoopMarkers.MaxRange; MarkKind kind = MarkKind.Point;
+            var hits = Physics.RaycastAll(ray, CoopMarkers.MaxRange, ~0, QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            foreach (var h in hits) { if (h.collider.transform.IsChildOf(transform) || (h.collider.attachedRigidbody && h.collider.attachedRigidbody.transform.IsChildOf(transform))) continue; pos = h.point; kind = CoopMarkers.Classify(h.collider); if (RoundDirector.DiagnosticKeys) Debug.Log($"[Mark] mira sobre {h.collider.name} -> {kind}"); break; }
+            if (kind == MarkKind.Point) CoopMarkers.AimAssist(ray, Vector3.Distance(ray.origin, pos), ref kind, ref pos); // rozar al tio o al carrito cuenta
+            if (!IsSpawned) { ShowMark(OwnerClientId, kind, pos); return; }
+            if (IsServer) ServerMark(kind, pos); else MarkRpc((byte)kind, pos);
+        }
+        [Rpc(SendTo.Server)]
+        void MarkRpc(byte kind, Vector3 pos, RpcParams p = default)
+        {
+            if (p.Receive.SenderClientId != OwnerClientId || kind > (byte)MarkKind.Van) return;
+            ServerMark((MarkKind)kind, pos);
+        }
+        void ServerMark(MarkKind kind, Vector3 pos)
+        {
+            var round = RoundDirector.Instance;
+            if (!round || round.InLobby || round.State != RoundState.Running) return;
+            if (!CoopMarkers.Accept(motor ? motor.EyePosition : transform.position, pos, lastMarkAt, Time.time)) return;
+            lastMarkAt = Time.time;
+            ShowMarkRpc((byte)kind, pos);
+        }
+        [Rpc(SendTo.Everyone)]
+        void ShowMarkRpc(byte kind, Vector3 pos) => ShowMark(OwnerClientId, (MarkKind)kind, pos);
+        void ShowMark(ulong owner, MarkKind kind, Vector3 pos) { if (CoopMarkers.Instance) CoopMarkers.Instance.Show(owner, motor ? motor.playerName : "?", kind, pos); }
     }
 }

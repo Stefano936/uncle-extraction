@@ -11,7 +11,7 @@ namespace UncleExtraction
     {
         public const int Rate = 44100;
         static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
-        public static readonly string[] Ids = { "grab", "release", "impact", "whoosh", "cue_slap", "cue_push", "cue_kick", "cue_shake", "van_close", "door_creak", "success", "timeout", "ui" };
+        public static readonly string[] Ids = { "grab", "release", "impact", "whoosh", "cue_slap", "cue_push", "cue_kick", "cue_shake", "van_close", "door_creak", "success", "timeout", "ui", "ping" };
 
         public static AudioClip Get(string id)
         {
@@ -47,6 +47,7 @@ namespace UncleExtraction
                 case "cue_shake": b = Tremolo(520f, 14f, 0.5f); break;                                 // vibrato rapido
                 case "van_close": b = Buf(0.5f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; b[i] = (Mathf.Sin(2 * Mathf.PI * 70f * t) + 0.4f * N() * Mathf.Exp(-40f * t)) * Env(t, 0.003f, 0.5f) * 0.9f; } break;
                 case "door_creak": b = Buf(0.4f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; float f = 300f + 60f * Mathf.Sin(t * 30f); b[i] = Mathf.Sign(Mathf.Sin(2 * Mathf.PI * f * t)) * 0.12f * Mathf.Sin(Mathf.PI * t / 0.4f); } break;
+                case "ping": b = Tones(new[] { 988f, 1318f }, 0.07f, 0.02f); break;                       // marcador de un compañero
                 case "success": b = Tones(new[] { 523f, 659f, 784f, 1046f }, 0.14f, 0.02f); break;
                 case "timeout": b = Tones(new[] { 392f, 311f, 233f }, 0.22f, 0.04f); break;
                 default: b = Tones(new[] { 1000f }, 0.03f, 0f); break;                               // ui

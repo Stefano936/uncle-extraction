@@ -29,6 +29,7 @@ Controles por defecto (teclado y mouse se cambian en Opciones → Controles; el 
 | Soltar todo | Q | B / círculo |
 | Interactuar (mantener o tocar): soltarle la mano de la barra, cargar y asegurar en el carrito, cerrar la camioneta, ayudar a un compañero caído | E | A / cruz |
 | Agacharse / paso evasivo | Ctrl / Espacio | clic del stick derecho / X / cuadrado |
+| Marcar para el equipo (tío, carrito, camioneta o un punto; 6 s) | clic central | cruceta arriba |
 | Pausa, opciones, volver al menú | Esc | Start / Options |
 | Reintentar | botón de resultados o de la pausa (en red decide el anfitrión) | — |
 | Panel de depuración (mostrar el cursor) | Tab | — |

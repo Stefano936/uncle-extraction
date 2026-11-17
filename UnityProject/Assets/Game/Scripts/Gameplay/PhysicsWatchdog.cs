@@ -13,6 +13,8 @@ namespace UncleExtraction
         class Track { public NpcBody npc; public Rigidbody rb; public Vector3 safePos; public Quaternion safeRot; public float overSpeedFor, nextSafe; }
         readonly List<Track> tracks = new List<Track>();
         public int Rescues { get; private set; }
+        /// Rescates de la ronda en curso (se reinicia con la ronda); RoundDirector lo deja en el registro al terminar.
+        public static int RoundRescues { get; private set; }
         public string LastRescue { get; private set; } = "";
 
         void FixedUpdate()
@@ -50,7 +52,7 @@ namespace UncleExtraction
 
         void Rescue(Track t, string why)
         {
-            Rescues++; LastRescue = $"{t.rb.name}: {why}";
+            Rescues++; RoundRescues++; LastRescue = $"{t.rb.name}: {why}";
             Debug.LogWarning($"[Watchdog] rescate tecnico de {t.rb.name} ({why}) -> {t.safePos}");
             if (t.npc) t.npc.ReleaseAllGrabs(ReleaseReason.Reset); else GrabRegistry.ReleaseAllOnBody(t.rb, ReleaseReason.Reset);
             var hands = t.rb.GetComponent<PlayerHands>(); if (hands) hands.ReleaseAll(ReleaseReason.Reset);
@@ -65,6 +67,6 @@ namespace UncleExtraction
             t.overSpeedFor = 0f;
         }
 
-        public void ResetState() { tracks.Clear(); }
+        public void ResetState() { tracks.Clear(); RoundRescues = 0; }
     }
 }

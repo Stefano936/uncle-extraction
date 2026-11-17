@@ -29,7 +29,7 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Primera partida guiada, omisible, repetible desde pausa, local en cooperativo | Alta | `FirstSteps` (9 pasos que avanzan con la acción real) | parcial | C | E de avance de pasos; B capturas; **H: primer agarre en el primer minuto** |
 | «Cómo jugar» breve y fiel (teclas reales, modo de agarre) | Media | `FrontendMenu` HowTo | completo | C | H |
 | Feedback de mira: válido / ocupado / fuera de alcance | Alta | `GrabFeedback` | completo | E, B (capturas) | Sonido distinto por estado (faltante) |
-| Agarre pendiente vs confirmado (autoridad del anfitrión) | Media | — | faltante | — | Marca «agarrando…» en el cliente hasta la confirmación |
+| Agarre pendiente vs confirmado (autoridad del anfitrión) | Media | `GameHud.HandState.Pending` («pendiente» con el botón apretado sobre un punto válido hasta que el anfitrión confirma) | completo | C, B (ya existía; la fila figuraba mal como faltante) | L con latencia simulada (`netsim`) y H |
 | Motivo de cierre bloqueado con orientación | Alta | `VanDoors` + rombo | completo | E (`StuckRecoveryTests`), B | H |
 | Prioridad de E con compañero caído, carrito, mano anclada y camioneta | Media | `PlayerHands.HandleInteract` | parcial | C | Prueba dirigida con los cuatro casos juntos |
 
@@ -39,12 +39,12 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | --- | --- | --- | --- | --- | --- |
 | 1–4 jugadores × 3 dificultades | Alta | `RoundDirector`, `LabBalance` | completo (automático) | L: 12 combinaciones con autopiloto (sesión 9) + coop/party4 en cada candidata | R2 y H con 4 personas |
 | Ventajas de cooperar (tirones, anclaje, carrito, levantar, cierre) | Alta | Física de agarres, `HandleInteract` | parcial | E/L automáticos | H: medir si se siente la ventaja |
-| Marcador contextual (tío/carrito/salida) con emisor y límite | Media | — | faltante | — | Implementar (bloque D) |
-| Identificación de compañeros (nombre, manos, caída) | Media | Nombres en sala | parcial | L | Etiqueta sobre cada compañero |
+| Marcador contextual (tío/carrito/camioneta/punto) con emisor y límite | Media | `CoopMarkers` + `PlayerControls.MarkRpc` (botón central / cruceta arriba, remapeable; ayuda de puntería 0,6 m; uno por jugador, 6 s, 0,75 s entre marcas, alcance 30 m validado por el anfitrión; en el borde si queda fuera de pantalla) | completo | C, E (`Mark_MiddleClickOnUncle…`, `Mark_IsAccepted…`) | L con 2+ procesos; H |
+| Identificación de compañeros (nombre, color, caída) | Media | `CoopMarkers`: nombre con color por jugador sobre cada compañero; «CAÍDO: ayudalo» en rojo | parcial | C | Captura con 2+ procesos; manos con color propio (bloque E) |
 | Ataques legibles: preparación, zona real, un impacto por jugador, recuperación | Alta | `NpcBrain`, `AttackTelegraph`, `UncleAttackPose` | completo | E (`AttackSignalTests`), B, L | H |
-| Disponibilidad de extremidades y espacio para atacar (GDD) | Media | — | faltante | — | Bloque D: brazo controlado = sin manotazo de ese lado |
-| Transición tras desconexión (no recalcular el grupo al instante) | Media | `RoundDirector.autoPartySize` (inmediato) | faltante | — | Bloque D: período de gracia de 10 s |
-| Rescates técnicos registrados | Media | `PhysicsWatchdog` | parcial | E | Contador en el registro de cada ronda |
+| Disponibilidad de extremidades y espacio para atacar (GDD) | Media | `NpcBrain.AvailableAttacks` + `HeldLimbs` (los dos brazos sujetos = sin manotazo; uno = sin empujón; los dos tobillos = sin patada; la sacudida sigue) | completo | C, E (`FairnessRulesTests`, 6 casos) | L/H: notar que sujetar brazos protege |
+| Transición tras desconexión (no recalcular el grupo al instante) | Media | `RoundDirector.UpdatePartySize`: baja aplicada tras 10 s de gracia, reconexión la cancela, transcurrido conservado, mínimo 60 s restantes | completo | C, E (`FairnessRulesTests`, 3 casos) | L: `clientdrop` en la regresión de red |
+| Rescates técnicos registrados | Media | `PhysicsWatchdog.RoundRescues` en `[Round] SUCCESS/TIMEOUT … rescates=N` | completo | C | Revisar los registros de la regresión |
 
 ## Red y ciclo
 
@@ -53,6 +53,7 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Anfitrión autoritativo, sala, LISTO, dificultad del anfitrión, rechazo con motivo | Alta | NGO + `RoundDirector` + `NetSession` | completo | E, L (12 escenarios), R1 | R2 |
 | Relay con código; cancelar | Alta | `RelayConnector` | completo | E, R1 (`MQRGGG`, `69e9c6f`) | R2; operación tardía tras cancelar (prueba) |
 | Pérdida del anfitrión, desconexiones con manos ocupadas | Alta | `NetSession`, `PlayerControls.ReleaseTimeout` | completo | L (`hostkill` 10,1 s, `clientdrop`) | R2 |
+| Validación de intenciones del invitado (finitos, movimiento ≤ 1, ángulos acotados, solo botones de juego) | Alta | `PlayerIntent.Sanitize` en `SubmitIntentRpc` | completo | C, E (`NetIntentTests`) | L (regresión de red) |
 | Compatibilidad de versión en la admisión | Media | `VersionTag` (Application.version/ProtocolVersion) | completo | E (`AdmissionTests`) | — |
 
 ## Presentación, audio y rendimiento
@@ -62,7 +63,7 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Bar nocturno, tío con ropa y gorro, carrito y camioneta propios | Alta | `BarDressing`, `Finishing` | completo | B (capturas) | **H** |
 | Manos del jugador (hoy cubos) | Alta | — | faltante | — | Bloque E: manos con forma y estados |
 | Malla y expresión del tío | Alta | malla del kit facetada | parcial | B | Bloque E |
-| Interfaz 720p–21:9, texto 100–150 %, ES/EN | Alta | `Ui`, `UiAudit` | completo | B (15/15 por idioma) | H de legibilidad |
+| Interfaz 720p–21:9, texto 100–150 %, ES/EN | Alta | `Ui`, `UiAudit` | completo | B (`07dbc8f`: EN 15/15; ES 11/15 por «Reducir inclinación de cámara» recortado en Opciones → texto acortado, a reauditar) | H de legibilidad |
 | Audio por categorías con volumen separado | Media | `SfxSynth`, `GameAudio` (volumen general) | parcial | E | Volumen de efectos / voz / música |
 | Voz y música | Baja | — | pospuesto | sin fuentes con licencia | Requiere grabaciones o compra (dueño) |
 | Calidad Alta/Baja, detección de integrada | Media | `GraphicsQuality` | completo | B (banco RTX/Iris) | Banco a batería (H/dueño) |
