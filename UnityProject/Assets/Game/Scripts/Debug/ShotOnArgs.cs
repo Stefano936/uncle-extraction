@@ -61,6 +61,9 @@ namespace UncleExtraction
             Debug.Log($"[Shot] {p.file} a los {p.at:0.0} s");
         }
 
+        /// -ueFaceAngle grados: desde donde mirar (0 = frente logico del tio, 180 = espalda).
+        static float FaceAngle { get { var a = Environment.GetCommandLineArgs(); for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueFaceAngle" && float.TryParse(a[i + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var v)) return v; return 0f; } }
+
         IEnumerator FaceUncle(float at)
         {
             yield return WaitGame(at);
@@ -77,10 +80,10 @@ namespace UncleExtraction
                     bool found = false;
                     foreach (int sgn in new[] { 1, -1 })
                     {
-                        Vector3 dir = Quaternion.Euler(0, d * sgn, 0) * body.Forward, p = c0 + dir * 1.2f;
+                        Vector3 dir = Quaternion.Euler(0, d * sgn + FaceAngle, 0) * body.Forward, p = c0 + dir * 1.2f;
                         if (!Physics.CheckCapsule(p + Vector3.up * 0.4f, p + Vector3.up * 1.7f, 0.3f, ~0, QueryTriggerInteraction.Ignore)) { at3 = p; found = true; break; }
                     }
-                    if (found) break;
+                    if (found) { if (k == 0) Debug.Log($"[Shot] lugar libre a {d}° de la cara del tio (cara={body.Forward})"); break; }
                 }
                 if (rb) { rb.position = at3; rb.linearVelocity = Vector3.zero; } pc.transform.position = at3;
                 Vector3 to = head - (at3 + Vector3.up * 1.62f), f = new Vector3(to.x, 0, to.z);

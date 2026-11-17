@@ -33,6 +33,25 @@ namespace UncleExtraction.Tests
 
         public static readonly AttackId[] Ids = { AttackId.Slap, AttackId.Push, AttackId.Kick, AttackId.Shake };
 
+        /// Sesion 13: la malla del tio articulado mira hacia -z de la raiz; antes giraba la NUCA hacia el objetivo al
+        /// preparar el golpe. Con el jugador detras de la cara, al terminar la preparacion la cara tiene que mirarlo.
+        [UnityTest]
+        public IEnumerator Windup_TurnsTheFaceTowardsThePlayer()
+        {
+            if (body.Articulated && body.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Kit_uncle_prototype"))
+                Assert.AreEqual(-1f, body.FaceSign, "la cara del kit mira hacia atras de la raiz");
+            Vector3 behind = body.Body.position - body.Forward * 1.2f; behind.y = 0f;
+            player.Body.position = behind; player.transform.position = behind; player.Body.linearVelocity = Vector3.zero;
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(npc.ForceAttack(AttackId.Slap));
+            float windup = LabBalance.Windup(AttackId.Slap, RoundDirector.Instance ? RoundDirector.Instance.difficulty : Difficulty.Normal);
+            yield return new WaitForSeconds(windup * 0.95f);
+            Vector3 toP = player.transform.position - body.Body.position; toP.y = 0f;
+            float facing = Vector3.Angle(body.Forward, toP);
+            Debug.Log($"[Test] cara vs jugador al final de la preparacion: {facing:0}°");
+            Assert.Less(facing, 60f, "al preparar el golpe la cara del tio mira al jugador");
+        }
+
         /// Centro de cada parte en el marco de la raiz del tio (cancela el balanceo del cuerpo entero).
         Vector3[] LocalCenters() => body.parts.Select(p => body.transform.InverseTransformPoint(p.GetComponent<Collider>().bounds.center)).ToArray();
 

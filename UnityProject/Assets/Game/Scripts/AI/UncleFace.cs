@@ -23,12 +23,18 @@ namespace UncleExtraction
             if (!anchor) { enabled = false; return; }
             var dark = FaceMaterial();
             // offsets calculados en reposo respecto de la cabeza: despues siguen al hueso
-            Vector3 L(Vector3 localUncle) => anchor.InverseTransformPoint(transform.TransformPoint(localUncle));
-            faceRot = Quaternion.Inverse(anchor.rotation) * transform.rotation;
+            float fs = body.FaceSign; // la cara mira hacia -z de la raiz en el tio articulado (ver NpcBody.Forward)
+            Vector3 L(Vector3 localUncle) => anchor.InverseTransformPoint(transform.TransformPoint(new Vector3(localUncle.x * fs, localUncle.y, localUncle.z * fs)));
+            faceRot = Quaternion.Inverse(anchor.rotation) * transform.rotation * (fs < 0f ? Quaternion.Euler(0, 180f, 0) : Quaternion.identity);
             browLPos = L(new Vector3(-0.09f, 1.785f, 0.252f)); browRPos = L(new Vector3(0.09f, 1.785f, 0.252f)); mouthPos = L(new Vector3(0f, 1.552f, 0.232f));
             browL = Part(PrimitiveType.Cube, "Brow_L", new Vector3(0.15f, 0.042f, 0.03f), dark);
             browR = Part(PrimitiveType.Cube, "Brow_R", new Vector3(0.15f, 0.042f, 0.03f), dark);
             mouth = Part(PrimitiveType.Sphere, "Mouth_Open", new Vector3(0.1f, 0.06f, 0.03f), dark);
+            if (RoundDirector.DiagnosticKeys || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueFaceUncle") >= 0)
+            {
+                Transform nose = null; foreach (var t in GetComponentsInChildren<Transform>()) if (t.name.ToLowerInvariant().Contains("nose")) nose = t;
+                Debug.Log($"[Face] raiz={transform.position} adelante={transform.forward} ancla={anchor.name}@{anchor.position} ceja_der={browR.parent.TransformPoint(browRPos)} hijos_cabeza={anchor.childCount}");
+            }
         }
 
         Material FaceMaterial()

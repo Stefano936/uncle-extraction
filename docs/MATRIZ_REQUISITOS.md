@@ -62,8 +62,8 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
 | --- | --- | --- | --- | --- | --- |
 | Bar nocturno, tío con ropa y gorro, carrito y camioneta propios | Alta | `BarDressing`, `Finishing` | completo | B (capturas) | **H** |
-| Manos del jugador con forma y estados | Alta | `HandRig`: palma, dedos y pulgar con piel, puño de manga con color de estado; dedos abiertos / a medias (pendiente) / cerrados (agarrando) | parcial | C | B: capturas en la build; H |
-| Malla y expresión del tío | Alta | malla del kit facetada | parcial | B | Bloque E |
+| Manos del jugador con forma y estados | Alta | `HandRig`: palma, dedos y pulgar con piel, puño de manga con color de estado; dedos abiertos / a medias (pendiente) / cerrados (agarrando) | completo | C, B (capturas) | H |
+| Malla y expresión del tío | Alta | Malla del kit (facetada) + `UncleFace`: cejas y boca por estado (enojado al preparar/golpear, cejas arriba al recuperarse o caer). **Corregido:** la cara del kit miraba hacia atrás de la raíz, así que el tío preparaba los golpes y escapaba de espaldas (`NpcBody.FaceSign`) | parcial | B (capturas `cara_*.png`: gira la cara hacia el jugador y frunce el ceño), E (`Windup_TurnsTheFaceTowardsThePlayer`) | Malla con más detalle (fuera de alcance de esta pasada); H |
 | Interfaz 720p–21:9, texto 100–150 %, ES/EN | Alta | `Ui`, `UiAudit` | completo | B (`07dbc8f`: EN 15/15; ES 11/15 por «Reducir inclinación de cámara» recortado en Opciones → texto acortado, a reauditar) | H de legibilidad |
 | Audio por categorías con volumen separado | Media | `GameAudio.CategoryVolume`: general × efectos (agarres, golpes, puertas) o × avisos (señales de ataque, marcas, fin de ronda); Opciones con dos controles nuevos | completo | C, E (persistencia) | Voz y música cuando existan fuentes |
 | Voz y música | Baja | — | pospuesto | sin fuentes con licencia | Requiere grabaciones o compra (dueño) |

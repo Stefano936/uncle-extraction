@@ -36,7 +36,12 @@ namespace UncleExtraction
         public bool Articulated => parts != null && parts.Length > 0;
         public float TiltDeg => Vector3.Angle(UpAxis, Vector3.up);
         Vector3 UpAxis => chest ? chest.transform.up : transform.up;
-        public Vector3 Forward { get { var f = transform.forward; f.y = 0; return f.sqrMagnitude > 1e-4f ? f.normalized : Vector3.forward; } }
+        /// Hacia donde mira la CARA del tio (sesion 13). La malla del kit del tio articulado quedo girada 180° respecto de la
+        /// raiz (verificado con capturas: ojos, nariz y bigote miran a -raiz.forward), asi que el giro hacia el objetivo al
+        /// preparar un golpe, la marcha al escapar y el arco del piso usaban la nuca. FaceSign corrige sin regenerar el rig.
+        public Vector3 Forward { get { var f = transform.forward * FaceSign; f.y = 0; return f.sqrMagnitude > 1e-4f ? f.normalized : Vector3.forward; } }
+        /// -1 si la malla mira hacia atras de la raiz (tio articulado con la malla del kit), 1 si no.
+        public float FaceSign { get; private set; } = 1f;
         public Vector3 ChestPosition => torso ? torso.position : transform.position + Vector3.up * 1.3f;
         int fallCount;
         public int FallCount { get => Mirror ? nFalls.Value : fallCount; private set => fallCount = value; }
@@ -57,6 +62,7 @@ namespace UncleExtraction
         void Awake()
         {
             rb = GetComponent<Rigidbody>();
+            foreach (var c in GetComponentsInChildren<Transform>(true)) if (c.name == "Kit_uncle_prototype") { FaceSign = -1f; break; }
             bodies.Clear(); bodies.Add(rb);
             if (!Articulated)
             {
@@ -291,7 +297,7 @@ namespace UncleExtraction
                 if (found) break;
             }
             if (!found) { fallenSince = Time.time - standUpDelay + 0.5f; return false; }
-            TeleportTo(p, Quaternion.LookRotation(Forward, Vector3.up));
+            TeleportTo(p, Quaternion.LookRotation(Forward * FaceSign, Vector3.up)); // conserva el giro de la raiz
             Posture = NpcPosture.Upright; SetStrength(true);
             Debug.Log("[Npc] stood up");
             return true;
