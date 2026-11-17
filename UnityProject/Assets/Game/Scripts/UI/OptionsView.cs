@@ -13,7 +13,7 @@ namespace UncleExtraction
     {
         public RectTransform Root { get; private set; }
         readonly Action onClose;
-        struct Draft { public float mouse, fov, volume, textScale; public bool invertY, subtitles, profanity; public string lang, name; }
+        struct Draft { public float mouse, fov, volume, textScale; public bool invertY, subtitles, profanity, lowQuality; public string lang, name; }
         Draft saved, draft;
         readonly List<Action> refresh = new List<Action>();
         Text status; RectTransform confirm; IDisposable listening; Act listeningFor;
@@ -49,6 +49,8 @@ namespace UncleExtraction
             var reset = Ui.Button(Root, "ResetControls", "", new Vector2(0f, 1f), new Vector2(620 + 250, ry - 10), new Vector2(500, 56), () => { InputBindings.ResetAll(); Refresh(); });
             reset.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 1f);
             refresh.Add(() => reset.GetComponentInChildren<Text>().text = Loc.T("settings.reset_controls"));
+            // calidad grafica (columna derecha, debajo de los controles)
+            Choice(Root, "settings.quality", new Vector2(620, ry - 90 - g), new[] { "settings.quality_high", "settings.quality_low" }, () => draft.lowQuality ? 1 : 0, i => draft.lowQuality = i == 1);
             status = Ui.Label(Root, "Status", "", Ui.FontHud, Ui.Focus, TextAnchor.LowerCenter); Inset(status, 40, 0, 40, 120);
             // botones
             var apply = Ui.Button(Root, "Apply", "", new Vector2(0.5f, 0f), new Vector2(-260, 40), new Vector2(480, Ui.ButtonH), Apply);
@@ -60,11 +62,11 @@ namespace UncleExtraction
             UnityEngine.EventSystems.EventSystem.current?.SetSelectedGameObject(apply.gameObject);
         }
 
-        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, profanity = GameSettings.ProfanityFilter, name = GameSettings.PlayerName ?? "", textScale = Ui.TextScale, lang = Loc.Language };
+        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, profanity = GameSettings.ProfanityFilter, name = GameSettings.PlayerName ?? "", lowQuality = GameSettings.LowQuality, textScale = Ui.TextScale, lang = Loc.Language };
         static void Store(Draft d)
         {
             GameSettings.MouseSensitivity = d.mouse; GameSettings.FieldOfView = d.fov; GameSettings.MasterVolume = d.volume; GameSettings.InvertY = d.invertY;
-            GameHud.AttackSubtitles = d.subtitles; GameSettings.AttackSubtitles = d.subtitles; GameSettings.ProfanityFilter = d.profanity; UncleDialogue.ProfanityFilter = d.profanity; GameSettings.PlayerName = PlayerMotor.Sanitize(d.name); GameSettings.TextScale = d.textScale; Ui.TextScale = d.textScale;
+            GameHud.AttackSubtitles = d.subtitles; GameSettings.AttackSubtitles = d.subtitles; GameSettings.ProfanityFilter = d.profanity; UncleDialogue.ProfanityFilter = d.profanity; GameSettings.PlayerName = PlayerMotor.Sanitize(d.name); GameSettings.TextScale = d.textScale; Ui.TextScale = d.textScale; GameSettings.LowQuality = d.lowQuality; GraphicsQuality.Low = d.lowQuality; GraphicsQuality.Apply();
             if (Loc.Language != d.lang) Loc.SetLanguage(d.lang);
         }
 

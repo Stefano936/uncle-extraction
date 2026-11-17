@@ -401,6 +401,21 @@
    "key": "error.retry_hint",
    "en": "Go back to the menu and try again, or play solo.",
    "es_UY": "Volvé al menú e intentá de nuevo, o jugá solo."
+  },
+  {
+   "key": "settings.quality",
+   "en": "Graphics",
+   "es_UY": "Gráficos"
+  },
+  {
+   "key": "settings.quality_high",
+   "en": "HIGH",
+   "es_UY": "ALTA"
+  },
+  {
+   "key": "settings.quality_low",
+   "en": "LOW (integrated GPU)",
+   "es_UY": "BAJA (GPU integrada)"
   }
  ]
 }
