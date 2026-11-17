@@ -455,6 +455,7 @@ namespace UncleExtraction.EditorTools
             EditorUtility.SetDirty(profile); AssetDatabase.SaveAssets();
             var go = new GameObject("PostFX"); go.transform.SetParent(root, false);
             var vol = go.AddComponent<Volume>(); vol.isGlobal = true; vol.sharedProfile = profile; vol.priority = 1;
+            go.AddComponent<ScenePostFx>(); // posproceso en la camara local solo en esta escena
         }
     }
 }

@@ -309,7 +309,6 @@ namespace UncleExtraction.EditorTools
             var pivot = new GameObject("CameraPivot").transform; pivot.SetParent(go.transform, false); pivot.localPosition = new Vector3(0, 1.62f, 0);
             var camGo = new GameObject("PlayerCamera"); camGo.tag = "MainCamera"; camGo.transform.SetParent(pivot, false);
             var cam = camGo.AddComponent<Camera>(); cam.depth = 0; cam.fieldOfView = 85f; cam.nearClipPlane = 0.05f; // FOV vertical (convencion de Unity)
-            UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).renderPostProcessing = true; // volumen del escenario (bar)
             camGo.AddComponent<AudioListener>();
             var hl = NoCollider(LocalPrim(PrimitiveType.Cube, "Hand_L", camGo.transform, new Vector3(-0.28f, -0.3f, 0.75f), new Vector3(0.09f, 0.07f, 0.16f), handM));
             var hr = NoCollider(LocalPrim(PrimitiveType.Cube, "Hand_R", camGo.transform, new Vector3(0.28f, -0.3f, 0.75f), new Vector3(0.09f, 0.07f, 0.16f), handM));
