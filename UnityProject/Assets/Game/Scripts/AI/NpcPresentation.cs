@@ -58,7 +58,7 @@ namespace UncleExtraction
                 if (!r) continue;
                 if (r.sharedMaterials.Length > 1)
                 {   // malla del kit con varios materiales: brillo del color del ataque solo al prepararse y al golpear
-                    float k = brain.State == NpcState.Windup ? 0.18f + 0.22f * pulse : brain.State == NpcState.Attack ? 0.5f : 0f;
+                    float k = brain.State == NpcState.Windup ? 0.08f + 0.12f * pulse : brain.State == NpcState.Attack ? 0.28f : 0f; // senal sin quemar el color de cerca (con bloom)
                     mpb ??= new MaterialPropertyBlock(); r.GetPropertyBlock(mpb); mpb.SetColor(EmissionId, c * k); r.SetPropertyBlock(mpb);
                 }
                 else r.material.color = c;
