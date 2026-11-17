@@ -19,7 +19,7 @@ $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
 $All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin')
 # QA ampliada (mas larga; -Scenario qa): dificultades y grupos, sesion larga, perdida brusca del anfitrion, rendimiento.
 # 'relay' va aparte: necesita el proyecto vinculado a Unity Cloud y prueba Relay en UNA PC.
-$Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080')
+$Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080','perf1080low')
 $Wanted = if ($Scenario -eq 'all') { $All } elseif ($Scenario -eq 'qa') { $Qa } else { $Scenario -split ',' | ForEach-Object { $_.Trim() } }
 $results = @()
 # Procesos del juego que quedaron vivos de una corrida anterior ocupan el puerto 7777: cerrarlos (solo los de Builds\)
@@ -177,14 +177,16 @@ for ($run = 1; $run -le $Runs; $run++) {
         $detail = "4 procesos en UNA PC (compiten por CPU/GPU; no equivale a 4 equipos) [$(Brief $f)] " + ((0..3 | ForEach-Object { "p$($_): " + (PerfLine $g[$_]) }) -join ' | ')
         Record $label $(if ((Field $f 'ronda') -eq 'Success') { 'PASS' } else { 'FAIL' }) $detail
       }
-      'perf1080' {
+      { $_ -in 'perf1080','perf1080low' } {
         # Un proceso a 1920x1080 sin bordes (pantalla completa del monitor de esta PC), con sincronizacion vertical.
+        # perf1080low: calidad grafica Baja (-ueQuality low). Se registra la GPU que uso Windows (equipos con dos GPU).
+        $q = if ($sc -eq 'perf1080low') { @('-ueQuality','low') } else { @('-ueQuality','high') }
         $f0 = Join-Path $Log "${tag}_solo.log"; if (Test-Path $f0) { Remove-Item $f0 }
-        $p = Start-Process $Exe -ArgumentList @('-screen-fullscreen','0','-popupwindow','-screen-width','1920','-screen-height','1080','-ueScene',$Scene,'-ueAutopilot','drag','-ueQuitOnEnd','-uePerf','10','-logFile',"`"$f0`"") -PassThru
+        $p = Start-Process $Exe -ArgumentList (@('-screen-fullscreen','0','-popupwindow','-screen-width','1920','-screen-height','1080','-ueScene',$Scene,'-ueAutopilot','drag','-ueQuitOnEnd','-uePerf','10') + $q + @('-logFile',"`"$f0`"") -PassThru
         $null = $p.WaitForExit(330000); $g = @{ p = $p; log = $f0; name = "${tag}_solo" }; Stop-Game $g
         if (Crashed $g) { Record $label 'BLOCKED' 'crash al arrancar'; break }
         $f = @(Finals $g)[0]; $eq = Last $g '\[Perf\] equipo'
-        Record $label $(if ((Field $f 'ronda') -eq 'Success') { 'PASS' } else { 'FAIL' }) "1920x1080 [$(Brief $f)] $(PerfLine $g) $([regex]::Match("$eq", 'pantalla=\S+ vsync=\d').Value) (esta PC)"
+        Record $label $(if ((Field $f 'ronda') -eq 'Success') { 'PASS' } else { 'FAIL' }) "1920x1080 [$(Brief $f)] $(PerfLine $g) $([regex]::Match("$eq", 'gpu=«[^»]*»').Value) $([regex]::Match("$eq", 'pantalla=\S+ vsync=\d').Value) calidad=$($q[1]) (esta PC)"
       }
       'coop' {
         $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd') 330
