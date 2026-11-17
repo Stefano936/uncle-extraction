@@ -85,7 +85,8 @@ namespace UncleExtraction.EditorTools
                     var st = Box("Stool", env, new Vector3(x, 0.41f, 7.75f), new Vector3(0.42f, 0.83f, 0.42f), wood);
                     if (PhysicsLabBuilder.KitVisual("stool", env, new Vector3(x, 0f, 7.75f), Quaternion.identity)) PhysicsLabBuilder.HideRenderer(st);
                 }
-                PhysicsLabBuilder.NoCollider(PhysicsLabBuilder.Prim(PrimitiveType.Cylinder, "Stool_Home", env, new Vector3(4.5f, 0.37f, 7.75f), new Vector3(0.4f, 0.37f, 0.4f), PhysicsLabBuilder.metalM));
+                var home = PhysicsLabBuilder.NoCollider(PhysicsLabBuilder.Prim(PrimitiveType.Cylinder, "Stool_Home", env, new Vector3(4.5f, 0.37f, 7.75f), new Vector3(0.4f, 0.37f, 0.4f), PhysicsLabBuilder.metalM));
+                if (PhysicsLabBuilder.KitVisual("stool", env, new Vector3(4.5f, 0f, 7.95f), Quaternion.identity)) PhysicsLabBuilder.HideRenderer(home);
                 // Mesas del kit (1,40 x 0,82 x 0,90 m): salon izquierdo y una junto a la pared derecha, lejos del corredor
                 foreach (var p in new[] { new Vector3(-4.2f, 0, 6.2f), new Vector3(-4.5f, 0, 2.6f), new Vector3(-6.8f, 0, 4.4f), new Vector3(7.6f, 0, 4.2f) })
                 {

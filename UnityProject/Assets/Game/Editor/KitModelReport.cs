@@ -12,7 +12,7 @@ namespace UncleExtraction.EditorTools
     {
         public static void Run()
         {
-            foreach (var name in new[] { "transport_cart", "passenger_van", "exit_door" })
+            foreach (var name in new[] { "transport_cart", "passenger_van", "exit_door", "stool", "table", "bar_counter" })
             {
                 var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{Kit3DImporter.Folder}/{name}.fbx");
                 if (!src) { Debug.Log($"[KitReport] falta {name}"); continue; }

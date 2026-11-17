@@ -62,6 +62,7 @@ namespace UncleExtraction
             var rt = Rect(name, parent, anchor, anchor, anchor, pos, size);
             var img = rt.gameObject.AddComponent<Image>(); img.sprite = danger ? S?.panelDanger : S?.panel; img.type = UnityEngine.UI.Image.Type.Sliced;
             img.color = img.sprite ? Color.white : (danger ? new Color(0.27f, 0.16f, 0.15f, 0.92f) : new Color(0.1f, 0.15f, 0.18f, 0.92f));
+            rt.gameObject.AddComponent<UiFade>(); // aparicion breve y consistente de todos los paneles
             return rt;
         }
 
@@ -96,6 +97,7 @@ namespace UncleExtraction
                 rt.gameObject.AddComponent<FocusRing>().ring = ring;
             }
             if (onClick != null) b.onClick.AddListener(() => onClick());
+            rt.gameObject.AddComponent<ButtonLabelState>().label = lab; // deshabilitado: tambien se atenua el texto
             return b;
         }
 
@@ -117,6 +119,36 @@ namespace UncleExtraction
             var rt = Rect(name, parent, anchor, anchor, anchor, pos, new Vector2(size, size));
             var img = rt.gameObject.AddComponent<Image>(); img.sprite = S?.Icon(icon); img.color = color; img.preserveAspect = true; img.raycastTarget = false;
             img.enabled = img.sprite; return img;
+        }
+    }
+
+    /// Aparicion de un panel: opacidad y escala en 0,12 s (tiempo real, tambien en pausa). Empieza en 35 % para que un aviso
+    /// de peligro se lea desde el primer cuadro; no demora ninguna accion ni mueve la camara.
+    public class UiFade : MonoBehaviour
+    {
+        public const float Duration = 0.12f;
+        CanvasGroup cg; float t0; bool done;
+        void OnEnable() { if (!cg) cg = GetComponent<CanvasGroup>(); if (!cg) cg = gameObject.AddComponent<CanvasGroup>(); t0 = Time.unscaledTime; done = false; Apply(0f); }
+        void Update() { if (done) return; float k = Mathf.Clamp01((Time.unscaledTime - t0) / Duration); Apply(k); done = k >= 1f; }
+        public bool Running => !done;
+        void Apply(float k)
+        {
+            float e = 1f - (1f - k) * (1f - k); // salida suave
+            cg.alpha = Mathf.Lerp(0.35f, 1f, e);
+            var fit = GetComponent<FitInCanvas>(); float s = (fit ? fit.Scale : 1f) * Mathf.Lerp(0.97f, 1f, e);
+            transform.localScale = new Vector3(s, s, 1f);
+        }
+    }
+
+    /// Texto de boton atenuado cuando no se puede usar (el sprite cambia solo; el texto tambien tiene que avisar).
+    public class ButtonLabelState : MonoBehaviour
+    {
+        public Text label; Selectable sel; Color baseColor; bool init;
+        void Update()
+        {
+            if (!label) return; if (!sel) sel = GetComponent<Selectable>();
+            if (!init) { baseColor = label.color; init = true; }
+            var c = baseColor; if (sel && !sel.IsInteractable()) c.a *= 0.45f; label.color = c;
         }
     }
 
@@ -143,6 +175,7 @@ namespace UncleExtraction
     public class FitInCanvas : MonoBehaviour
     {
         public float margin = 16f;
+        public float Scale { get; private set; } = 1f;
         RectTransform rt, canvasRt;
         void LateUpdate()
         {
@@ -150,6 +183,8 @@ namespace UncleExtraction
             if (!canvasRt) { var c = GetComponentInParent<Canvas>(); if (c) canvasRt = (RectTransform)c.rootCanvas.transform; else return; }
             var size = rt.rect.size; var avail = canvasRt.rect.size - new Vector2(margin * 2, margin * 2);
             float s = Mathf.Min(1f, avail.x / Mathf.Max(1f, size.x), avail.y / Mathf.Max(1f, size.y));
+            Scale = s;
+            var fade = GetComponent<UiFade>(); if (fade && fade.Running) return; // la aparicion aplica la escala
             if (Mathf.Abs(rt.localScale.x - s) > 0.001f) rt.localScale = new Vector3(s, s, 1f);
         }
     }

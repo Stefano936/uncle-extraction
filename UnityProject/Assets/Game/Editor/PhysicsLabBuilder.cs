@@ -240,6 +240,8 @@ namespace UncleExtraction.EditorTools
             auto.npc = brain; auto.body = body; auto.cart = cart; auto.zone = zone; auto.round = round;
             hud.autopilot = auto;
 
+            // Direccion visual del escenario principal (noche, techo, terminaciones, luces, calle, posproceso): solo visual
+            if (spec.kitVisuals && spec.name == "Bar_LastRound") BarDressing.Apply(env, spec.halfX, spec.backZ, spec.doorZ, spec.doorX);
             // Materiales del kit (escenario principal): solo visual; el laboratorio conserva colores lisos de diagnostico
             if (spec.kitVisuals) foreach (var rootGo in scene.GetRootGameObjects()) KitMaterials.ApplyToLevel(rootGo.transform, floorM, wallM, woodM);
 
@@ -307,6 +309,7 @@ namespace UncleExtraction.EditorTools
             var pivot = new GameObject("CameraPivot").transform; pivot.SetParent(go.transform, false); pivot.localPosition = new Vector3(0, 1.62f, 0);
             var camGo = new GameObject("PlayerCamera"); camGo.tag = "MainCamera"; camGo.transform.SetParent(pivot, false);
             var cam = camGo.AddComponent<Camera>(); cam.depth = 0; cam.fieldOfView = 85f; cam.nearClipPlane = 0.05f; // FOV vertical (convencion de Unity)
+            UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).renderPostProcessing = true; // volumen del escenario (bar)
             camGo.AddComponent<AudioListener>();
             var hl = NoCollider(LocalPrim(PrimitiveType.Cube, "Hand_L", camGo.transform, new Vector3(-0.28f, -0.3f, 0.75f), new Vector3(0.09f, 0.07f, 0.16f), handM));
             var hr = NoCollider(LocalPrim(PrimitiveType.Cube, "Hand_R", camGo.transform, new Vector3(0.28f, -0.3f, 0.75f), new Vector3(0.09f, 0.07f, 0.16f), handM));
@@ -381,7 +384,9 @@ namespace UncleExtraction.EditorTools
             var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{Kit3DImporter.Folder}/{id}.fbx");
             if (!src) { Debug.LogWarning($"[LabBuilder] falta el FBX del kit: {id}"); return null; }
             var go = (GameObject)PrefabUtility.InstantiatePrefab(src);
-            go.name = "Kit_" + id; go.transform.SetParent(parent, false); go.transform.localPosition = localPos; go.transform.localRotation = localRot;
+            // El kit viene con Z hacia arriba (alto en z; ver KitModelReport): se convierte a Y arriba. El tio usa su rig, ya correcto.
+            var axis = id == "uncle_prototype" ? Quaternion.identity : Quaternion.Euler(-90f, 0f, 0f);
+            go.name = "Kit_" + id; go.transform.SetParent(parent, false); go.transform.localPosition = localPos; go.transform.localRotation = localRot * axis;
             foreach (var c in go.GetComponentsInChildren<Collider>()) UnityEngine.Object.DestroyImmediate(c);
             return go;
         }

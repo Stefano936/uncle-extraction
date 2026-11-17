@@ -89,6 +89,7 @@ namespace UncleExtraction
 
         IEnumerator Check(string screen)
         {
+            yield return Seconds(UiFade.Duration + 0.2f);
             yield return new WaitForEndOfFrame();
             string file = Path.Combine(dir, $"{tag}_{screen}.png");
             ScreenCapture.CaptureScreenshot(file);

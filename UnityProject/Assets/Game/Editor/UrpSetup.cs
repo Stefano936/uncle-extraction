@@ -35,6 +35,12 @@ namespace UncleExtraction.EditorTools
             asset.shadowDistance = 40f;
             asset.msaaSampleCount = 2;
             asset.supportsHDR = true;
+            // Forward+: el bar usa ~15 luces calidas; sin limite de luces por objeto (con Forward el piso mostraba saltos)
+            if (rendererData.renderingMode != RenderingMode.ForwardPlus) { rendererData.renderingMode = RenderingMode.ForwardPlus; EditorUtility.SetDirty(rendererData); }
+            var so = new SerializedObject(asset); // sombras de luces adicionales (focos de la barra y farol): sin setter publico
+            var sp = so.FindProperty("m_AdditionalLightShadowsSupported"); if (sp != null) sp.boolValue = true;
+            var res = so.FindProperty("m_AdditionalLightsShadowmapResolution"); if (res != null) res.intValue = 2048;
+            so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
 
             bool changed = GraphicsSettings.defaultRenderPipeline != asset;
