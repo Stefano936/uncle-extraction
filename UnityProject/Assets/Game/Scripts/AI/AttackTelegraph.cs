@@ -97,9 +97,10 @@ namespace UncleExtraction
             float pulse = attack ? 1.25f : 1f + 0.08f * Mathf.Sin(Time.time * 14f);
             // de cerca (menos de 2,4 m) el aviso del HUD ya lo dice: el rotulo se achica y se oculta en vez de tapar la pantalla
             float d = cam ? Vector3.Distance(cam.transform.position, label.transform.position) : 10f;
-            float near = Mathf.InverseLerp(1.6f, 2.4f, d);
+            // tamano angular constante (no crece al acercarse) y oculto a menos de 2,8 m, donde el aviso del HUD ya lo dice
+            float near = Mathf.InverseLerp(2.8f, 3.4f, d);
             label.gameObject.SetActive(near > 0.01f);
-            label.transform.localScale = Vector3.one * pulse * Mathf.Lerp(0.5f, 1f, near);
+            label.transform.localScale = Vector3.one * pulse * Mathf.Clamp(d * 0.16f, 0.35f, 1f) * near;
         }
     }
 }
