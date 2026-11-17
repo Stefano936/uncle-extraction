@@ -2,6 +2,26 @@
 
 Resultados de sesiones anteriores tal como quedaron, sin reescribir (incluye los FAIL y las repeticiones). El estado vigente y lo pendiente están en `PROGRESS.md`; las razones de diseño, en `docs/DECISIONES_IMPLEMENTACION.md`.
 
+## Sesión 9 (2026-11-16): prueba humana, Relay, QA, rendimiento e interfaz
+
+Build vigente: **`e8ee30f`** (release, vinculada a Unity Cloud; el código del juego es el de `836a4bd`). Desarrollo: `836a4bd`. PC de prueba: i7-12700H, RTX 3070 Ti Laptop, 16 GB, monitor 1920×1080 a 360 Hz.
+
+| Prueba | Código / build | Resultado |
+| --- | --- | --- |
+| Proveedor Relay sin red (`RelayProviderTests`: código, motivos de error, sin proyecto → `error.online_unlinked` sin tocar la red, textos EN/es_UY) | `71d11e6` | EM PASS (12 casos). |
+| **Relay en una PC** (`net_smoke -Scenario relay`) | build `8c90742` | **BLOCKED**: proyecto sin vincular a Unity Cloud (`cloudProjectId` vacío). |
+| **Relay en una PC, tras vincular el proyecto** (Unity Cloud «UnityProject», vinculado con `unity projects link cloud` con tu autorización) | build `e8ee30f` | NET **PASS en la primera corrida**: código de sala `96CM9R`, asignación en `southamerica-east1`, el invitado entró por Relay, partida ganada con el mismo final convergido en ambos, RTT 86–92 ms a través del servidor de Relay. No hizo falta habilitar Relay a mano en el panel. **Es una sola PC**: el tráfico sale a internet y vuelve, pero no prueba dos equipos. **Dos equipos por Relay y dos redes distintas: NOT_RUN** (necesitan otra PC). |
+| EditMode completo (incluye persistencia de opciones, idioma y controles tras «reiniciar», valores corruptos) | `8c90742` | EM **31/31**. |
+| PM de interfaz, menú con mando virtual, diálogo de anfitrión perdido, flujo y señales de ataque | build `8c90742` | PM **20/20**. Antes, en el código intermedio: 7/8 por un `MissingReferenceException` real (cerrar Opciones al cambiar de escena volvía a entrar en `Show`; corregido) y 7/8 por un choque de puerto con la auditoría corriendo a la vez (entorno; auditoría movida al puerto 7807). |
+| **Auditoría de interfaz** (`ui_audit.ps1`: 720p, 1080p, 21:9 = 1920×810 equivalente a 2560×1080, 16:10, 4:3; texto 100/125/150 %; textos fuera, recortados, encimados o tapados) | código de `8c90742` | VIS **15/15 PASS** en la quinta corrida. Corridas anteriores, todas registradas: 1.ª 0/10 (página duplicada al volver de Opciones —error de flujo— y 131 problemas al 150 %); 2.ª 5/15 (todo 100 % limpio; quedaban títulos y filas al 125/150 %); 3.ª 14/15 (Cómo jugar fuera de pantalla en 21:9 al 150 %); 4.ª 10/15 (la verificación nueva «tapado» encontró la barra de los deslizadores sobre su etiqueta al 150 %). Capturas en `.local-setup/shots/s9/audit5/`. Revisado a ojo: sala, HUD, Cómo jugar, resultados y opciones. |
+| `Uncle_Escapes_BackInsideThroughTheDoor` (central y articulado), 3 corridas | código de `8c90742` | PM **6/6**. Duración 11,4 s y 13,3 s contra un límite de 15 s: el margen es chico y explica el fallo intermitente de la sesión 8. No se aflojó el límite; la prueba ahora registra la trayectoria si vuelve a fallar. |
+| Red completa (`-Scenario all`, 12 escenarios, localhost) | build `8c90742` | NET **12/12** en la primera tanda. |
+| **QA ampliada** (`-Scenario qa`) | build `8c90742` | NET 13 PASS: solo Relajado 39,2 s, Normal 21,1 s, Difícil 193,6 s; Relajado y Difícil con 2, 3 y 4 procesos (6/6, mismo final convergido en todos); sesión larga 8 rondas seguidas, 8 victorias, 0 excepciones, memoria de Unity 95→95 MB; rendimiento 1 y 4 procesos. **Hallazgo:** con caída brusca del anfitrión el invitado tardaba **30,1 s** en enterarse (congelado). Corregido en `836a4bd` (tiempo de desconexión 10 s). |
+| **Red tras el cambio de transporte** (`-Scenario all` + hostkill, perf1080, perf4) | build `836a4bd` | NET **12/12** en la primera tanda (netsim RTT 234 ms con 3 % de pérdida). **hostkill: detecta en 10,1 s**, vuelve al menú con el diálogo, 0 excepciones. |
+| **Rendimiento** (`-uePerf`, esta PC, vsync a 360 Hz) | build `836a4bd` | 1 proceso a 1920×1080: 347 fps (límite de vsync), cuadro p95 2,78 ms, 0 cuadros > 33 ms, CPU principal 1,03 ms, GPU 0,40 ms, memoria de Unity 92→93 MB (reservada 171 MB). 4 procesos en la misma PC (800×450): 344–349 fps, CPU 1,5–1,8 ms, 1–5 cuadros > 33 ms en 30 s. **No representa cuatro equipos ni PC más modestas.** Falta medir en una PC de gama baja. |
+
+Sin prueba humana, sin LAN entre dos PC y sin internet en ninguna fila.
+
 ## Sesión 8 (2026-11-16): atascos, señales de ataque, interfaz del kit, sala, sonido
 
 Build de referencia al cerrar la sesión: `378fa91` (verificación final en `490dab3`).

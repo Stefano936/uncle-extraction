@@ -4,4 +4,4 @@ Registro de lo que dijeron e hicieron personas reales jugando (guion en `docs/PR
 
 | Fecha | Build (commit) | Personas / conexión | Tarea | Observación literal | Acción tomada |
 | --- | --- | --- | --- | --- | --- |
-| — | — | — | — | **Sin sesiones todavía** (estado al 2026-11-16). | — |
+| 2026-11-16 | `e8ee30f` | Stefano (dueño del proyecto), conexión no indicada | General | «Ya probé el juego y funciona excelente.» | Se pasó a la etapa de pulido visual (sesión 10). Sin detalle por tarea: la planilla de `PRUEBA_HUMANA.md` no se completó. |

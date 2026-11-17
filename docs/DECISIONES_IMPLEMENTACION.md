@@ -160,6 +160,17 @@ Se armaron reproducciones controladas (`StuckRecoveryTests`) con un jugador guio
 - **Pantallas 21:9 en un monitor 16:9:** se prueban con una ventana del mismo aspecto (1920×810 para 2560×1080). El `CanvasScaler` (1920×1080, match 0,5) escala uniformemente, así que la disposición en unidades de canvas es idéntica; cambia solo la densidad de píxeles.
 - **Rendimiento:** `PerfProbe` usa `FrameTimingManager` (se habilitó *Frame Timing Stats*) para separar el trabajo de CPU y GPU del límite de sincronización vertical. Varias instancias en una PC compiten por CPU y GPU: sirven para encontrar fugas y picos, no para estimar cuatro equipos.
 
+## 2026-11-16 — Pulido visual (sesión 10)
+
+- **El kit 3D viene con Z hacia arriba.** `KitVisual` lo convierte a Y arriba para todo menos el tío (su rig ya importaba bien). Antes, banquetas, mesas, mostrador y puerta estaban acostados; la camioneta y el carrito no se notaban porque `KitDressing.Fit` los ajusta por nombre a cajas del mundo.
+- **Camioneta con carrocería propia, no la del kit.** El kit es un bloque de prueba (placas sin techo visible). La carrocería sigue la caja funcional (2,50 × 5,40 × 2,30 m): colisiones, piso, rampa, zona y hojas no cambian. Los renderers del kit y de los primitivos quedan ocultos.
+- **Todo el vestido es visual y sin colisión** (`BarDressing`, solo Bar_LastRound): nada nuevo bloquea recorridos, raycasts de agarre ni el cierre de la camioneta. Los objetos decorativos no se parecen a los agarrables (sin asas, fuera del alcance o en paredes y techo).
+- **Forward+** en URP: con ~15 luces cálidas, Forward limitaba las luces por objeto y el piso mostraba cortes. Sombras solo en la luna, un foco de la barra y el farol.
+- **Posproceso solo en la escena que tiene volumen** (`ScenePostFx`): en todas las escenas costaba un pase sin aportar nada y cambió el ritmo de cuadros lo suficiente para romper una maniobra guionada en el laboratorio (`lab_fail_m28`, 4/4 FAIL → 3/3 PASS). Es un hallazgo sobre la prueba, no sobre las reglas.
+- **Texto 3D con sombreador propio** (`UncleExtraction/WorldText`): el material de las fuentes dinámicas dibuja siempre encima y se veía a través de muros y techo. `WorldTextFont` mantiene la textura de la fuente al reconstruirse.
+- **Aparición de interfaz:** 0,12 s, desde 35 % de opacidad y 97 % de escala; sin movimientos de cámara ni destellos. El rótulo 3D del ataque se oculta a menos de 2,4 m porque el aviso del HUD ya lo dice y de cerca tapaba la pantalla.
+- **Jerarquía del HUD:** peligro > interacción > diálogo. Si el aviso de ataque y el subtítulo del tío no entran juntos, manda el aviso.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.
