@@ -12,7 +12,22 @@
 
 ### Resultados de la sesión 9 (por commit y build)
 
-RESULTADOS_S9
+Build vigente: **`836a4bd`** (release y desarrollo; `VERSION.txt` sin cambios sin commitear). PC de prueba: i7-12700H, RTX 3070 Ti Laptop, 16 GB, monitor 1920×1080 a 360 Hz.
+
+| Prueba | Código / build | Resultado |
+| --- | --- | --- |
+| Proveedor Relay sin red (`RelayProviderTests`: código, motivos de error, sin proyecto → `error.online_unlinked` sin tocar la red, textos EN/es_UY) | `71d11e6` | EM PASS (12 casos). |
+| **Relay en una PC** (`net_smoke -Scenario relay`) | build `8c90742` | **BLOCKED**: proyecto sin vincular a Unity Cloud (`cloudProjectId` vacío). Dos equipos por Relay y dos redes distintas: **NOT_RUN** (dependen de lo anterior). |
+| EditMode completo (incluye persistencia de opciones, idioma y controles tras «reiniciar», valores corruptos) | `8c90742` | EM **31/31**. |
+| PM de interfaz, menú con mando virtual, diálogo de anfitrión perdido, flujo y señales de ataque | build `8c90742` | PM **20/20**. Antes, en el código intermedio: 7/8 por un `MissingReferenceException` real (cerrar Opciones al cambiar de escena volvía a entrar en `Show`; corregido) y 7/8 por un choque de puerto con la auditoría corriendo a la vez (entorno; auditoría movida al puerto 7807). |
+| **Auditoría de interfaz** (`ui_audit.ps1`: 720p, 1080p, 21:9 = 1920×810 equivalente a 2560×1080, 16:10, 4:3; texto 100/125/150 %; textos fuera, recortados, encimados o tapados) | código de `8c90742` | VIS **15/15 PASS** en la quinta corrida. Corridas anteriores, todas registradas: 1.ª 0/10 (página duplicada al volver de Opciones —error de flujo— y 131 problemas al 150 %); 2.ª 5/15 (todo 100 % limpio; quedaban títulos y filas al 125/150 %); 3.ª 14/15 (Cómo jugar fuera de pantalla en 21:9 al 150 %); 4.ª 10/15 (la verificación nueva «tapado» encontró la barra de los deslizadores sobre su etiqueta al 150 %). Capturas en `.local-setup/shots/s9/audit5/`. Revisado a ojo: sala, HUD, Cómo jugar, resultados y opciones. |
+| `Uncle_Escapes_BackInsideThroughTheDoor` (central y articulado), 3 corridas | código de `8c90742` | PM **6/6**. Duración 11,4 s y 13,3 s contra un límite de 15 s: el margen es chico y explica el fallo intermitente de la sesión 8. No se aflojó el límite; la prueba ahora registra la trayectoria si vuelve a fallar. |
+| Red completa (`-Scenario all`, 12 escenarios, localhost) | build `8c90742` | NET **12/12** en la primera tanda. |
+| **QA ampliada** (`-Scenario qa`) | build `8c90742` | NET 13 PASS: solo Relajado 39,2 s, Normal 21,1 s, Difícil 193,6 s; Relajado y Difícil con 2, 3 y 4 procesos (6/6, mismo final convergido en todos); sesión larga 8 rondas seguidas, 8 victorias, 0 excepciones, memoria de Unity 95→95 MB; rendimiento 1 y 4 procesos. **Hallazgo:** con caída brusca del anfitrión el invitado tardaba **30,1 s** en enterarse (congelado). Corregido en `836a4bd` (tiempo de desconexión 10 s). |
+| **Red tras el cambio de transporte** (`-Scenario all` + hostkill, perf1080, perf4) | build `836a4bd` | NET **12/12** en la primera tanda (netsim RTT 234 ms con 3 % de pérdida). **hostkill: detecta en 10,1 s**, vuelve al menú con el diálogo, 0 excepciones. |
+| **Rendimiento** (`-uePerf`, esta PC, vsync a 360 Hz) | build `836a4bd` | 1 proceso a 1920×1080: 347 fps (límite de vsync), cuadro p95 2,78 ms, 0 cuadros > 33 ms, CPU principal 1,03 ms, GPU 0,40 ms, memoria de Unity 92→93 MB (reservada 171 MB). 4 procesos en la misma PC (800×450): 344–349 fps, CPU 1,5–1,8 ms, 1–5 cuadros > 33 ms en 30 s. **No representa cuatro equipos ni PC más modestas.** Falta medir en una PC de gama baja. |
+
+Sin prueba humana, sin LAN entre dos PC y sin internet en ninguna fila.
 
 ### Pendientes reales (en orden)
 
@@ -27,7 +42,7 @@ RESULTADOS_S9
 ### Fallos intermitentes conocidos (se mantienen visibles)
 
 - **Bot del modo carrito:** falló en 2 de 4 regresiones completas de la sesión 8 (asa contra la pared, corregido; no llegó a cargar en el laboratorio articulado, abierto). Es el punto más inestable de las pruebas automáticas, no una regla del juego.
-- **`Uncle_Escapes_BackInsideThroughTheDoor` (articulado):** 1 de 3 corridas en la sesión 8 terminó con el tío en el umbral (z = −1,50 con la condición > −1,5) a los 15 s. ESCAPE_S9
+- **`Uncle_Escapes_BackInsideThroughTheDoor` (articulado):** 1 de 3 corridas en la sesión 8 terminó con el tío en el umbral (z = −1,50 con la condición > −1,5) a los 15 s. En la sesión 9 pasó 6/6, pero con 11–13 s de un límite de 15 s; la prueba ahora registra la trayectoria.
 
 ## Bloqueado por cuentas, equipos o participantes
 
@@ -41,4 +56,6 @@ RESULTADOS_S9
 
 ## Próxima acción exacta
 
-PROXIMA_S9
+1. **Vos:** vincular Unity Cloud y habilitar Relay (ver «Bloqueado»). Después: regenerar la build, `net_smoke.ps1 -Scenario relay` y la prueba entre dos equipos en redes distintas.
+2. **Vos o testers:** prueba con personas con `PRUEBA_HUMANA.txt` (solo y con amigos por red local).
+3. Mientras tanto (sin cuentas): medir en una PC de gama baja si hay una disponible; preparar Sessions sobre el proveedor Relay solo si la prueba con amigos pide listar salas o reconectar.
