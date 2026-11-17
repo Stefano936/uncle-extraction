@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEngine;
@@ -117,7 +118,8 @@ namespace UncleExtraction.EditorTools
                     if (best) vis.Bind(best, map[s.name]); else Debug.LogWarning($"[ArticulatedUncle] sin hueso del kit para {s.name}");
                 }
                 var anim = kit.GetComponent<Animator>(); if (anim) Object.DestroyImmediate(anim); // la pose la da la fisica
-                pres.bodyRenderers = kit.GetComponentsInChildren<Renderer>();
+                Finishing.Uncle(kit, map["head"]); // materiales (tela con trama, piel, cuero) y gorro de fiesta
+                pres.bodyRenderers = kit.GetComponentsInChildren<Renderer>().Where(r => r is SkinnedMeshRenderer).ToArray();
             }
             else
             {
@@ -126,7 +128,7 @@ namespace UncleExtraction.EditorTools
                 pres.bodyRenderers = rs.ToArray();
             }
             var ind = PhysicsLabBuilder.NoCollider(GameObject.CreatePrimitive(PrimitiveType.Sphere)); ind.name = "Telegraph_Indicator";
-            ind.transform.SetParent(map["head"], false); ind.transform.position = t.TransformPoint(new Vector3(0, 2.15f, 0)); ind.transform.localScale = Vector3.one * 0.2f;
+            ind.transform.SetParent(map["head"], false); ind.transform.position = t.TransformPoint(new Vector3(0, 2.42f, 0)); // sobre el gorro ind.transform.localScale = Vector3.one * 0.2f;
             ind.GetComponent<Renderer>().sharedMaterial = PhysicsLabBuilder.Mat("Indicator", Color.yellow);
             pres.indicator = ind.transform; pres.indicatorRenderer = ind.GetComponent<Renderer>(); ind.SetActive(false);
 

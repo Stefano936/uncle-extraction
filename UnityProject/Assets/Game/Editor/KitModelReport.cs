@@ -12,7 +12,7 @@ namespace UncleExtraction.EditorTools
     {
         public static void Run()
         {
-            foreach (var name in new[] { "transport_cart", "passenger_van", "exit_door", "stool", "table", "bar_counter" })
+            foreach (var name in new[] { "transport_cart", "passenger_van", "exit_door", "stool", "table", "bar_counter", "uncle_prototype" })
             {
                 var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{Kit3DImporter.Folder}/{name}.fbx");
                 if (!src) { Debug.Log($"[KitReport] falta {name}"); continue; }
@@ -24,7 +24,7 @@ namespace UncleExtraction.EditorTools
                 foreach (var r in rs.OrderBy(r => r.name))
                 {
                     var b = r.bounds;
-                    Debug.Log($"[KitReport]   {name}/{Path(r.transform, go.transform)}: centro {b.center:F3} tamano {b.size:F3} material {(r.sharedMaterial ? r.sharedMaterial.name : "-")}");
+                    Debug.Log($"[KitReport]   {name}/{Path(r.transform, go.transform)}: centro {b.center:F3} tamano {b.size:F3} materiales {string.Join(",", r.sharedMaterials.Select(m => m ? m.name : "-"))}");
                 }
                 foreach (var t in go.GetComponentsInChildren<Transform>().Where(t => !t.GetComponent<Renderer>() && t != go.transform))
                     Debug.Log($"[KitReport]   {name}/{Path(t, go.transform)} (vacio): posicion {t.position:F3}");

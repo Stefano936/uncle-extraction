@@ -42,7 +42,7 @@ namespace UncleExtraction
             var skin = UiSkin.Load();
             var bg = Ui.Image(canvas.transform, "Background", skin ? skin.background : null, skin && skin.background ? Color.white : Ui.Ink, false);
             bg.preserveAspect = false;
-            var shade = Ui.Image(canvas.transform, "Shade", null, new Color(0.06f, 0.09f, 0.11f, 0.55f), false);
+            var shade = Ui.Image(canvas.transform, "Shade", null, new Color(0.06f, 0.09f, 0.11f, 0.4f), false); // el fondo nocturno ya es oscuro
             var title = Ui.Label(canvas.transform, "Title", "UNCLE EXTRACTION", 112, Ui.Text, TextAnchor.UpperLeft, true);
             title.fontSize = title.resizeTextMaxSize = 112; title.resizeTextMinSize = 72; // logo: no crece con el tamaño de texto
             title.rectTransform.offsetMin = new Vector2(Ui.Margin, 0); title.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin);

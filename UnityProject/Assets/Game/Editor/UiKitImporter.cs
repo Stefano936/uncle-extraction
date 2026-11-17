@@ -67,7 +67,10 @@ namespace UncleExtraction.EditorTools
             skin.panel = Sp("panel_dark"); skin.panelDanger = Sp("panel_danger"); skin.button = Sp("button_primary"); skin.buttonHover = Sp("button_hover");
             skin.buttonPressed = Sp("button_pressed"); skin.buttonDisabled = Sp("button_disabled"); skin.focus = Sp("focus_ring"); skin.keycap = Sp("keycap");
             skin.barTrack = Sp("bar_track"); skin.barAmber = Sp("bar_fill_amber"); skin.barTeal = Sp("bar_fill_teal");
-            skin.background = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiDir}/Backgrounds/bar_idle.png");
+            // fondo: captura del bar actual (CamTour «menu_fondo», sesion 11) si existe; si no, el render original del kit
+            string night = $"{UiDir}/Backgrounds/bar_night.png";
+            if (File.Exists(night)) ConfigureSprite(night, Vector4.zero, 100);
+            skin.background = AssetDatabase.LoadAssetAtPath<Sprite>(File.Exists(night) ? night : $"{UiDir}/Backgrounds/bar_idle.png");
             skin.font = AssetDatabase.LoadAssetAtPath<Font>(FontPath); skin.fontBold = AssetDatabase.LoadAssetAtPath<Font>(FontBoldPath);
             skin.icons = Directory.GetFiles(UiDir + "/Icons", "*.png").Select(f => AssetDatabase.LoadAssetAtPath<Sprite>(f.Replace('\\', '/'))).Where(x => x).ToList();
             EditorUtility.SetDirty(skin);

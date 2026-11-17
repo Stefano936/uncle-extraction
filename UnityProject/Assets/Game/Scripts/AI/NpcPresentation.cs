@@ -13,6 +13,8 @@ namespace UncleExtraction
         public Renderer indicatorRenderer;
 
         static readonly Color idle = new Color(0.55f, 0.35f, 0.75f);
+        static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
+        MaterialPropertyBlock mpb;
         Quaternion armL0, armR0, legL0, legR0;
 
         void Start()
@@ -51,7 +53,16 @@ namespace UncleExtraction
                 case NpcState.Secured: c = new Color(0.3f, 0.9f, 0.4f); break;
                 case NpcState.Distracted: c = new Color(1f, 0.85f, 0.35f); aR = new Vector3(-40, 0, 20); break; // brazo hacia el vaso
             }
-            foreach (var r in bodyRenderers) if (r) r.material.color = c;
+            foreach (var r in bodyRenderers)
+            {
+                if (!r) continue;
+                if (r.sharedMaterials.Length > 1)
+                {   // malla del kit con varios materiales: brillo del color del ataque solo al prepararse y al golpear
+                    float k = brain.State == NpcState.Windup ? 0.18f + 0.22f * pulse : brain.State == NpcState.Attack ? 0.5f : 0f;
+                    mpb ??= new MaterialPropertyBlock(); r.GetPropertyBlock(mpb); mpb.SetColor(EmissionId, c * k); r.SetPropertyBlock(mpb);
+                }
+                else r.material.color = c;
+            }
             Pose(armL, armL0, aL); Pose(armR, armR0, aR); Pose(legL, legL0, lL); Pose(legR, legR0, lR);
             if (indicator)
             {

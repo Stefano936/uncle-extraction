@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 804d9a4563743c848b5d057f99eb25de, type: 3}
   m_Name: UiSkin
   m_EditorClassIdentifier: UncleExtraction.Runtime::UncleExtraction.UiSkin
-  background: {fileID: 21300000, guid: f7bd399a8f66802489c50e4086d8dda5, type: 3}
+  background: {fileID: 21300000, guid: 9629f7f1d72b2ba478ce2b943cdde7ec, type: 3}
   panel: {fileID: 21300000, guid: ff11d1501ab19d845b8fead597596eee, type: 3}
   panelDanger: {fileID: 21300000, guid: 44f403d70f91a2b45962814551ebad96, type: 3}
   button: {fileID: 21300000, guid: 22d9b7f7a856dec4a820b5fb975d2cbc, type: 3}

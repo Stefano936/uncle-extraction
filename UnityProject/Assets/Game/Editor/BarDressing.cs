@@ -262,7 +262,7 @@ namespace UncleExtraction.EditorTools
             var g = Group("Interior_Lights");
             var shade = Lit("Lamp_Shade", new Color(0.08f, 0.22f, 0.15f), 0.6f, 0.3f);
             var cord = Lit("Lamp_Cord", new Color(0.03f, 0.03f, 0.03f), 0.2f);
-            var bulb = Glow("Bulb", Tungsten, 5f);
+            var bulb = Glow("Bulb", Tungsten, 3f);
             void Pendant(string n, Vector3 at, float intensity, float range, bool spot, bool shadows)
             {
                 V(PrimitiveType.Cylinder, n + "_Cord", g, new Vector3(at.x, (3f + at.y + 0.15f) * 0.5f, at.z), new Vector3(0.012f, (3f - at.y - 0.15f) * 0.5f, 0.012f), cord);
@@ -273,8 +273,21 @@ namespace UncleExtraction.EditorTools
             }
             // barra y tio: los dos focos con sombra (lectura del cuerpo y de las poses de ataque)
             // sobre el mostrador (fuera de la linea de vista entre el salon y el cartel de la pared)
-            Pendant("Bar_A", new Vector3(3.4f, 2.2f, 8.6f), 9f, 7f, true, true);
-            Pendant("Bar_B", new Vector3(5.6f, 2.2f, 8.6f), 9f, 7f, true, false);
+            // a los costados del cartel (no lo tapan desde el salon) y menos intensos: la tapa de la barra se quemaba
+            // focos embutidos en el techo sobre la barra: no cuelgan, asi que no tapan el cartel desde ningun angulo
+            void Can(string n, Vector3 at, bool shadows)
+            {
+                V(PrimitiveType.Cylinder, n + "_Can", g, new Vector3(at.x, 2.97f, at.z), new Vector3(0.26f, 0.05f, 0.26f), Lit("Can_Housing", new Color(0.08f, 0.07f, 0.06f), 0.4f, 0.5f));
+                V(PrimitiveType.Cylinder, n + "_Lens", g, new Vector3(at.x, 2.915f, at.z), new Vector3(0.16f, 0.01f, 0.16f), bulb);
+                L(n + "_Light", LightType.Spot, new Vector3(at.x, 2.88f, at.z), Tungsten, 6f, 7f, g, shadows, new Vector3(at.x, 0f, at.z - 0.9f), 100f);
+            }
+            Can("Bar_A", new Vector3(3.2f, 0f, 8.3f), true);
+            Can("Bar_B", new Vector3(5.8f, 0f, 8.3f), false);
+            // luz de presentacion del tio: frontal, desde el salon, para leer cara y manos contra la barra
+            L("Uncle_Key", LightType.Spot, new Vector3(4.5f, 2.8f, 5.2f), new Color(1f, 0.86f, 0.72f), 2.6f, 6f, g, false, new Vector3(4.5f, 1.2f, 7.6f), 55f);
+            var fill = new GameObject("Character_Fill"); fill.transform.SetParent(g, false);
+            var fl = fill.AddComponent<Light>(); fl.type = LightType.Point; fl.color = new Color(1f, 0.88f, 0.76f); fl.intensity = 0.7f; fl.range = 2.6f; fl.shadows = LightShadows.None;
+            fill.AddComponent<CharacterFill>();
             foreach (var p in new[] { new Vector3(-4.2f, 2.0f, 6.2f), new Vector3(-4.5f, 2.0f, 2.6f), new Vector3(-6.8f, 2.0f, 4.4f), new Vector3(7.6f, 2.0f, 4.2f) })
                 Pendant("Table", p, 2.4f, 4.2f, false, false);
             // salon y recorrido: relleno calido sin sombra (para que nada importante quede en negro)
@@ -450,7 +463,7 @@ namespace UncleExtraction.EditorTools
             if (!profile) { profile = ScriptableObject.CreateInstance<VolumeProfile>(); AssetDatabase.CreateAsset(profile, path); }
             T Get<T>() where T : VolumeComponent { if (!profile.TryGet<T>(out var c)) { c = profile.Add<T>(true); AssetDatabase.AddObjectToAsset(c, profile); } c.active = true; return c; }
             var tm = Get<Tonemapping>(); tm.mode.Override(TonemappingMode.ACES);
-            var bloom = Get<Bloom>(); bloom.threshold.Override(1.05f); bloom.intensity.Override(0.55f); bloom.scatter.Override(0.6f);
+            var bloom = Get<Bloom>(); bloom.threshold.Override(1.25f); bloom.intensity.Override(0.4f); bloom.scatter.Override(0.6f);
             var ca = Get<ColorAdjustments>(); ca.postExposure.Override(0.7f); ca.contrast.Override(14f); ca.saturation.Override(6f);
             var vig = Get<Vignette>(); vig.intensity.Override(0.24f); vig.smoothness.Override(0.45f);
             EditorUtility.SetDirty(profile); AssetDatabase.SaveAssets();

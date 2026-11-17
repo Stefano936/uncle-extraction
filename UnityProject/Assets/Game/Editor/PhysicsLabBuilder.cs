@@ -193,7 +193,7 @@ namespace UncleExtraction.EditorTools
             var strapPt = new GameObject("Strap_Point").transform; strapPt.SetParent(ct, false); strapPt.localPosition = new Vector3(0, 0.6f, 0);
             Socket(handle.transform, "cart_handle", "asa del carrito", Vector3.zero, cartRb, 2);
             var cart = cartGo.AddComponent<TransportCart>(); cart.bed = bed; cart.strapPoint = strapPt;
-            if (spec.kitVisuals && KitDressing.Cart(ct)) Debug.Log("[LabBuilder] carrito vestido con transport_cart del kit (geometria funcional sin cambios)");
+            if (spec.kitVisuals) { Finishing.Cart(ct); Debug.Log("[LabBuilder] carrito con modelo propio sobre la geometria funcional (sin cambios de colision)"); }
 
             // Tio
             NpcBody body; NpcBrain brain; NpcPresentation pres;
@@ -244,6 +244,7 @@ namespace UncleExtraction.EditorTools
             if (spec.kitVisuals && spec.name == "Bar_LastRound") BarDressing.Apply(env, spec.halfX, spec.backZ, spec.doorZ, spec.doorX);
             // Materiales del kit (escenario principal): solo visual; el laboratorio conserva colores lisos de diagnostico
             if (spec.kitVisuals) foreach (var rootGo in scene.GetRootGameObjects()) KitMaterials.ApplyToLevel(rootGo.transform, floorM, wallM, woodM);
+            if (spec.kitVisuals) Finishing.ReliefForLevel(); // relieve sutil (mapas de normales) en madera, baldosas, revoque, asfalto y losetas
 
             EditorSceneManager.SaveScene(scene, spec.scenePath);
             // NGO genera GlobalObjectIdHash en OnValidate, que en modo batch no siempre corre: forzarlo y guardar de nuevo.

@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace UncleExtraction.EditorTools
@@ -78,7 +79,16 @@ namespace UncleExtraction.EditorTools
                 var wood = PhysicsLabBuilder.woodM;
                 // Barra (kit bar_counter: 4,12 x 1,08 x 0,90 m) al fondo a la derecha; colision del mismo tamano
                 var counter = Box("Bar_Counter", env, new Vector3(4.5f, 0.54f, 8.85f), new Vector3(4.12f, 1.08f, 0.9f), wood);
-                if (PhysicsLabBuilder.KitVisual("bar_counter", env, new Vector3(4.5f, 0f, 8.85f), Quaternion.identity)) PhysicsLabBuilder.HideRenderer(counter);
+                var kitCounter = PhysicsLabBuilder.KitVisual("bar_counter", env, new Vector3(4.5f, 0f, 8.85f), Quaternion.identity);
+                if (kitCounter)
+                {
+                    PhysicsLabBuilder.HideRenderer(counter);
+                    var woodTex = AssetDatabase.LoadAssetAtPath<Material>("Assets/Game/Art/Materials/MAT_Wood_Boards.mat");
+                    Texture2D bt = woodTex ? woodTex.GetTexture("_BaseMap") as Texture2D : null, bn = woodTex ? woodTex.GetTexture("_BumpMap") as Texture2D : null;
+                    foreach (var r in kitCounter.GetComponentsInChildren<Renderer>())
+                        r.sharedMaterial = r.name == "CounterTop" ? Finishing.Lit("Counter_Top", new Color(0.36f, 0.2f, 0.12f), 0.5f, 0f, bt, bn, 0.3f, new Vector2(4, 1))
+                                                                  : Finishing.Lit("Counter_Front", new Color(0.5f, 0.3f, 0.18f), 0.25f, 0f, bt, bn, 0.6f, new Vector2(4, 1));
+                }
                 // Banquetas del kit (0,54 x 0,83 m): obstaculos fijos a los costados del banco del tio, no en su camino
                 foreach (var x in new[] { 2.8f, 6.3f })
                 {
