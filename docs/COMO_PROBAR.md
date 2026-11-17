@@ -9,7 +9,7 @@
    - **Red local (IP):** en una PC **Crear partida en la red local** (Windows puede pedir permiso de firewall); en las otras **Unirse por IP** con la IP del anfitrión (`127.0.0.1` en la misma PC).
    - Primero se abre la **sala**: cada jugador pulsa **LISTO** y el anfitrión, que elige la dificultad, pulsa **INICIAR EXTRACCIÓN**. No se puede entrar con la ronda ya empezada; al reintentar se vuelve a la sala. El nombre de jugador se elige en Opciones.
 4. **Opciones** (en el menú o en la pausa):
-   - idioma (español rioplatense o inglés), volumen, sensibilidad del mouse, campo de visión, eje Y invertido, subtítulos de ataques y tamaño del texto;
+   - idioma (español rioplatense o inglés), volumen, sensibilidad del mouse, campo de visión, eje Y invertido, subtítulos de ataques, tamaño del texto y **gráficos** (Alta o Baja; con GPU integrada empieza en Baja);
    - **controles**: elegir una acción y pulsar la tecla nueva. Esc cancela. Si la tecla ya estaba en uso, las dos acciones se intercambian;
    - **Aplicar cambios** guarda; **Volver** con cambios pregunta si aplicar o descartar.
 

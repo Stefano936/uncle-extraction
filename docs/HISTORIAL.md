@@ -2,6 +2,26 @@
 
 Resultados de sesiones anteriores tal como quedaron, sin reescribir (incluye los FAIL y las repeticiones). El estado vigente y lo pendiente están en `PROGRESS.md`; las razones de diseño, en `docs/DECISIONES_IMPLEMENTACION.md`.
 
+## Sesión 10 (2026-11-16): primera pasada de pulido visual
+
+Código final: **`1e23c82`**; la build entregada sale del commit de documentación siguiente (mismo código; ver `VERSION.txt`). Respaldo de la anterior: `Builds/UncleExtraction_Backup_e8ee30f/` (local). Capturas comparativas reales (misma cámara, `-ueCamTour`): `docs/capturas/pulido_s10/`.
+
+| Prueba | Código / build | Resultado |
+| --- | --- | --- |
+| Revisión visual de partida (13 vistas fijas: salón, barra, tío, karaoke, carrito, puerta por dentro y por fuera, vereda, camioneta, interior de la camioneta, esquina, techo, general) | `e8ee30f` (antes) y varias iteraciones | VIS. Encontrado: bar sin techo con cielo de día; baldosas del bar también afuera; **banquetas, mesas, mostrador y puerta del kit acostados** (el kit viene con Z arriba; la puerta era una placa en el piso); camioneta de placas planas sin techo y piso verde lima; paredes lisas sin terminaciones. Durante el pulido: carteles 3D que se veían a través de muros y techo (sombreador propio con prueba de profundidad), dos carteles espejados, una lámpara tapando el cartel de la barra, manchas de luz en el techo. Todo corregido y vuelto a capturar. |
+| PM afectadas (geometría, señales de ataque, interfaz, menú, flujo, atascos, intentos del bar) | `315e7b2` | PM **39/41 + 1 omitida, 1 FAIL**: `StuckRecoveryTests_Lab` pose `lab_fail_m28` (laboratorio, que este pulido no viste). Repetida aislada: **FAIL 3/3**. Causa encontrada: el posproceso activo en la cámara del jugador en todas las escenas cambia el ritmo de cuadros y la maniobra guionada (empujar, alinear, tirar) depende de él. Con posproceso solo en el bar (`a64cb3c`): **PASS 3/3**; atascos + ataques en el bar + geometría **21/22 + 1 omitida, 0 FAIL**. Las reglas del juego no cambiaron; la prueba queda marcada como sensible al ritmo de cuadros. |
+| Red tras el pulido (`coop`, `party4`) | builds `315e7b2` y `a64cb3c` | NET PASS (coop 21,6 s y 20,7 s; party4 34,5 s; mismo final convergido). Solo localhost. |
+| **Rendimiento con iluminación y posproceso** (`perf1080`, 1 proceso, 1920×1080, vsync a 360 Hz) | `836a4bd` → `a64cb3c` | Antes: 347 fps, cuadro p99 2,78 ms, CPU 1,03 ms, GPU 0,40 ms, memoria de Unity 93 MB. Después: **338 fps**, p99 5,56 ms, **CPU 1,54 ms, GPU 0,89 ms**, 104 MB (reservada 189 MB), 0 cuadros > 33 ms. 4 procesos en una PC (`315e7b2`): 269–302 fps, CPU 2,9–3,6 ms. Costo real: +0,5 ms de CPU y +0,5 ms de GPU por cuadro en esta PC (RTX 3070 Ti); sin medir en gama baja. |
+| **Auditoría de interfaz** con la verificación nueva de **paneles que se pisan** y la pantalla del **aviso de ataque** (5 aspectos × texto 100/125/150 %) | código final `1e23c82` | VIS español **15/15**, inglés **15/15**. Corridas intermedias registradas: 15/15 (antes de agregar las verificaciones nuevas); 14/15 (aviso de ataque y subtítulo del tío en 21:9 al 150 %: ahora manda el aviso); inglés 10/15 (título de la sala en dos líneas al 150 %: ahora se ajusta a una). En la captura del ataque además se corrigieron: subtítulo del ataque encimado con el consejo, el rótulo 3D gigante al estar pegado al tío (se achica y se oculta a menos de 2,4 m: el HUD ya lo dice) y el aviso rozando el objetivo con texto grande. |
+
+**Qué cambió (todo visual; colisiones, masas, dificultad, red y condiciones de victoria sin cambios):**
+- **Dirección visual:** noche de cierre; interior cálido (tungsteno, madera oscura, verde botella), exterior frío (luna, sodio de la calle) y acentos de neón rosa y magenta. La luz guía a lo importante: focos sobre la barra y el tío, relleno sobre el carrito, cartel **SALIDA** verde sobre la puerta, farol y luces de la camioneta.
+- **Bar:** techo con vigas, friso de madera, moldura, zócalo y cornisa; marco y umbral de la puerta; estante con botellas, neones «CERVEZA HELADA» y «KARAOKE», cuadros y diana (fuera de los recorridos y sin colisión); la banqueta del tío pasó de cilindro gris a la del kit.
+- **Afuera:** fachada con zócalo, cornisa, cartel de neón «THE LAST ROUND» y apliques; calle de asfalto, vereda de losetas, cordón, marcas viales, farol, contenedor y cajones; edificios vecinos y la cuadra de enfrente cierran la vista.
+- **Camioneta:** carrocería propia sobre la caja funcional (laterales, techo, frente bajo, parabrisas inclinado, ruedas con taza, franja, luces, paragolpes, luz interior); piso de carga oscuro con la zona marcada con cinta amarilla; rampa de acero con bordes amarillos.
+- **Render:** URP Forward+ (sin límite de luces por objeto), sombras de luces adicionales, volumen con ACES, bloom contenido, contraste y viñeta suave, solo en el bar.
+- **Interfaz:** aparición de paneles en 0,12 s (opacidad desde 35 %, para que un aviso de peligro se lea desde el primer cuadro); texto atenuado en botones deshabilitados; jerarquía peligro > diálogo; aviso de ataque en filas propias.
+
 ## Sesión 9 (2026-11-16): prueba humana, Relay, QA, rendimiento e interfaz
 
 Build vigente: **`e8ee30f`** (release, vinculada a Unity Cloud; el código del juego es el de `836a4bd`). Desarrollo: `836a4bd`. PC de prueba: i7-12700H, RTX 3070 Ti Laptop, 16 GB, monitor 1920×1080 a 360 Hz.

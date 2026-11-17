@@ -171,6 +171,17 @@ Se armaron reproducciones controladas (`StuckRecoveryTests`) con un jugador guio
 - **Aparición de interfaz:** 0,12 s, desde 35 % de opacidad y 97 % de escala; sin movimientos de cámara ni destellos. El rótulo 3D del ataque se oculta a menos de 2,4 m porque el aviso del HUD ya lo dice y de cerca tapaba la pantalla.
 - **Jerarquía del HUD:** peligro > interacción > diálogo. Si el aviso de ataque y el subtítulo del tío no entran juntos, manda el aviso.
 
+## 2026-11-17 — Segunda pasada de pulido y FPS (sesión 11)
+
+- **Objetivo de la mano desde la mirada ordenada** (`PlayerMotor.EyePosition` + `LookRotation`), no desde el transform de la cámara: la cámara se orienta una vez por cuadro y, con menos de 60 FPS, el segundo paso de física del cuadro veía el cuerpo ya girado con el desfase anterior de la cámara. Es un arreglo de juego medido con límites de 30/60/120 FPS; no cambia fuerzas, alcances ni criterios.
+- **El bot y el jugador guionado se mueven relativos a la mirada ordenada** (como WASD), no al giro interpolado del cuerpo.
+- **Esperas de las pruebas en pasos de física** cuando arman una situación física (puerta que se cierra sola), no en segundos de reloj.
+- **El posproceso solo en el bar se mantiene** por costo, pero ya no es la explicación del fallo del laboratorio.
+- **Tío:** se conserva la malla del kit (rig y uniones verificados); el pulido es de materiales, gorro y señal. Cambiar la malla exige rehacer el ligado de huesos y repetir las pruebas de ragdoll.
+- **Carrito y focos de la barra con geometría propia**, como la camioneta en la sesión 10: el kit es un bloque de prueba y la geometría funcional manda.
+- **Calidad gráfica Baja** (escala de render 75 %, sin MSAA, sombras solo de la luna a 20 m, sin bloom), automática con GPU integrada: medición real de 11,7 fps en la Iris Xe con Alta.
+- **Fondo del menú:** captura del escenario actual con la misma cámara reproducible (`CamTour`), no una escena 3D en vivo: mismo resultado con costo nulo en el menú.
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.
