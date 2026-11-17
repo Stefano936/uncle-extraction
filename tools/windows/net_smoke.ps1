@@ -7,7 +7,7 @@
 #   netsim usa la build de desarrollo: el simulador de red de NGO solo existe en editor y builds de desarrollo.
 # Codigo de salida: 0 = TODOS los escenarios pedidos dieron PASS; 1 = hubo algun FAIL; 2 = ejecucion incompleta
 #   (algun BLOCKED o NOT_RUN, o no se ejecuto nada). Un 0 nunca encubre escenarios sin correr.
-param([string]$Scenario = 'all', [string]$Scene = 'Bar_LastRound', [int]$Runs = 1)
+param([string]$Scenario = 'all', [string]$Scene = 'Bar_LastRound', [int]$Runs = 1, [switch]$NoPreflight)
 $ErrorActionPreference = 'Continue'
 $Repo   = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $Exe    = Join-Path $Repo 'Builds\UncleExtraction\UncleExtraction.exe'
@@ -22,6 +22,10 @@ $All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddr
 $Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080','perf1080low')
 $Wanted = if ($Scenario -eq 'all') { $All } elseif ($Scenario -eq 'qa') { $Qa } else { $Scenario -split ',' | ForEach-Object { $_.Trim() } }
 $results = @()
+# Guardia (sesion 12): sintaxis y VERSION.txt al dia, una sola tanda a la vez, y al cancelar se cierran SOLO sus procesos
+Import-Module (Join-Path $PSScriptRoot 'Guard.psm1') -Force
+if (-not $NoPreflight) { try { Assert-Preflight -Builds @('UncleExtraction','UncleExtraction_Dev') } catch { Write-Host $_ -ForegroundColor Red; exit 2 } }
+try { Enter-BatchLock 'net_smoke' } catch { Write-Host $_ -ForegroundColor Red; exit 2 }
 # Procesos del juego que quedaron vivos de una corrida anterior ocupan el puerto 7777: cerrarlos (solo los de Builds\)
 Get-Process UncleExtraction -ErrorAction SilentlyContinue | Where-Object { $_.Path -like (Join-Path $Repo 'Builds\*') } | ForEach-Object { Write-Host "Cerrando proceso previo $($_.Id)"; $_ | Stop-Process -Force }
 Start-Sleep 1
@@ -29,6 +33,7 @@ Start-Sleep 1
 function Start-Game($name, [string[]]$extra, [string]$exe = $Exe) {
   $f = Join-Path $Log "$name.log"; if (Test-Path $f) { Remove-Item $f }
   $p = Start-Process $exe -ArgumentList ($Win + @('-ueScene', $Scene) + $extra + @('-logFile', "`"$f`"")) -PassThru
+  Register-Tracked $p
   return @{ p = $p; log = $f; name = $name }
 }
 function Stop-Game($g) { if (-not $g.p.HasExited) { $g.p.CloseMainWindow() | Out-Null; if (-not $g.p.WaitForExit(8000)) { $g.p.Kill() } } }
@@ -95,6 +100,7 @@ function SameFinal($a, $b) {
 }
 function Brief($l) { "$(Field $l 'ronda') t=$(Field $l 't') intento=$(Field $l 'reinicios') puertas=$(Field $l 'puertas') tio=$(Field $l 'tio') asegurado=$(Field $l 'asegurado') escena=$(Field $l 'escena') conv=$(Field $l 'convergencia')$(if ((Field $l 'faltan') -ne '') { ' faltan=' + (Field $l 'faltan') })" }
 
+try {
 for ($run = 1; $run -le $Runs; $run++) {
   foreach ($sc in $Wanted) {
     $label = "$sc #$run"; $tag = "${sc}_${Scene}_$run"
@@ -182,7 +188,7 @@ for ($run = 1; $run -le $Runs; $run++) {
         # perf1080low: calidad grafica Baja (-ueQuality low). Se registra la GPU que uso Windows (equipos con dos GPU).
         $q = if ($sc -eq 'perf1080low') { @('-ueQuality','low') } else { @('-ueQuality','high') }
         $f0 = Join-Path $Log "${tag}_solo.log"; if (Test-Path $f0) { Remove-Item $f0 }
-        $p = Start-Process $Exe -ArgumentList (@('-screen-fullscreen','0','-popupwindow','-screen-width','1920','-screen-height','1080','-ueScene',$Scene,'-ueAutopilot','drag','-ueQuitOnEnd','-uePerf','10') + $q + @('-logFile',"`"$f0`"")) -PassThru
+        $p = Start-Process $Exe -ArgumentList (@('-screen-fullscreen','0','-popupwindow','-screen-width','1920','-screen-height','1080','-ueScene',$Scene,'-ueAutopilot','drag','-ueQuitOnEnd','-uePerf','10') + $q + @('-logFile',"`"$f0`"")) -PassThru; Register-Tracked $p
         $null = $p.WaitForExit(330000); $g = @{ p = $p; log = $f0; name = "${tag}_solo" }; Stop-Game $g
         if (Crashed $g) { Record $label 'BLOCKED' 'crash al arrancar'; break }
         $f = @(Finals $g)[0]; $eq = Last $g '\[Perf\] equipo'
@@ -294,6 +300,7 @@ for ($run = 1; $run -le $Runs; $run++) {
     }
   }
 }
+} finally { Stop-AllTracked; Exit-BatchLock }
 $results | Format-Table -AutoSize | Out-String -Width 260
 $results | Export-Csv -NoTypeInformation -Encoding UTF8 (Join-Path $Log "net_smoke_results_$Scene.csv")
 # Historial acumulado: conserva los fallos iniciales y las repeticiones (una repeticion aprobada no borra un FAIL anterior)
