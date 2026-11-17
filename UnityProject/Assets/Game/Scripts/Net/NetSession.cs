@@ -27,6 +27,11 @@ namespace UncleExtraction
         public static ushort Port = 7777;
         /// Direccion de escucha del anfitrion: 0.0.0.0 para LAN; 127.0.0.1 para pruebas en la misma PC (sin aviso del firewall).
         public static string ListenAddress = "0.0.0.0";
+        /// Internet por Relay (M4): mismo anfitrion autoritativo; cambia solo el transporte. false = conexion directa por IP.
+        public static bool Online;
+        /// Codigo de sala Relay: lo obtiene el anfitrion y lo escribe el invitado.
+        public static string JoinCode = "";
+        public static string RelayRegion = "";
         public static string StatusMessage = "";
         public static float StatusUntil;
         public static NetSession Instance { get; private set; }
@@ -66,6 +71,10 @@ namespace UncleExtraction
             {
                 if (a[i] == "-ueHost") Mode = NetMode.Host;
                 else if (a[i] == "-ueClient") { Mode = NetMode.Client; if (i + 1 < a.Length && !a[i + 1].StartsWith("-")) Address = a[i + 1]; }
+                else if (a[i] == "-ueRelay") Online = true;
+                else if (a[i] == "-ueDifficulty" && i + 1 < a.Length && Enum.TryParse<Difficulty>(a[i + 1], true, out var dif)) RoundDirector.RequestedDifficulty = dif;
+                else if (a[i] == "-ueJoinCode" && i + 1 < a.Length) { Online = true; Mode = NetMode.Client; JoinCode = a[i + 1]; }
+                else if (a[i] == "-ueProfile" && i + 1 < a.Length) RelayConnector.Profile = a[i + 1];
                 else if (a[i] == "-uePort" && i + 1 < a.Length && ushort.TryParse(a[i + 1], out var p)) Port = p;
                 else if (a[i] == "-ueListen" && i + 1 < a.Length) ListenAddress = a[i + 1];
                 else if (a[i] == "-ueNetSim" && i + 3 < a.Length)
@@ -163,7 +172,7 @@ namespace UncleExtraction
             if (nm != null && (nm.IsListening || nm.IsClient)) nm.Shutdown();
             Time.timeScale = 1f;
             int menu = SceneUtility.GetBuildIndexByScenePath(MenuScenePath);
-            Mode = NetMode.Solo;
+            Mode = NetMode.Solo; Online = false; JoinCode = ""; RelayRegion = "";
             if (menu >= 0) SceneManager.LoadScene(menu);
             else SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
@@ -172,7 +181,7 @@ namespace UncleExtraction
         public static string WorldState()
         {
             var r = RoundDirector.Instance; var n = NpcBrain.Instance; var v = VanDoors.Instance; var z = ExtractionZone.Instance;
-            return $"ronda={(r ? r.State.ToString() : "-")} t={(r ? r.Elapsed : 0f):0.0} reinicios={(r ? r.Restarts : 0)} tio={(n ? n.State.ToString() : "-")} " +
+            return $"ronda={(r ? r.State.ToString() : "-")} t={(r ? r.Elapsed : 0f):0.0} reinicios={(r ? r.Restarts : 0)} dificultad={(r ? r.CurrentDifficulty.ToString() : "-")} tio={(n ? n.State.ToString() : "-")} " +
                    $"puertas={(v ? v.CurrentPhase.ToString() : "-")}/{(v ? v.Closed01 : 0f):0.00} pose={(z ? z.Progress01 : 0f):0.00} asegurado={(z && z.Secured)} " +
                    $"carrito={(TransportCart.Instance ? (TransportCart.Instance.IsLoading ? "Cargando" : TransportCart.Instance.IsStrapped ? "Asegurado" : "Vacio") : "-")} escena={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}";
         }
@@ -189,6 +198,15 @@ namespace UncleExtraction
             sim.ChangeConnectionPreset(preset);
             bool active = Debug.isDebugBuild || Application.isEditor;
             Debug.Log($"[Net] simulador de red: {SimDelayMs} ms +-{SimJitterMs} ms, perdida {SimLossPct}% (activo={active}; en builds de release no tiene efecto)");
+        }
+
+        /// Fallo de internet: no se cae a jugar solo en silencio; vuelve al menu con el motivo (UI_SPEC: error.*).
+        static void OnlineFailed(string reason)
+        {
+            Debug.Log($"[Net] internet no disponible: {reason}");
+            NetAuth.Frozen = true;
+            LeaveToMenu();
+            Say(reason, 10f);
         }
 
         public IEnumerator Begin(NetMode mode)
@@ -219,19 +237,40 @@ namespace UncleExtraction
                     }
                     break;
                 case NetMode.Host:
+                    if (Online)
+                    {   // internet: el codigo de sala sale de la asignacion Relay
+                        Say("lobby.creating", 20f);
+                        var t = RelayConnector.Host(utp, MaxPlayers - 1);
+                        while (!t.IsCompleted) yield return null;
+                        if (!t.Result.ok) { OnlineFailed(t.Result.error); yield break; }
+                        JoinCode = t.Result.code; RelayRegion = t.Result.region ?? "";
+                        ok = nm.StartHost();
+                        if (ok) Say("relay.hosting|code=" + JoinCode);
+                        break;
+                    }
                     utp.SetConnectionData(ListenAddress, Port, ListenAddress);
                     ok = nm.StartHost();
                     if (ok) Say($"Anfitrion en el puerto {Port} (conexion directa LAN/localhost)");
                     break;
                 case NetMode.Client:
-                    utp.SetConnectionData(Address, Port);
                     nm.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(VersionTag);
+                    if (Online)
+                    {
+                        var t = RelayConnector.Join(utp, JoinCode);
+                        while (!t.IsCompleted) yield return null;
+                        if (!t.Result.ok) { OnlineFailed(t.Result.error); yield break; }
+                        JoinCode = t.Result.code; RelayRegion = t.Result.region ?? "";
+                        ok = nm.StartClient();
+                        break;
+                    }
+                    utp.SetConnectionData(Address, Port);
                     ok = nm.StartClient();
                     if (ok) Say($"Conectando a {Address}:{Port}...");
                     break;
             }
-            Debug.Log($"[Net] begin {mode} ok={ok} protocol={ProtocolVersion}");
+            Debug.Log($"[Net] begin {mode} ok={ok} protocol={ProtocolVersion} transporte={(Online ? "relay codigo=" + JoinCode + " region=" + RelayRegion : "directo")}");
             if (ok && (SimDelayMs > 0 || SimLossPct > 0) && mode != NetMode.Solo) ApplyNetSim(nm);
+            if (!ok && Online) { OnlineFailed("error.service"); yield break; }
             if (!ok)
             {
                 Say($"No se pudo iniciar {mode}. Jugando solo.");

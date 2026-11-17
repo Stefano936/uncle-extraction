@@ -16,10 +16,13 @@ namespace UncleExtraction
         public const string LabArticulatedScene = "PhysicsLab_Articulated"; // laboratorio con el tio articulado (ragdoll reducido)
         public static string SelectedScene = GameScene;
         static bool argsForwarded;
-        public enum Page { Main, Solo, Friends, HowTo, Options }
+        public enum Page { Main, Solo, Friends, Lan, HowTo, Options }
         public Page Current { get; private set; } = Page.Main;
         Canvas canvas; RectTransform pageRoot; Text status; OptionsView options;
-        InputField ipField, portField;
+        RectTransform errorBox; Text errorTitle, errorDetail; string shownError = ""; float shownUntil;
+        /// Error de red que se esta mostrando en el dialogo (clave), o "" si no hay.
+        public string ErrorShown => errorBox && errorBox.gameObject.activeSelf ? shownError : "";
+        InputField ipField, portField, codeField;
 
         void Start()
         {
@@ -33,7 +36,7 @@ namespace UncleExtraction
                 argsForwarded = true;
                 string scene = GameScene;
                 for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueScene") scene = a[i + 1];
-                foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueAutopilot") { SceneManager.LoadScene(scene); return; }
+                foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueJoinCode" || s == "-ueAutopilot") { SceneManager.LoadScene(scene); return; }
             }
             canvas = Ui.Canvas("Menu", 0);
             var skin = UiSkin.Load();
@@ -47,13 +50,46 @@ namespace UncleExtraction
             tag.gameObject.AddComponent<LocText>().key = "lobby.tagline";
             status = Ui.Label(canvas.transform, "Status", "", Ui.FontHud + 4, Ui.Danger, TextAnchor.LowerCenter);
             status.rectTransform.offsetMin = new Vector2(Ui.Margin, Ui.Margin); status.rectTransform.offsetMax = new Vector2(-Ui.Margin, 0);
+            // dialogo de error (UI_SPEC 3/7: error.* con detalle y salida clara); la linea de estado queda para avisos breves
+            errorBox = Ui.PanelBox("Error", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 360), true);
+            errorTitle = Ui.Label(errorBox, "Title", "", Ui.FontSection + 4, Ui.Text, TextAnchor.UpperCenter, true); errorTitle.rectTransform.offsetMin = new Vector2(40, 0); errorTitle.rectTransform.offsetMax = new Vector2(-40, -34);
+            errorDetail = Ui.Label(errorBox, "Detail", "", Ui.FontHud + 4, Ui.Text, TextAnchor.UpperCenter); errorDetail.rectTransform.offsetMin = new Vector2(40, 120); errorDetail.rectTransform.offsetMax = new Vector2(-40, -150);
+            var ok = Ui.Button(errorBox, "Ok", "", new Vector2(0.5f, 0f), new Vector2(0, 34), new Vector2(420, Ui.ButtonH), CloseError);
+            ok.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0f); ok.gameObject.AddComponent<LocText>().key = "button.back";
+            errorBox.gameObject.SetActive(false);
             Show(Page.Main);
         }
 
+        void CloseError()
+        {
+            errorBox.gameObject.SetActive(false); NetSession.StatusUntil = 0f;
+            Show(Current == Page.Options ? Page.Main : Current);
+        }
+
+        /// Clave base de un mensaje codificado ("error.full|x=y" -> "error.full").
+        static string KeyOf(string coded) { int i = coded.IndexOf('|'); return i < 0 ? coded : coded.Substring(0, i); }
+
         void Update()
         {
-            if (status) status.text = Time.unscaledTime < NetSession.StatusUntil && NetSession.StatusMessage != "" ? Loc.Coded(NetSession.StatusMessage) : "";
-            if (LabInput.Pressed(Act.Pause) && Current != Page.Main && options == null && !InputBindings.Listening) Show(Page.Main);
+            bool live = Time.unscaledTime < NetSession.StatusUntil && NetSession.StatusMessage != "";
+            bool isError = live && KeyOf(NetSession.StatusMessage).StartsWith("error.");
+            if (isError && errorBox && (NetSession.StatusMessage != shownError || NetSession.StatusUntil != shownUntil))
+            {   // los errores (anfitrion perdido, sala llena, codigo invalido, servicio) se muestran en un dialogo hasta cerrarlo
+                shownError = NetSession.StatusMessage; shownUntil = NetSession.StatusUntil;
+                string key = KeyOf(shownError);
+                errorTitle.text = Loc.Coded(shownError);
+                errorDetail.text = Loc.Has(key + "_detail") ? Loc.T(key + "_detail") : Loc.T("error.retry_hint");
+                errorBox.gameObject.SetActive(true); errorBox.SetAsLastSibling();
+                EventSystem.current?.SetSelectedGameObject(errorBox.Find("Ok").gameObject);
+            }
+            if (status) status.text = live && !isError ? Loc.Coded(NetSession.StatusMessage) : "";
+            if (errorBox && errorBox.gameObject.activeSelf)
+            {
+                if (LabInput.Pressed(Act.Pause) || GamepadBack()) CloseError();
+                return;
+            }
+            if ((LabInput.Pressed(Act.Pause) || GamepadBack()) && Current != Page.Main && options == null && !InputBindings.Listening && !Typing())
+                Show(Current == Page.Lan ? Page.Friends : Page.Main);
         }
 
         public void Show(Page p)
@@ -88,6 +124,7 @@ namespace UncleExtraction
                     break;
                 case Page.Solo:
                 case Page.Friends:
+                case Page.Lan:
                     var diff = B("lobby.difficulty", null, 60);
                     diff.onClick.AddListener(() => { GameSettings.SoloDifficulty = (Difficulty)(((int)GameSettings.SoloDifficulty + 1) % 3); GameSettings.Save(); Relabel(diff); });
                     Relabel(diff);
@@ -97,15 +134,22 @@ namespace UncleExtraction
                         B("menu.lab", () => { SelectedScene = LabScene; Play(NetMode.Solo); }, 56);
                         B("menu.lab_articulated", () => { SelectedScene = LabArticulatedScene; Play(NetMode.Solo); }, 56);
                     }
+                    else if (p == Page.Friends)
+                    {   // internet (Relay): sala con codigo; la red local por IP queda en su propia pagina
+                        if (!RelayConnector.ProjectLinked) Note(Loc.T("menu.online_pending"), 64);
+                        B("menu.host_online", () => { SelectedScene = GameScene; Play(NetMode.Host, true); });
+                        codeField = Field("Code", Loc.T("lobby.code"), "", ref y); codeField.characterLimit = 12;
+                        B("button.join", () => Play(NetMode.Client, true));
+                        B("menu.lan", () => Show(Page.Lan), 60);
+                    }
                     else
                     {
-                        Note(Loc.T("menu.online_pending"), 64);
                         portField = Field("Port", Loc.T("menu.port"), NetSession.Port.ToString(), ref y);
                         B("menu.host_lan", () => { SelectedScene = GameScene; Play(NetMode.Host); });
                         ipField = Field("Ip", Loc.T("menu.ip"), NetSession.Address, ref y);
                         B("menu.join_lan", () => Play(NetMode.Client));
                     }
-                    B("button.back", () => Show(Page.Main));
+                    B("button.back", () => Show(p == Page.Lan ? Page.Friends : Page.Main));
                     break;
                 case Page.HowTo:
                     foreach (var (t, d) in new[] { ("tutorial.grab", "tutorial.grab_detail"), ("tutorial.watch", "tutorial.watch_detail"), ("tutorial.move", "tutorial.move_detail") })
@@ -125,6 +169,18 @@ namespace UncleExtraction
             if (first) EventSystem.current?.SetSelectedGameObject(first);
         }
 
+        /// Boton B / circulo del mando: volver (navegacion de UI; con teclado es Esc).
+        static bool GamepadBack()
+        {
+#if UE_INPUT_SYSTEM
+            var g = UnityEngine.InputSystem.Gamepad.current;
+            return g != null && g.buttonEast.wasPressedThisFrame;
+#else
+            return false;
+#endif
+        }
+        static bool Typing() { var s = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null; var f = s ? s.GetComponent<InputField>() : null; return f && f.isFocused; }
+
         void Relabel(Button diff)
         {
             var d = GameSettings.SoloDifficulty;
@@ -142,9 +198,12 @@ namespace UncleExtraction
             y -= 72; return f;
         }
 
-        void Play(NetMode mode)
+        void Play(NetMode mode, bool online = false)
         {
-            NetSession.Mode = mode;
+            if (online && mode == NetMode.Client && RelayConnector.NormalizeCode(codeField ? codeField.text : "") == "")
+            { NetSession.Say("error.invalid"); return; } // sin red: el codigo no tiene forma de codigo
+            NetSession.Mode = mode; NetSession.Online = online;
+            if (online && mode == NetMode.Client) NetSession.JoinCode = RelayConnector.NormalizeCode(codeField.text);
             if (mode == NetMode.Client && ipField) NetSession.Address = ipField.text.Trim();
             if (portField && ushort.TryParse(portField.text, out var p)) NetSession.Port = p;
             RoundDirector.RequestedDifficulty = GameSettings.SoloDifficulty;

@@ -64,7 +64,7 @@ namespace UncleExtraction
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-ueQuitOnEnd") quitOnEnd = true;
-                if (args[i] == "-ueHost" || args[i] == "-ueClient") lobbyBot = true;
+                if (args[i] == "-ueHost" || args[i] == "-ueClient" || args[i] == "-ueJoinCode") lobbyBot = true;
                 if (args[i] == "-ueExpectPlayers" && i + 1 < args.Length) int.TryParse(args[i + 1], out expectPlayers);
                 if (args[i] == "-ueAutopilot" && i + 1 < args.Length)
                     pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart

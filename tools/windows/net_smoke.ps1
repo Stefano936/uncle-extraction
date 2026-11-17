@@ -17,7 +17,10 @@ New-Item -ItemType Directory -Force -Path $Log | Out-Null
 if (-not (Test-Path $Exe)) { Write-Host "Falta la build: $Exe" -ForegroundColor Red; exit 2 }
 $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
 $All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin')
-$Wanted = if ($Scenario -eq 'all') { $All } else { $Scenario -split ',' | ForEach-Object { $_.Trim() } }
+# QA ampliada (mas larga; -Scenario qa): dificultades y grupos, sesion larga, perdida brusca del anfitrion, rendimiento.
+# 'relay' va aparte: necesita el proyecto vinculado a Unity Cloud y prueba Relay en UNA PC.
+$Qa = @('hostkill','solo3','matrix','long','perf1','perf4')
+$Wanted = if ($Scenario -eq 'all') { $All } elseif ($Scenario -eq 'qa') { $Qa } else { $Scenario -split ',' | ForEach-Object { $_.Trim() } }
 $results = @()
 # Procesos del juego que quedaron vivos de una corrida anterior ocupan el puerto 7777: cerrarlos (solo los de Builds\)
 Get-Process UncleExtraction -ErrorAction SilentlyContinue | Where-Object { $_.Path -like (Join-Path $Repo 'Builds\*') } | ForEach-Object { Write-Host "Cerrando proceso previo $($_.Id)"; $_ | Stop-Process -Force }
@@ -69,9 +72,9 @@ function PairRetry($label, $tag, [string[]]$h, [string[]]$c, [int]$timeout, [str
 # si dentro del MISMO intento (reinicios), con tiempo maximo. "convergencia=TIMEOUT(...) faltan=..." = no convergio.
 function Converged($l) { $c = Field $l 'convergencia'; $c -ne '' -and $c -notmatch 'TIMEOUT|reinicio' }
 # N procesos (anfitrion + N-1 clientes), arranque escalonado; devuelve los juegos o $null si alguno crasheo.
-function Party($tag, [int]$n, [int]$timeout) {
-  $games = @(); $games += Start-Game "${tag}_host" (HostArgs @('-ueAutopilot','drag','-ueQuitOnEnd') $n)
-  for ($k = 1; $k -lt $n; $k++) { Start-Sleep 4; $games += Start-Game "${tag}_client$k" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd')) }
+function Party($tag, [int]$n, [int]$timeout, [string[]]$hx = @(), [string[]]$ax = @()) {
+  $games = @(); $games += Start-Game "${tag}_host" (HostArgs (@('-ueAutopilot','drag','-ueQuitOnEnd') + $hx + $ax) $n)
+  for ($k = 1; $k -lt $n; $k++) { Start-Sleep 4; $games += Start-Game "${tag}_client$k" (ClientArgs (@('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd') + $ax)) }
   $deadline = (Get-Date).AddSeconds($timeout)
   foreach ($g in $games) { $left = [int][Math]::Max(1, ($deadline - (Get-Date)).TotalMilliseconds); $null = $g.p.WaitForExit($left) }
   foreach ($g in $games) { Stop-Game $g }
@@ -79,6 +82,14 @@ function Party($tag, [int]$n, [int]$timeout) {
   return $games
 }
 
+# Un proceso solo (anfitrion en loopback, como «Jugar solo»).
+function Solo($tag, [string[]]$x, [int]$timeout) {
+  $g = Start-Game "${tag}_solo" (@('-ueAutopilot','drag','-ueQuitOnEnd') + $x)
+  $null = $g.p.WaitForExit($timeout * 1000); Stop-Game $g
+  if (Crashed $g) { return $null }; return $g
+}
+function PerfLine($g) { $l = Last $g '\[Perf\] resumen'; if (-not $l) { return 'sin [Perf] resumen' }
+  "fps=$(Field $l 'fps_medio') p95=$(Field $l 'p95')ms p99=$(Field $l 'p99')ms lentos=$(Field $l 'cuadros_>33ms') cpu=$(Field $l 'media')ms mem_unity=$(Field $l 'mem_unity_inicio')->$(Field $l 'final') pico_proceso=$(Field $l 'proceso_pico')" }
 function SameFinal($a, $b) {
   $a -and $b -and (Converged $a) -and (Converged $b) -and ((Field $a 'reinicios') -eq (Field $b 'reinicios')) -and ((Field $a 'ronda') -eq (Field $b 'ronda')) -and ((Field $a 'asegurado') -eq (Field $b 'asegurado')) -and ((Field $a 'tio') -eq (Field $b 'tio')) -and (((Field $a 'puertas') -split '/')[0] -eq ((Field $b 'puertas') -split '/')[0])
 }
@@ -88,6 +99,84 @@ for ($run = 1; $run -le $Runs; $run++) {
   foreach ($sc in $Wanted) {
     $label = "$sc #$run"; $tag = "${sc}_${Scene}_$run"
     switch ($sc) {
+      'relay' {
+        # Internet por Relay en UNA PC: prueba el proveedor y el codigo, no dos equipos ni dos redes (eso es manual).
+        $hostG = Start-Game "${tag}_host" @('-ueHost','-ueRelay','-ueProfile','uehost','-ueExpectPlayers','2','-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd')
+        $code = ''; $fail = ''; $deadline = (Get-Date).AddSeconds(60)
+        while ((Get-Date) -lt $deadline -and $code -eq '' -and $fail -eq '' -and -not $hostG.p.HasExited) {
+          Start-Sleep 1
+          $l = Last $hostG 'transporte=relay codigo='; if ($l) { $code = Field $l 'codigo' }
+          $f = Last $hostG 'internet no disponible: '; if ($f) { $fail = ([regex]::Match($f, 'internet no disponible: (\S+)')).Groups[1].Value }
+        }
+        if ($code -eq '') {
+          Stop-Game $hostG
+          $why = if ($fail -eq 'error.online_unlinked') { 'proyecto sin vincular a Unity Cloud (Application.cloudProjectId vacio)' } elseif ($fail) { "servicio: $fail" } else { 'sin codigo en 60 s' }
+          Record $label 'BLOCKED' "Relay no disponible: $why"; break
+        }
+        $cliG = Start-Game "${tag}_client" @('-ueJoinCode',$code,'-ueProfile','ueclient','-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd')
+        $null = $cliG.p.WaitForExit(330000); $null = $hostG.p.WaitForExit(25000); Stop-Game $cliG; Stop-Game $hostG
+        $fh = @(Finals $hostG)[0]; $fc = @(Finals $cliG)[0]
+        $viaRelay = (Grep $cliG 'transporte=relay').Count -gt 0
+        $ok = $viaRelay -and (SameFinal $fh $fc) -and (Field $fh 'ronda') -eq 'Success'
+        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "codigo=$code relay_cliente=$viaRelay anfitrion[$(Brief $fh)] cliente[$(Brief $fc)] rtt $(RttRange $hostG 'c1=(\d+)ms') (una PC: no prueba dos equipos ni dos redes)"
+      }
+      'hostkill' {
+        # Perdida BRUSCA del anfitrion (proceso terminado, sin aviso) con el cliente agarrando: el cliente detecta la
+        # caida, muestra el motivo y vuelve al menu. Mide cuanto tarda en enterarse (tiempo de desconexion del transporte).
+        $hostG = Start-Game "${tag}_host" (HostArgs @()); Start-Sleep 4
+        $cliG = Start-Game "${tag}_client" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3'))
+        Start-Sleep 18
+        $held = (Grep $hostG 'NetDiag\] anfitrion: jugadores=2.*agarres=[1-9]').Count -gt 0
+        $killedAt = Get-Date; $hostG.p.Kill()
+        $seen = $null; while (((Get-Date) - $killedAt).TotalSeconds -lt 60) { if ((Grep $cliG 'error.host_left|Disconnect Event').Count -gt 0) { $seen = ((Get-Date) - $killedAt).TotalSeconds; break }; Start-Sleep -Milliseconds 250 }
+        Start-Sleep 6; Stop-Game $cliG
+        if (Crashed $cliG) { Record $label 'FAIL' "el cliente crasheo al perder el anfitrion; ver $($cliG.log)"; break }
+        $menu = (Grep $cliG '\[Menu\] en el menu').Count -ge 2; $exc = (Grep $cliG 'Exception').Count; $fake = (Grep $cliG '\[Round\] SUCCESS').Count -gt 0
+        $state = if (-not $held) { 'NOT_RUN' } elseif ($seen -and $menu -and $exc -eq 0 -and -not $fake) { 'PASS' } else { 'FAIL' }
+        Record $label $state "agarraba=$held detecta_en=$(if ($seen) { '{0:0.0}s' -f $seen } else { 'no (60 s)' }) vuelve_al_menu=$menu excepciones=$exc victoria_falsa=$fake"
+      }
+      'solo3' {
+        foreach ($d in 'Relaxed','Normal','Hard') {
+          $g = Solo "${tag}_$d" @('-ueDifficulty',$d) 330
+          if ($null -eq $g) { Record "$label $d" 'BLOCKED' "crash al arrancar"; continue }
+          $f = @(Finals $g)[0]
+          Record "$label $d" $(if ((Converged $f) -and (Field $f 'ronda') -eq 'Success' -and "$f" -match "dificultad=$d") { 'PASS' } elseif (-not $f) { 'NOT_RUN' } else { 'FAIL' }) "1 jugador [$(Brief $f)] dificultad=$(Field $f 'dificultad')"
+        }
+      }
+      'matrix' {
+        # Normal con 2-4 ya lo cubren coop/party3/party4; aca Relajado y Dificil con 2, 3 y 4 procesos.
+        foreach ($d in 'Relaxed','Hard') { foreach ($n in 2,3,4) {
+          $g = Party "${tag}_${d}_$n" $n 480 @('-ueDifficulty',$d)
+          if ($null -eq $g) { Record "$label $d x$n" 'BLOCKED' "crash al arrancar algun proceso"; continue }
+          $finals = @($g | ForEach-Object { @(Finals $_)[0] }); $started = Last $g[0] 'sala: inicia la ronda con'
+          $allSame = $true; foreach ($f in $finals) { if (-not (SameFinal $finals[0] $f)) { $allSame = $false } }
+          $ok = $allSame -and (Field $finals[0] 'ronda') -eq 'Success' -and ("$started" -match "con $n jugadores") -and "$($finals[0])" -match "dificultad=$d"
+          Record "$label $d x$n" $(if ($ok) { 'PASS' } elseif (-not $started) { 'NOT_RUN' } else { 'FAIL' }) ("procesos=$n " + (($finals | ForEach-Object { "[" + (Brief $_) + " dif=" + (Field $_ 'dificultad') + "]" }) -join ' '))
+        } }
+      }
+      'long' {
+        # Sesion larga: 1 + 7 reintentos seguidos en solitario, con medicion de memoria por ventana.
+        $g = Solo $tag @('-ueRepeat','7','-uePerf','15') 1500
+        if ($null -eq $g) { Record $label 'BLOCKED' 'crash al arrancar'; break }
+        $fs = @(Finals $g); $wins = @($fs | Where-Object { (Field $_ 'ronda') -eq 'Success' }).Count; $exc = (Grep $g 'Exception').Count
+        $mem = @(Grep $g '\[Perf\] ventana' | ForEach-Object { [int]([regex]::Match($_, 'mem_unity=(\d+)MB').Groups[1].Value) })
+        $growth = if ($mem.Count -ge 4) { $mem[-1] - $mem[2] } else { 0 }
+        $ok = $fs.Count -ge 8 -and $wins -eq $fs.Count -and $exc -eq 0 -and $growth -lt 64
+        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "rondas=$($fs.Count) victorias=$wins excepciones=$exc mem_unity_ventanas=$($mem -join ',') crecimiento=$growth MB $(PerfLine $g)"
+      }
+      'perf1' {
+        $g = Solo $tag @('-uePerf','10') 330
+        if ($null -eq $g) { Record $label 'BLOCKED' 'crash al arrancar'; break }
+        $f = @(Finals $g)[0]
+        Record $label $(if ((Field $f 'ronda') -eq 'Success') { 'PASS' } else { 'FAIL' }) "1 proceso [$(Brief $f)] $(PerfLine $g) (esta PC)"
+      }
+      'perf4' {
+        $g = Party $tag 4 480 @() @('-uePerf','10')
+        if ($null -eq $g) { Record $label 'BLOCKED' 'crash al arrancar algun proceso'; break }
+        $f = @(Finals $g[0])[0]
+        $detail = "4 procesos en UNA PC (compiten por CPU/GPU; no equivale a 4 equipos) [$(Brief $f)] " + ((0..3 | ForEach-Object { "p$($_): " + (PerfLine $g[$_]) }) -join ' | ')
+        Record $label $(if ((Field $f 'ronda') -eq 'Success') { 'PASS' } else { 'FAIL' }) $detail
+      }
       'coop' {
         $r = PairRetry $label $tag @('-ueAutopilot','drag','-ueAutopilotDelay','6','-ueQuitOnEnd') @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueQuitOnEnd') 330
         if ($r) { $fh = @(Finals $r.h)[0]; $fc = @(Finals $r.c)[0]

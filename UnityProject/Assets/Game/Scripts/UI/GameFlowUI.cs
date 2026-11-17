@@ -99,9 +99,11 @@ namespace UncleExtraction
             if (BlockingInput) { Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
             UpdateResults(ended);
             lobby?.Update();
-            bool conn = NetSession.Mode == NetMode.Client && PlayerControls.Local == null;
+            var nmc = Unity.Netcode.NetworkManager.Singleton;
+            bool creating = NetSession.Mode == NetMode.Host && NetSession.Online && (nmc == null || !nmc.IsListening);
+            bool conn = (NetSession.Mode == NetMode.Client && PlayerControls.Local == null) || creating;
             if (connecting.gameObject.activeSelf != conn) { connecting.gameObject.SetActive(conn); if (conn) EventSystem.current?.SetSelectedGameObject(connecting.Find("Cancel").gameObject); }
-            if (conn) { connectingText.text = Loc.T("lobby.connecting") + "\n" + NetSession.Address + ":" + NetSession.Port; Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
+            if (conn) { connectingText.text = creating ? Loc.T("lobby.creating") : Loc.T("lobby.connecting") + "\n" + (NetSession.Online ? Loc.T("lobby.code") + ": " + NetSession.JoinCode : NetSession.Address + ":" + NetSession.Port); Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
         }
 
         void CloseOverlays()
@@ -117,7 +119,7 @@ namespace UncleExtraction
             EventSystem.current?.SetSelectedGameObject(pauseRoot.Find("Resume").gameObject);
         }
 
-        void SetPaused(bool on)
+        public void SetPaused(bool on)
         {
             paused = on;
             if (on) ShowPause(); else CloseOverlays();

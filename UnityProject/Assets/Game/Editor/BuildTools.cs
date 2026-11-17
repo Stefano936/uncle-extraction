@@ -42,6 +42,8 @@ namespace UncleExtraction.EditorTools
             {   // instrucciones junto al ejecutable (docs/COMO_PROBAR.md)
                 var guide = Path.Combine(Directory.GetParent(Application.dataPath).Parent.FullName, "docs", "COMO_PROBAR.md");
                 if (File.Exists(guide)) File.Copy(guide, Path.Combine(outDir, "LEEME.txt"), true);
+                var test = Path.Combine(Directory.GetParent(Application.dataPath).Parent.FullName, "docs", "PRUEBA_HUMANA.md");
+                if (File.Exists(test)) File.Copy(test, Path.Combine(outDir, "PRUEBA_HUMANA.txt"), true);
                 // version de origen: commit, si habia cambios sin commitear y cuando se genero (cada resultado se asocia a esto)
                 string head = Git("rev-parse --short HEAD"), dirty = Git("status --porcelain --untracked-files=no");
                 File.WriteAllText(Path.Combine(outDir, "VERSION.txt"),

@@ -4,7 +4,10 @@
 
 1. Doble clic en `Builds\UncleExtraction\UncleExtraction.exe` (se genera en la PC de desarrollo; no está en Git).
 2. Menú: **Jugar solo** → tocar **Dificultad** hasta la deseada → **Iniciar extracción**. El **Laboratorio** es la escena de diagnóstico. El escenario principal usa el tío de 11 cuerpos (ragdoll reducido, malla del kit). **Laboratorio** conserva el tío anterior de primitivas (un solo cuerpo) para comparar, y **Laboratorio: tío articulado (prueba)** es el laboratorio con el tío nuevo.
-3. Cooperativo en la misma PC o LAN: en una ventana **Jugar con amigos → Crear partida en la red local**; en otra **Unirse por IP** con la IP del anfitrión (`127.0.0.1` en la misma PC). Windows puede pedir permiso de firewall al anfitrión. Primero se abre la **sala**: cada jugador pulsa **LISTO** y el anfitrión, que elige la dificultad, pulsa **INICIAR EXTRACCIÓN**. No se puede entrar con la ronda ya empezada; al reintentar se vuelve a la sala. Las salas por internet (Relay) todavía no están disponibles.
+3. **Jugar con amigos** (2 a 4 jugadores):
+   - **Por internet:** el anfitrión elige **Crear sala por internet** y pasa el **código de sala** que aparece en la sala (botón **Copiar código**); los demás lo escriben y eligen **Unirse con código**. Necesita que la build tenga vinculado el proyecto de Unity Cloud con Relay; si no, el menú lo avisa y la red local sigue funcionando.
+   - **Red local (IP):** en una PC **Crear partida en la red local** (Windows puede pedir permiso de firewall); en las otras **Unirse por IP** con la IP del anfitrión (`127.0.0.1` en la misma PC).
+   - Primero se abre la **sala**: cada jugador pulsa **LISTO** y el anfitrión, que elige la dificultad, pulsa **INICIAR EXTRACCIÓN**. No se puede entrar con la ronda ya empezada; al reintentar se vuelve a la sala. El nombre de jugador se elige en Opciones.
 4. **Opciones** (en el menú o en la pausa):
    - idioma (español rioplatense o inglés), volumen, sensibilidad del mouse, campo de visión, eje Y invertido, subtítulos de ataques y tamaño del texto;
    - **controles**: elegir una acción y pulsar la tecla nueva. Esc cancela. Si la tecla ya estaba en uso, las dos acciones se intercambian;
@@ -44,6 +47,10 @@ Teclas por defecto (se pueden cambiar en Opciones → Controles; el HUD y los av
 - Con una sola mano no alcanza para arrastrarlo caído; usá las dos o el carrito.
 - El vaso de cerveza (sobre una mesa) distrae al tío si lo llevás y lo apoyás a su vista: suelta la barra unos segundos.
 - Tomarlo de los tobillos ayuda a entrarlo «con los pies primero»; si las piernas quedan afuera, no se puede cerrar.
+
+## Prueba guiada
+
+`PRUEBA_HUMANA.txt` (junto al ejecutable) tiene un guion de 25–35 minutos con las tareas y una planilla.
 
 ## Qué anotar
 

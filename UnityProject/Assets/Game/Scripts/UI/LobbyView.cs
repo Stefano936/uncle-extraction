@@ -13,7 +13,10 @@ namespace UncleExtraction
     {
         public RectTransform Root { get; private set; }
         readonly RoundDirector round;
-        readonly Text title, members, difficulty, reason, mode;
+        readonly Text title, members, difficulty, reason, mode, codeLabel, codeText;
+        readonly Button copyBtn;
+        float copiedUntil;
+        public string CodeText => codeText && codeText.gameObject.activeInHierarchy ? codeText.text : "";
         readonly Button readyBtn, startBtn, diffBtn, leaveBtn;
         bool wasVisible;
 
@@ -33,6 +36,17 @@ namespace UncleExtraction
             var drt = difficulty.rectTransform; drt.anchorMin = drt.anchorMax = new Vector2(1, 1); drt.pivot = new Vector2(1, 1); drt.anchoredPosition = new Vector2(-48, -170); drt.sizeDelta = new Vector2(400, 40);
             diffBtn = Ui.Button(Root, "DiffBtn", "", new Vector2(1, 1), new Vector2(-48, -220), new Vector2(400, 64), () => { var d = round.CurrentDifficulty; round.SetDifficulty((Difficulty)(((int)d + 1) % 3)); });
             diffBtn.GetComponent<RectTransform>().pivot = new Vector2(1, 1);
+            // codigo de sala (internet): visible para todos, con copiar (UI_SPEC 3: lobby.code, button.copy_code)
+            codeLabel = Ui.Label(Root, "CodeLabel", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperLeft);
+            var crt = codeLabel.rectTransform; crt.anchorMin = crt.anchorMax = new Vector2(1, 1); crt.pivot = new Vector2(1, 1); crt.anchoredPosition = new Vector2(-48, -310); crt.sizeDelta = new Vector2(400, 36);
+            codeText = Ui.Label(Root, "Code", "", Ui.FontTitle, Ui.Focus, TextAnchor.UpperLeft); codeText.supportRichText = false;
+            var ctr = codeText.rectTransform; ctr.anchorMin = ctr.anchorMax = new Vector2(1, 1); ctr.pivot = new Vector2(1, 1); ctr.anchoredPosition = new Vector2(-48, -346); ctr.sizeDelta = new Vector2(400, 70);
+            copyBtn = Ui.Button(Root, "Copy", "", new Vector2(1, 1), new Vector2(-48, -424), new Vector2(400, 56), () =>
+            {
+                try { GUIUtility.systemCopyBuffer = NetSession.JoinCode; copiedUntil = Time.unscaledTime + 3f; }
+                catch { NetSession.Say("error.copy_failed"); }
+            });
+            copyBtn.GetComponent<RectTransform>().pivot = new Vector2(1, 1);
             reason = Ui.Label(Root, "Reason", "", Ui.FontHud + 2, Ui.Focus, TextAnchor.MiddleCenter); Inset(reason, 40, 560, 40, 150);
             readyBtn = Ui.Button(Root, "Ready", "", new Vector2(0.5f, 0f), new Vector2(-270, 50), new Vector2(500, Ui.ButtonH), () => { var pc = PlayerControls.Local; if (pc) pc.SetReady(!pc.Ready); });
             startBtn = Ui.Button(Root, "Start", "", new Vector2(0.5f, 0f), new Vector2(270, 50), new Vector2(500, Ui.ButtonH), () => round.StartFromLobby());
@@ -77,6 +91,14 @@ namespace UncleExtraction
             startBtn.GetComponentInChildren<Text>().text = Loc.T(host ? "button.start" : "button.wait_host");
             reason.text = all ? (host ? "" : Loc.T("button.wait_host")) : Loc.T("lobby.waiting_player", ("player", Sanitize(waiting)));
             leaveBtn.GetComponentInChildren<Text>().text = Loc.T("button.leave_lobby");
+            bool code = NetSession.Online && !string.IsNullOrEmpty(NetSession.JoinCode);
+            codeLabel.gameObject.SetActive(code); codeText.gameObject.SetActive(code); copyBtn.gameObject.SetActive(code);
+            if (code)
+            {
+                codeLabel.text = Loc.T("lobby.code") + (NetSession.RelayRegion != "" ? "  ·  " + NetSession.RelayRegion : "");
+                codeText.text = NetSession.JoinCode;
+                copyBtn.GetComponentInChildren<Text>().text = Time.unscaledTime < copiedUntil ? "✓ " + Loc.T("lobby.copied") : Loc.T("button.copy_code");
+            }
         }
 
         /// Nombres como datos de presentacion: largo limitado y sin etiquetas de texto enriquecido (UI_SPEC 7).

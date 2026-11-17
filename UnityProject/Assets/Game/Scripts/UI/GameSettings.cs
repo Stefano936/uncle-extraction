@@ -32,8 +32,15 @@ namespace UncleExtraction
                 TextScale = Mathf.Clamp(PlayerPrefs.GetFloat("ue.textScale", 1f), 1f, 1.5f);
             }
             catch { /* preferencias corruptas: valores por defecto */ }
+            // pruebas de interfaz: -ueTextScale 1.5 fuerza el tamaño de texto sin guardarlo
+            var a = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < a.Length - 1; i++)
+                if (a[i] == "-ueTextScale" && float.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var ts)) TextScale = Mathf.Clamp(ts, 1f, 1.5f);
             Apply();
         }
+
+        /// Olvida lo cargado y vuelve a leer lo guardado (equivale a reiniciar el juego; pruebas de persistencia).
+        public static void ReloadFromDisk() { loaded = false; Load(); }
 
         public static void Save()
         {

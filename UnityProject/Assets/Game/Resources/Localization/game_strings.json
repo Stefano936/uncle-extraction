@@ -254,8 +254,8 @@
   },
   {
    "key": "menu.online_pending",
-   "en": "Online rooms (Relay) need the Unity Cloud project link. LAN works now.",
-   "es_UY": "Las salas online (Relay) necesitan vincular el proyecto de Unity Cloud. La red local ya funciona."
+   "en": "Online rooms need the Unity Cloud project linked to this build. Local network play already works.",
+   "es_UY": "Las salas por internet necesitan el proyecto de Unity Cloud vinculado a esta build. La red local ya funciona."
   },
   {
    "key": "settings.controls",
@@ -376,6 +376,31 @@
    "key": "settings.name",
    "en": "Player name",
    "es_UY": "Nombre"
+  },
+  {
+   "key": "menu.host_online",
+   "en": "CREATE ONLINE ROOM",
+   "es_UY": "CREAR SALA POR INTERNET"
+  },
+  {
+   "key": "menu.lan",
+   "en": "LOCAL NETWORK (IP)…",
+   "es_UY": "RED LOCAL (IP)…"
+  },
+  {
+   "key": "relay.hosting",
+   "en": "Room created. Code: {code}",
+   "es_UY": "Sala creada. Código: {code}"
+  },
+  {
+   "key": "error.online_unlinked",
+   "en": "Online play isn't set up in this build yet (Unity Cloud project not linked). Local network play works.",
+   "es_UY": "El modo online todavía no está configurado en esta build (falta vincular el proyecto de Unity Cloud). La red local funciona."
+  },
+  {
+   "key": "error.retry_hint",
+   "en": "Go back to the menu and try again, or play solo.",
+   "es_UY": "Volvé al menú e intentá de nuevo, o jugá solo."
   }
  ]
 }

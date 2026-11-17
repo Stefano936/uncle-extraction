@@ -37,6 +37,9 @@ namespace UncleExtraction
             }
         }
 
+        /// Olvida lo cargado y vuelve a leer lo guardado (equivale a reiniciar el juego; pruebas de persistencia).
+        public static void ReloadFromDisk() { loaded = false; paths.Clear(); Load(); }
+
         public static string Path(Act a) { Load(); return paths.TryGetValue(a, out var p) ? p : ""; }
 
 #if UE_INPUT_SYSTEM
