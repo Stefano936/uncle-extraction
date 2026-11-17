@@ -16,7 +16,7 @@
 | Unity Transport | 2.7.5 | Ídem. |
 | Multiplayer Tools | 2.2.12 (simulador de red en editor y builds de desarrollo) | Ídem. |
 | Render | URP `com.unity.render-pipelines.universal` 17.3.0 (incluido en el editor 6000.3.28f1; trae core 17.3.0, shadergraph 17.3.0 y universal-config 17.0.3) | Asset y renderer creados por código (`UrpSetup`, `Assets/Game/Settings/`), sombras a 40 m, MSAA 2x. Verificado en la build con capturas (`-ueShot`). |
-| Multiplayer Services (Sessions/Relay) | Sin instalar | Requiere un proyecto de Unity Cloud (bloqueo de cuenta). |
+| Multiplayer Services | **2.4.1** (`com.unity.services.multiplayer`; trae Services Core, Authentication, QoS, Wire y Deployment, fijados en `packages-lock.json`). Se eligió 2.4.1 y no 2.5.0, publicada el mismo día. | Compila y las pruebas EditMode del proveedor pasan. La conexión real por Relay está **bloqueada** hasta vincular un proyecto de Unity Cloud. |
 | Steamworks.NET | Sin instalar | Requiere cuenta de Steamworks y App ID. |
 
 `packages-lock.json` fija las dependencias transitivas. No actualizar el editor ni los paquetes sin registrarlo aquí.
@@ -24,4 +24,4 @@
 ## Histórico
 
 - Antes de M0, en la sesión de Cowork, no había Unity instalado y no se había comprobado ninguna versión. Las propuestas originales (URP, NGO, MPS, Steamworks.NET) están en la especificación técnica de `preproduction/`.
-- El 2026-11-15 se instalaron Unity Hub, Unity CLI y el editor con winget y se fijaron los paquetes base. NGO y Transport se agregaron en M2, y Multiplayer Tools en M3.
+- El 2026-11-15 se instalaron Unity Hub, Unity CLI y el editor con winget y se fijaron los paquetes base. NGO y Transport se agregaron en M2, Multiplayer Tools en M3 y Multiplayer Services 2.4.1 en la sesión 9 (2026-11-16). Desde la sesión 9 está habilitado *Frame Timing Stats* (medición de CPU y GPU por cuadro).
