@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-17, sesión 11 (segunda pasada de pulido). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+Última actualización: 2026-11-17, sesión 12 (versión candidata). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Estado vigente
 
@@ -10,30 +10,57 @@
 
 **Niveles de evidencia:** PM = PlayMode en el editor; EM = EditMode; AUTO = partida completa con entradas de jugador simuladas; NET = procesos de la build en **localhost** (no LAN ni internet); VIS = auditoría y capturas reales de la build. **Ninguna fila tiene prueba humana.**
 
-### Resultados de la sesión 11: segunda pasada de pulido (por commit y build)
+### Versión candidata (sesión 12): rendimiento, calidad Baja y verificación
 
-**Build vigente: `e1656f8`** (release `Builds/UncleExtraction/` y desarrollo `Builds/UncleExtraction_Dev/`, ambas con `VERSION.txt` sin cambios sin commitear). **Respaldo funcional anterior:** `Builds/UncleExtraction_Backup_2fc2d5d/` (local). Comparativas reales contra `2fc2d5d` (misma cámara fija y mismos instantes de juego): `docs/capturas/pulido_s11/`.
+**Build candidata: `69e9c6f`** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`; `VERSION.txt` sin cambios sin commitear). Respaldo: `Builds/UncleExtraction_Backup_2fc2d5d/`. Guion de revisión humana: `REVISION_CANDIDATA.txt` junto al ejecutable (`docs/REVISION_CANDIDATA.md`). Capturas actuales: `docs/capturas/candidata_69e9c6f/`.
 
-**Dónde corrió cada cosa:** todo en **una PC** (i7-12700H, RTX 3070 Ti Laptop, monitor 1920×1080 a 360 Hz). Red en procesos de **localhost**, salvo Relay, que pasa por el servidor de Unity en internet desde la misma PC. **Ninguna prueba con dos equipos ni dos redes** (no hay otra PC disponible): queda pendiente.
+**Todo en una PC** (i7-12700H, RTX 3070 Ti Laptop + Intel Iris Xe, pantalla 1920×1080 a 360 Hz, plan de energía «Equilibrado» —el único instalado—, enchufada). Red: procesos en localhost; Relay sale a internet desde la misma PC. **Sin pruebas entre dos equipos.**
 
-| Prueba | Código / build | Resultado |
+#### Rendimiento comparable
+
+Banco de vistas fijas (`-ueBench`, `tools/windows/perf_bench.ps1`): Bar_LastRound, tío quieto, 6 vistas × 6 s, 8 s de calentamiento **no medidos**, 1920×1080 en ventana sin bordes, mismos procesos abiertos (Chrome, OneDrive, Overwolf). `2fc2d5d` se compiló aparte con **el mismo `Bench.cs`** agregado (`Builds/UncleExtraction_Bench_2fc2d5d/`). «normal» = como se juega (sincronización vertical, sin límite propio); «sin vsync» = solo diagnóstico.
+
+| Build | GPU | Calidad | Resolución | Modo | FPS | Cuadro p95 / p99 (ms) | CPU (ms) | GPU (ms) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `2fc2d5d` (2 corridas) | RTX 3070 Ti | Alta | 1080p | normal | 119,6 / 120,1 | 8,35 / 11,11 | 3,92 / 3,83 | 2,06 / 2,15 |
+| `2fc2d5d` (2 corridas) | RTX 3070 Ti | Alta | 1080p | sin vsync | 160,4 / 159,4 | 7,8 / 9,0 | 3,00 | 2,55 |
+| `a056b8a` (2 corridas) | RTX 3070 Ti | Alta | 1080p | normal | 119,6 / 120,2 | 8,36 / 11,11 | 3,71 / 3,84 | 2,09 / 2,03 |
+| `a056b8a` (2 corridas) | RTX 3070 Ti | Alta | 1080p | sin vsync | 159,6 / 160,3 | 7,7 / 9,1 | 2,94 | 2,50 |
+| **`69e9c6f`** | RTX 3070 Ti | Alta | 1080p | normal | **120,2** | 8,37 / 11,11 | 3,73 | 2,06 |
+| **`69e9c6f`** | RTX 3070 Ti | Alta | 1080p | sin vsync | 160,7 | 7,49 / 8,93 | 2,92 | 2,50 |
+| `a056b8a` | Iris Xe (forzada) | Alta | 1080p | normal | 125,4 | 11,11 / 11,11 | 2,79 | 7,21 |
+| `a056b8a` | Iris Xe | Alta | 1080p | sin vsync | 125,6 | 9,25 / 9,44 | 2,49 | 7,16 |
+| `a056b8a` | Iris Xe | **Baja** | 1080p | normal | 204,8 | 8,33 / 8,33 | 2,43 | 3,67 |
+| `a056b8a` | Iris Xe | Baja | 1080p | sin vsync | 225,2 | 5,18 / 5,49 | 2,10 | 3,68 |
+| **`69e9c6f`** | Iris Xe | Baja | 1080p | normal | **204,6** | 8,33 / 8,33 | 2,39 | 3,68 |
+| `a056b8a` | Iris Xe | Baja | **720p** | normal | 344,6 | 2,78 / 5,56 | 1,96 | 1,94 |
+| `a056b8a` | Iris Xe | Baja | 720p | sin vsync | 428,4 | 2,69 / 2,82 | 1,67 | 1,91 |
+
+**Qué explica cada diferencia:**
+- **Costo de los cambios `2fc2d5d` → `69e9c6f`: nulo dentro del ruido** (±0,5 fps; ±0,15 ms de CPU) en las mismas condiciones. No hay regresión del juego que corregir.
+- **Sincronización vertical:** con el monitor a 360 Hz, un cuadro que tarda más de 2,78 ms espera al siguiente refresco útil; la build normal queda en 120 fps (cada 3 refrescos) mientras la misma escena sin vsync da ~160.
+- **Condiciones del equipo (hipótesis, sin demostrar):** en la sesión 10 una partida a 1080p midió 338 fps con 1,0 ms de CPU; hoy el mismo código mide ~3–4 ms de CPU. Las mediciones no son iguales (partida con autopiloto contra banco de vistas fijas) y el estado de energía, la carga de fondo o el paso de la imagen de la RTX por la integrada (Optimus) pueden explicarlo; no se probó cuál. Indicio a favor de Optimus: la Iris Xe, que maneja la pantalla, da más fps en Baja (205) que la RTX en Alta (120) con menos tiempo de GPU por cuadro en la RTX.
+- **Batería (hipótesis fuerte, comparación no controlada):** la Iris Xe midió **11,7 fps** en partida a batería y en Alta (`480ad7d`, sesión 11) contra **125 fps** enchufada en el banco. Falta repetir el banco a batería (requiere desenchufar).
+
+#### Calidad Baja en la integrada
+
+- Baja reduce el tiempo de GPU a la mitad en la Iris Xe (7,2 → 3,7 ms a 1080p); a 720p, 1,9 ms. No hizo falta endurecer el perfil con estas mediciones; se revisa cuando haya una medición a batería.
+- **Juego con Baja en la Iris Xe** (editor forzado a la Iris, `UE_QUALITY=low`): atascos del carrito, señales de ataque e intentos completos del bar **28/28, 0 FAIL, 1 omitida**. En el editor no se aplican escala de render ni MSAA (no se modifica el asset del proyecto); sí luces sin sombra y sin bloom.
+- **Capturas en la build con Baja en la Iris** (`calidad_alta_vs_baja.jpg`): aviso del HUD, arco del piso, brillo del tío, anillo de la mira y estado de las manos se leen igual que en Alta.
+- **Detección automática** por tipo de dispositivo y no por fabricante: Intel Iris/UHD/HD = integrada, Intel Arc = dedicada; Radeon «Graphics»/Vega = integrada, RX/Pro = dedicada; NVIDIA = dedicada; render por software = Baja. EditMode: 14 casos de GPU. **La elección guardada en Opciones manda siempre** (probado).
+
+#### Verificación (cada resultado con su build)
+
+| Prueba | Build | Resultado |
 | --- | --- | --- |
-| **Carrito trabado según los FPS** (`Cart_CrookedInDoorway`, 4 poses × bar y laboratorio, `UE_TEST_FPS` = 30/60/120/libre, FPS reales registrados) | `2fc2d5d` → `7877651` | Antes: la pose −28° del laboratorio **fallaba a 30, 60 y 120 FPS** y solo pasaba sin límite (~2.200 FPS): sacar el posproceso del laboratorio (`a64cb3c`) solo había devuelto ese ritmo irreal. Causas encontradas y corregidas: **automatización** (el bot movía según el giro interpolado del cuerpo, no según la mirada ordenada), **juego** (el objetivo de la mano salía de la cámara, orientada una vez por cuadro: con dos pasos de física por cuadro apuntaba más allá del giro; ahora sale de la mirada ordenada y la pose de física) y **armado de la prueba** (esperas por tiempo real; ahora por pasos de física). Después (`f387b84`, RTX): **8/8 a 30, 60 y 120 FPS** (reales 27–30, 53–59, 106–118). **Sin límite (~2.000–2.500 FPS): 7/8**; falla `StuckRecoveryTests_Lab` −28° (el carrito no pasa la puerta en 3 intentos). Ese ritmo no ocurre jugando (la build usa sincronización vertical); queda registrado. |
-| EditMode | `f387b84` | **30/30**, 1 ignorada. |
-| **PlayMode completo** (incluye los 9 intentos completos en las tres escenas) | `f387b84` (RTX) | **89/90, 0 FAIL, 1 omitida** (pie en la camioneta con el tío central: no aplica). Intentos: bar carrito 43,7 s, arrastre 21,1/46,7 s; laboratorio articulado carrito 31,2 s, arrastre 20,1/116,1 s; laboratorio central carrito 27,0 s, arrastre 42,0/73,4 s. Corrida anterior registrada: **87/90 con 2 FAIL** en `480ad7d`, con la notebook a batería sobre la **Intel Iris Xe** (~12 FPS reales): no se cuenta como PASS ni como FAIL del código. |
-| **Red completa** (`-Scenario all`, 12 escenarios) | build `f387b84` | **12/12 en la primera tanda válida**. Dos tandas anteriores no cuentan: una con la GPU integrada (4 FAIL/NOT_RUN por ritmo) y otra con la build de release vieja por un archivo bloqueado; además un error de sintaxis mío en `net_smoke.ps1` impidió correr la red (corregido). |
-| **Relay** (una PC, por internet) | build `f387b84` | **PASS**: código `T6HPGW`, el invitado entró por Relay, partida ganada en ambos. |
-| **Interfaz** (5 aspectos × texto 100/125/150 %, ES y EN; fuera, recortado, encimado, tapado, paneles) | build `f387b84` | **15/15 español, 15/15 inglés**. |
-| **Rendimiento** (`perf1080`, 1 proceso) | `f387b84` | RTX 3070 Ti, Alta: 116 fps (sincronización a 360 Hz que cuantiza a 120), CPU 4,2 ms, GPU 2,3 ms; Baja: 118 fps, CPU 3,8 ms, GPU 1,7 ms. La CPU midió 4,2 ms contra 1,5 ms antes del episodio a batería: probablemente el plan de energía de Windows; repetir con la PC en modo alto rendimiento. **Intel Iris Xe** (a batería, `480ad7d`, Alta): **11,7 fps**, CPU 32 ms, GPU 67 ms; por eso se agregó la calidad gráfica Baja (sin medir todavía en la Iris Xe). |
-| Señales de ataque e interfaz tras suavizar el brillo del tío | `e1656f8` | PM **16/16**. Captura de juego: el tío se lee mientras se prepara (antes se quemaba casi a blanco). |
+| Guardia de tandas (`Guard.psm1`): sintaxis de scripts, `VERSION.txt` al día con el código, una tanda a la vez, cada script cierra solo sus procesos | — | En uso en `net_smoke`, `ui_audit`, `perf_bench`; la tanda final pasó el preflight («builds al día con el código»). |
+| EditMode | `abc8bb2` (código) | **44/44**, 1 ignorada. |
+| PlayMode afectadas en la Iris Xe con Baja (atascos, ataques, intentos del bar) | `abc8bb2` | **28/28**, 1 omitida. |
+| PlayMode señales de ataque e interfaz | `69e9c6f` | **16/16**. |
+| **Cooperativo** (coop, 4 procesos) y **Relay** | build `69e9c6f` | **PASS, PASS, PASS** (Relay código `MQRGGG`). |
+| Fallos en la integrada a batería (sesión 11, `480ad7d`, ~12 fps reales) | `480ad7d` | Se conservan como evidencia de **rendimiento insuficiente**, no del código: PM 2 FAIL (intento con carrito del tío articulado sin terminar; carrito −28° del laboratorio) y red 3 FAIL + 1 NOT_RUN (`race`, `hostleave`, `latejoin`: ventanas de tiempo de los scripts —automatización—; `clientdrop`: el bot no llegó a agarrar). Los mismos casos pasan en la RTX y en la Iris enchufada. Relay BLOCKED por `error.service` en ese momento (servicio/red). |
 
-**Qué cambió (todo visual o de presentación, salvo el objetivo de la mano, que es una corrección de juego):**
-- **Iluminación y legibilidad:** focos embutidos en el techo sobre la barra (las lámparas colgantes tapaban «CERVEZA HELADA» desde el salón y el menú); luz frontal sobre el tío y relleno del lado de la cámara (`CharacterFill`); tapa de la barra de madera oscura (la crema del kit reflejaba los focos); menos bloom; brillo de preparación del tío más suave.
-- **Tío** (rig, huesos, colliders y puntos de agarre sin cambios): ropa con trama (musculosa, camisa, bermuda), piel con brillo, zapatos de cuero, ojos y pelo propios; gorro de fiesta torcido. Se quitó la franja violeta de la panza: el color de estado ya no reemplaza un material; la preparación se ve como brillo del color del ataque en todo el cuerpo.
-- **Carrito:** modelo propio sobre la geometría funcional (0,90 × 1,40 m, asa a 1,0 m): chasis naranja de seguridad, tablas de madera, barandas tubulares, barra de acero con empuñaduras de goma, ruedas de goma con taza.
-- **Materiales:** mapas de normales generados (madera, baldosas, revoque, tela, asfalto, losetas).
-- **Menú:** fondo con una captura del bar actual (`Art/UI/Backgrounds/bar_night.png`) y velo más liviano.
-- **Calidad gráfica** en Opciones (Alta/Baja; Baja automática con GPU integrada).
+**Correcciones de esta etapa:** guardia de tandas; banco reproducible; detección de GPU por tipo; rótulo 3D del ataque de tamaño constante y oculto a menos de 2,8 m (de cerca tapaba el reloj, visto en la Iris y en la RTX); capturas del ataque actualizadas tras suavizar el brillo.
 
 ### Pendientes reales (en orden)
 
@@ -64,6 +91,6 @@
 
 ## Próxima acción exacta
 
-1. **Vos o testers:** jugar la build `e1656f8` (`Builds/UncleExtraction/UncleExtraction.exe`) con `PRUEBA_HUMANA.txt`; mirar especialmente brillo y contraste del bar, el tío frente a la barra, el carrito y el menú. Anotar en `docs/OBSERVACIONES_PRUEBAS.md`.
-2. **Con otra PC:** Relay entre dos equipos en redes distintas (Jugar con amigos → Crear sala por internet / Unirse con código) y LAN por IP.
-3. Sin cuentas ni equipos: medir la calidad Baja en la Intel Iris Xe (forzando esa GPU) y el rendimiento con Windows en alto rendimiento; investigar el caso −28° del laboratorio a más de 2.000 FPS solo si vuelve a aparecer a ritmos reales.
+1. **Vos:** revisar la candidata `69e9c6f` con `REVISION_CANDIDATA.txt` (iluminación, controles, carrito, extracción); si podés, también a batería.
+2. **Con otra PC:** el punto 5 del guion (Relay entre dos equipos en redes distintas) y LAN por IP.
+3. Sin equipos: repetir el banco a batería (`perf_bench.ps1 -Device 1 -Quality low` y `high`) para confirmar la hipótesis de alimentación y ajustar Baja si hace falta.

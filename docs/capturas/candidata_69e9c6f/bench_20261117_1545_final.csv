@@ -1,0 +1,3 @@
+﻿"Build","Modo","Calidad","Resolucion","Rep","GPU","Alimentacion","Plan","Vsync","Limite","Pantalla","FPS","p50","p95","p99","CPU_ms","GPU_ms","Escala","MSAA","LucesSombra","Post"
+"UncleExtraction (Commit de origen: 69e9c6f)","normal","high","1920x1080","1","","Charging","Equilibrado","1","-1","1920x1080@360","120.2","8.33","8.37","11.11","3.73","2.06","1,00","2","3","True"
+"UncleExtraction (Commit de origen: 69e9c6f)","novsync","high","1920x1080","1","","Charging","Equilibrado","0","-1","1920x1080@360","160.7","5.89","7.49","8.93","2.92","2.50","1,00","2","3","True"

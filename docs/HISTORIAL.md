@@ -2,6 +2,31 @@
 
 Resultados de sesiones anteriores tal como quedaron, sin reescribir (incluye los FAIL y las repeticiones). El estado vigente y lo pendiente están en `PROGRESS.md`; las razones de diseño, en `docs/DECISIONES_IMPLEMENTACION.md`.
 
+## Sesión 11 (2026-11-17): segunda pasada de pulido y FPS
+
+**Build vigente: `e1656f8`** (release `Builds/UncleExtraction/` y desarrollo `Builds/UncleExtraction_Dev/`, ambas con `VERSION.txt` sin cambios sin commitear). **Respaldo funcional anterior:** `Builds/UncleExtraction_Backup_2fc2d5d/` (local). Comparativas reales contra `2fc2d5d` (misma cámara fija y mismos instantes de juego): `docs/capturas/pulido_s11/`.
+
+**Dónde corrió cada cosa:** todo en **una PC** (i7-12700H, RTX 3070 Ti Laptop, monitor 1920×1080 a 360 Hz). Red en procesos de **localhost**, salvo Relay, que pasa por el servidor de Unity en internet desde la misma PC. **Ninguna prueba con dos equipos ni dos redes** (no hay otra PC disponible): queda pendiente.
+
+| Prueba | Código / build | Resultado |
+| --- | --- | --- |
+| **Carrito trabado según los FPS** (`Cart_CrookedInDoorway`, 4 poses × bar y laboratorio, `UE_TEST_FPS` = 30/60/120/libre, FPS reales registrados) | `2fc2d5d` → `7877651` | Antes: la pose −28° del laboratorio **fallaba a 30, 60 y 120 FPS** y solo pasaba sin límite (~2.200 FPS): sacar el posproceso del laboratorio (`a64cb3c`) solo había devuelto ese ritmo irreal. Causas encontradas y corregidas: **automatización** (el bot movía según el giro interpolado del cuerpo, no según la mirada ordenada), **juego** (el objetivo de la mano salía de la cámara, orientada una vez por cuadro: con dos pasos de física por cuadro apuntaba más allá del giro; ahora sale de la mirada ordenada y la pose de física) y **armado de la prueba** (esperas por tiempo real; ahora por pasos de física). Después (`f387b84`, RTX): **8/8 a 30, 60 y 120 FPS** (reales 27–30, 53–59, 106–118). **Sin límite (~2.000–2.500 FPS): 7/8**; falla `StuckRecoveryTests_Lab` −28° (el carrito no pasa la puerta en 3 intentos). Ese ritmo no ocurre jugando (la build usa sincronización vertical); queda registrado. |
+| EditMode | `f387b84` | **30/30**, 1 ignorada. |
+| **PlayMode completo** (incluye los 9 intentos completos en las tres escenas) | `f387b84` (RTX) | **89/90, 0 FAIL, 1 omitida** (pie en la camioneta con el tío central: no aplica). Intentos: bar carrito 43,7 s, arrastre 21,1/46,7 s; laboratorio articulado carrito 31,2 s, arrastre 20,1/116,1 s; laboratorio central carrito 27,0 s, arrastre 42,0/73,4 s. Corrida anterior registrada: **87/90 con 2 FAIL** en `480ad7d`, con la notebook a batería sobre la **Intel Iris Xe** (~12 FPS reales): no se cuenta como PASS ni como FAIL del código. |
+| **Red completa** (`-Scenario all`, 12 escenarios) | build `f387b84` | **12/12 en la primera tanda válida**. Dos tandas anteriores no cuentan: una con la GPU integrada (4 FAIL/NOT_RUN por ritmo) y otra con la build de release vieja por un archivo bloqueado; además un error de sintaxis mío en `net_smoke.ps1` impidió correr la red (corregido). |
+| **Relay** (una PC, por internet) | build `f387b84` | **PASS**: código `T6HPGW`, el invitado entró por Relay, partida ganada en ambos. |
+| **Interfaz** (5 aspectos × texto 100/125/150 %, ES y EN; fuera, recortado, encimado, tapado, paneles) | build `f387b84` | **15/15 español, 15/15 inglés**. |
+| **Rendimiento** (`perf1080`, 1 proceso) | `f387b84` | RTX 3070 Ti, Alta: 116 fps (sincronización a 360 Hz que cuantiza a 120), CPU 4,2 ms, GPU 2,3 ms; Baja: 118 fps, CPU 3,8 ms, GPU 1,7 ms. La CPU midió 4,2 ms contra 1,5 ms antes del episodio a batería: probablemente el plan de energía de Windows; repetir con la PC en modo alto rendimiento. **Intel Iris Xe** (a batería, `480ad7d`, Alta): **11,7 fps**, CPU 32 ms, GPU 67 ms; por eso se agregó la calidad gráfica Baja (sin medir todavía en la Iris Xe). |
+| Señales de ataque e interfaz tras suavizar el brillo del tío | `e1656f8` | PM **16/16**. Captura de juego: el tío se lee mientras se prepara (antes se quemaba casi a blanco). |
+
+**Qué cambió (todo visual o de presentación, salvo el objetivo de la mano, que es una corrección de juego):**
+- **Iluminación y legibilidad:** focos embutidos en el techo sobre la barra (las lámparas colgantes tapaban «CERVEZA HELADA» desde el salón y el menú); luz frontal sobre el tío y relleno del lado de la cámara (`CharacterFill`); tapa de la barra de madera oscura (la crema del kit reflejaba los focos); menos bloom; brillo de preparación del tío más suave.
+- **Tío** (rig, huesos, colliders y puntos de agarre sin cambios): ropa con trama (musculosa, camisa, bermuda), piel con brillo, zapatos de cuero, ojos y pelo propios; gorro de fiesta torcido. Se quitó la franja violeta de la panza: el color de estado ya no reemplaza un material; la preparación se ve como brillo del color del ataque en todo el cuerpo.
+- **Carrito:** modelo propio sobre la geometría funcional (0,90 × 1,40 m, asa a 1,0 m): chasis naranja de seguridad, tablas de madera, barandas tubulares, barra de acero con empuñaduras de goma, ruedas de goma con taza.
+- **Materiales:** mapas de normales generados (madera, baldosas, revoque, tela, asfalto, losetas).
+- **Menú:** fondo con una captura del bar actual (`Art/UI/Backgrounds/bar_night.png`) y velo más liviano.
+- **Calidad gráfica** en Opciones (Alta/Baja; Baja automática con GPU integrada).
+
 ## Sesión 10 (2026-11-16): primera pasada de pulido visual
 
 Código final: **`1e23c82`**; la build entregada sale del commit de documentación siguiente (mismo código; ver `VERSION.txt`). Respaldo de la anterior: `Builds/UncleExtraction_Backup_e8ee30f/` (local). Capturas comparativas reales (misma cámara, `-ueCamTour`): `docs/capturas/pulido_s10/`.

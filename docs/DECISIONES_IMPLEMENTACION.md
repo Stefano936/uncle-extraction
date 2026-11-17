@@ -182,6 +182,14 @@ Se armaron reproducciones controladas (`StuckRecoveryTests`) con un jugador guio
 - **Calidad gráfica Baja** (escala de render 75 %, sin MSAA, sombras solo de la luna a 20 m, sin bloom), automática con GPU integrada: medición real de 11,7 fps en la Iris Xe con Alta.
 - **Fondo del menú:** captura del escenario actual con la misma cámara reproducible (`CamTour`), no una escena 3D en vivo: mismo resultado con costo nulo en el menú.
 
+## 2026-11-17 — Versión candidata (sesión 12)
+
+- **Medir rendimiento con un banco de vistas fijas**, no con partidas de autopiloto: el recorrido del bot cambia en cada corrida. El calentamiento y la carga no se miden; se registran GPU, alimentación, pantalla, vsync, límite, escala, MSAA, luces con sombra y posproceso.
+- **Comparar builds con el mismo código de medición:** `2fc2d5d` se compiló en un árbol aparte con el mismo `Bench.cs`.
+- **GPU forzada con `-force-device-index`** (parámetro de Unity), sin tocar la configuración gráfica de Windows.
+- **Detección de integrada por tipo de dispositivo** (nombre y fabricante), no solo por fabricante; la memoria informada no decide sola porque en las integradas es compartida.
+- **Guardia de tandas:** el preflight acepta una build si su commit no difiere del actual en `UnityProject/` (los commits de documentación posteriores no la invalidan).
+
 ## Plantilla para nuevas decisiones
 
 Fecha, problema observado, decisión, alternativas relevantes, impacto y evidencia. Para balance, registrar valores anteriores y nuevos y el resultado de la prueba.
