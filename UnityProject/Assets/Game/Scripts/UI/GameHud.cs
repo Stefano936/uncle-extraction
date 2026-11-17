@@ -70,17 +70,17 @@ namespace UncleExtraction
             objective = Ui.Label(ob, "Title", "", Ui.FontSection, Ui.Text, TextAnchor.UpperLeft, true); HalfRow(objective, 0f, 1f, 20f, 16f, 10f, Ui.K(44));
             objectiveDetail = Ui.Label(ob, "Detail", "", Ui.FontHud, Ui.Muted, TextAnchor.LowerLeft); Inset(objectiveDetail, 20, 0, 16, 12);
             // aviso de ataque (arriba, debajo del reloj): prioridad sobre ayuda contextual
-            attackBox = Ui.PanelBox("Attack", root, new Vector2(0.5f, 1f), new Vector2(0, -150), new Vector2(760, Ui.K(132)), true);
+            attackBox = Ui.PanelBox("Attack", root, new Vector2(0.5f, 1f), new Vector2(0, -Mathf.Max(150f, Ui.Margin * 0.5f + Ui.K(96) + 14f)), new Vector2(760, 24 + Ui.K(44) + Ui.K(34) + Ui.K(28)), true);
             attackIcon = Ui.Icon(attackBox, "Icon", "warning", new Vector2(0, 0.5f), new Vector2(60, 0), 72, Ui.Danger);
             attackTitle = Ui.Label(attackBox, "Title", "", Ui.FontSection + 4, Ui.Text, TextAnchor.UpperLeft, true); Inset(attackTitle, 120, 14, 20, 0);
-            attackHint = Ui.Label(attackBox, "Hint", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleLeft); Inset(attackHint, 120, 14 + Ui.K(44), 20, 0);
-            attackSub = Ui.Label(attackBox, "Subtitle", "", Ui.FontHud, Ui.Muted, TextAnchor.LowerLeft); Inset(attackSub, 120, 0, 20, 10);
+            attackHint = Ui.Label(attackBox, "Hint", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleLeft); Inset(attackHint, 120, 14 + Ui.K(44), 20, 0); attackHint.rectTransform.offsetMin = new Vector2(120, 10 + Ui.K(28));
+            attackSub = Ui.Label(attackBox, "Subtitle", "", Ui.FontHud, Ui.Muted, TextAnchor.LowerLeft); Inset(attackSub, 120, 0, 20, 8); attackSub.rectTransform.offsetMax = new Vector2(-20, -(14 + Ui.K(44) + Ui.K(34)));
             // interaccion (abajo al centro, encima de la energia)
             promptBox = Ui.PanelBox("Prompt", root, new Vector2(0.5f, 0f), new Vector2(0, 300 + Ui.K(50) - 50), new Vector2(820, Ui.K(80)));
             prompt = Ui.Label(promptBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter, true); Inset(prompt, 20, 4, 20, 18);
             promptBar = Ui.Bar(promptBox, "Progress", new Vector2(0.5f, 0f), Vector2.zero, new Vector2(820, 12), true, out _);
             // subtitulos del tio (catalogo de dialogos; sin voz grabada)
-            subBox = Ui.PanelBox("Subtitle", root, new Vector2(0.5f, 0f), new Vector2(0, 460 + Ui.K(110) - 110), new Vector2(980, Ui.K(64)));
+            subBox = Ui.PanelBox("Subtitle", root, new Vector2(0.5f, 0f), new Vector2(0, 460 + Ui.K(110) - 110), new Vector2(980 * (1f + (Ui.TextScale - 1f) * 0.5f), Ui.K(64)));
             subtitle = Ui.Label(subBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter); Inset(subtitle, 20, 4, 20, 4);
             toastBox = Ui.PanelBox("Toast", root, new Vector2(0.5f, 0f), new Vector2(0, 390 + Ui.K(90) - 90), new Vector2(620, Ui.K(56)));
             toast = Ui.Label(toastBox, "Text", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleCenter);
@@ -98,6 +98,12 @@ namespace UncleExtraction
             var rt = t.rectTransform; rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(0.5f, 1f);
             rt.offsetMin = new Vector2(left, -(top + height)); rt.offsetMax = new Vector2(-right, -top);
             t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Truncate;
+        }
+        static readonly Vector3[] ca = new Vector3[4], cb = new Vector3[4];
+        static bool Overlap(RectTransform a, RectTransform b)
+        {
+            a.GetWorldCorners(ca); b.GetWorldCorners(cb);
+            return ca[0].x < cb[2].x && cb[0].x < ca[2].x && ca[0].y < cb[2].y && cb[0].y < ca[2].y;
         }
         static void HalfRow(Text t, float a0, float a1, float left, float right, float top, float height)
         {
@@ -168,7 +174,8 @@ namespace UncleExtraction
             promptBox.gameObject.SetActive(label != "" && !fallen);
             if (label != "") { prompt.text = Key(Loc.Coded(label)); promptBar.fillAmount = hands.InteractProgress01; promptBar.transform.parent.gameObject.SetActive(hands.InteractProgress01 > 0.01f); }
             var dlg = UncleDialogue.Instance; string line = dlg ? dlg.Current : "";
-            subBox.gameObject.SetActive(line != "");
+            // jerarquia: si el aviso de peligro y el subtitulo no entran juntos (pantallas bajas con texto grande), manda el aviso
+            subBox.gameObject.SetActive(line != "" && !(attackBox.gameObject.activeSelf && Overlap(attackBox, subBox)));
             if (line != "") subtitle.text = $"<b>{Loc.T(dlg.CurrentSpeaker == "bartender" ? "dialogue.bartender" : "dialogue.uncle")}:</b> {line}";
             bool toastOn = Time.time < hands.FeedbackUntil && hands.LastFeedback != "" && !fallen;
             toastBox.gameObject.SetActive(toastOn);

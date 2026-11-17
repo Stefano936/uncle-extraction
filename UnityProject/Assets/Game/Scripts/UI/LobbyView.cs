@@ -31,7 +31,8 @@ namespace UncleExtraction
             float modeTop = 26 + Ui.K(74), d = Ui.K(100) - 100f, crewH = Ui.K(380);
             Root = Ui.PanelBox("Lobby", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1100, 160 + d + crewH + 220 + Ui.K(60) - 60));
             Ui.FitInCanvas(Root);
-            title = Ui.Label(Root, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(title, 20, 26, 20, 0);
+            title = Ui.Label(Root, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true);
+            { var t = title.rectTransform; t.anchorMin = new Vector2(0, 1); t.anchorMax = new Vector2(1, 1); t.pivot = new Vector2(0.5f, 1); t.offsetMin = new Vector2(20, -(modeTop - 4)); t.offsetMax = new Vector2(-20, -26); } // una linea: se ajusta en vez de pisar el modo
             mode = Ui.Label(Root, "Mode", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperCenter); Inset(mode, 40, modeTop, 40, 0);
             var crew = Ui.PanelBox("Crew", Root, new Vector2(0f, 1f), new Vector2(48, -160 - d), new Vector2(560, crewH)); crew.pivot = new Vector2(0, 1);
             members = Ui.Label(crew, "Members", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft); Inset(members, 24, 20, 24, 20);

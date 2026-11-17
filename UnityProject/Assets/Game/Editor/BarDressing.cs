@@ -272,8 +272,9 @@ namespace UncleExtraction.EditorTools
                 else L(n + "_Light", LightType.Point, at - Vector3.up * 0.15f, Tungsten, intensity, range, g, shadows);
             }
             // barra y tio: los dos focos con sombra (lectura del cuerpo y de las poses de ataque)
-            Pendant("Bar_A", new Vector3(3.6f, 2.3f, 7.7f), 9f, 6.5f, true, true);
-            Pendant("Bar_B", new Vector3(5.4f, 2.3f, 7.7f), 9f, 6.5f, true, false);
+            // sobre el mostrador (fuera de la linea de vista entre el salon y el cartel de la pared)
+            Pendant("Bar_A", new Vector3(3.4f, 2.2f, 8.6f), 9f, 7f, true, true);
+            Pendant("Bar_B", new Vector3(5.6f, 2.2f, 8.6f), 9f, 7f, true, false);
             foreach (var p in new[] { new Vector3(-4.2f, 2.0f, 6.2f), new Vector3(-4.5f, 2.0f, 2.6f), new Vector3(-6.8f, 2.0f, 4.4f), new Vector3(7.6f, 2.0f, 4.2f) })
                 Pendant("Table", p, 2.4f, 4.2f, false, false);
             // salon y recorrido: relleno calido sin sombra (para que nada importante quede en negro)
@@ -450,7 +451,7 @@ namespace UncleExtraction.EditorTools
             T Get<T>() where T : VolumeComponent { if (!profile.TryGet<T>(out var c)) { c = profile.Add<T>(true); AssetDatabase.AddObjectToAsset(c, profile); } c.active = true; return c; }
             var tm = Get<Tonemapping>(); tm.mode.Override(TonemappingMode.ACES);
             var bloom = Get<Bloom>(); bloom.threshold.Override(1.05f); bloom.intensity.Override(0.55f); bloom.scatter.Override(0.6f);
-            var ca = Get<ColorAdjustments>(); ca.postExposure.Override(0.55f); ca.contrast.Override(14f); ca.saturation.Override(6f);
+            var ca = Get<ColorAdjustments>(); ca.postExposure.Override(0.7f); ca.contrast.Override(14f); ca.saturation.Override(6f);
             var vig = Get<Vignette>(); vig.intensity.Override(0.24f); vig.smoothness.Override(0.45f);
             EditorUtility.SetDirty(profile); AssetDatabase.SaveAssets();
             var go = new GameObject("PostFX"); go.transform.SetParent(root, false);

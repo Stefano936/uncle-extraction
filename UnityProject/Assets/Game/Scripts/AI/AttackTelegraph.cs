@@ -95,7 +95,11 @@ namespace UncleExtraction
             label.transform.position = body.ChestPosition + Vector3.up * 0.95f;
             if (cam) label.transform.rotation = Quaternion.LookRotation(label.transform.position - cam.transform.position, Vector3.up);
             float pulse = attack ? 1.25f : 1f + 0.08f * Mathf.Sin(Time.time * 14f);
-            label.transform.localScale = Vector3.one * pulse;
+            // de cerca (menos de 2,4 m) el aviso del HUD ya lo dice: el rotulo se achica y se oculta en vez de tapar la pantalla
+            float d = cam ? Vector3.Distance(cam.transform.position, label.transform.position) : 10f;
+            float near = Mathf.InverseLerp(1.6f, 2.4f, d);
+            label.gameObject.SetActive(near > 0.01f);
+            label.transform.localScale = Vector3.one * pulse * Mathf.Lerp(0.5f, 1f, near);
         }
     }
 }

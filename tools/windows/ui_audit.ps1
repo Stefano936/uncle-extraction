@@ -4,7 +4,7 @@
 # (UiAudit.cs), captura cada pantalla y registra textos fuera de pantalla, recortados o encimados.
 # Aspectos mayores que el monitor (2560x1080, 3440x1440) se prueban con una ventana del MISMO aspecto: el CanvasScaler
 # (1920x1080, match 0,5) escala uniformemente, asi que la disposicion en unidades de canvas es identica.
-param([string]$Out = '')
+param([string]$Out = '', [string]$Lang = '', [switch]$Quick)
 $ErrorActionPreference = 'Stop'
 $Repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $Exe = Join-Path $Repo 'Builds\UncleExtraction\UncleExtraction.exe'
@@ -18,10 +18,12 @@ $variants = @(
   @{ w = 1728; h = 1080; name = '16:10' },
   @{ w = 1440; h = 1080; name = '4:3' }
 )
+if ($Quick) { $variants = @($variants[0], $variants[2]) }
+$langArgs = if ($Lang) { @('-ueLang', $Lang) } else { @() }
 $rows = @()
 foreach ($v in $variants) { foreach ($ts in '1', '1.25', '1.5') {
   $log = Join-Path $Out ("audit_{0}x{1}_t{2}.log" -f $v.w, $v.h, $ts)
-  $p = Start-Process $Exe -ArgumentList @('-screen-fullscreen','0','-popupwindow','-screen-width',"$($v.w)",'-screen-height',"$($v.h)",'-ueUiAudit',"`"$Out`"",'-ueTextScale',$ts,'-logFile',"`"$log`"") -PassThru
+  $p = Start-Process $Exe -ArgumentList (@('-screen-fullscreen','0','-popupwindow','-screen-width',"$($v.w)",'-screen-height',"$($v.h)",'-ueUiAudit',"`"$Out`"",'-ueTextScale',$ts) + $langArgs + @('-logFile',"`"$log`"")) -PassThru
   if (-not $p.WaitForExit(120000)) { $p.Kill(); $state = 'NOT_RUN'; $detail = 'no termino en 120 s' }
   else {
     $start = Select-String -Path $log -Pattern '\[UiAudit\] inicio' | Select-Object -Last 1
@@ -37,7 +39,7 @@ foreach ($v in $variants) { foreach ($ts in '1', '1.25', '1.5') {
   $rows += [pscustomobject]@{ Variante = "$($v.name) texto x$ts"; Resultado = $state; Build = $ver; Detalle = $detail }
   Write-Host ("{0,-70} {1,-8} {2}" -f "$($v.name) texto x$ts", $state, $detail)
 } }
-$issues = Get-ChildItem $Out -Filter 'audit_*.log' | ForEach-Object { Select-String -Path $_.FullName -Pattern '\[UiAudit\] \S+ (FUERA|RECORTADO|ENCIMADO|TAPADO)' | ForEach-Object { "$($_.Filename): $($_.Line)" } }
+$issues = Get-ChildItem $Out -Filter 'audit_*.log' | ForEach-Object { Select-String -Path $_.FullName -Pattern '\[UiAudit\] \S+ (FUERA|RECORTADO|ENCIMADO|TAPADO|PANELES)' | ForEach-Object { "$($_.Filename): $($_.Line)" } }
 $issues | Set-Content -Encoding UTF8 (Join-Path $Out 'problemas.txt')
 $rows | Export-Csv -NoTypeInformation -Encoding UTF8 (Join-Path $Out 'resultados.csv')
 Write-Host "Problemas detallados: $(Join-Path $Out 'problemas.txt') ($(@($issues).Count) lineas)"

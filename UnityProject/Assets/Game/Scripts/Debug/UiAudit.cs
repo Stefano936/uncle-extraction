@@ -70,6 +70,8 @@ namespace UncleExtraction
             RoundDirector.Instance.StartFromLobby();
             yield return Seconds(3f);
             yield return Check("hud");
+            // aviso de ataque (preparacion de la patada): titulo, consejo y subtitulo no se pisan
+            if (NpcBrain.Instance) { NpcBrain.Instance.ForceAttack(AttackId.Kick); yield return Seconds(0.25f); yield return Check("hud_attack"); yield return Seconds(2.5f); }
             var flow = GameFlowUI.Instance;
             flow.SetPaused(true); yield return Frames(4);
             yield return Check("pause");
@@ -147,7 +149,28 @@ namespace UncleExtraction
                     issues++;
                     Debug.Log($"[UiAudit] {screen} TAPADO '{it.path}' «{Short(it.t.text)}» por '{NodePath(im.transform)}' ({frac:P0})");
                 }
-            // 4) encimados: glifos de dos textos que se pisan (descontando el que este tapado por un panel opaco de otra capa)
+            // 4) paneles que se pisan entre si dentro de la misma pantalla (p. ej. aviso de ataque sobre el objetivo).
+            //    Los paneles modales (sala, pausa, resultados, opciones, dialogos) cubren a proposito lo de atras.
+            var modal = new HashSet<string> { "Lobby", "Pause", "Results", "Options", "Error", "Connecting", "ConfirmLeave", "Unsaved", "Page" };
+            var panels = new List<RectTransform>();
+            foreach (var f in FindObjectsByType<UiFade>(FindObjectsSortMode.None))
+            {
+                var rt = (RectTransform)f.transform;
+                if (!f.isActiveAndEnabled || modal.Contains(rt.name) || HiddenByGroup(rt.parent)) continue;
+                if (TopPanel(rt) != rt) continue; // solo paneles de primer nivel
+                panels.Add(rt);
+            }
+            for (int i = 0; i < panels.Count; i++)
+                for (int j = i + 1; j < panels.Count; j++)
+                {
+                    var a = panels[i]; var b = panels[j];
+                    if (a.GetComponentInParent<Canvas>().rootCanvas != b.GetComponentInParent<Canvas>().rootCanvas) continue;
+                    var inter = Intersect(ScreenRect(a), ScreenRect(b));
+                    if (inter.width <= 3f || inter.height <= 3f) continue;
+                    issues++;
+                    Debug.Log($"[UiAudit] {screen} PANELES '{NodePath(a)}' y '{NodePath(b)}' se pisan ({inter.width:0}x{inter.height:0} px)");
+                }
+            // 5) encimados: glifos de dos textos que se pisan (descontando el que este tapado por un panel opaco de otra capa)
             for (int i = 0; i < items.Count; i++)
                 for (int j = i + 1; j < items.Count; j++)
                 {

@@ -34,6 +34,9 @@ namespace UncleExtraction
             string saved = "";
             try { saved = PlayerPrefs.GetString("ue.lang", ""); } catch { }
             lang = saved == En || saved == EsUY ? saved : Application.systemLanguage == SystemLanguage.Spanish ? EsUY : En;
+            // pruebas: -ueLang en|es_UY fuerza el idioma sin guardarlo
+            var a = Environment.GetCommandLineArgs();
+            for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueLang" && (a[i + 1] == En || a[i + 1] == EsUY)) lang = a[i + 1];
         }
 
         public static bool Has(string key) { Ensure(); return table.ContainsKey(key); }
