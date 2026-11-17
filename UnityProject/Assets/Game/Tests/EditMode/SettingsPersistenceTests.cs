@@ -7,7 +7,7 @@ namespace UncleExtraction.Tests
     /// y se vuelve a leer. Restaura las preferencias del editor al terminar.
     public class SettingsPersistenceTests
     {
-        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge" };
+        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.quality", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge" };
         readonly System.Collections.Generic.List<System.Action> restore = new System.Collections.Generic.List<System.Action>();
 
         [SetUp]
@@ -42,6 +42,7 @@ namespace UncleExtraction.Tests
             GameSettings.MouseSensitivity = 0.31f; GameSettings.InvertY = true; GameSettings.FieldOfView = 95f; GameSettings.MasterVolume = 0.35f;
             GameSettings.SoloDifficulty = Difficulty.Hard; GameSettings.AttackSubtitles = false; GameSettings.ProfanityFilter = true;
             GameSettings.PlayerName = "Prueba"; GameSettings.TextScale = 1.5f;
+            bool detected = GraphicsQuality.DetectLow(); GameSettings.LowQuality = !detected; // eleccion manual opuesta a la deteccion
             GameSettings.Save();
             Loc.SetLanguage("en");
             InputBindings.Set(Act.Interact, "<Keyboard>/f");
@@ -62,6 +63,7 @@ namespace UncleExtraction.Tests
             Assert.IsTrue(GameSettings.ProfanityFilter);
             Assert.AreEqual("Prueba", GameSettings.PlayerName);
             Assert.AreEqual(1.5f, GameSettings.TextScale, 1e-4f);
+            Assert.AreEqual(!detected, GameSettings.LowQuality, "la calidad elegida a mano manda sobre la deteccion de GPU");
             Assert.AreEqual(1.5f, Ui.TextScale, 1e-4f, "el tamaño de texto se aplica al cargar");
             Assert.AreEqual("en", Loc.Language);
             Assert.AreEqual("<Keyboard>/f", InputBindings.Path(Act.Interact));

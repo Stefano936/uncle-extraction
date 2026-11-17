@@ -42,6 +42,8 @@ namespace UncleExtraction
                 if (a[i] == "-ueQuality") LowQuality = a[i + 1] == "low";
                 if (a[i] == "-ueTextScale" && float.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var ts)) TextScale = Mathf.Clamp(ts, 1f, 1.5f);
             }
+            // pruebas en el editor: UE_QUALITY=low|high fuerza la calidad sin guardarla
+            var env = System.Environment.GetEnvironmentVariable("UE_QUALITY"); if (env == "low" || env == "high") LowQuality = env == "low";
             Apply();
         }
 

@@ -7,6 +7,7 @@
 param([string[]]$Builds = @('UncleExtraction'), [string[]]$Modes = @('normal','novsync'), [string]$Quality = 'high',
       [int]$Width = 1920, [int]$Height = 1080, [int]$Device = -1, [int]$Repeat = 2, [string]$Tag = '', [float]$PerView = 6)
 $ErrorActionPreference = 'Stop'
+$Builds = @($Builds | ForEach-Object { $_ -split ',' }); $Modes = @($Modes | ForEach-Object { $_ -split ',' })  # con -File llegan como un solo texto
 $Repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $Out = Join-Path $Repo ".local-setup\logs\perf"; New-Item -ItemType Directory -Force $Out | Out-Null
 Import-Module (Join-Path $PSScriptRoot 'Guard.psm1') -Force
@@ -27,7 +28,7 @@ try {
     if ($m -eq 'novsync') { $a += '-ueNoVsync' }
     if ($Device -ge 0) { $a += @('-force-device-index',"$Device") }
     $p = Start-Tracked $exe $a
-    if (-not $p.WaitForExit(180000)) { $p.Kill(); $res = $null } else { $res = Select-String -Path $log -Pattern '\[Bench\] resumen' | Select-Object -Last 1 }
+    if (-not $p.WaitForExit(180000)) { $p.Kill(); $res = $null } else { $res = Select-String -Encoding UTF8 -Path $log -Pattern '\[Bench\] resumen' | Select-Object -Last 1 }
     $L = "$res"
     function F($k) { [regex]::Match($L, "$k=([^\s»]+)").Groups[1].Value }
     $row = [pscustomobject]@{
