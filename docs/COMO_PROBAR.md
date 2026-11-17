@@ -3,7 +3,7 @@
 ## Abrir
 
 1. Doble clic en `Builds\UncleExtraction\UncleExtraction.exe` (se genera en la PC de desarrollo; no está en Git).
-2. Menú: **Jugar solo** → tocar **Dificultad** hasta la deseada → **Iniciar extracción**. El **Laboratorio** es la escena de diagnóstico. El escenario principal usa el tío de 11 cuerpos (ragdoll reducido, malla del kit). **Laboratorio** conserva el tío anterior de primitivas (un solo cuerpo) para comparar, y **Laboratorio: tío articulado (prueba)** es el laboratorio con el tío nuevo.
+2. Menú: **Jugar solo** → tocar **Dificultad** hasta la deseada → **Iniciar extracción**. La primera vez aparece una guía corta (Primeros pasos) que se puede omitir o repetir desde la pausa. Los laboratorios de diagnóstico solo aparecen con `-ueDebug` o en la build de desarrollo. El escenario principal usa el tío de 11 cuerpos (ragdoll reducido, malla del kit). **Laboratorio** conserva el tío anterior de primitivas (un solo cuerpo) para comparar, y **Laboratorio: tío articulado (prueba)** es el laboratorio con el tío nuevo.
 3. **Jugar con amigos** (2 a 4 jugadores):
    - **Por internet:** el anfitrión elige **Crear sala por internet** y pasa el **código de sala** que aparece en la sala (botón **Copiar código**); los demás lo escriben y eligen **Unirse con código**. No hace falta abrir puertos ni conocer la IP.
    - **Red local (IP):** en una PC **Crear partida en la red local** (Windows puede pedir permiso de firewall); en las otras **Unirse por IP** con la IP del anfitrión (`127.0.0.1` en la misma PC).
@@ -23,17 +23,17 @@ Controles por defecto (teclado y mouse se cambian en Opciones → Controles; el 
 
 | Acción | Teclado y mouse | Mando |
 | --- | --- | --- |
-| Moverse / mirar | WASD / mouse | stick izquierdo / stick derecho |
-| Mano izquierda / derecha (mantener) | clic izquierdo / derecho | gatillo izquierdo / derecho |
+| Moverse / mirar | WASD o flechas / mouse | stick izquierdo / stick derecho |
+| Mano izquierda / derecha | clic izquierdo / derecho (mantener, o un clic agarra y otro suelta si elegís «Alternar» en Opciones → Agarre) | gatillo izquierdo / derecho |
 | Esfuerzo (más fuerza un rato) | Shift | clic del stick izquierdo |
 | Soltar todo | Q | B / círculo |
 | Interactuar (mantener o tocar): soltarle la mano de la barra, cargar y asegurar en el carrito, cerrar la camioneta, ayudar a un compañero caído | E | A / cruz |
 | Agacharse / paso evasivo | Ctrl / Espacio | clic del stick derecho / X / cuadrado |
 | Pausa, opciones, volver al menú | Esc | Start / Options |
-| Reintentar | R | — |
+| Reintentar | botón de resultados o de la pausa (en red decide el anfitrión) | — |
 | Panel de depuración (mostrar el cursor) | Tab | — |
 
-En los menús, el mando navega con la cruceta o el stick, acepta con A/cruz y vuelve con B/círculo. El código de sala se escribe con teclado (no hay teclado en pantalla). Solo el teclado y el mouse se pueden reasignar.
+En los menús, el mando navega con la cruceta o el stick, acepta con A/cruz y vuelve con B/círculo. El código de sala se escribe con teclado (no hay teclado en pantalla). Se reasignan el movimiento y las acciones principales de teclado y mouse (las flechas quedan siempre como alternativa; Esc y Tab están reservadas). Los cambios se guardan con **Aplicar**; **Volver** sin aplicar los descarta.
 
 ## Consejos
 

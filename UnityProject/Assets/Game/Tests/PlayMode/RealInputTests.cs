@@ -181,6 +181,26 @@ namespace UncleExtraction.Tests
         }
 
         [UnityTest]
+        public IEnumerator FirstSteps_AdvanceWithRealActions_AndCanBeSkipped()
+        {
+            var fs = FirstSteps.Instance; Assert.IsNotNull(fs, "la guia existe en la partida");
+            fs.Begin(); yield return Frames(2);
+            Assert.AreEqual("tut.move", fs.CurrentKey);
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.UpArrow)); yield return new WaitForSeconds(1.2f); yield return Keys();
+            Assert.AreNotEqual("tut.move", fs.CurrentKey, "caminar con las flechas completa el primer paso");
+            yield return FaceUncle(); yield return Frames(3);
+            Assert.AreEqual("tut.grab", fs.CurrentKey, "apuntar al tio pasa a «agarrar»");
+            yield return Buttons(false, true); yield return Frames(4);
+            Assert.AreEqual("tut.release", fs.CurrentKey, "agarrar pasa a «soltar»");
+            yield return Buttons(false, false); yield return Frames(4);
+            Assert.AreEqual("tut.twohands", fs.CurrentKey, "soltar pasa a «dos manos»");
+            fs.Skip(); yield return Frames(2);
+            Assert.IsFalse(fs.Active, "se puede omitir");
+            Assert.IsTrue(FirstSteps.Completed, "y no vuelve a aparecer sola");
+            PlayerPrefs.DeleteKey("ue.firstSteps");
+        }
+
+        [UnityTest]
         public IEnumerator TextSizeAndLanguage_ChangeDuringMatch_UpdateHud()
         {
             float s0 = Ui.TextScale; string l0 = Loc.Language;

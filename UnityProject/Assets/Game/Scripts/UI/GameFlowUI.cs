@@ -34,6 +34,7 @@ namespace UncleExtraction
             if (!GetComponent<GameHud>()) gameObject.AddComponent<GameHud>();
             if (!GetComponent<GameAudio>()) gameObject.AddComponent<GameAudio>();
             if (!GetComponent<UncleDialogue>()) gameObject.AddComponent<UncleDialogue>();
+            if (!GetComponent<FirstSteps>()) gameObject.AddComponent<FirstSteps>(); // guia de la primera partida (local)
             canvas = Ui.Canvas("FlowUI", 20);
             BuildPanels();
             Loc.Changed += Relabel; Relabel();
@@ -67,14 +68,15 @@ namespace UncleExtraction
         {
             // alturas que crecen con el texto: titulo, aviso de partida online (2 lineas) y botones debajo
             float infoTop = 30 + Ui.K(80), y = -(infoTop + Ui.K(90));
-            pauseRoot = Ui.PanelBox("Pause", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(Ui.K(700), Mathf.Max(700, -y + 270 + Ui.ButtonH + 60)));
+            pauseRoot = Ui.PanelBox("Pause", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(Ui.K(700), Mathf.Max(700, -y + 360 + Ui.ButtonH + 60)));
             Ui.FitInCanvas(pauseRoot);
             pauseTitle = Ui.Label(pauseRoot, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(pauseTitle, 20, 30, 20, 0); Top(pauseTitle, 30, infoTop - 34);
             pauseInfo = Ui.Label(pauseRoot, "Info", "", Ui.FontHud + 2, Ui.Focus, TextAnchor.UpperCenter); Inset(pauseInfo, 40, infoTop, 40, 0);
             Btn(pauseRoot, "Resume", "button.resume", y, () => SetPaused(false));
             Btn(pauseRoot, "Settings", "button.settings", y - 90, () => { pauseRoot.gameObject.SetActive(false); options = new OptionsView(canvas.transform, () => { options = null; if (paused) ShowPause(); }); });
             Btn(pauseRoot, "Retry", "button.retry_same", y - 180, () => { SetPaused(false); round.Restart(); });
-            Btn(pauseRoot, "Leave", "button.leave_match", y - 270, AskLeave);
+            var guide = Btn(pauseRoot, "Guide", "tut.repeat", y - 270, () => { var fs = FirstSteps.Instance; if (fs) { if (fs.Active) fs.Skip(); else fs.Begin(); } SetPaused(false); });
+            Btn(pauseRoot, "Leave", "button.leave_match", y - 360, AskLeave);
             pauseRoot.gameObject.SetActive(false);
         }
 
@@ -146,6 +148,7 @@ namespace UncleExtraction
         {
             pauseRoot.gameObject.SetActive(true); Relabel();
             var retry = pauseRoot.Find("Retry"); if (retry) retry.gameObject.SetActive(NetAuth.IsServer); // en red reinicia el anfitrion
+            var g = pauseRoot.Find("Guide"); if (g) g.GetComponent<LocText>().key = FirstSteps.Instance && FirstSteps.Instance.Active ? "tut.skip" : "tut.repeat";
             EventSystem.current?.SetSelectedGameObject(pauseRoot.Find("Resume").gameObject);
         }
 

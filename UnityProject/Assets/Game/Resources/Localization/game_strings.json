@@ -481,6 +481,91 @@
    "key": "action.MoveRight",
    "en": "Move right",
    "es_UY": "Derecha"
+  },
+  {
+   "key": "tut.title",
+   "en": "FIRST STEPS {n}/{total}",
+   "es_UY": "PRIMEROS PASOS {n}/{total}"
+  },
+  {
+   "key": "tut.move",
+   "en": "Move with {keys} or the arrows, look with the mouse. Go towards the uncle at the bar.",
+   "es_UY": "Movete con {keys} o las flechas y mirá con el mouse. Andá hacia el tío en la barra."
+  },
+  {
+   "key": "tut.aim",
+   "en": "Aim at the uncle: the ring shows if you can grab (solid), if it is taken (thick) or if you must get closer (dashed).",
+   "es_UY": "Apuntá al tío: el anillo indica si podés agarrar (sólido), si está ocupado (grueso) o si tenés que acercarte (punteado)."
+  },
+  {
+   "key": "tut.hold",
+   "en": "hold",
+   "es_UY": "mantené"
+  },
+  {
+   "key": "tut.tap",
+   "en": "click once",
+   "es_UY": "hacé un clic"
+  },
+  {
+   "key": "tut.grab",
+   "en": "Grab him with one hand: {how} {left} (left hand) or {right} (right hand).",
+   "es_UY": "Agarralo con una mano: {how} {left} (mano izquierda) o {right} (mano derecha)."
+  },
+  {
+   "key": "tut.release",
+   "en": "Let go: release the button or press {key} to drop everything.",
+   "es_UY": "Soltá: dejá de apretar el botón o tocá {key} para soltar todo."
+  },
+  {
+   "key": "tut.release_toggle",
+   "en": "Let go: click that hand again or press {key} to drop everything.",
+   "es_UY": "Soltá: hacé otro clic con esa mano o tocá {key} para soltar todo."
+  },
+  {
+   "key": "tut.twohands",
+   "en": "Use both hands at once. Hold {effort} for extra strength while holding.",
+   "es_UY": "Usá las dos manos a la vez. Mantené {effort} para hacer más fuerza mientras sostenés."
+  },
+  {
+   "key": "tut.attack",
+   "en": "Watch him: before hitting he winds up (pose, floor marker, red banner). Step away, dodge with {dodge} or let go.",
+   "es_UY": "Mirá al tío: antes de pegar se prepara (pose, marca en el piso, cartel rojo). Alejate, esquivá con {dodge} o soltalo."
+  },
+  {
+   "key": "tut.recover",
+   "en": "After an attack he needs to recover: pull now. If he clings to the bar, hold {key} on his hand to unhook it.",
+   "es_UY": "Después de atacar se tiene que recuperar: tirá ahora. Si se aferra a la barra, mantené {key} sobre su mano para soltarla."
+  },
+  {
+   "key": "tut.cart",
+   "en": "Bring the cart (grab its handle), put him next to it and press {key} to load and strap him.",
+   "es_UY": "Traé el carrito (agarrá el asa), ponelo al lado del tío y tocá {key} para cargarlo y atarlo."
+  },
+  {
+   "key": "tut.extract",
+   "en": "Take him up the ramp into the van, step out and hold {key} from outside to close the doors.",
+   "es_UY": "Subilo por la rampa a la camioneta, salí y mantené {key} desde afuera para cerrar las puertas."
+  },
+  {
+   "key": "tut.repeat",
+   "en": "REPEAT FIRST STEPS",
+   "es_UY": "REPETIR PRIMEROS PASOS"
+  },
+  {
+   "key": "tut.skip",
+   "en": "SKIP FIRST STEPS",
+   "es_UY": "OMITIR PRIMEROS PASOS"
+  },
+  {
+   "key": "howto.arrows",
+   "en": "arrows",
+   "es_UY": "flechas"
+  },
+  {
+   "key": "howto.move",
+   "en": "move",
+   "es_UY": "moverse"
   }
  ]
 }

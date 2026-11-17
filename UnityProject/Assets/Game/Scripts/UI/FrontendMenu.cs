@@ -167,7 +167,7 @@ namespace UncleExtraction
                         var dd = Ui.Label(card, "D", Loc.T(d), Ui.FontHud + 2, Ui.Text, TextAnchor.LowerLeft); dd.rectTransform.offsetMin = new Vector2(24, 12); dd.rectTransform.offsetMax = new Vector2(-24, -(12 + Ui.K(44)));
                         y -= 72 + 60 * Ui.TextScale + 10;
                     }
-                    Note($"{InputBindings.Display(Act.GrabLeft)} / {InputBindings.Display(Act.GrabRight)}: {Loc.T("hud.hold_grab")}  ·  {InputBindings.Display(Act.ReleaseAll)}: {Loc.T("action.ReleaseAll")}  ·  {InputBindings.Display(Act.Effort)}: {Loc.T("hud.effort")}  ·  {InputBindings.Display(Act.Interact)}: {Loc.T("action.Interact")}", 80);
+                    Note($"{InputBindings.MoveDisplay()} / {Loc.T("howto.arrows")}: {Loc.T("howto.move")}  ·  {InputBindings.Display(Act.GrabLeft)} / {InputBindings.Display(Act.GrabRight)}: {Loc.T(GrabIntent.Toggle ? "hud.tap_grab" : "hud.hold_grab")}  ·  {InputBindings.Display(Act.ReleaseAll)}: {Loc.T("action.ReleaseAll")}  ·  {InputBindings.Display(Act.Effort)}: {Loc.T("hud.effort")}  ·  {InputBindings.Display(Act.Interact)}: {Loc.T("action.Interact")}", 80);
                     B("button.back", () => Show(Page.Main));
                     break;
                 case Page.Options:
