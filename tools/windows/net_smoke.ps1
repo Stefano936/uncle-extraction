@@ -182,7 +182,7 @@ for ($run = 1; $run -le $Runs; $run++) {
         # perf1080low: calidad grafica Baja (-ueQuality low). Se registra la GPU que uso Windows (equipos con dos GPU).
         $q = if ($sc -eq 'perf1080low') { @('-ueQuality','low') } else { @('-ueQuality','high') }
         $f0 = Join-Path $Log "${tag}_solo.log"; if (Test-Path $f0) { Remove-Item $f0 }
-        $p = Start-Process $Exe -ArgumentList (@('-screen-fullscreen','0','-popupwindow','-screen-width','1920','-screen-height','1080','-ueScene',$Scene,'-ueAutopilot','drag','-ueQuitOnEnd','-uePerf','10') + $q + @('-logFile',"`"$f0`"") -PassThru
+        $p = Start-Process $Exe -ArgumentList (@('-screen-fullscreen','0','-popupwindow','-screen-width','1920','-screen-height','1080','-ueScene',$Scene,'-ueAutopilot','drag','-ueQuitOnEnd','-uePerf','10') + $q + @('-logFile',"`"$f0`"")) -PassThru
         $null = $p.WaitForExit(330000); $g = @{ p = $p; log = $f0; name = "${tag}_solo" }; Stop-Game $g
         if (Crashed $g) { Record $label 'BLOCKED' 'crash al arrancar'; break }
         $f = @(Finals $g)[0]; $eq = Last $g '\[Perf\] equipo'
