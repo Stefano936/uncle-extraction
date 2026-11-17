@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-17, sesión 12 (versión candidata). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+Última actualización: 2026-11-17, sesión 13 (controles, guía, cooperación, justicia del tío, presentación). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Estado vigente
 
@@ -10,57 +10,48 @@
 
 **Niveles de evidencia:** PM = PlayMode en el editor; EM = EditMode; AUTO = partida completa con entradas de jugador simuladas; NET = procesos de la build en **localhost** (no LAN ni internet); VIS = auditoría y capturas reales de la build. **Ninguna fila tiene prueba humana.**
 
-### Versión candidata (sesión 12): rendimiento, calidad Baja y verificación
+### Sesión 13: controles, primera partida guiada, cooperación y justicia del tío
 
-**Build candidata: `69e9c6f`** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`; `VERSION.txt` sin cambios sin commitear). Respaldo: `Builds/UncleExtraction_Backup_2fc2d5d/`. Guion de revisión humana: `REVISION_CANDIDATA.txt` junto al ejecutable (`docs/REVISION_CANDIDATA.md`). Capturas actuales: `docs/capturas/candidata_69e9c6f/`.
+**Build de referencia: `{BUILD}`** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`, ZIP `{ZIP}`). Respaldo anterior: `Builds/UncleExtraction_Candidate_69e9c6f/`. Matriz de requisitos con evidencia por nivel: `docs/MATRIZ_REQUISITOS.md`.
 
-**Todo en una PC** (i7-12700H, RTX 3070 Ti Laptop + Intel Iris Xe, pantalla 1920×1080 a 360 Hz, plan de energía «Equilibrado» —el único instalado—, enchufada). Red: procesos en localhost; Relay sale a internet desde la misma PC. **Sin pruebas entre dos equipos.**
+**Hallazgos A–M (revisión del dueño), todos reproducidos antes de corregir salvo F (revisión de código):**
 
-#### Rendimiento comparable
+| | Hallazgo | Corrección | Evidencia |
+| --- | --- | --- | --- |
+| A | Flechas no movían | `LabInput.RealMove`: asignadas + flechas, diagonal normalizada, sin sumar velocidad | E (`RealInputTests`, teclado simulado) |
+| B | Movimiento no reasignable | `InputBindings` con `MoveKey` | E |
+| C | Sin agarre alternado | `GrabIntent` (mantener / alternar, local y guardado) | E |
+| D | Q soltaba y el clic sostenido volvía a agarrar | rearmado al soltar el botón | E |
+| E | `Pressed` ignoraba menús y campos de texto | `PlayerControls.Pressed` con `BlockingInput` (+ escritura) | E |
+| F | Cualquiera reiniciaba con R | R solo diagnóstico en el anfitrión; el invitado pide al terminar | C, L (`repeat`, `lose`) |
+| G | Reasignar guardaba al instante | borrador con Aplicar / Descartar | E |
+| H | Tamaño de texto no cambiaba en partida | reconstrucción del HUD y paneles | E |
+| I | Preferencias dañadas | `GameSettings.Validate`, `InputBindings.Valid` | E |
+| J | El tío pegaba con un brazo sujeto | ataques según extremidades libres | E (`FairnessRulesTests`) |
+| K | Una desconexión recalculaba la ronda al instante | 10 s de gracia, tiempo conservado, mínimo 60 s | E |
+| L | Laboratorios en el menú | solo con `-ueDebug` / build de desarrollo | C |
+| M | README desactualizado | reescrito | — |
 
-Banco de vistas fijas (`-ueBench`, `tools/windows/perf_bench.ps1`): Bar_LastRound, tío quieto, 6 vistas × 6 s, 8 s de calentamiento **no medidos**, 1920×1080 en ventana sin bordes, mismos procesos abiertos (Chrome, OneDrive, Overwolf). `2fc2d5d` se compiló aparte con **el mismo `Bench.cs`** agregado (`Builds/UncleExtraction_Bench_2fc2d5d/`). «normal» = como se juega (sincronización vertical, sin límite propio); «sin vsync» = solo diagnóstico.
-
-| Build | GPU | Calidad | Resolución | Modo | FPS | Cuadro p95 / p99 (ms) | CPU (ms) | GPU (ms) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `2fc2d5d` (2 corridas) | RTX 3070 Ti | Alta | 1080p | normal | 119,6 / 120,1 | 8,35 / 11,11 | 3,92 / 3,83 | 2,06 / 2,15 |
-| `2fc2d5d` (2 corridas) | RTX 3070 Ti | Alta | 1080p | sin vsync | 160,4 / 159,4 | 7,8 / 9,0 | 3,00 | 2,55 |
-| `a056b8a` (2 corridas) | RTX 3070 Ti | Alta | 1080p | normal | 119,6 / 120,2 | 8,36 / 11,11 | 3,71 / 3,84 | 2,09 / 2,03 |
-| `a056b8a` (2 corridas) | RTX 3070 Ti | Alta | 1080p | sin vsync | 159,6 / 160,3 | 7,7 / 9,1 | 2,94 | 2,50 |
-| **`69e9c6f`** | RTX 3070 Ti | Alta | 1080p | normal | **120,2** | 8,37 / 11,11 | 3,73 | 2,06 |
-| **`69e9c6f`** | RTX 3070 Ti | Alta | 1080p | sin vsync | 160,7 | 7,49 / 8,93 | 2,92 | 2,50 |
-| `a056b8a` | Iris Xe (forzada) | Alta | 1080p | normal | 125,4 | 11,11 / 11,11 | 2,79 | 7,21 |
-| `a056b8a` | Iris Xe | Alta | 1080p | sin vsync | 125,6 | 9,25 / 9,44 | 2,49 | 7,16 |
-| `a056b8a` | Iris Xe | **Baja** | 1080p | normal | 204,8 | 8,33 / 8,33 | 2,43 | 3,67 |
-| `a056b8a` | Iris Xe | Baja | 1080p | sin vsync | 225,2 | 5,18 / 5,49 | 2,10 | 3,68 |
-| **`69e9c6f`** | Iris Xe | Baja | 1080p | normal | **204,6** | 8,33 / 8,33 | 2,39 | 3,68 |
-| `a056b8a` | Iris Xe | Baja | **720p** | normal | 344,6 | 2,78 / 5,56 | 1,96 | 1,94 |
-| `a056b8a` | Iris Xe | Baja | 720p | sin vsync | 428,4 | 2,69 / 2,82 | 1,67 | 1,91 |
-
-**Qué explica cada diferencia:**
-- **Costo de los cambios `2fc2d5d` → `69e9c6f`: nulo dentro del ruido** (±0,5 fps; ±0,15 ms de CPU) en las mismas condiciones. No hay regresión del juego que corregir.
-- **Sincronización vertical:** con el monitor a 360 Hz, un cuadro que tarda más de 2,78 ms espera al siguiente refresco útil; la build normal queda en 120 fps (cada 3 refrescos) mientras la misma escena sin vsync da ~160.
-- **Condiciones del equipo (hipótesis, sin demostrar):** en la sesión 10 una partida a 1080p midió 338 fps con 1,0 ms de CPU; hoy el mismo código mide ~3–4 ms de CPU. Las mediciones no son iguales (partida con autopiloto contra banco de vistas fijas) y el estado de energía, la carga de fondo o el paso de la imagen de la RTX por la integrada (Optimus) pueden explicarlo; no se probó cuál. Indicio a favor de Optimus: la Iris Xe, que maneja la pantalla, da más fps en Baja (205) que la RTX en Alta (120) con menos tiempo de GPU por cuadro en la RTX.
-- **Batería (hipótesis fuerte, comparación no controlada):** la Iris Xe midió **11,7 fps** en partida a batería y en Alta (`480ad7d`, sesión 11) contra **125 fps** enchufada en el banco. Falta repetir el banco a batería (requiere desenchufar).
-
-#### Calidad Baja en la integrada
-
-- Baja reduce el tiempo de GPU a la mitad en la Iris Xe (7,2 → 3,7 ms a 1080p); a 720p, 1,9 ms. No hizo falta endurecer el perfil con estas mediciones; se revisa cuando haya una medición a batería.
-- **Juego con Baja en la Iris Xe** (editor forzado a la Iris, `UE_QUALITY=low`): atascos del carrito, señales de ataque e intentos completos del bar **28/28, 0 FAIL, 1 omitida**. En el editor no se aplican escala de render ni MSAA (no se modifica el asset del proyecto); sí luces sin sombra y sin bloom.
-- **Capturas en la build con Baja en la Iris** (`calidad_alta_vs_baja.jpg`): aviso del HUD, arco del piso, brillo del tío, anillo de la mira y estado de las manos se leen igual que en Alta.
-- **Detección automática** por tipo de dispositivo y no por fabricante: Intel Iris/UHD/HD = integrada, Intel Arc = dedicada; Radeon «Graphics»/Vega = integrada, RX/Pro = dedicada; NVIDIA = dedicada; render por software = Baja. EditMode: 14 casos de GPU. **La elección guardada en Opciones manda siempre** (probado).
+**Nuevo:** primeros pasos (9 indicaciones, omitibles y repetibles desde la pausa, locales en cooperativo); marcador contextual (clic central) y nombres de compañeros con aviso de caído; validación de intenciones del invitado; descarte de respuestas tardías de Relay tras cancelar; manos con forma (palma, dedos que se cierran, puño con color de estado); expresión del tío (cejas y boca por estado) y **corrección de orientación: la cara del kit miraba hacia atrás de la raíz, así que el tío preparaba los golpes de espaldas al jugador y escapaba caminando de espaldas** (`NpcBody.FaceSign`; captura `docs/capturas/sesion13/tio_expresiones.jpg`); volúmenes de efectos y de avisos; suavizado visual independiente de los FPS; rescates técnicos por ronda en el registro.
 
 #### Verificación (cada resultado con su build)
 
-| Prueba | Build | Resultado |
+| Prueba | Código / build | Resultado |
 | --- | --- | --- |
-| Guardia de tandas (`Guard.psm1`): sintaxis de scripts, `VERSION.txt` al día con el código, una tanda a la vez, cada script cierra solo sus procesos | — | En uso en `net_smoke`, `ui_audit`, `perf_bench`; la tanda final pasó el preflight («builds al día con el código»). |
-| EditMode | `abc8bb2` (código) | **44/44**, 1 ignorada. |
-| PlayMode afectadas en la Iris Xe con Baja (atascos, ataques, intentos del bar) | `abc8bb2` | **28/28**, 1 omitida. |
-| PlayMode señales de ataque e interfaz | `69e9c6f` | **16/16**. |
-| **Cooperativo** (coop, 4 procesos) y **Relay** | build `69e9c6f` | **PASS, PASS, PASS** (Relay código `MQRGGG`). |
-| Fallos en la integrada a batería (sesión 11, `480ad7d`, ~12 fps reales) | `480ad7d` | Se conservan como evidencia de **rendimiento insuficiente**, no del código: PM 2 FAIL (intento con carrito del tío articulado sin terminar; carrito −28° del laboratorio) y red 3 FAIL + 1 NOT_RUN (`race`, `hostleave`, `latejoin`: ventanas de tiempo de los scripts —automatización—; `clientdrop`: el bot no llegó a agarrar). Los mismos casos pasan en la RTX y en la Iris enchufada. Relay BLOCKED por `error.service` en ese momento (servicio/red). |
+| EditMode | `40d17af` | **58/58**, 1 ignorada (+21 nuevas: extremidades, gracia, intenciones, marcador, suavizado, volúmenes) |
+| PlayMode completa | `aac5b90` (código) | **97/99**: 1 omitida, 1 FAIL conocido `lab_fail_m28` (carrito torcido del laboratorio sin límite de FPS; pasa a 30/60/120 fps) |
+| PlayMode completa con la regla de extremidades | `83e55c7` (código) | 97/98, 1 omitida (esta vez también pasó `lab_fail_m28`) |
+| Señales de ataque + orientación de la cara | `aac5b90` | **15/15**; la cara queda a 4–9° del jugador al final de la preparación |
+| Entrada real, interfaz, flujo, marcador | `40d17af` | **29/29** |
+| Red en localhost (12 escenarios) | build `07dbc8f` | 11 PASS + `race` FAIL (rechazos=0); repetido ×3: 3/3 PASS → intermitencia de tiempos del escenario |
+| Red en localhost (12 escenarios) | build `83e55c7` | **12/12 PASS** |
+| Red en localhost tras la corrección de orientación | build `{NETBUILD}` | {NETRES} |
+| Auditoría de interfaz | build `07dbc8f` | EN 15/15; ES 11/15 (texto «Reducir inclinación de cámara» recortado en Opciones → acortado) |
+| Auditoría de interfaz (Opciones con volúmenes y Marcar) | build `{UIBUILD}` | {UIRES} |
+| Capturas de la build | `aac5b90` | cara del tío normal / enojado (gira hacia el jugador) / recuperándose; manos nuevas (`docs/capturas/sesion13/`) |
 
-**Correcciones de esta etapa:** guardia de tandas; banco reproducible; detección de GPU por tipo; rótulo 3D del ataque de tamaño constante y oculto a menos de 2,8 m (de cerca tapaba el reloj, visto en la Iris y en la RTX); capturas del ataque actualizadas tras suavizar el brillo.
+**No verificado en esta sesión:** LAN real, dos equipos por internet (Relay solo desde una PC en sesiones anteriores), revisión humana. La gracia de desconexión no se ejercita en `clientdrop` (el anfitrión termina enseguida): evidencia E, no L. En `latejoin` el bot del anfitrión quedó trabado con la cabeza del tío afuera de la camioneta (no es criterio del escenario; inestabilidad conocida del autopiloto).
+
 
 ### Pendientes reales (en orden)
 
