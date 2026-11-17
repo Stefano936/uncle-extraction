@@ -35,13 +35,16 @@ namespace UncleExtraction
             if (VanDoors.Instance) lastVan = VanDoors.Instance.CurrentPhase;
         }
 
-        public void Play2D(string id, float vol = 1f) { Count(id); if (ui) ui.PlayOneShot(SfxSynth.Get(id), vol); }
+        /// Categoria de cada sonido: avisos (deben oirse siempre que el jugador no los baje a proposito) o efectos.
+        public static bool IsAlert(string id) => id.StartsWith("cue_") || id == "ping" || id == "success" || id == "timeout" || id == "ui";
+        public static float CategoryVolume(string id) => IsAlert(id) ? GameSettings.AlertsVolume : GameSettings.EffectsVolume;
+        public void Play2D(string id, float vol = 1f) { Count(id); if (ui) ui.PlayOneShot(SfxSynth.Get(id), vol * CategoryVolume(id)); }
         public void Play3D(string id, Vector3 at, float vol = 1f, bool cue = false)
         {
             Count(id);
             AudioSource s = null; foreach (var p in pool) if (!p.isPlaying) { s = p; break; }
             if (!s) s = pool[0];
-            s.transform.position = at; s.clip = SfxSynth.Get(id); s.volume = vol;
+            s.transform.position = at; s.clip = SfxSynth.Get(id); s.volume = vol * CategoryVolume(id);
             s.spatialBlend = cue ? 0.6f : 1f; // las senales criticas se oyen aunque se mire al otro lado
             s.Play();
         }

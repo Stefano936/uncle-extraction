@@ -26,7 +26,8 @@ namespace UncleExtraction
         PlayerMotor motor; Rigidbody rb; PlayerControls controls;
         readonly List<GrabLink> broken = new List<GrabLink>();
         float effortTime;
-        Renderer leftR, rightR;
+        Renderer leftR, rightR; readonly HandRig[] rigs = new HandRig[2];
+        public HandRig Rig(int hand) => rigs[hand];
         bool effortActive; string interactLabel = ""; float interactProgress;
 
         bool Auth => NetAuth.IsServer;
@@ -64,6 +65,9 @@ namespace UncleExtraction
             if (!cam) cam = GetComponentInChildren<Camera>();
             if (leftHandVisual) leftR = leftHandVisual.GetComponent<Renderer>();
             if (rightHandVisual) rightR = rightHandVisual.GetComponent<Renderer>();
+            // manos con forma (sesion 13): palma, dedos y puño de manga; el cubo del prefab queda oculto
+            if (leftHandVisual && !leftHandVisual.GetComponentInChildren<HandRig>()) rigs[0] = HandRig.Build(leftHandVisual, 0);
+            if (rightHandVisual && !rightHandVisual.GetComponentInChildren<HandRig>()) rigs[1] = HandRig.Build(rightHandVisual, 1);
         }
 
         /// Id del punto que sostiene una mano ("" = libre). En clientes viene replicado del anfitrion.
@@ -265,6 +269,7 @@ namespace UncleExtraction
             if (IsServer) GrabRegistry.ReleaseAllOf(this, ReleaseReason.Disconnect);
         }
 
+        static readonly Color sleeveFree = new Color(0.22f, 0.3f, 0.36f);
         static readonly Color free = new Color(0.95f, 0.8f, 0.65f), holding = new Color(0.2f, 0.85f, 0.75f), strained = new Color(1f, 0.55f, 0.1f);
         void UpdateVisuals()
         {
@@ -275,8 +280,15 @@ namespace UncleExtraction
             if (!t) return;
             var s = HeldSocket(hand);
             Vector3 p = s ? Vector3.Lerp(HandTarget(hand), s.Position, 0.85f) : HandTarget(hand);
-            t.position = Vector3.Lerp(t.position, p, 0.5f);
-            if (r) r.material.color = s == null ? free : Color.Lerp(holding, strained, Tension01(hand));
+            t.position = Vector3.Lerp(t.position, p, Smooth.Factor(0.5f));
+            Color c = s == null ? free : Color.Lerp(holding, strained, Tension01(hand));
+            var rig = rigs[hand];
+            if (rig)
+            {
+                bool pending = s == null && Candidate && Ctrl(hand == 0 ? Act.GrabLeft : Act.GrabRight);
+                rig.Set(s ? 1f : pending ? 0.55f : 0.15f, s == null ? sleeveFree : c);
+            }
+            else if (r) r.material.color = c;
         }
     }
 }

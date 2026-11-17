@@ -77,7 +77,7 @@ namespace UncleExtraction
 
         static void Pose(Transform t, Quaternion rest, Vector3 euler)
         {
-            if (t) t.localRotation = Quaternion.Slerp(t.localRotation, rest * Quaternion.Euler(euler), 0.25f);
+            if (t) t.localRotation = Quaternion.Slerp(t.localRotation, rest * Quaternion.Euler(euler), Smooth.Factor(0.25f));
         }
     }
 }

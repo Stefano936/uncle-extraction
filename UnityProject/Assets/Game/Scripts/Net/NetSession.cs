@@ -213,6 +213,15 @@ namespace UncleExtraction
             Say(reason, 10f);
         }
 
+        /// Relay responde de forma asincronica: si mientras tanto el jugador cancelo (Mode volvio a Solo o se pidio otra sesion),
+        /// la respuesta tardia se descarta y no inicia ninguna conexion. (Ademas el coroutine muere con la escena al cancelar.)
+        bool CancelledWhileWaiting(NetMode mode)
+        {
+            if (this && Mode == mode && Online) return false;
+            Debug.Log($"[Net] respuesta de Relay descartada: la sesion {mode} se cancelo mientras se esperaba");
+            return true;
+        }
+
         public IEnumerator Begin(NetMode mode)
         {
             var nm = EnsureManager();
@@ -246,6 +255,7 @@ namespace UncleExtraction
                         Say("lobby.creating", 20f);
                         var t = RelayConnector.Host(utp, MaxPlayers - 1);
                         while (!t.IsCompleted) yield return null;
+                        if (CancelledWhileWaiting(mode)) yield break;
                         if (!t.Result.ok) { OnlineFailed(t.Result.error); yield break; }
                         JoinCode = t.Result.code; RelayRegion = t.Result.region ?? "";
                         ok = nm.StartHost();
@@ -262,6 +272,7 @@ namespace UncleExtraction
                     {
                         var t = RelayConnector.Join(utp, JoinCode);
                         while (!t.IsCompleted) yield return null;
+                        if (CancelledWhileWaiting(mode)) yield break;
                         if (!t.Result.ok) { OnlineFailed(t.Result.error); yield break; }
                         JoinCode = t.Result.code; RelayRegion = t.Result.region ?? "";
                         ok = nm.StartClient();

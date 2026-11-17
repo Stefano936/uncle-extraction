@@ -9,6 +9,9 @@ namespace UncleExtraction
         public static bool InvertY;
         public static float FieldOfView = 85f;
         public static float MasterVolume = 0.8f;
+        /// Categorias (sesion 13): efectos del mundo (agarres, golpes, puertas) y avisos (señales de ataque, marcadores, fin de
+        /// ronda). Voz y musica no existen todavia (sin fuentes con licencia). Se multiplican por el volumen general.
+        public static float EffectsVolume = 1f, AlertsVolume = 1f;
         public static Difficulty SoloDifficulty = Difficulty.Normal;
         public static bool AttackSubtitles = true;
         public static bool ProfanityFilter;
@@ -31,6 +34,7 @@ namespace UncleExtraction
                 InvertY = PlayerPrefs.GetInt("ue.invertY", 0) == 1;
                 FieldOfView = PlayerPrefs.GetFloat("ue.fov", FieldOfView);
                 MasterVolume = PlayerPrefs.GetFloat("ue.volume", MasterVolume);
+                EffectsVolume = PlayerPrefs.GetFloat("ue.vol.sfx", EffectsVolume); AlertsVolume = PlayerPrefs.GetFloat("ue.vol.alerts", AlertsVolume);
                 int dif = PlayerPrefs.GetInt("ue.difficulty", (int)Difficulty.Normal);
                 SoloDifficulty = System.Enum.IsDefined(typeof(Difficulty), dif) ? (Difficulty)dif : Difficulty.Normal; // fuera del enum: Normal
                 AttackSubtitles = PlayerPrefs.GetInt("ue.attackSubs", 1) == 1;
@@ -64,6 +68,7 @@ namespace UncleExtraction
             MouseSensitivity = Safe(MouseSensitivity, 0.03f, 0.4f, 0.12f);
             FieldOfView = Safe(FieldOfView, 65f, 100f, 85f);           // campo de vision VERTICAL en grados (convencion de Unity)
             MasterVolume = Safe(MasterVolume, 0f, 1f, 0.8f);
+            EffectsVolume = Safe(EffectsVolume, 0f, 1f, 1f); AlertsVolume = Safe(AlertsVolume, 0f, 1f, 1f);
             float ts = Safe(TextScale, 1f, 1.5f, 1f);                    // solo los tamanos ofrecidos: 100, 125 y 150 %
             TextScale = ts >= 1.4f ? 1.5f : ts >= 1.2f ? 1.25f : 1f;
             if (!System.Enum.IsDefined(typeof(Difficulty), SoloDifficulty)) SoloDifficulty = Difficulty.Normal;
@@ -77,6 +82,7 @@ namespace UncleExtraction
             PlayerPrefs.SetInt("ue.invertY", InvertY ? 1 : 0);
             PlayerPrefs.SetFloat("ue.fov", FieldOfView);
             PlayerPrefs.SetFloat("ue.volume", MasterVolume);
+            PlayerPrefs.SetFloat("ue.vol.sfx", EffectsVolume); PlayerPrefs.SetFloat("ue.vol.alerts", AlertsVolume);
             PlayerPrefs.SetInt("ue.difficulty", (int)SoloDifficulty);
             PlayerPrefs.SetInt("ue.attackSubs", AttackSubtitles ? 1 : 0);
             PlayerPrefs.SetInt("ue.profanity", ProfanityFilter ? 1 : 0);

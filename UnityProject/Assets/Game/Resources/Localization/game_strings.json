@@ -601,6 +601,16 @@
    "key": "howto.mark",
    "en": "mark for your team",
    "es_UY": "marcar para el equipo"
+  },
+  {
+   "key": "settings.effects",
+   "en": "Effects volume",
+   "es_UY": "Volumen de efectos"
+  },
+  {
+   "key": "settings.alerts",
+   "en": "Alerts volume (attacks, marks)",
+   "es_UY": "Volumen de avisos (ataques, marcas)"
   }
  ]
 }

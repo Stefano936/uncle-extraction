@@ -140,7 +140,7 @@ namespace UncleExtraction
             bool control = motor.ControlsEnabled;
 
             for (int h = 0; h < 2; h++) UpdateHand(hand[h], h, hands, control);
-            energy.fillAmount = Mathf.Lerp(energy.fillAmount, motor.Energy / LabBalance.EnergyMax, 0.2f); // suavizado solo visual
+            energy.fillAmount = Mathf.Lerp(energy.fillAmount, motor.Energy / LabBalance.EnergyMax, Smooth.Factor(0.2f)); // suavizado solo visual
             bool anyHeld = hands.AnyHeld;
             effortHint.text = !control ? "" : anyHeld ? $"{InputBindings.Display(Act.Effort)}: {Loc.T("hud.effort")}" : Loc.T("hud.grip_first");
             if (motor.Composure < lastComposure - 0.5f) composureShowUntil = Time.time + 4f;

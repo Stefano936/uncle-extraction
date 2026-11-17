@@ -44,6 +44,7 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Ataques legibles: preparación, zona real, un impacto por jugador, recuperación | Alta | `NpcBrain`, `AttackTelegraph`, `UncleAttackPose` | completo | E (`AttackSignalTests`), B, L | H |
 | Disponibilidad de extremidades y espacio para atacar (GDD) | Media | `NpcBrain.AvailableAttacks` + `HeldLimbs` (los dos brazos sujetos = sin manotazo; uno = sin empujón; los dos tobillos = sin patada; la sacudida sigue) | completo | C, E (`FairnessRulesTests`, 6 casos) | L/H: notar que sujetar brazos protege |
 | Transición tras desconexión (no recalcular el grupo al instante) | Media | `RoundDirector.UpdatePartySize`: baja aplicada tras 10 s de gracia, reconexión la cancela, transcurrido conservado, mínimo 60 s restantes | completo | C, E (`FairnessRulesTests`, 3 casos) | L: `clientdrop` en la regresión de red |
+| Suavizado visual independiente de los FPS (manos, pose del tío, barra de energía) | Media | `Smooth.Factor` (igual a 60 fps que antes) | completo | C | — |
 | Rescates técnicos registrados | Media | `PhysicsWatchdog.RoundRescues` en `[Round] SUCCESS/TIMEOUT … rescates=N` | completo | C | Revisar los registros de la regresión |
 
 ## Red y ciclo
@@ -51,7 +52,7 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
 | --- | --- | --- | --- | --- | --- |
 | Anfitrión autoritativo, sala, LISTO, dificultad del anfitrión, rechazo con motivo | Alta | NGO + `RoundDirector` + `NetSession` | completo | E, L (12 escenarios), R1 | R2 |
-| Relay con código; cancelar | Alta | `RelayConnector` | completo | E, R1 (`MQRGGG`, `69e9c6f`) | R2; operación tardía tras cancelar (prueba) |
+| Relay con código; cancelar | Alta | `RelayConnector`; `NetSession.CancelledWhileWaiting` descarta una respuesta tardía tras cancelar (y el coroutine muere con la escena) | completo | E, R1 (`MQRGGG`, `69e9c6f`); cancelación tardía: C (revisión de código, sin prueba automática: requiere el servicio) | R2 |
 | Pérdida del anfitrión, desconexiones con manos ocupadas | Alta | `NetSession`, `PlayerControls.ReleaseTimeout` | completo | L (`hostkill` 10,1 s, `clientdrop`) | R2 |
 | Validación de intenciones del invitado (finitos, movimiento ≤ 1, ángulos acotados, solo botones de juego) | Alta | `PlayerIntent.Sanitize` en `SubmitIntentRpc` | completo | C, E (`NetIntentTests`) | L (regresión de red) |
 | Compatibilidad de versión en la admisión | Media | `VersionTag` (Application.version/ProtocolVersion) | completo | E (`AdmissionTests`) | — |
@@ -61,10 +62,10 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
 | --- | --- | --- | --- | --- | --- |
 | Bar nocturno, tío con ropa y gorro, carrito y camioneta propios | Alta | `BarDressing`, `Finishing` | completo | B (capturas) | **H** |
-| Manos del jugador (hoy cubos) | Alta | — | faltante | — | Bloque E: manos con forma y estados |
+| Manos del jugador con forma y estados | Alta | `HandRig`: palma, dedos y pulgar con piel, puño de manga con color de estado; dedos abiertos / a medias (pendiente) / cerrados (agarrando) | parcial | C | B: capturas en la build; H |
 | Malla y expresión del tío | Alta | malla del kit facetada | parcial | B | Bloque E |
 | Interfaz 720p–21:9, texto 100–150 %, ES/EN | Alta | `Ui`, `UiAudit` | completo | B (`07dbc8f`: EN 15/15; ES 11/15 por «Reducir inclinación de cámara» recortado en Opciones → texto acortado, a reauditar) | H de legibilidad |
-| Audio por categorías con volumen separado | Media | `SfxSynth`, `GameAudio` (volumen general) | parcial | E | Volumen de efectos / voz / música |
+| Audio por categorías con volumen separado | Media | `GameAudio.CategoryVolume`: general × efectos (agarres, golpes, puertas) o × avisos (señales de ataque, marcas, fin de ronda); Opciones con dos controles nuevos | completo | C, E (persistencia) | Voz y música cuando existan fuentes |
 | Voz y música | Baja | — | pospuesto | sin fuentes con licencia | Requiere grabaciones o compra (dueño) |
 | Calidad Alta/Baja, detección de integrada | Media | `GraphicsQuality` | completo | B (banco RTX/Iris) | Banco a batería (H/dueño) |
 | Banco reproducible y tandas protegidas | Media | `Bench.cs`, `perf_bench.ps1`, `Guard.psm1` | completo | B | — |

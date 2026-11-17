@@ -13,7 +13,7 @@ namespace UncleExtraction
     {
         public RectTransform Root { get; private set; }
         readonly Action onClose;
-        struct Draft { public float mouse, fov, volume, textScale; public bool invertY, subtitles, profanity, lowQuality, grabToggle, reduceMotion; public string lang, name; }
+        struct Draft { public float mouse, fov, volume, sfx, alerts, textScale; public bool invertY, subtitles, profanity, lowQuality, grabToggle, reduceMotion; public string lang, name; }
         Draft saved, draft;
         readonly List<Action> refresh = new List<Action>();
         Text status; RectTransform confirm; IDisposable listening;
@@ -26,7 +26,7 @@ namespace UncleExtraction
             this.onClose = onClose;
             saved = Capture(); draft = saved; bindSnap = InputBindings.Snapshot();
             float g = Ui.K(20) - 20f; // aire extra bajo cada encabezado con texto grande
-            Root = Ui.PanelBox("Options", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 1040 + 2 * g));
+            Root = Ui.PanelBox("Options", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 1140 + 2 * g));
             Ui.FitInCanvas(Root);
             var title = Ui.Label(Root, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(title, 0, 24, 0, 0);
             refresh.Add(() => title.text = Loc.T("button.settings"));
@@ -34,16 +34,18 @@ namespace UncleExtraction
             // columna izquierda: audio, idioma, camara y accesibilidad
             Section(Root, "settings.audio_language", new Vector2(48, y));
             Slider(Root, "settings.master", new Vector2(48, y - 50 - g), 0f, 1f, () => draft.volume, v => { draft.volume = v; AudioListener.volume = v; }, v => $"{v * 100f:0}%");
-            Choice(Root, "settings.language", new Vector2(48, y - 120 - g), new[] { "settings.spanish", "settings.english" }, () => draft.lang == Loc.EsUY ? 0 : 1, i => { draft.lang = i == 0 ? Loc.EsUY : Loc.En; Loc.SetLanguage(draft.lang); });
-            Section(Root, "settings.comfort", new Vector2(48, y - 210 - g));
-            Slider(Root, "settings.mouse", new Vector2(48, y - 260 - 2 * g), 0.03f, 0.4f, () => draft.mouse, v => draft.mouse = v, v => $"{v:0.00}");
-            Slider(Root, "settings.fov", new Vector2(48, y - 330 - 2 * g), 65f, 100f, () => draft.fov, v => draft.fov = v, v => $"{v:0}");
-            Toggle(Root, "settings.invert_y", new Vector2(48, y - 400 - 2 * g), () => draft.invertY, v => draft.invertY = v);
-            Toggle(Root, "settings.attack_subtitles", new Vector2(48, y - 460 - 2 * g), () => draft.subtitles, v => draft.subtitles = v);
-            Toggle(Root, "settings.profanity", new Vector2(48, y - 580 - 2 * g), () => draft.profanity, v => draft.profanity = v);
-            Toggle(Root, "settings.reduce_motion", new Vector2(48, y - 640 - 2 * g), () => draft.reduceMotion, v => draft.reduceMotion = v);
-            NameField(Root, new Vector2(48, y - 710 - 2 * g));
-            Choice(Root, "settings.text_size", new Vector2(48, y - 520 - 2 * g), new[] { "100%", "125%", "150%" }, () => draft.textScale >= 1.4f ? 2 : draft.textScale >= 1.2f ? 1 : 0, i => draft.textScale = i == 2 ? 1.5f : i == 1 ? 1.25f : 1f, "percent");
+            Slider(Root, "settings.effects", new Vector2(48, y - 116 - g), 0f, 1f, () => draft.sfx, v => draft.sfx = v, v => $"{v * 100f:0}%");
+            Slider(Root, "settings.alerts", new Vector2(48, y - 182 - g), 0f, 1f, () => draft.alerts, v => draft.alerts = v, v => $"{v * 100f:0}%");
+            Choice(Root, "settings.language", new Vector2(48, y - 250 - g), new[] { "settings.spanish", "settings.english" }, () => draft.lang == Loc.EsUY ? 0 : 1, i => { draft.lang = i == 0 ? Loc.EsUY : Loc.En; Loc.SetLanguage(draft.lang); });
+            Section(Root, "settings.comfort", new Vector2(48, y - 334 - g));
+            Slider(Root, "settings.mouse", new Vector2(48, y - 384 - 2 * g), 0.03f, 0.4f, () => draft.mouse, v => draft.mouse = v, v => $"{v:0.00}");
+            Slider(Root, "settings.fov", new Vector2(48, y - 450 - 2 * g), 65f, 100f, () => draft.fov, v => draft.fov = v, v => $"{v:0}");
+            Toggle(Root, "settings.invert_y", new Vector2(48, y - 516 - 2 * g), () => draft.invertY, v => draft.invertY = v);
+            Toggle(Root, "settings.attack_subtitles", new Vector2(48, y - 574 - 2 * g), () => draft.subtitles, v => draft.subtitles = v);
+            Toggle(Root, "settings.profanity", new Vector2(48, y - 690 - 2 * g), () => draft.profanity, v => draft.profanity = v);
+            Toggle(Root, "settings.reduce_motion", new Vector2(48, y - 748 - 2 * g), () => draft.reduceMotion, v => draft.reduceMotion = v);
+            NameField(Root, new Vector2(48, y - 812 - 2 * g));
+            Choice(Root, "settings.text_size", new Vector2(48, y - 632 - 2 * g), new[] { "100%", "125%", "150%" }, () => draft.textScale >= 1.4f ? 2 : draft.textScale >= 1.2f ? 1 : 0, i => draft.textScale = i == 2 ? 1.5f : i == 1 ? 1.25f : 1f, "percent");
             // columna derecha: controles
             Section(Root, "settings.controls", new Vector2(620, y));
             Choice(Root, "settings.grab_mode", new Vector2(620, y - 50 - g), new[] { "settings.grab_hold", "settings.grab_toggle" }, () => draft.grabToggle ? 1 : 0, i => draft.grabToggle = i == 1);
@@ -65,10 +67,10 @@ namespace UncleExtraction
             UnityEngine.EventSystems.EventSystem.current?.SetSelectedGameObject(apply.gameObject);
         }
 
-        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, profanity = GameSettings.ProfanityFilter, name = GameSettings.PlayerName ?? "", lowQuality = GameSettings.LowQuality, grabToggle = GameSettings.GrabToggle, reduceMotion = GameSettings.ReduceMotion, textScale = Ui.TextScale, lang = Loc.Language };
+        static Draft Capture() => new Draft { mouse = GameSettings.MouseSensitivity, fov = GameSettings.FieldOfView, volume = GameSettings.MasterVolume, sfx = GameSettings.EffectsVolume, alerts = GameSettings.AlertsVolume, invertY = GameSettings.InvertY, subtitles = GameHud.AttackSubtitles, profanity = GameSettings.ProfanityFilter, name = GameSettings.PlayerName ?? "", lowQuality = GameSettings.LowQuality, grabToggle = GameSettings.GrabToggle, reduceMotion = GameSettings.ReduceMotion, textScale = Ui.TextScale, lang = Loc.Language };
         static void Store(Draft d)
         {
-            GameSettings.MouseSensitivity = d.mouse; GameSettings.FieldOfView = d.fov; GameSettings.MasterVolume = d.volume; GameSettings.InvertY = d.invertY;
+            GameSettings.MouseSensitivity = d.mouse; GameSettings.FieldOfView = d.fov; GameSettings.MasterVolume = d.volume; GameSettings.EffectsVolume = d.sfx; GameSettings.AlertsVolume = d.alerts; GameSettings.InvertY = d.invertY;
             GameHud.AttackSubtitles = d.subtitles; GameSettings.AttackSubtitles = d.subtitles; GameSettings.ProfanityFilter = d.profanity; UncleDialogue.ProfanityFilter = d.profanity; GameSettings.PlayerName = PlayerMotor.Sanitize(d.name); GameSettings.TextScale = d.textScale; Ui.TextScale = d.textScale; GameSettings.LowQuality = d.lowQuality; GraphicsQuality.Low = d.lowQuality; GraphicsQuality.Apply(); GameSettings.GrabToggle = d.grabToggle; GameSettings.ReduceMotion = d.reduceMotion; GrabIntent.Reset();
             if (Loc.Language != d.lang) Loc.SetLanguage(d.lang);
         }

@@ -36,6 +36,14 @@ namespace UncleExtraction.Tests
             CollectionAssert.IsEmpty(NpcBrain.AvailableAttacks(false, false, true, L()), "caido");
         }
 
+        [Test] public void VisualSmoothing_ConvergesTheSameAt30_60_And240Fps()
+        {
+            float Run(float fps) { float x = 0f; for (float t = 0f; t < 0.25f - 1e-5f; t += 1f / fps) x = Mathf.Lerp(x, 1f, Smooth.Factor(0.5f, 1f / fps)); return x; }
+            float a = Run(30f), b = Run(60f), c = Run(240f);
+            Assert.AreEqual(b, a, 0.01f); Assert.AreEqual(b, c, 0.01f);
+            Assert.AreEqual(0.5f, Smooth.Factor(0.5f, 1f / 60f), 1e-4f, "a 60 fps queda igual que antes");
+        }
+
         RoundDirector NewRound(Difficulty d, int party)
         {
             var go = new GameObject("RoundTest"); var r = go.AddComponent<RoundDirector>();

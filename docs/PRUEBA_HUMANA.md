@@ -7,7 +7,8 @@ Sirve para lo que las pruebas automáticas no miden: si se entiende, si los cont
 - Build: `Builds\UncleExtraction\UncleExtraction.exe`. Anotá el commit que dice `VERSION.txt` (junto al ejecutable).
 - **No expliques el objetivo ni los controles.** Dejá que la persona abra el juego y lea lo que el juego muestra. Si se traba más de 2 minutos, ayudá con una sola frase y anotá qué tuviste que decir: es un hallazgo.
 - Pedile que piense en voz alta. Anotá lo que dice, no lo que vos creés que quiso decir.
-- Para la parte con amigos hacen falta 2 a 4 PC. En la misma red: **Jugar con amigos → Red local (IP)**. Por internet: **Crear sala por internet** solo funciona cuando el proyecto esté vinculado a Unity Cloud (ver `PROGRESS.md`).
+- Para la parte con amigos hacen falta 2 a 4 PC. En la misma red: **Jugar con amigos → Red local (IP)**. Por internet: **Crear sala por internet** funciona sin abrir puertos (proyecto ya vinculado a Unity Cloud).
+- Si la persona ya jugó antes y querés ver la guía de primeros pasos: Pausa → **Repetir primeros pasos**.
 
 ## Tareas
 
@@ -15,16 +16,17 @@ Marcá cada tarea: **Sí** (sola), **Con ayuda** (qué frase), **No**. Anotá el
 
 | # | Tarea (lo que se le pide a la persona) | Qué observar |
 | --- | --- | --- |
-| 1 | «Abrí el juego y empezá una partida solo.» | ¿Encuentra **Jugar solo → Iniciar extracción**? ¿Entiende el objetivo con el HUD (sacar al tío y cerrar la camioneta) sin preguntar? |
-| 2 | «Agarrá al tío con las dos manos.» | ¿Descubre clic izquierdo/derecho? ¿Lee el anillo de la mira (sólido, grueso, punteado)? ¿Entiende «ocupado» o «muy lejos»? |
+| 1 | «Abrí el juego y empezá una partida solo.» | ¿Encuentra **Jugar solo → Iniciar extracción**? ¿Entiende el objetivo con el HUD (sacar al tío y cerrar la camioneta) sin preguntar? ¿Lee la guía de primeros pasos (izquierda) o la ignora? **¿Logra el primer agarre en el primer minuto?** (anotá los segundos) |
+| 2 | «Agarrá al tío con las dos manos.» | ¿Descubre clic izquierdo/derecho? ¿Lee el anillo de la mira (sólido, grueso, punteado)? ¿Entiende «ocupado» o «muy lejos»? ¿Se ve en la mano que agarró (dedos cerrados, puño de color)? Después: Opciones → Agarre **Alternar** y probar de nuevo: ¿cuál prefiere? ¿Q suelta siempre? |
 | 3 | «Hacé que se suelte de la barra.» | ¿Encuentra la manija/mano anclada y la tecla E? ¿Prueba el vaso de cerveza? |
-| 4 | «Evitá que te pegue.» (jugar 2–3 min) | Por cada ataque (cachetada, empujón, patada, sacudida): ¿lo vio venir? ¿Supo qué hacer (alejarse, esquivar, soltar)? ¿Le pareció injusto? |
+| 4 | «Evitá que te pegue.» (jugar 2–3 min) | Por cada ataque (cachetada, empujón, patada, sacudida): ¿lo vio venir (cara enojada, pose, marca en el piso, cartel)? ¿Supo qué hacer (alejarse, esquivar, soltar)? ¿Le pareció injusto? ¿Descubre que sujetarle los brazos evita cachetadas y empujones? |
 | 5 | «Llevalo en el carrito.» | ¿Entiende cargarlo y atarlo (E)? Si el carrito se traba en la puerta: ¿lo destraba (empujar adentro, alinearse, tirar derecho)? ¿Cuánto tarda? |
 | 6 | «Metelo en la camioneta y cerrala.» | ¿Lee el rombo que marca qué molesta? ¿Entiende «mantené E desde afuera»? |
 | 7 | «Perdé a propósito (esperá) y reintentá.» | ¿Entiende la pantalla de resultados y encuentra **Reintentar**? |
 | 8 | «Cambiá el idioma, el tamaño del texto y una tecla; cerrá el juego y volvé a abrirlo.» | ¿Se guardaron? ¿Algo quedó cortado o encimado con texto grande? |
 | 9 | Con amigos: «Uno crea la sala y los otros se unen; todos listos y empiecen.» | ¿Encuentran crear/unirse? ¿Entienden LISTO y quién inicia? ¿El motivo de «no se puede iniciar» se entiende? |
-| 10 | Con amigos: jugar una ronda completa. | ¿Se coordinan? ¿Se nota la latencia? ¿Algún tirón, teletransporte o desincronización? |
+| 10 | Con amigos: jugar una ronda completa. | ¿Se coordinan? ¿Usan el marcador (clic central) o hablan? ¿Reconocen a cada compañero (nombre y color) y ven el aviso «caído»? ¿Se nota la latencia? ¿Algún tirón, teletransporte o desincronización? |
+| 11 | Con amigos: uno cierra el juego a mitad de ronda. | ¿Los demás entienden qué pasó? ¿La ronda sigue sin cortes bruscos (el tiempo no salta)? |
 
 ## Preguntas al final (1 = nada, 5 = mucho)
 

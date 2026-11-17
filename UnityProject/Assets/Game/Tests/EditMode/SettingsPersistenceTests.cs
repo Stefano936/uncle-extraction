@@ -7,7 +7,7 @@ namespace UncleExtraction.Tests
     /// y se vuelve a leer. Restaura las preferencias del editor al terminar.
     public class SettingsPersistenceTests
     {
-        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.quality", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge", "ue.bind.MoveForward", "ue.bind.MoveLeft", "ue.bind.ReleaseAll", "ue.grabToggle", "ue.reduceMotion" };
+        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.quality", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge", "ue.bind.MoveForward", "ue.bind.MoveLeft", "ue.bind.ReleaseAll", "ue.grabToggle", "ue.reduceMotion", "ue.vol.sfx", "ue.vol.alerts", "ue.bind.Mark" };
         readonly System.Collections.Generic.List<System.Action> restore = new System.Collections.Generic.List<System.Action>();
 
         [SetUp]
@@ -39,7 +39,7 @@ namespace UncleExtraction.Tests
         public void Options_Language_And_Bindings_SurviveRestart()
         {
             GameSettings.Load();
-            GameSettings.MouseSensitivity = 0.31f; GameSettings.InvertY = true; GameSettings.FieldOfView = 95f; GameSettings.MasterVolume = 0.35f;
+            GameSettings.MouseSensitivity = 0.31f; GameSettings.InvertY = true; GameSettings.FieldOfView = 95f; GameSettings.MasterVolume = 0.35f; GameSettings.EffectsVolume = 0.4f; GameSettings.AlertsVolume = 0.9f;
             GameSettings.SoloDifficulty = Difficulty.Hard; GameSettings.AttackSubtitles = false; GameSettings.ProfanityFilter = true;
             GameSettings.PlayerName = "Prueba"; GameSettings.TextScale = 1.5f;
             bool detected = GraphicsQuality.DetectLow(); GameSettings.LowQuality = !detected; // eleccion manual opuesta a la deteccion
@@ -51,7 +51,7 @@ namespace UncleExtraction.Tests
             InputBindings.SaveAll(); // las asignaciones son borrador hasta Aplicar
 
             // «reinicio»: se pisan los valores en memoria y se vuelve a leer lo guardado
-            GameSettings.MouseSensitivity = 0f; GameSettings.InvertY = false; GameSettings.FieldOfView = 0f; GameSettings.MasterVolume = 1f;
+            GameSettings.MouseSensitivity = 0f; GameSettings.InvertY = false; GameSettings.FieldOfView = 0f; GameSettings.MasterVolume = 1f; GameSettings.EffectsVolume = 1f; GameSettings.AlertsVolume = 1f;
             GameSettings.SoloDifficulty = Difficulty.Relaxed; GameSettings.AttackSubtitles = true; GameSettings.ProfanityFilter = false;
             GameSettings.PlayerName = ""; GameSettings.TextScale = 1f;
             GameSettings.ReloadFromDisk(); InputBindings.ReloadFromDisk(); Loc.Reload();
@@ -60,6 +60,8 @@ namespace UncleExtraction.Tests
             Assert.IsTrue(GameSettings.InvertY);
             Assert.AreEqual(95f, GameSettings.FieldOfView, 1e-3f);
             Assert.AreEqual(0.35f, GameSettings.MasterVolume, 1e-4f);
+            Assert.AreEqual(0.4f, GameSettings.EffectsVolume, 1e-4f, "volumen de efectos guardado aparte");
+            Assert.AreEqual(0.9f, GameSettings.AlertsVolume, 1e-4f, "volumen de avisos guardado aparte");
             Assert.AreEqual(Difficulty.Hard, GameSettings.SoloDifficulty);
             Assert.IsFalse(GameSettings.AttackSubtitles);
             Assert.IsTrue(GameSettings.ProfanityFilter);
