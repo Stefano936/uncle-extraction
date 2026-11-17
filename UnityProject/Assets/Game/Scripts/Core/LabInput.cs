@@ -13,22 +13,28 @@ namespace UncleExtraction
     {
         /// Movimiento simulado (autopiloto/pruebas). Si tiene valor, reemplaza al teclado.
         public static Vector2? SimulatedMove;
+        /// Pruebas con dispositivos simulados en un editor sin ventana: tratar la ventana como enfocada y el cursor como capturado.
+        public static bool TestFocus;
+        public static bool Focused => TestFocus || Application.isFocused;
 
         public static Vector2 Move() => SimulatedMove ?? RealMove();
 
         static Vector2 RealMove()
         {
 #if UE_INPUT_SYSTEM
+            if (!Focused) return Vector2.zero; // ventana sin foco: no caminar con teclas que quedaron apretadas
             Vector2 v = Vector2.zero;
             var k = Keyboard.current;
             if (k != null)
-            {
-                if (k.wKey.isPressed) v.y += 1; if (k.sKey.isPressed) v.y -= 1;
-                if (k.dKey.isPressed) v.x += 1; if (k.aKey.isPressed) v.x -= 1;
+            {   // teclas asignadas (WASD por defecto) y flechas como alternativa fija: cada direccion vale 0 o 1, asi que usar
+                // las dos a la vez no suma velocidad
+                float f = InputBindings.KeyHeld(MoveKey.Forward) || k.upArrowKey.isPressed ? 1f : 0f, b = InputBindings.KeyHeld(MoveKey.Back) || k.downArrowKey.isPressed ? 1f : 0f;
+                float r = InputBindings.KeyHeld(MoveKey.Right) || k.rightArrowKey.isPressed ? 1f : 0f, l = InputBindings.KeyHeld(MoveKey.Left) || k.leftArrowKey.isPressed ? 1f : 0f;
+                v = new Vector2(r - l, f - b);
             }
             var g = Gamepad.current;
             if (g != null) v += g.leftStick.ReadValue();
-            return Vector2.ClampMagnitude(v, 1f);
+            return Vector2.ClampMagnitude(v, 1f); // diagonal normalizada
 #elif ENABLE_LEGACY_INPUT_MANAGER
             return Vector2.ClampMagnitude(new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")), 1f);
 #else
@@ -60,8 +66,24 @@ namespace UncleExtraction
         public static bool HeldForGameplay(Act a)
         {
             if (Simulated[(int)a]) return true;
-            if ((a == Act.GrabLeft || a == Act.GrabRight) && Cursor.lockState != CursorLockMode.Locked) return false;
+            if (a == Act.GrabLeft) return GrabIntent.Held(0);   // mantener/alternar, liberacion por Q y menus (GrabIntent)
+            if (a == Act.GrabRight) return GrabIntent.Held(1);
+            if (!Focused) return false;
             return RealHeld(a);
+        }
+
+        /// Estado real de un boton (sin simulacion ni politica de agarre). Lo usa GrabIntent.
+        public static bool RawHeld(Act a) => RealHeld(a);
+        static readonly bool[] rawPrev = new bool[16]; static readonly bool[] rawDown = new bool[16]; static int rawFrame = -1;
+        /// Flanco real de un boton para el juego (sin simulacion; no cuenta con la ventana sin foco).
+        public static bool RawPressedForGameplay(Act a)
+        {
+            if (rawFrame != Time.frameCount)
+            {
+                rawFrame = Time.frameCount;
+                for (int i = 0; i <= (int)Act.Pause; i++) { bool h = Focused && RealHeld((Act)i); rawDown[i] = h && !rawPrev[i]; rawPrev[i] = h; }
+            }
+            return rawDown[(int)a];
         }
 
         public static bool Held(Act a) => Simulated[(int)a] || RealHeld(a);

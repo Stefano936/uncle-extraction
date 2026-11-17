@@ -94,7 +94,9 @@ namespace UncleExtraction
 
         void Update()
         {
-            if (LabInput.Pressed(Act.Restart)) { if (NetAuth.IsServer) Restart(); else RequestRestartRpc(); }
+            // R reinicia solo como herramienta de diagnostico (editor, build de desarrollo o -ueDebug), solo en el anfitrion y
+            // nunca con un menu o campo de texto activo. El reintento normal es el boton de resultados o de la pausa.
+            if (DiagnosticKeys && NetAuth.IsServer && !GameFlowUI.BlockingInput && LabInput.Pressed(Act.Restart)) Restart();
             if (!NetAuth.IsServer) return;
             if (autoPartySize) partySize = Mathf.Clamp(NetAuth.ConnectedPlayers, 1, 4);
             if (IsSpawned)
@@ -117,7 +119,15 @@ namespace UncleExtraction
 
         /// Cualquier jugador puede pedir reintentar; decide y ejecuta el anfitrion.
         [Rpc(SendTo.Server)]
-        void RequestRestartRpc(RpcParams p = default) { Debug.Log($"[Round] restart pedido por cliente {p.Receive.SenderClientId}"); Restart(); }
+        void RequestRestartRpc(RpcParams p = default)
+        {   // pedido explicito de un invitado (boton de resultados): se acepta solo con la ronda terminada; decide el anfitrion
+            ulong who = p.Receive.SenderClientId;
+            bool ok = State != RoundState.Running && !inLobby && NetworkManager.ConnectedClients.ContainsKey(who);
+            Debug.Log($"[Round] reintento pedido por cliente {who}: {(ok ? "aceptado (vuelta a la sala)" : "rechazado (ronda en curso)")}");
+            if (ok) BackToLobby();
+        }
+        /// Atajos de diagnostico (R = reiniciar): editor, build de desarrollo o -ueDebug.
+        public static bool DiagnosticKeys => Application.isEditor || Debug.isDebugBuild || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueDebug") >= 0;
 
         public void Restart()
         {

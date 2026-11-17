@@ -136,8 +136,11 @@ namespace UncleExtraction
                     {
                         B("button.start", () => { SelectedScene = GameScene; Play(NetMode.Solo); });
                         float labH = Ui.TextScale > 1.01f ? Ui.ButtonH : 56; // con texto grande, el alto de un boton comun
-                        B("menu.lab", () => { SelectedScene = LabScene; Play(NetMode.Solo); }, labH);
-                        B("menu.lab_articulated", () => { SelectedScene = LabArticulatedScene; Play(NetMode.Solo); }, labH);
+                        if (RoundDirector.DiagnosticKeys)
+                        {   // laboratorios: herramientas de desarrollo (editor, build de desarrollo o -ueDebug), no del menu normal
+                            B("menu.lab", () => { SelectedScene = LabScene; Play(NetMode.Solo); }, labH);
+                            B("menu.lab_articulated", () => { SelectedScene = LabArticulatedScene; Play(NetMode.Solo); }, labH);
+                        }
                     }
                     else if (p == Page.Friends)
                     {   // internet (Relay): sala con codigo; la red local por IP queda en su propia pagina

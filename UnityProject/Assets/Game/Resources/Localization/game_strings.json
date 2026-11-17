@@ -416,6 +416,71 @@
    "key": "settings.quality_low",
    "en": "LOW (integrated GPU)",
    "es_UY": "BAJA (GPU integrada)"
+  },
+  {
+   "key": "hud.tap_grab",
+   "en": "Click to grab (click again to let go)",
+   "es_UY": "Hacé clic para agarrar (otro clic suelta)"
+  },
+  {
+   "key": "hud.grab_armed",
+   "en": "Grabbing…",
+   "es_UY": "Agarrando…"
+  },
+  {
+   "key": "hud.nothing_to_grab",
+   "en": "Nothing to grab there: aim at the uncle, the cart handle or an object",
+   "es_UY": "No hay nada para agarrar ahí: apuntá al tío, al asa del carrito o a un objeto"
+  },
+  {
+   "key": "settings.grab_mode",
+   "en": "Grab",
+   "es_UY": "Agarre"
+  },
+  {
+   "key": "settings.grab_hold",
+   "en": "HOLD BUTTON",
+   "es_UY": "MANTENER BOTÓN"
+  },
+  {
+   "key": "settings.grab_toggle",
+   "en": "CLICK ON / CLICK OFF",
+   "es_UY": "CLIC AGARRA / CLIC SUELTA"
+  },
+  {
+   "key": "settings.reduce_motion",
+   "en": "Reduce camera tilt",
+   "es_UY": "Reducir inclinación de cámara"
+  },
+  {
+   "key": "settings.reserved",
+   "en": "That key is reserved (Esc, Tab, arrows). Choose another.",
+   "es_UY": "Esa tecla está reservada (Esc, Tab, flechas). Elegí otra."
+  },
+  {
+   "key": "settings.pending",
+   "en": "Unsaved changes",
+   "es_UY": "Cambios sin aplicar"
+  },
+  {
+   "key": "action.MoveForward",
+   "en": "Move forward",
+   "es_UY": "Avanzar"
+  },
+  {
+   "key": "action.MoveBack",
+   "en": "Move back",
+   "es_UY": "Retroceder"
+  },
+  {
+   "key": "action.MoveLeft",
+   "en": "Move left",
+   "es_UY": "Izquierda"
+  },
+  {
+   "key": "action.MoveRight",
+   "en": "Move right",
+   "es_UY": "Derecha"
   }
  ]
 }

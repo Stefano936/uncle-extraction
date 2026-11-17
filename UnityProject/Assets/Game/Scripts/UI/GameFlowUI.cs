@@ -20,7 +20,7 @@ namespace UncleExtraction
         public bool Paused => paused;
         public static GameFlowUI Instance { get; private set; }
         /// Pausa o resultados en pantalla, o escuchando una tecla para remapear: no se controla al personaje.
-        public static bool BlockingInput => InputBindings.Listening || (Instance && Instance.isActiveAndEnabled && (Instance.paused || (Instance.round && (Instance.round.State != RoundState.Running || Instance.round.InLobby))));
+        public static bool BlockingInput => InputBindings.Listening || Ui.Typing || (Instance && Instance.isActiveAndEnabled && (Instance.paused || (Instance.round && (Instance.round.State != RoundState.Running || Instance.round.InLobby))));
         public bool LobbyVisible => lobby != null && lobby.Root && lobby.Root.gameObject.activeSelf;
         LobbyView lobby; RectTransform connecting; Text connectingText;
         public bool ConnectingVisible => connecting && connecting.gameObject.activeSelf;
@@ -35,6 +35,15 @@ namespace UncleExtraction
             if (!GetComponent<GameAudio>()) gameObject.AddComponent<GameAudio>();
             if (!GetComponent<UncleDialogue>()) gameObject.AddComponent<UncleDialogue>();
             canvas = Ui.Canvas("FlowUI", 20);
+            BuildPanels();
+            Loc.Changed += Relabel; Relabel();
+        }
+
+        float builtScale = -1f;
+        /// Paneles de pausa, resultados, sala y conexion. Se reconstruyen si cambia el tamano de texto (con Opciones cerrado).
+        void BuildPanels()
+        {
+            builtScale = Ui.TextScale;
             BuildPause(); BuildResults(); lobby = new LobbyView(canvas.transform, round);
             // conectando (cliente): con salida controlada (UI_SPEC 3: un spinner tiene cancelacion)
             connecting = Ui.PanelBox("Connecting", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760, 280));
@@ -42,7 +51,14 @@ namespace UncleExtraction
             var cancel = Ui.Button(connecting, "Cancel", "", new Vector2(0.5f, 0f), new Vector2(0, 40), new Vector2(420, Ui.ButtonH), NetSession.LeaveToMenu);
             cancel.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0f); cancel.gameObject.AddComponent<LocText>().key = "button.cancel";
             connecting.gameObject.SetActive(false);
-            Loc.Changed += Relabel; Relabel();
+        }
+
+        void RebuildPanels()
+        {
+            bool wasPaused = paused && pauseRoot && pauseRoot.gameObject.activeSelf;
+            foreach (var t in new Transform[] { pauseRoot, resultsRoot, lobby?.Root, connecting, confirmRoot }) if (t) Destroy(t.gameObject);
+            confirmRoot = null; BuildPanels(); Relabel();
+            if (wasPaused) ShowPause();
         }
         void OnDisable() { if (Time.timeScale == 0f) Time.timeScale = 1f; }
         void OnDestroy() { if (Instance == this) Instance = null; Loc.Changed -= Relabel; if (canvas) Destroy(canvas.gameObject); }
@@ -98,6 +114,7 @@ namespace UncleExtraction
 
         void Update()
         {
+            if (options == null && builtScale > 0f && Mathf.Abs(builtScale - Ui.TextScale) > 0.01f) RebuildPanels();
             if (!round) return;
             bool ended = round.State != RoundState.Running;
             if (ended && resultsSince < 0f) { resultsSince = Time.unscaledTime; CloseOverlays(); paused = false; if (Time.timeScale == 0f) Time.timeScale = 1f; }
@@ -128,6 +145,7 @@ namespace UncleExtraction
         void ShowPause()
         {
             pauseRoot.gameObject.SetActive(true); Relabel();
+            var retry = pauseRoot.Find("Retry"); if (retry) retry.gameObject.SetActive(NetAuth.IsServer); // en red reinicia el anfitrion
             EventSystem.current?.SetSelectedGameObject(pauseRoot.Find("Resume").gameObject);
         }
 

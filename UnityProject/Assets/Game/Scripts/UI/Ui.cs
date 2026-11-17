@@ -17,6 +17,8 @@ namespace UncleExtraction
         public static float TextScale = 1f;
         /// Medida que crece con el tamaño de texto (UI_SPEC: «el layout puede crecer»): separaciones y altos de filas de texto.
         public static float K(float v) => v * TextScale;
+        /// Hay un campo de texto con foco: las teclas son texto, no acciones de juego (R, E, Espacio...).
+        public static bool Typing { get { var es = EventSystem.current; var go = es ? es.currentSelectedGameObject : null; var f = go ? go.GetComponent<InputField>() : null; return f && f.isFocused; } }
 
         static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out var c); return c; }
         static UiSkin S => UiSkin.Load();

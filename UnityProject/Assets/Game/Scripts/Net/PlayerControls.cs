@@ -64,7 +64,7 @@ namespace UncleExtraction
 
         public bool Pressed(Act a)
         {
-            if (IsLocal) return LabInput.Pressed(a);
+            if (IsLocal) return !GameFlowUI.BlockingInput && LabInput.Pressed(a); // menus, campos de texto y reasignacion no disparan acciones de juego
             if (pressedFrame != Time.frameCount)
             {
                 pressedFrame = Time.frameCount;

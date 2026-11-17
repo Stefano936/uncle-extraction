@@ -7,7 +7,7 @@ namespace UncleExtraction.Tests
     /// y se vuelve a leer. Restaura las preferencias del editor al terminar.
     public class SettingsPersistenceTests
     {
-        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.quality", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge" };
+        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.quality", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge", "ue.bind.MoveForward", "ue.bind.MoveLeft", "ue.bind.ReleaseAll", "ue.grabToggle", "ue.reduceMotion" };
         readonly System.Collections.Generic.List<System.Action> restore = new System.Collections.Generic.List<System.Action>();
 
         [SetUp]
@@ -47,6 +47,8 @@ namespace UncleExtraction.Tests
             Loc.SetLanguage("en");
             InputBindings.Set(Act.Interact, "<Keyboard>/f");
             InputBindings.Set(Act.Dodge, "<Keyboard>/c");
+            InputBindings.Set(InputBindings.Id(MoveKey.Forward), "<Keyboard>/i");
+            InputBindings.SaveAll(); // las asignaciones son borrador hasta Aplicar
 
             // «reinicio»: se pisan los valores en memoria y se vuelve a leer lo guardado
             GameSettings.MouseSensitivity = 0f; GameSettings.InvertY = false; GameSettings.FieldOfView = 0f; GameSettings.MasterVolume = 1f;
@@ -68,6 +70,7 @@ namespace UncleExtraction.Tests
             Assert.AreEqual("en", Loc.Language);
             Assert.AreEqual("<Keyboard>/f", InputBindings.Path(Act.Interact));
             Assert.AreEqual("<Keyboard>/c", InputBindings.Path(Act.Dodge));
+            Assert.AreEqual("<Keyboard>/i", InputBindings.Path(MoveKey.Forward), "el movimiento tambien se reasigna y se conserva");
             Assert.AreEqual("<Mouse>/leftButton", InputBindings.Path(Act.GrabLeft), "lo no cambiado conserva el valor por defecto");
         }
 
@@ -80,6 +83,24 @@ namespace UncleExtraction.Tests
             Assert.AreEqual(1.5f, GameSettings.TextScale, 1e-4f, "tamaño de texto acotado");
             Assert.That(Loc.Language == "en" || Loc.Language == "es_UY");
             Assert.AreEqual("<Keyboard>/e", InputBindings.Path(Act.Interact), "asignacion vacia vuelve a la de fabrica");
+        }
+
+        [Test]
+        public void DamagedPreferences_AreValidatedBeforeUse()
+        {
+            PlayerPrefs.SetInt("ue.difficulty", 99); PlayerPrefs.SetFloat("ue.mouse", float.NaN); PlayerPrefs.SetFloat("ue.fov", 500f);
+            PlayerPrefs.SetFloat("ue.volume", -3f); PlayerPrefs.SetFloat("ue.textScale", 1.3f); PlayerPrefs.SetString("ue.name", "<b>Tio</b> con un nombre larguisimo de mas");
+            PlayerPrefs.SetString("ue.bind.ReleaseAll", "<Keyboard>/escape"); PlayerPrefs.SetString("ue.bind.MoveLeft", "basura sin formato");
+            PlayerPrefs.Save();
+            GameSettings.ReloadFromDisk(); InputBindings.ReloadFromDisk();
+            Assert.AreEqual(Difficulty.Normal, GameSettings.SoloDifficulty, "dificultad fuera del enum");
+            Assert.AreEqual(0.12f, GameSettings.MouseSensitivity, 1e-4f, "sensibilidad no finita");
+            Assert.AreEqual(100f, GameSettings.FieldOfView, 1e-3f, "FOV acotado");
+            Assert.AreEqual(0f, GameSettings.MasterVolume, 1e-4f, "volumen acotado");
+            Assert.AreEqual(1.25f, GameSettings.TextScale, 1e-4f, "tamaño de texto a un valor ofrecido");
+            Assert.That(GameSettings.PlayerName.Length <= 20 && !GameSettings.PlayerName.Contains("<"), "nombre saneado");
+            Assert.AreEqual("<Keyboard>/q", InputBindings.Path(Act.ReleaseAll), "tecla reservada no se acepta");
+            Assert.AreEqual("<Keyboard>/a", InputBindings.Path(MoveKey.Left), "ruta sin formato vuelve a la de fabrica");
         }
     }
 }

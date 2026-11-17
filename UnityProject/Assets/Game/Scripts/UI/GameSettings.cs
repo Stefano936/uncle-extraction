@@ -15,6 +15,10 @@ namespace UncleExtraction
         public static string PlayerName = "";
         /// Calidad grafica baja (sin eleccion guardada: se detecta segun la GPU; ver GraphicsQuality).
         public static bool LowQuality;
+        /// Agarre por alternancia (una pulsacion agarra, otra suelta). Local y persistente.
+        public static bool GrabToggle;
+        /// Reduce la inclinacion de camara al caer (comodidad).
+        public static bool ReduceMotion;
         public static float TextScale = 1f;
         static bool loaded;
 
@@ -27,14 +31,18 @@ namespace UncleExtraction
                 InvertY = PlayerPrefs.GetInt("ue.invertY", 0) == 1;
                 FieldOfView = PlayerPrefs.GetFloat("ue.fov", FieldOfView);
                 MasterVolume = PlayerPrefs.GetFloat("ue.volume", MasterVolume);
-                SoloDifficulty = (Difficulty)PlayerPrefs.GetInt("ue.difficulty", (int)SoloDifficulty);
+                int dif = PlayerPrefs.GetInt("ue.difficulty", (int)Difficulty.Normal);
+                SoloDifficulty = System.Enum.IsDefined(typeof(Difficulty), dif) ? (Difficulty)dif : Difficulty.Normal; // fuera del enum: Normal
                 AttackSubtitles = PlayerPrefs.GetInt("ue.attackSubs", 1) == 1;
                 ProfanityFilter = PlayerPrefs.GetInt("ue.profanity", 0) == 1;
                 PlayerName = PlayerPrefs.GetString("ue.name", "");
+                GrabToggle = PlayerPrefs.GetInt("ue.grabToggle", 0) == 1;
+                ReduceMotion = PlayerPrefs.GetInt("ue.reduceMotion", 0) == 1;
                 LowQuality = PlayerPrefs.HasKey("ue.quality") ? PlayerPrefs.GetInt("ue.quality") == 0 : GraphicsQuality.DetectLow();
                 TextScale = Mathf.Clamp(PlayerPrefs.GetFloat("ue.textScale", 1f), 1f, 1.5f);
             }
             catch { /* preferencias corruptas: valores por defecto */ }
+            Validate();
             // pruebas de interfaz: -ueTextScale 1.5 fuerza el tamaño de texto sin guardarlo
             var a = System.Environment.GetCommandLineArgs();
             for (int i = 0; i < a.Length - 1; i++)
@@ -50,6 +58,19 @@ namespace UncleExtraction
         /// Olvida lo cargado y vuelve a leer lo guardado (equivale a reiniciar el juego; pruebas de persistencia).
         public static void ReloadFromDisk() { loaded = false; Load(); }
 
+        /// Rangos que usa el juego (los mismos de Opciones); numeros no finitos o fuera de rango vuelven a un valor seguro.
+        public static void Validate()
+        {
+            MouseSensitivity = Safe(MouseSensitivity, 0.03f, 0.4f, 0.12f);
+            FieldOfView = Safe(FieldOfView, 65f, 100f, 85f);           // campo de vision VERTICAL en grados (convencion de Unity)
+            MasterVolume = Safe(MasterVolume, 0f, 1f, 0.8f);
+            float ts = Safe(TextScale, 1f, 1.5f, 1f);                    // solo los tamanos ofrecidos: 100, 125 y 150 %
+            TextScale = ts >= 1.4f ? 1.5f : ts >= 1.2f ? 1.25f : 1f;
+            if (!System.Enum.IsDefined(typeof(Difficulty), SoloDifficulty)) SoloDifficulty = Difficulty.Normal;
+            PlayerName = PlayerMotor.Sanitize(PlayerName ?? "");
+        }
+        static float Safe(float v, float lo, float hi, float def) => float.IsNaN(v) || float.IsInfinity(v) ? def : Mathf.Clamp(v, lo, hi);
+
         public static void Save()
         {
             PlayerPrefs.SetFloat("ue.mouse", MouseSensitivity);
@@ -60,6 +81,8 @@ namespace UncleExtraction
             PlayerPrefs.SetInt("ue.attackSubs", AttackSubtitles ? 1 : 0);
             PlayerPrefs.SetInt("ue.profanity", ProfanityFilter ? 1 : 0);
             PlayerPrefs.SetString("ue.name", PlayerName ?? "");
+            PlayerPrefs.SetInt("ue.grabToggle", GrabToggle ? 1 : 0);
+            PlayerPrefs.SetInt("ue.reduceMotion", ReduceMotion ? 1 : 0);
             PlayerPrefs.SetInt("ue.quality", LowQuality ? 0 : 1);
             PlayerPrefs.SetFloat("ue.textScale", TextScale);
             PlayerPrefs.Save();

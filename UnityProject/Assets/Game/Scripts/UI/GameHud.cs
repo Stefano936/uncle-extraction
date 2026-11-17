@@ -31,8 +31,13 @@ namespace UncleExtraction
         void Awake() { Instance = this; }
         void OnDestroy() { if (Instance == this) Instance = null; Loc.Changed -= Relabel; if (canvas) Destroy(canvas.gameObject); }
 
+        float builtScale = -1f;
+        /// Reconstruye el HUD (tamano de texto cambiado durante la partida: fuentes y filas se calculan al construir).
+        public void Rebuild() { Loc.Changed -= Relabel; if (canvas) Destroy(canvas.gameObject); Start(); }
+
         void Start()
         {
+            builtScale = Ui.TextScale;
             round = FindAnyObjectByType<RoundDirector>(); npc = FindAnyObjectByType<NpcBrain>();
             canvas = Ui.Canvas("HUD", 10); root = Ui.Stretch("Root", canvas.transform);
             // manos: abajo a la izquierda y a la derecha
@@ -125,6 +130,7 @@ namespace UncleExtraction
 
         void Update()
         {
+            if (builtScale > 0f && Mathf.Abs(builtScale - Ui.TextScale) > 0.01f) { Rebuild(); return; }
             if (!root) return;
             var pc = PlayerControls.Local; var motor = pc ? pc.GetComponent<PlayerMotor>() : null; var hands = pc ? pc.GetComponent<PlayerHands>() : null;
             bool running = round && round.State == RoundState.Running && !round.InLobby; // en la sala no hay HUD de juego
@@ -177,9 +183,10 @@ namespace UncleExtraction
             // jerarquia: si el aviso de peligro y el subtitulo no entran juntos (pantallas bajas con texto grande), manda el aviso
             subBox.gameObject.SetActive(line != "" && !(attackBox.gameObject.activeSelf && Overlap(attackBox, subBox)));
             if (line != "") subtitle.text = $"<b>{Loc.T(dlg.CurrentSpeaker == "bartender" ? "dialogue.bartender" : "dialogue.uncle")}:</b> {line}";
-            bool toastOn = Time.time < hands.FeedbackUntil && hands.LastFeedback != "" && !fallen;
+            bool grabToast = Time.time < GrabIntent.FeedbackUntil && GrabIntent.Feedback != "";
+            bool toastOn = (Time.time < hands.FeedbackUntil && hands.LastFeedback != "" || grabToast) && !fallen;
             toastBox.gameObject.SetActive(toastOn);
-            if (toastOn) toast.text = Key(Loc.Coded(hands.LastFeedback));
+            if (toastOn) toast.text = Key(Loc.Coded(Time.time < hands.FeedbackUntil && hands.LastFeedback != "" ? hands.LastFeedback : GrabIntent.Feedback));
         }
 
         void UpdateHand(HandUi u, int h, PlayerHands hands, bool control)
@@ -199,7 +206,7 @@ namespace UncleExtraction
             u.state.text = Loc.T(s == HandState.Free ? "hud.free" : s == HandState.Pending ? "hud.pending" : s == HandState.Holding ? "hud.holding" : s == HandState.Strained ? "hud.strained" : s == HandState.Released ? "hud.released" : "hud.unavailable");
             u.state.color = s == HandState.Strained ? Ui.Danger : s == HandState.Holding ? Ui.Accent : s == HandState.Unavailable ? Ui.Muted : Ui.Text;
             var sock = GrabSocket.ById(held);
-            u.socket.text = held != "" ? GrabFeedback.SocketName(sock) : s == HandState.Free ? $"{InputBindings.Display(h == 0 ? Act.GrabLeft : Act.GrabRight)}: {Loc.T("hud.hold_grab")}" : "";
+            u.socket.text = held != "" ? GrabFeedback.SocketName(sock) : s == HandState.Free ? $"{InputBindings.Display(h == 0 ? Act.GrabLeft : Act.GrabRight)}: {Loc.T(GrabIntent.Toggle ? (GrabIntent.Armed(h) ? "hud.grab_armed" : "hud.tap_grab") : "hud.hold_grab")}" : "";
             u.tension.transform.parent.gameObject.SetActive(held != "");
             u.tension.fillAmount = t;
             u.icon.color = s == HandState.Strained ? Ui.Danger : s == HandState.Holding ? Ui.Accent : Ui.Text;
