@@ -15,6 +15,8 @@ namespace UncleExtraction
         public const int Margin = 64, ButtonH = 72, FontButton = 27, FontBody = 27, FontTitle = 54, FontSection = 31, FontHud = 20, FontTimer = 36;
         /// Escala de texto de las opciones (100/125/150 %).
         public static float TextScale = 1f;
+        /// Medida que crece con el tamaño de texto (UI_SPEC: «el layout puede crecer»): separaciones y altos de filas de texto.
+        public static float K(float v) => v * TextScale;
 
         static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out var c); return c; }
         static UiSkin S => UiSkin.Load();
@@ -68,7 +70,9 @@ namespace UncleExtraction
             var rt = Stretch(name, parent); var t = rt.gameObject.AddComponent<Text>();
             t.font = (bold ? S?.fontBold : S?.font) ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             t.text = text; t.fontSize = Mathf.RoundToInt(size * TextScale); t.color = color; t.alignment = align; t.raycastTarget = false;
-            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
+            // Truncate: con Overflow el ajuste automatico no actua en vertical y el texto se derrama sobre lo de abajo.
+            // El minimo nunca baja del tamaño base al 125/150 % (2/3 del escalado), asi que solo se ajusta lo que no entra.
+            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Truncate;
             t.resizeTextForBestFit = true; t.resizeTextMinSize = Mathf.Max(10, t.fontSize * 2 / 3); t.resizeTextMaxSize = t.fontSize; // traducciones largas: achicar un poco, no cortar
             return t;
         }
@@ -95,6 +99,9 @@ namespace UncleExtraction
             return b;
         }
 
+        /// Si el panel no entra en el canvas (por ejemplo 21:9 con texto al 150 %), lo reduce lo justo para que entre entero.
+        public static void FitInCanvas(RectTransform panel, float margin = 16f) { if (!panel.GetComponent<FitInCanvas>()) panel.gameObject.AddComponent<FitInCanvas>().margin = margin; }
+
         public static Image Bar(Transform parent, string name, Vector2 anchor, Vector2 pos, Vector2 size, bool amber, out Image track)
         {
             var rt = Rect(name, parent, anchor, anchor, anchor, pos, size);
@@ -118,5 +125,32 @@ namespace UncleExtraction
     {
         public Image ring;
         void Update() { if (ring) ring.enabled = EventSystem.current && EventSystem.current.currentSelectedGameObject == gameObject; }
+    }
+
+    /// Reduce una pagina solo cuando su contenido (alto en unidades de canvas) no entra en el alto disponible.
+    public class FitContent : MonoBehaviour
+    {
+        public float contentHeight;
+        void LateUpdate()
+        {
+            var rt = (RectTransform)transform; float h = rt.rect.height;
+            float s = contentHeight > 1f && h > 1f ? Mathf.Min(1f, h / contentHeight) : 1f;
+            if (Mathf.Abs(rt.localScale.x - s) > 0.001f) rt.localScale = new Vector3(s, s, 1f);
+        }
+    }
+
+    /// Reduce un panel solo cuando no entra en el canvas (aspectos bajos y texto grande); 1 en el resto de los casos.
+    public class FitInCanvas : MonoBehaviour
+    {
+        public float margin = 16f;
+        RectTransform rt, canvasRt;
+        void LateUpdate()
+        {
+            if (!rt) rt = (RectTransform)transform;
+            if (!canvasRt) { var c = GetComponentInParent<Canvas>(); if (c) canvasRt = (RectTransform)c.rootCanvas.transform; else return; }
+            var size = rt.rect.size; var avail = canvasRt.rect.size - new Vector2(margin * 2, margin * 2);
+            float s = Mathf.Min(1f, avail.x / Mathf.Max(1f, size.x), avail.y / Mathf.Max(1f, size.y));
+            if (Mathf.Abs(rt.localScale.x - s) > 0.001f) rt.localScale = new Vector3(s, s, 1f);
+        }
     }
 }

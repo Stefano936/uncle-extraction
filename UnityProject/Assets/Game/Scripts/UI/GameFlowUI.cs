@@ -49,10 +49,12 @@ namespace UncleExtraction
 
         void BuildPause()
         {
-            pauseRoot = Ui.PanelBox("Pause", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(700, 700));
-            pauseTitle = Ui.Label(pauseRoot, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(pauseTitle, 20, 30, 20, 0);
-            pauseInfo = Ui.Label(pauseRoot, "Info", "", Ui.FontHud + 2, Ui.Focus, TextAnchor.UpperCenter); Inset(pauseInfo, 40, 110, 40, 0);
-            float y = -200;
+            // alturas que crecen con el texto: titulo, aviso de partida online (2 lineas) y botones debajo
+            float infoTop = 30 + Ui.K(80), y = -(infoTop + Ui.K(90));
+            pauseRoot = Ui.PanelBox("Pause", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(Ui.K(700), Mathf.Max(700, -y + 270 + Ui.ButtonH + 60)));
+            Ui.FitInCanvas(pauseRoot);
+            pauseTitle = Ui.Label(pauseRoot, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(pauseTitle, 20, 30, 20, 0); Top(pauseTitle, 30, infoTop - 34);
+            pauseInfo = Ui.Label(pauseRoot, "Info", "", Ui.FontHud + 2, Ui.Focus, TextAnchor.UpperCenter); Inset(pauseInfo, 40, infoTop, 40, 0);
             Btn(pauseRoot, "Resume", "button.resume", y, () => SetPaused(false));
             Btn(pauseRoot, "Settings", "button.settings", y - 90, () => { pauseRoot.gameObject.SetActive(false); options = new OptionsView(canvas.transform, () => { options = null; if (paused) ShowPause(); }); });
             Btn(pauseRoot, "Retry", "button.retry_same", y - 180, () => { SetPaused(false); round.Restart(); });
@@ -62,12 +64,15 @@ namespace UncleExtraction
 
         void BuildResults()
         {
-            resultsRoot = Ui.PanelBox("Results", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900, 640));
-            resTitle = Ui.Label(resultsRoot, "Title", "", Ui.FontTitle + 10, Ui.Text, TextAnchor.UpperCenter, true); Inset(resTitle, 20, 30, 20, 0);
-            resDetail = Ui.Label(resultsRoot, "Detail", "", Ui.FontBody, Ui.Muted, TextAnchor.UpperCenter); Inset(resDetail, 40, 120, 40, 0);
-            resStats = Ui.Label(resultsRoot, "Stats", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft); Inset(resStats, 120, 200, 120, 0);
-            resRetry = Btn(resultsRoot, "Retry", "button.retry_same", -430, () => { if (NetSession.Mode == NetMode.Solo) round.Restart(); else round.BackToLobby(); }); // en red: vuelve a la sala con confirmacion limpia
-            resMenu = Btn(resultsRoot, "Menu", "button.back_menu", -520, () => NetSession.LeaveToMenu());
+            float detailTop = 30 + Ui.K(90), statsTop = detailTop + Ui.K(80), retryY = -(statsTop + Ui.K(230));
+            resultsRoot = Ui.PanelBox("Results", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(Ui.K(900), -retryY + 90 + Ui.ButtonH + 48));
+            Ui.FitInCanvas(resultsRoot);
+            resTitle = Ui.Label(resultsRoot, "Title", "", Ui.FontTitle + 10, Ui.Text, TextAnchor.UpperCenter, true); Inset(resTitle, 20, 30, 20, 0); Top(resTitle, 30, detailTop - 34);
+            resDetail = Ui.Label(resultsRoot, "Detail", "", Ui.FontBody, Ui.Muted, TextAnchor.UpperCenter); Inset(resDetail, 40, detailTop, 40, 0);
+            resStats = Ui.Label(resultsRoot, "Stats", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft); Inset(resStats, 120, statsTop, 120, -retryY - statsTop > 0 ? 0 : 0);
+            resStats.rectTransform.offsetMin = new Vector2(120, resultsRoot.sizeDelta.y + retryY + 8);
+            resRetry = Btn(resultsRoot, "Retry", "button.retry_same", retryY, () => { if (NetSession.Mode == NetMode.Solo) round.Restart(); else round.BackToLobby(); }); // en red: vuelve a la sala con confirmacion limpia
+            resMenu = Btn(resultsRoot, "Menu", "button.back_menu", retryY - 90, () => NetSession.LeaveToMenu());
             resultsRoot.gameObject.SetActive(false);
         }
 
@@ -75,6 +80,13 @@ namespace UncleExtraction
         {
             var b = Ui.Button(p, name, "", new Vector2(0.5f, 1f), new Vector2(0, y), new Vector2(520, Ui.ButtonH), a);
             b.gameObject.AddComponent<LocText>().key = key; return b;
+        }
+        /// Limita un texto a una franja desde arriba (para que un titulo largo se ajuste en vez de pisar lo de abajo).
+        static void Top(Text t, float top, float height)
+        {
+            var rt = t.rectTransform; float l = rt.offsetMin.x, r = rt.offsetMax.x;
+            rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(0.5f, 1);
+            rt.offsetMin = new Vector2(l, -(top + height)); rt.offsetMax = new Vector2(r, -top);
         }
         static void Inset(Text t, float l, float top, float r, float b) { t.rectTransform.offsetMin = new Vector2(l, b); t.rectTransform.offsetMax = new Vector2(-r, -top); }
 

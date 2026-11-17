@@ -19,19 +19,21 @@ Sacar al tío del bar, subirlo por la rampa a la camioneta (arrastrándolo o en 
 
 ## Controles
 
-Teclas por defecto (se pueden cambiar en Opciones → Controles; el HUD y los avisos muestran la tecla asignada):
+Controles por defecto (teclado y mouse se cambian en Opciones → Controles; el HUD y los avisos muestran la tecla asignada):
 
-| Acción | Tecla |
-| --- | --- |
-| Moverse / mirar | WASD / mouse |
-| Mano izquierda / derecha (mantener) | clic izquierdo / derecho |
-| Esfuerzo (más fuerza un rato) | Shift |
-| Soltar todo | Q |
-| Interactuar (mantener o tocar): soltarle la mano de la barra, cargar y asegurar en el carrito, cerrar la camioneta, ayudar a un compañero caído | E |
-| Agacharse / paso evasivo | Ctrl / Espacio |
-| Pausa, opciones, volver al menú | Esc |
-| Panel de depuración (mostrar el cursor) | Tab |
-| Reintentar | R |
+| Acción | Teclado y mouse | Mando |
+| --- | --- | --- |
+| Moverse / mirar | WASD / mouse | stick izquierdo / stick derecho |
+| Mano izquierda / derecha (mantener) | clic izquierdo / derecho | gatillo izquierdo / derecho |
+| Esfuerzo (más fuerza un rato) | Shift | clic del stick izquierdo |
+| Soltar todo | Q | B / círculo |
+| Interactuar (mantener o tocar): soltarle la mano de la barra, cargar y asegurar en el carrito, cerrar la camioneta, ayudar a un compañero caído | E | A / cruz |
+| Agacharse / paso evasivo | Ctrl / Espacio | clic del stick derecho / X / cuadrado |
+| Pausa, opciones, volver al menú | Esc | Start / Options |
+| Reintentar | R | — |
+| Panel de depuración (mostrar el cursor) | Tab | — |
+
+En los menús, el mando navega con la cruceta o el stick, acepta con A/cruz y vuelve con B/círculo. El código de sala se escribe con teclado (no hay teclado en pantalla). Solo el teclado y el mouse se pueden reasignar.
 
 ## Consejos
 

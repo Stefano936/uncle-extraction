@@ -14,7 +14,8 @@ namespace UncleExtraction
     /// en cada pantalla captura una imagen y revisa cada texto visible:
     ///  - fuera de pantalla: parte del texto dibujado queda fuera de la ventana;
     ///  - recortado: el texto no entra en su caja ni con el tamaño minimo de ajuste;
-    ///  - encimado: los glifos de dos textos visibles se pisan.
+    ///  - encimado: los glifos de dos textos visibles se pisan;
+    ///  - tapado: un boton o panel del mismo panel, dibujado encima, cubre parte del texto.
     /// Registra "[UiAudit] pantalla tipo ..." y un resumen. No juzga legibilidad ni estetica: eso queda para una persona.
     /// Usar con -screen-width/-screen-height y -ueTextScale 1.5 para las variantes.
     public class UiAudit : MonoBehaviour
@@ -42,7 +43,8 @@ namespace UncleExtraction
         IEnumerator Start()
         {
             Directory.CreateDirectory(dir);
-            tag = $"{Screen.width}x{Screen.height}_t{Ui.TextScale:0.0#}";
+            tag = $"{Screen.width}x{Screen.height}_t{Mathf.RoundToInt(Ui.TextScale * 100)}";
+            dir = Path.GetFullPath(dir);
             Debug.Log($"[UiAudit] inicio {tag} pantalla={Screen.width}x{Screen.height} aspecto={(float)Screen.width / Screen.height:0.000} texto={Ui.TextScale:0.##} idioma={Loc.Language}");
             yield return Seconds(1.5f);
             var menu = FindAnyObjectByType<FrontendMenu>();
@@ -59,7 +61,7 @@ namespace UncleExtraction
                 NetSession.StatusUntil = 0f; menu.Show(FrontendMenu.Page.Main); yield return Frames(2);
             }
             // sala: anfitrion solo en loopback (puerto aparte para no chocar con otras pruebas)
-            NetSession.Mode = NetMode.Host; NetSession.Online = false; NetSession.ListenAddress = "127.0.0.1"; NetSession.Port = 7795;
+            NetSession.Mode = NetMode.Host; NetSession.Online = false; NetSession.ListenAddress = "127.0.0.1"; NetSession.Port = 7807; // fuera del rango del modo solo (7790-7799)
             SceneManager.LoadScene(FrontendMenu.GameScene);
             while (RoundDirector.Instance == null || PlayerControls.Local == null) yield return null;
             yield return Seconds(2f);
@@ -119,7 +121,32 @@ namespace UncleExtraction
                 if (Clipped(t, out string why))
                 { issues++; Debug.Log($"[UiAudit] {screen} RECORTADO '{path}' «{Short(t.text)}» {why}"); }
             }
-            // 3) encimados: glifos de dos textos que se pisan (descontando el que este tapado por un panel opaco de otra capa)
+            // 3) tapados: un boton o panel del MISMO panel, dibujado despues, cubre parte del texto (p. ej. un boton sobre un aviso)
+            var covers = new List<Image>();
+            foreach (var im in FindObjectsByType<Image>(FindObjectsSortMode.None))
+            {
+                if (!im.isActiveAndEnabled || im.color.a < 0.5f || HiddenByGroup(im.transform) || !im.canvas || !im.canvas.isActiveAndEnabled) continue;
+                string nm = im.gameObject.name;
+                if (nm == "Focus" || nm == "Fill" || nm == "Icon" || nm == "Background" || nm == "Shade" || nm == "Handle") continue;
+                bool control = im.GetComponent<Selectable>();
+                var r = im.rectTransform.rect;
+                if (!control && (r.width < 200f || r.height < 40f)) continue;
+                covers.Add(im);
+            }
+            foreach (var it in items)
+                foreach (var im in covers)
+                {
+                    if (it.t.transform.IsChildOf(im.transform)) continue;               // su propio boton o panel
+                    if (TopPanel(it.t.transform) != TopPanel(im.transform)) continue;  // otra pantalla encima: no es defecto de esta
+                    if (!Later(im.transform, it.t.transform)) continue;                 // dibujado antes: queda debajo del texto
+                    var inter = Intersect(it.glyphs, ScreenRect(im.rectTransform));
+                    if (inter.width <= 2f || inter.height <= 2f) continue;
+                    float frac = inter.width * inter.height / Area(it.glyphs);
+                    if (frac < 0.05f) continue;
+                    issues++;
+                    Debug.Log($"[UiAudit] {screen} TAPADO '{it.path}' «{Short(it.t.text)}» por '{NodePath(im.transform)}' ({frac:P0})");
+                }
+            // 4) encimados: glifos de dos textos que se pisan (descontando el que este tapado por un panel opaco de otra capa)
             for (int i = 0; i < items.Count; i++)
                 for (int j = i + 1; j < items.Count; j++)
                 {
@@ -129,11 +156,20 @@ namespace UncleExtraction
                     if (inter.width <= 2f || inter.height <= 2f) continue;
                     float frac = inter.width * inter.height / Mathf.Min(Area(a.glyphs), Area(b.glyphs));
                     if (frac < 0.15f) continue;
-                    if (Occluded(a.t, b.t) || Occluded(b.t, a.t)) continue;
+                    bool samePanel = TopPanel(a.t.transform) == TopPanel(b.t.transform);
+                    if (!samePanel && (Occluded(a.t, b.t) || Occluded(b.t, a.t))) continue;
                     issues++;
                     Debug.Log($"[UiAudit] {screen} ENCIMADO '{a.path}' «{Short(a.t.text)}» con '{b.path}' «{Short(b.t.text)}» ({frac:P0})");
                 }
             return issues;
+        }
+
+        /// Panel de primer nivel (hijo directo del canvas raiz o de su raiz de contenido) al que pertenece un elemento.
+        static Transform TopPanel(Transform t)
+        {
+            var root = t.GetComponentInParent<Canvas>()?.rootCanvas.transform;
+            var p = t; while (p.parent && p.parent != root && !(p.parent.parent == root && p.parent.name == "Root")) p = p.parent;
+            return p;
         }
 
         static bool HiddenByGroup(Transform tr)

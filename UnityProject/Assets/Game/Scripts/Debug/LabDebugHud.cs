@@ -39,6 +39,8 @@ namespace UncleExtraction
             box = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, fontSize = 13 };
         }
 
+        static readonly bool DebugArg = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueDebug") >= 0;
+
         void OnGUI()
         {
             Styles();
@@ -86,6 +88,8 @@ namespace UncleExtraction
 
             if (autopilot && autopilot.Running) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
             if (Time.unscaledTime < NetSession.StatusUntil && !kitHud) GUI.Label(new Rect(0, H * 0.72f, W, 30), NetSession.StatusMessage, mid);
+            bool techLines = !kitHud || Debug.isDebugBuild || Application.isEditor || panel || DebugArg;
+            if (!techLines) { if (panel) DrawPanel(W, H); return; } // prueba con personas: sin textos tecnicos sobre el juego
             if (NetAuth.Listening)
             {
                 var nm = Unity.Netcode.NetworkManager.Singleton;

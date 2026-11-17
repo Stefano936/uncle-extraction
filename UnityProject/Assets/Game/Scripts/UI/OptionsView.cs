@@ -24,25 +24,27 @@ namespace UncleExtraction
         {
             this.onClose = onClose;
             saved = Capture(); draft = saved;
-            Root = Ui.PanelBox("Options", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 980));
+            float g = Ui.K(20) - 20f; // aire extra bajo cada encabezado con texto grande
+            Root = Ui.PanelBox("Options", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 980 + 2 * g));
+            Ui.FitInCanvas(Root);
             var title = Ui.Label(Root, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(title, 0, 24, 0, 0);
             refresh.Add(() => title.text = Loc.T("button.settings"));
             float y = -120;
             // columna izquierda: audio, idioma, camara y accesibilidad
             Section(Root, "settings.audio_language", new Vector2(48, y));
-            Slider(Root, "settings.master", new Vector2(48, y - 50), 0f, 1f, () => draft.volume, v => { draft.volume = v; AudioListener.volume = v; }, v => $"{v * 100f:0}%");
-            Choice(Root, "settings.language", new Vector2(48, y - 120), new[] { "settings.spanish", "settings.english" }, () => draft.lang == Loc.EsUY ? 0 : 1, i => { draft.lang = i == 0 ? Loc.EsUY : Loc.En; Loc.SetLanguage(draft.lang); });
-            Section(Root, "settings.comfort", new Vector2(48, y - 210));
-            Slider(Root, "settings.mouse", new Vector2(48, y - 260), 0.03f, 0.4f, () => draft.mouse, v => draft.mouse = v, v => $"{v:0.00}");
-            Slider(Root, "settings.fov", new Vector2(48, y - 330), 65f, 100f, () => draft.fov, v => draft.fov = v, v => $"{v:0}");
-            Toggle(Root, "settings.invert_y", new Vector2(48, y - 400), () => draft.invertY, v => draft.invertY = v);
-            Toggle(Root, "settings.attack_subtitles", new Vector2(48, y - 460), () => draft.subtitles, v => draft.subtitles = v);
-            Toggle(Root, "settings.profanity", new Vector2(48, y - 580), () => draft.profanity, v => draft.profanity = v);
-            NameField(Root, new Vector2(48, y - 650));
-            Choice(Root, "settings.text_size", new Vector2(48, y - 520), new[] { "100%", "125%", "150%" }, () => draft.textScale >= 1.4f ? 2 : draft.textScale >= 1.2f ? 1 : 0, i => draft.textScale = i == 2 ? 1.5f : i == 1 ? 1.25f : 1f, "percent");
+            Slider(Root, "settings.master", new Vector2(48, y - 50 - g), 0f, 1f, () => draft.volume, v => { draft.volume = v; AudioListener.volume = v; }, v => $"{v * 100f:0}%");
+            Choice(Root, "settings.language", new Vector2(48, y - 120 - g), new[] { "settings.spanish", "settings.english" }, () => draft.lang == Loc.EsUY ? 0 : 1, i => { draft.lang = i == 0 ? Loc.EsUY : Loc.En; Loc.SetLanguage(draft.lang); });
+            Section(Root, "settings.comfort", new Vector2(48, y - 210 - g));
+            Slider(Root, "settings.mouse", new Vector2(48, y - 260 - 2 * g), 0.03f, 0.4f, () => draft.mouse, v => draft.mouse = v, v => $"{v:0.00}");
+            Slider(Root, "settings.fov", new Vector2(48, y - 330 - 2 * g), 65f, 100f, () => draft.fov, v => draft.fov = v, v => $"{v:0}");
+            Toggle(Root, "settings.invert_y", new Vector2(48, y - 400 - 2 * g), () => draft.invertY, v => draft.invertY = v);
+            Toggle(Root, "settings.attack_subtitles", new Vector2(48, y - 460 - 2 * g), () => draft.subtitles, v => draft.subtitles = v);
+            Toggle(Root, "settings.profanity", new Vector2(48, y - 580 - 2 * g), () => draft.profanity, v => draft.profanity = v);
+            NameField(Root, new Vector2(48, y - 650 - 2 * g));
+            Choice(Root, "settings.text_size", new Vector2(48, y - 520 - 2 * g), new[] { "100%", "125%", "150%" }, () => draft.textScale >= 1.4f ? 2 : draft.textScale >= 1.2f ? 1 : 0, i => draft.textScale = i == 2 ? 1.5f : i == 1 ? 1.25f : 1f, "percent");
             // columna derecha: controles
             Section(Root, "settings.controls", new Vector2(620, y));
-            float ry = y - 50;
+            float ry = y - 50 - g;
             foreach (var a in InputBindings.Remappable) { Rebind(Root, a, new Vector2(620, ry)); ry -= 64; }
             var reset = Ui.Button(Root, "ResetControls", "", new Vector2(0f, 1f), new Vector2(620 + 250, ry - 10), new Vector2(500, 56), () => { InputBindings.ResetAll(); Refresh(); });
             reset.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 1f);
@@ -78,8 +80,9 @@ namespace UncleExtraction
         void Slider(Transform p, string key, Vector2 pos, float min, float max, Func<float> get, Action<float> set, Func<float, string> fmt)
         {
             var rt = Ui.Rect(key, p, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), pos, new Vector2(520, 60));
-            var t = Ui.Label(rt, "T", "", Ui.FontHud + 2, Ui.Text, TextAnchor.UpperLeft);
-            var srt = Ui.Rect("Slider", rt, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 2), new Vector2(0, 24));
+            // la etiqueta ocupa la franja de arriba y la barra la de abajo: con texto al 150 % no se pisan
+            var t = Ui.Label(rt, "T", "", Ui.FontHud + 2, Ui.Text, TextAnchor.UpperLeft); t.rectTransform.offsetMin = new Vector2(0, 20);
+            var srt = Ui.Rect("Slider", rt, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 2), new Vector2(0, 16));
             var bg = srt.gameObject.AddComponent<Image>(); bg.sprite = UiSkin.Load()?.barTrack; bg.type = Image.Type.Sliced; bg.color = bg.sprite ? Color.white : Ui.Disabled;
             var fillArea = Ui.Stretch("Fill Area", srt); var fill = Ui.Image(fillArea, "Fill", UiSkin.Load()?.barTeal, UiSkin.Load() ? Color.white : Ui.Accent);
             var handleArea = Ui.Stretch("Handle Area", srt); var handle = Ui.Rect("Handle", handleArea, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(20, 8));

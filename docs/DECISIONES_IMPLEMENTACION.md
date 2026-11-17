@@ -143,7 +143,22 @@ Se armaron reproducciones controladas (`StuckRecoveryTests`) con un jugador guio
 - **Mensajes que viajan por red como claves con parámetros** (`van.part_outside|part=part.foot`): cada jugador los ve en su idioma. Los textos fijos en español dentro del código se reemplazaron por claves.
 - **Controles reasignables con un mapa propio** (`InputBindings`: rutas del Input System por acción, guardadas en PlayerPrefs) y no con un `InputActionAsset`. `LabInput` ya centraliza la lectura por acción y el autopiloto y las pruebas la simulan. Si una tecla ya estaba asignada, se intercambia. El mando conserva su asignación fija.
 - **Datos de resultados:** solo los reales (tiempo, caídas del grupo, dificultad y jugadores). No hay contador de fugas, así que no se muestra. Tampoco hay premios.
-- **Lobby y preparación de jugadores: pendientes.** El cooperativo actual entra directo a la escena, sin sala previa.
+- **Lobby y preparación de jugadores:** implementados después (`f2b4ebc`): sala con LISTO, dificultad del anfitrión y rechazo con motivo.
+
+## 2026-11-16 — Internet por Relay, auditoría de interfaz y rendimiento
+
+- **Relay directo (allocation + código), no la API de Sessions.** Se usa `com.unity.services.multiplayer` 2.4.1 (la 2.5.0 salió el mismo día; se eligió la anterior, con un mes de uso). Con la API de Relay el juego sigue arrancando `NetworkManager` por su cuenta: la misma aprobación de conexión (versión, sala llena, ronda iniciada), la misma sala y el mismo anfitrión autoritativo que la conexión directa. Sessions arranca la red por sí misma y habría duplicado ese flujo. El código de Relay hace de código de sala. Si más adelante hace falta listar salas o reconectar, se puede envolver con Sessions sin tocar el juego.
+  - Anfitrión: sesión anónima → asignación para 3 invitados → código → `SetRelayServerData(dtls)` → `StartHost`. Invitado: código → `JoinAllocation` → `StartClient`.
+  - Sin proyecto vinculado (`Application.cloudProjectId` vacío), el proveedor devuelve `error.online_unlinked` sin tocar la red: no hay credenciales ficticias. El menú lo avisa antes de intentar. La conexión directa por IP y el modo solo no cambian.
+  - Fallos de internet: vuelven al menú con el motivo en un diálogo, sin pasar a jugar solo en silencio.
+- **Diálogo de error del kit en el menú** (anfitrión perdido con detalle, sala llena, otra versión, ronda iniciada, código inválido, servicio, tiempo). La línea de estado queda para avisos breves.
+- **Tamaño de texto (UI_SPEC: «el layout puede crecer; no achicar toda la tipografía»):**
+  - las etiquetas usan `Truncate` para que el ajuste automático funcione de verdad (con `Overflow` no actuaba en vertical y el texto se derramaba sobre lo de abajo); el mínimo al 150 % es el tamaño base;
+  - filas, cajas y separaciones que dependen del texto crecen con la escala (`Ui.K`);
+  - el título del menú es un logo y no crece;
+  - `FitInCanvas` reduce un panel solo si no entra en el canvas (21:9 con texto grande). Es un compromiso para revisar en la prueba humana.
+- **Pantallas 21:9 en un monitor 16:9:** se prueban con una ventana del mismo aspecto (1920×810 para 2560×1080). El `CanvasScaler` (1920×1080, match 0,5) escala uniformemente, así que la disposición en unidades de canvas es idéntica; cambia solo la densidad de píxeles.
+- **Rendimiento:** `PerfProbe` usa `FrameTimingManager` (se habilitó *Frame Timing Stats*) para separar el trabajo de CPU y GPU del límite de sincronización vertical. Varias instancias en una PC compiten por CPU y GPU: sirven para encontrar fugas y picos, no para estimar cuatro equipos.
 
 ## Plantilla para nuevas decisiones
 

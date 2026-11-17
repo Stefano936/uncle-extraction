@@ -34,8 +34,8 @@ Importación verificada con `Kit3DImporter.ImportAndReport`: metros, Y arriba, s
 - 11 sprites con los bordes 9-slice de `sprite_import.json`, 20 iconos PNG de 64 px y el fondo `bar_idle.png`.
 - Fuentes DejaVu sin modificar, con `FONT_LICENSE.txt`, como fuente dinámica de uGUI. No se usa TMP: requiere TMP Essentials, cuya importación es interactiva.
 - Catálogo EN/es_UY copiado sin cambios a `Resources/Localization/ui_strings.json`; los textos propios del juego están en `game_strings.json`.
-- Pantallas en uso: HUD, menú, pausa, resultados y opciones.
-- Pendiente: lobby, pantalla de errores de conexión y pérdida del anfitrión con el kit; validación a 720p, ultrawide y texto al 150 % por una persona.
+- Pantallas en uso: menú (solo, amigos por internet con código, red local por IP, cómo jugar, opciones), sala con nombres, LISTO, dificultad del anfitrión y código de sala, pantalla «Conectando…/Creando sala…» con cancelación, diálogo de error (anfitrión perdido con detalle, sala llena, otra versión, ronda iniciada, código inválido, servicio online, sin vincular), HUD, pausa, resultados y opciones.
+- Validación automática a 720p, 1080p, 21:9, 16:10 y 4:3 con texto al 100, 125 y 150 % (`tools/windows/ui_audit.ps1`). Falta la revisión de una persona (legibilidad, jerarquía, comodidad).
 - Las capturas de `screens/` no se importan. |
 | Audio y diálogos | **En uso, provisional:** efectos sintetizados por el juego (`SfxSynth`; señal distinta por ataque, impactos, agarres, puertas y fin de ronda), con origen propio y sin archivos de terceros. Diálogos del catálogo original (`dialogue_en_es.csv`, 54 líneas del perfil alcohol) como **subtítulos** ligados a eventos reales, con prioridad, enfriamiento, idioma y filtro de insultos. **Sin voz grabada ni música.** Origen y licencias: `CREDITS_ASSETS.md`. |
 | Materiales de color de las primitivas (`Assets/Game/Materials/`) | Placeholders generados por el constructor. |

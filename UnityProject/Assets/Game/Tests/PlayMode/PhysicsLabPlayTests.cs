@@ -292,9 +292,19 @@ namespace UncleExtraction.Tests
             PlacePlayer(new Vector3(-5f, 0f, 6f), 0f); // lejos: sin agarres ni ataques
             Vector3 start = new Vector3(L.doorX + 3f, 0f, L.doorZ - 3f); // en la vereda, fuera del eje de la puerta
             body.TeleportTo(start, Quaternion.identity);
-            float t0 = Time.time;
-            while (body.transform.position.z < L.doorZ + 0.5f && Time.time - t0 < 15f) yield return null;
-            Assert.Greater(body.transform.position.z, L.doorZ + 0.5f, $"el tio deberia volver a entrar por la puerta (quedo en {body.transform.position})");
+            float t0 = Time.time, nextSample = 0f;
+            var trace = new System.Text.StringBuilder(); // trayectoria para diagnosticar el fallo intermitente (quedo en el umbral)
+            var door = Object.FindAnyObjectByType<ExitDoor>();
+            while (body.transform.position.z < L.doorZ + 0.5f && Time.time - t0 < 15f)
+            {
+                if (Time.time - t0 >= nextSample)
+                {
+                    nextSample += 1f; var p = body.transform.position;
+                    trace.Append($" t={Time.time - t0:0} ({p.x - L.doorX:0.00},{p.z - L.doorZ:0.00}) {npc.State}{(door ? $" hoja={door.Angle:0}" : "")};");
+                }
+                yield return null;
+            }
+            Assert.Greater(body.transform.position.z, L.doorZ + 0.5f, $"el tio deberia volver a entrar por la puerta (quedo en {body.transform.position}; relativo a la puerta x,z:{trace})");
             Assert.Less(Mathf.Abs(body.transform.position.x - L.doorX), 1.5f, "entra por la abertura, no atraviesa el muro");
         }
 

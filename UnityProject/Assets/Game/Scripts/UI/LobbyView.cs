@@ -27,27 +27,30 @@ namespace UncleExtraction
         public LobbyView(Transform parent, RoundDirector round)
         {
             this.round = round;
-            Root = Ui.PanelBox("Lobby", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1100, 760));
+            // con texto grande todo baja lo que crecen el titulo y el modo, y la lista crece (UI_SPEC: el layout crece)
+            float modeTop = 26 + Ui.K(74), d = Ui.K(100) - 100f, crewH = Ui.K(380);
+            Root = Ui.PanelBox("Lobby", parent, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1100, 160 + d + crewH + 220 + Ui.K(60) - 60));
+            Ui.FitInCanvas(Root);
             title = Ui.Label(Root, "Title", "", Ui.FontTitle, Ui.Text, TextAnchor.UpperCenter, true); Inset(title, 20, 26, 20, 0);
-            mode = Ui.Label(Root, "Mode", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperCenter); Inset(mode, 40, 100, 40, 0);
-            var crew = Ui.PanelBox("Crew", Root, new Vector2(0f, 1f), new Vector2(48, -160), new Vector2(560, 380)); crew.pivot = new Vector2(0, 1);
+            mode = Ui.Label(Root, "Mode", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperCenter); Inset(mode, 40, modeTop, 40, 0);
+            var crew = Ui.PanelBox("Crew", Root, new Vector2(0f, 1f), new Vector2(48, -160 - d), new Vector2(560, crewH)); crew.pivot = new Vector2(0, 1);
             members = Ui.Label(crew, "Members", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft); Inset(members, 24, 20, 24, 20);
             difficulty = Ui.Label(Root, "Difficulty", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft, true);
-            var drt = difficulty.rectTransform; drt.anchorMin = drt.anchorMax = new Vector2(1, 1); drt.pivot = new Vector2(1, 1); drt.anchoredPosition = new Vector2(-48, -170); drt.sizeDelta = new Vector2(400, 40);
-            diffBtn = Ui.Button(Root, "DiffBtn", "", new Vector2(1, 1), new Vector2(-48, -220), new Vector2(400, 64), () => { var d = round.CurrentDifficulty; round.SetDifficulty((Difficulty)(((int)d + 1) % 3)); });
+            var drt = difficulty.rectTransform; drt.anchorMin = drt.anchorMax = new Vector2(1, 1); drt.pivot = new Vector2(1, 1); drt.anchoredPosition = new Vector2(-48, -170 - d); drt.sizeDelta = new Vector2(400, 40);
+            diffBtn = Ui.Button(Root, "DiffBtn", "", new Vector2(1, 1), new Vector2(-48, -220 - d), new Vector2(400, 64), () => { var d = round.CurrentDifficulty; round.SetDifficulty((Difficulty)(((int)d + 1) % 3)); });
             diffBtn.GetComponent<RectTransform>().pivot = new Vector2(1, 1);
             // codigo de sala (internet): visible para todos, con copiar (UI_SPEC 3: lobby.code, button.copy_code)
             codeLabel = Ui.Label(Root, "CodeLabel", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperLeft);
-            var crt = codeLabel.rectTransform; crt.anchorMin = crt.anchorMax = new Vector2(1, 1); crt.pivot = new Vector2(1, 1); crt.anchoredPosition = new Vector2(-48, -310); crt.sizeDelta = new Vector2(400, 36);
+            var crt = codeLabel.rectTransform; crt.anchorMin = crt.anchorMax = new Vector2(1, 1); crt.pivot = new Vector2(1, 1); crt.anchoredPosition = new Vector2(-48, -310 - d); crt.sizeDelta = new Vector2(400, Ui.K(36));
             codeText = Ui.Label(Root, "Code", "", Ui.FontTitle, Ui.Focus, TextAnchor.UpperLeft); codeText.supportRichText = false;
-            var ctr = codeText.rectTransform; ctr.anchorMin = ctr.anchorMax = new Vector2(1, 1); ctr.pivot = new Vector2(1, 1); ctr.anchoredPosition = new Vector2(-48, -346); ctr.sizeDelta = new Vector2(400, 70);
-            copyBtn = Ui.Button(Root, "Copy", "", new Vector2(1, 1), new Vector2(-48, -424), new Vector2(400, 56), () =>
+            var ctr = codeText.rectTransform; ctr.anchorMin = ctr.anchorMax = new Vector2(1, 1); ctr.pivot = new Vector2(1, 1); ctr.anchoredPosition = new Vector2(-48, -310 - d - Ui.K(36)); ctr.sizeDelta = new Vector2(400, Ui.K(70));
+            copyBtn = Ui.Button(Root, "Copy", "", new Vector2(1, 1), new Vector2(-48, -310 - d - Ui.K(114)), new Vector2(400, 56), () =>
             {
                 try { GUIUtility.systemCopyBuffer = NetSession.JoinCode; copiedUntil = Time.unscaledTime + 3f; }
                 catch { NetSession.Say("error.copy_failed"); }
             });
             copyBtn.GetComponent<RectTransform>().pivot = new Vector2(1, 1);
-            reason = Ui.Label(Root, "Reason", "", Ui.FontHud + 2, Ui.Focus, TextAnchor.MiddleCenter); Inset(reason, 40, 560, 40, 150);
+            reason = Ui.Label(Root, "Reason", "", Ui.FontHud + 2, Ui.Focus, TextAnchor.MiddleCenter); Inset(reason, 40, 0, 430, 150); reason.rectTransform.offsetMax = new Vector2(-430, -(Root.sizeDelta.y - 150 - Ui.K(60)));
             readyBtn = Ui.Button(Root, "Ready", "", new Vector2(0.5f, 0f), new Vector2(-270, 50), new Vector2(500, Ui.ButtonH), () => { var pc = PlayerControls.Local; if (pc) pc.SetReady(!pc.Ready); });
             startBtn = Ui.Button(Root, "Start", "", new Vector2(0.5f, 0f), new Vector2(270, 50), new Vector2(500, Ui.ButtonH), () => round.StartFromLobby());
             leaveBtn = Ui.Button(Root, "Leave", "", new Vector2(1f, 0f), new Vector2(-48, 140), new Vector2(360, 56), NetSession.LeaveToMenu);

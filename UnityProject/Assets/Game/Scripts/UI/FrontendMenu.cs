@@ -44,6 +44,7 @@ namespace UncleExtraction
             bg.preserveAspect = false;
             var shade = Ui.Image(canvas.transform, "Shade", null, new Color(0.06f, 0.09f, 0.11f, 0.55f), false);
             var title = Ui.Label(canvas.transform, "Title", "UNCLE EXTRACTION", 112, Ui.Text, TextAnchor.UpperLeft, true);
+            title.fontSize = title.resizeTextMaxSize = 112; title.resizeTextMinSize = 72; // logo: no crece con el tamaño de texto
             title.rectTransform.offsetMin = new Vector2(Ui.Margin, 0); title.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin);
             var tag = Ui.Label(canvas.transform, "Tagline", "", Ui.FontSection, Ui.Focus, TextAnchor.UpperLeft);
             tag.rectTransform.offsetMin = new Vector2(Ui.Margin + 6, 0); tag.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin - 140);
@@ -96,8 +97,10 @@ namespace UncleExtraction
         {
             Current = p;
             if (pageRoot) Destroy(pageRoot.gameObject);
-            options?.Close(); options = null;
-            pageRoot = Ui.Rect("Page", canvas.transform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(Ui.Margin, -70), new Vector2(620, -480));
+            var openOptions = options; options = null; openOptions?.Close(); // sin volver a entrar en Show desde el cierre
+            // con texto grande la pagina empieza mas arriba (debajo del lema) y llega mas abajo: ~720 de alto en vez de 600
+            bool big = Ui.TextScale > 1.01f;
+            pageRoot = Ui.Rect("Page", canvas.transform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(Ui.Margin, big ? -90 : -70), new Vector2(Ui.K(620), big ? -360 : -480));
             GameObject first = null;
             float y = 0;
             Button B(string key, Action a, float h = Ui.ButtonH)
@@ -110,6 +113,7 @@ namespace UncleExtraction
             }
             Text Note(string text, float h = 70)
             {
+                h = Ui.K(h);
                 var rt = Ui.Rect("Note", pageRoot, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, y), new Vector2(560, h));
                 var t = Ui.Label(rt, "T", text, Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperLeft); y -= h + 8; return t;
             }
@@ -131,8 +135,9 @@ namespace UncleExtraction
                     if (p == Page.Solo)
                     {
                         B("button.start", () => { SelectedScene = GameScene; Play(NetMode.Solo); });
-                        B("menu.lab", () => { SelectedScene = LabScene; Play(NetMode.Solo); }, 56);
-                        B("menu.lab_articulated", () => { SelectedScene = LabArticulatedScene; Play(NetMode.Solo); }, 56);
+                        float labH = Ui.TextScale > 1.01f ? Ui.ButtonH : 56; // con texto grande, el alto de un boton comun
+                        B("menu.lab", () => { SelectedScene = LabScene; Play(NetMode.Solo); }, labH);
+                        B("menu.lab_articulated", () => { SelectedScene = LabArticulatedScene; Play(NetMode.Solo); }, labH);
                     }
                     else if (p == Page.Friends)
                     {   // internet (Relay): sala con codigo; la red local por IP queda en su propia pagina
@@ -154,18 +159,20 @@ namespace UncleExtraction
                 case Page.HowTo:
                     foreach (var (t, d) in new[] { ("tutorial.grab", "tutorial.grab_detail"), ("tutorial.watch", "tutorial.watch_detail"), ("tutorial.move", "tutorial.move_detail") })
                     {
-                        var card = Ui.PanelBox(t, pageRoot, new Vector2(0, 1), new Vector2(0, y), new Vector2(900, 120)); card.pivot = new Vector2(0, 1);
-                        var tt = Ui.Label(card, "T", Loc.T(t), Ui.FontSection, Ui.Focus, TextAnchor.UpperLeft, true); tt.rectTransform.offsetMin = new Vector2(24, 0); tt.rectTransform.offsetMax = new Vector2(-24, -12);
-                        var dd = Ui.Label(card, "D", Loc.T(d), Ui.FontHud + 2, Ui.Text, TextAnchor.LowerLeft); dd.rectTransform.offsetMin = new Vector2(24, 14); dd.rectTransform.offsetMax = new Vector2(-24, 0);
-                        y -= 136;
+                        var card = Ui.PanelBox(t, pageRoot, new Vector2(0, 1), new Vector2(0, y), new Vector2(900, 72 + 60 * Ui.TextScale)); card.pivot = new Vector2(0, 1);
+                        var tt = Ui.Label(card, "T", Loc.T(t), Ui.FontSection, Ui.Focus, TextAnchor.UpperLeft, true); tt.rectTransform.offsetMin = new Vector2(24, 72 + 60 * Ui.TextScale - 12 - Ui.K(44)); tt.rectTransform.offsetMax = new Vector2(-24, -12);
+                        var dd = Ui.Label(card, "D", Loc.T(d), Ui.FontHud + 2, Ui.Text, TextAnchor.LowerLeft); dd.rectTransform.offsetMin = new Vector2(24, 12); dd.rectTransform.offsetMax = new Vector2(-24, -(12 + Ui.K(44)));
+                        y -= 72 + 60 * Ui.TextScale + 10;
                     }
                     Note($"{InputBindings.Display(Act.GrabLeft)} / {InputBindings.Display(Act.GrabRight)}: {Loc.T("hud.hold_grab")}  ·  {InputBindings.Display(Act.ReleaseAll)}: {Loc.T("action.ReleaseAll")}  ·  {InputBindings.Display(Act.Effort)}: {Loc.T("hud.effort")}  ·  {InputBindings.Display(Act.Interact)}: {Loc.T("action.Interact")}", 80);
                     B("button.back", () => Show(Page.Main));
                     break;
                 case Page.Options:
-                    options = new OptionsView(canvas.transform, () => { options = null; Show(Page.Main); });
+                    options = new OptionsView(canvas.transform, () => { if (options == null) return; options = null; Show(Page.Main); });
                     break;
             }
+            // si el contenido no entra (21:9 con texto al 150 %), la pagina se reduce lo justo; el pivote arriba la mantiene en su lugar
+            if (p != Page.Options) { Vector2 omin = pageRoot.offsetMin, omax = pageRoot.offsetMax; pageRoot.pivot = new Vector2(0f, 1f); pageRoot.offsetMin = omin; pageRoot.offsetMax = omax; pageRoot.gameObject.AddComponent<FitContent>().contentHeight = -y; }
             if (first) EventSystem.current?.SetSelectedGameObject(first);
         }
 
@@ -211,6 +218,6 @@ namespace UncleExtraction
             SceneManager.LoadScene(SelectedScene);
         }
 
-        void OnDestroy() { options?.Close(); if (canvas) Destroy(canvas.gameObject); }
+        void OnDestroy() { var o = options; options = null; o?.Close(); if (canvas) Destroy(canvas.gameObject); }
     }
 }

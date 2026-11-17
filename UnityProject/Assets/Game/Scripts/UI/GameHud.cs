@@ -39,49 +39,55 @@ namespace UncleExtraction
             for (int h = 0; h < 2; h++)
             {
                 var a = new Vector2(h == 0 ? 0f : 1f, 0f);
-                var u = new HandUi { box = Ui.PanelBox(h == 0 ? "LeftHand" : "RightHand", root, a, new Vector2(h == 0 ? Ui.Margin : -Ui.Margin, Ui.Margin), new Vector2(380, 150)) };
+                // filas desde arriba (sin superponerse) que crecen con el texto: titulo, estado, punto/ayuda (2 lineas si el texto
+                // es grande); la tension va abajo
+                float k = Ui.TextScale, r1 = 12f, h1 = Ui.K(26), r2 = r1 + h1 + 2f, h2 = Ui.K(34), r3 = r2 + h2 + 4f, h3 = Ui.K(30) * (k > 1.01f ? 1.9f : 1f);
+                float boxH = r3 + h3 + 42f, boxW = 380f * (1f + (k - 1f) * 0.5f);
+                var u = new HandUi { box = Ui.PanelBox(h == 0 ? "LeftHand" : "RightHand", root, a, new Vector2(h == 0 ? Ui.Margin : -Ui.Margin, Ui.Margin), new Vector2(boxW, boxH)) };
                 u.icon = Ui.Icon(u.box, "Icon", h == 0 ? "hand_left" : "hand_right", new Vector2(0, 0.5f), new Vector2(46, 8), 64, Ui.Text);
-                // filas fijas desde arriba (sin superponerse): titulo, estado, punto/ayuda; la tension va abajo
-                u.title = Ui.Label(u.box, "Title", "", Ui.FontHud, Ui.Muted, TextAnchor.MiddleLeft, true); Row(u.title, 92, 12, 26, 16);
-                u.state = Ui.Label(u.box, "State", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleLeft, true); Row(u.state, 92, 40, 34, 16);
-                u.socket = Ui.Label(u.box, "Socket", "", Ui.FontHud, Ui.Muted, TextAnchor.MiddleLeft); Row(u.socket, 92, 78, 30, 16);
+                u.title = Ui.Label(u.box, "Title", "", Ui.FontHud, Ui.Muted, TextAnchor.MiddleLeft, true); Row(u.title, 92 + 10 * (k - 1f) * 2f, r1, h1, 16);
+                u.state = Ui.Label(u.box, "State", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleLeft, true); Row(u.state, 92 + 10 * (k - 1f) * 2f, r2, h2, 16);
+                u.socket = Ui.Label(u.box, "Socket", "", Ui.FontHud, Ui.Muted, TextAnchor.UpperLeft); Row(u.socket, 92 + 10 * (k - 1f) * 2f, r3, h3, 16);
                 u.tension = Ui.Bar(u.box, "Tension", new Vector2(0.5f, 0f), new Vector2(38, 14), new Vector2(272, 16), true, out _);
                 hand[h] = u;
             }
             // energia (abajo al centro) y compostura
-            var eb = Ui.PanelBox("Energy", root, new Vector2(0.5f, 0f), new Vector2(0, Ui.Margin), new Vector2(420, 84));
+            float energyH = 84f + Ui.K(20) - 20f;
+            var eb = Ui.PanelBox("Energy", root, new Vector2(0.5f, 0f), new Vector2(0, Ui.Margin), new Vector2(420, energyH));
             Ui.Icon(eb, "Icon", "energy", new Vector2(0, 0.5f), new Vector2(36, 0), 44, Ui.Focus);
-            var el = Ui.Label(eb, "Label", "", Ui.FontHud, Ui.Muted, TextAnchor.UpperLeft, true); Inset(el, 70, 8, 12, 0); el.name = "EnergyLabel";
+            // etiqueta a la izquierda y ayuda a la derecha, cada una en su mitad (con texto grande no se pisan)
+            var el = Ui.Label(eb, "Label", "", Ui.FontHud, Ui.Muted, TextAnchor.UpperLeft, true); el.name = "EnergyLabel";
+            HalfRow(el, 0f, 0.42f, 70f, 6f, 8f, Ui.K(26));
             energy = Ui.Bar(eb, "Bar", new Vector2(0.5f, 0f), new Vector2(26, 14), new Vector2(320, 22), true, out _);
-            effortHint = Ui.Label(eb, "EffortHint", "", Ui.FontHud, Ui.Muted, TextAnchor.UpperRight); Inset(effortHint, 70, 8, 14, 0);
-            composureBox = Ui.PanelBox("Composure", root, new Vector2(0.5f, 0f), new Vector2(0, Ui.Margin + 92), new Vector2(420, 56));
+            effortHint = Ui.Label(eb, "EffortHint", "", Ui.FontHud, Ui.Muted, TextAnchor.UpperRight); HalfRow(effortHint, 0.42f, 1f, 6f, 14f, 8f, Ui.K(26));
+            composureBox = Ui.PanelBox("Composure", root, new Vector2(0.5f, 0f), new Vector2(0, Ui.Margin + energyH + 8f), new Vector2(420, 56));
             Ui.Icon(composureBox, "Icon", "composure", new Vector2(0, 0.5f), new Vector2(30, 0), 36, Ui.Danger);
             composure = Ui.Bar(composureBox, "Bar", new Vector2(0.5f, 0.5f), new Vector2(26, 0), new Vector2(320, 20), false, out _);
             // reloj y objetivo (arriba)
             var tb = Ui.PanelBox("Timer", root, new Vector2(0.5f, 1f), new Vector2(0, -Ui.Margin * 0.5f), new Vector2(200, 64));
             timer = Ui.Label(tb, "Text", "", Ui.FontTimer, Ui.Text, TextAnchor.MiddleCenter, true);
-            var ob = Ui.PanelBox("Objective", root, new Vector2(0f, 1f), new Vector2(Ui.Margin, -Ui.Margin * 0.5f), new Vector2(460, 96));
-            objective = Ui.Label(ob, "Title", "", Ui.FontSection, Ui.Text, TextAnchor.UpperLeft, true); Inset(objective, 20, 10, 16, 0);
+            var ob = Ui.PanelBox("Objective", root, new Vector2(0f, 1f), new Vector2(Ui.Margin, -Ui.Margin * 0.5f), new Vector2(460 + 160 * (Ui.TextScale - 1f), Ui.K(96)));
+            objective = Ui.Label(ob, "Title", "", Ui.FontSection, Ui.Text, TextAnchor.UpperLeft, true); HalfRow(objective, 0f, 1f, 20f, 16f, 10f, Ui.K(44));
             objectiveDetail = Ui.Label(ob, "Detail", "", Ui.FontHud, Ui.Muted, TextAnchor.LowerLeft); Inset(objectiveDetail, 20, 0, 16, 12);
             // aviso de ataque (arriba, debajo del reloj): prioridad sobre ayuda contextual
-            attackBox = Ui.PanelBox("Attack", root, new Vector2(0.5f, 1f), new Vector2(0, -150), new Vector2(760, 132), true);
+            attackBox = Ui.PanelBox("Attack", root, new Vector2(0.5f, 1f), new Vector2(0, -150), new Vector2(760, Ui.K(132)), true);
             attackIcon = Ui.Icon(attackBox, "Icon", "warning", new Vector2(0, 0.5f), new Vector2(60, 0), 72, Ui.Danger);
             attackTitle = Ui.Label(attackBox, "Title", "", Ui.FontSection + 4, Ui.Text, TextAnchor.UpperLeft, true); Inset(attackTitle, 120, 14, 20, 0);
-            attackHint = Ui.Label(attackBox, "Hint", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleLeft); Inset(attackHint, 120, 58, 20, 0);
+            attackHint = Ui.Label(attackBox, "Hint", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleLeft); Inset(attackHint, 120, 14 + Ui.K(44), 20, 0);
             attackSub = Ui.Label(attackBox, "Subtitle", "", Ui.FontHud, Ui.Muted, TextAnchor.LowerLeft); Inset(attackSub, 120, 0, 20, 10);
             // interaccion (abajo al centro, encima de la energia)
-            promptBox = Ui.PanelBox("Prompt", root, new Vector2(0.5f, 0f), new Vector2(0, 300), new Vector2(820, 80));
+            promptBox = Ui.PanelBox("Prompt", root, new Vector2(0.5f, 0f), new Vector2(0, 300 + Ui.K(50) - 50), new Vector2(820, Ui.K(80)));
             prompt = Ui.Label(promptBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter, true); Inset(prompt, 20, 4, 20, 18);
             promptBar = Ui.Bar(promptBox, "Progress", new Vector2(0.5f, 0f), Vector2.zero, new Vector2(820, 12), true, out _);
             // subtitulos del tio (catalogo de dialogos; sin voz grabada)
-            subBox = Ui.PanelBox("Subtitle", root, new Vector2(0.5f, 0f), new Vector2(0, 460), new Vector2(980, 64));
+            subBox = Ui.PanelBox("Subtitle", root, new Vector2(0.5f, 0f), new Vector2(0, 460 + Ui.K(110) - 110), new Vector2(980, Ui.K(64)));
             subtitle = Ui.Label(subBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter); Inset(subtitle, 20, 4, 20, 4);
-            toastBox = Ui.PanelBox("Toast", root, new Vector2(0.5f, 0f), new Vector2(0, 390), new Vector2(620, 56));
+            toastBox = Ui.PanelBox("Toast", root, new Vector2(0.5f, 0f), new Vector2(0, 390 + Ui.K(90) - 90), new Vector2(620, Ui.K(56)));
             toast = Ui.Label(toastBox, "Text", "", Ui.FontHud + 2, Ui.Text, TextAnchor.MiddleCenter);
             // caida
-            fallBox = Ui.PanelBox("Fall", root, new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(640, 150));
+            fallBox = Ui.PanelBox("Fall", root, new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(640, Ui.K(150)));
             fallTitle = Ui.Label(fallBox, "Title", "", Ui.FontSection + 4, Ui.Text, TextAnchor.UpperCenter, true); Inset(fallTitle, 20, 16, 20, 0);
-            fallDetail = Ui.Label(fallBox, "Detail", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.MiddleCenter); Inset(fallDetail, 20, 30, 20, 0);
+            fallDetail = Ui.Label(fallBox, "Detail", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.MiddleCenter); Inset(fallDetail, 20, Ui.K(30), 20, 0);
             fallBar = Ui.Bar(fallBox, "Progress", new Vector2(0.5f, 0f), new Vector2(0, 18), new Vector2(520, 18), false, out _);
             objectiveUntil = Time.time + 12f;
             Loc.Changed += Relabel; Relabel();
@@ -92,6 +98,11 @@ namespace UncleExtraction
             var rt = t.rectTransform; rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(0.5f, 1f);
             rt.offsetMin = new Vector2(left, -(top + height)); rt.offsetMax = new Vector2(-right, -top);
             t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Truncate;
+        }
+        static void HalfRow(Text t, float a0, float a1, float left, float right, float top, float height)
+        {
+            var rt = t.rectTransform; rt.anchorMin = new Vector2(a0, 1); rt.anchorMax = new Vector2(a1, 1); rt.pivot = new Vector2(0.5f, 1f);
+            rt.offsetMin = new Vector2(left, -(top + height)); rt.offsetMax = new Vector2(-right, -top);
         }
         static void Inset(Text t, float left, float top, float right, float bottom) { t.rectTransform.offsetMin = new Vector2(left, bottom); t.rectTransform.offsetMax = new Vector2(-right, -top); }
 
