@@ -5,7 +5,7 @@
 1. Doble clic en `Builds\UncleExtraction\UncleExtraction.exe` (se genera en la PC de desarrollo; no está en Git).
 2. Menú: **Jugar solo** → tocar **Dificultad** hasta la deseada → **Iniciar extracción**. El **Laboratorio** es la escena de diagnóstico. El escenario principal usa el tío de 11 cuerpos (ragdoll reducido, malla del kit). **Laboratorio** conserva el tío anterior de primitivas (un solo cuerpo) para comparar, y **Laboratorio: tío articulado (prueba)** es el laboratorio con el tío nuevo.
 3. **Jugar con amigos** (2 a 4 jugadores):
-   - **Por internet:** el anfitrión elige **Crear sala por internet** y pasa el **código de sala** que aparece en la sala (botón **Copiar código**); los demás lo escriben y eligen **Unirse con código**. Necesita que la build tenga vinculado el proyecto de Unity Cloud con Relay; si no, el menú lo avisa y la red local sigue funcionando.
+   - **Por internet:** el anfitrión elige **Crear sala por internet** y pasa el **código de sala** que aparece en la sala (botón **Copiar código**); los demás lo escriben y eligen **Unirse con código**. No hace falta abrir puertos ni conocer la IP.
    - **Red local (IP):** en una PC **Crear partida en la red local** (Windows puede pedir permiso de firewall); en las otras **Unirse por IP** con la IP del anfitrión (`127.0.0.1` en la misma PC).
    - Primero se abre la **sala**: cada jugador pulsa **LISTO** y el anfitrión, que elige la dificultad, pulsa **INICIAR EXTRACCIÓN**. No se puede entrar con la ronda ya empezada; al reintentar se vuelve a la sala. El nombre de jugador se elige en Opciones.
 4. **Opciones** (en el menú o en la pausa):
