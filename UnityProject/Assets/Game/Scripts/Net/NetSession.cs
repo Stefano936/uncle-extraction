@@ -40,6 +40,7 @@ namespace UncleExtraction
         /// Red degradada para pruebas (-ueNetSim latencia_ms jitter_ms perdida_%). Solo tiene efecto en editor y builds de desarrollo.
         public static int SimDelayMs, SimJitterMs, SimLossPct;
         const ushort SoloPortBase = 7790;
+        public const int DisconnectTimeoutMs = 10000;
 
         void Awake() { Instance = this; ParseArgsOnce(); }
         void OnDestroy() { if (Instance == this) Instance = null; }
@@ -91,6 +92,9 @@ namespace UncleExtraction
             {
                 var go = new GameObject("NetworkManager");
                 var utp = go.AddComponent<UnityTransport>();
+                // Caida brusca del anfitrion: con el valor por defecto (30 s) el invitado quedaba congelado 30 s antes de ver
+                // el motivo (medido: 30,1 s). 10 s sigue tolerando cortes breves con Relay o Wi-Fi.
+                utp.DisconnectTimeoutMS = DisconnectTimeoutMs;
                 nm = go.AddComponent<NetworkManager>();
                 nm.NetworkConfig = new NetworkConfig
                 {

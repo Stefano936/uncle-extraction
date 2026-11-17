@@ -19,7 +19,7 @@ namespace UncleExtraction
         readonly List<double> cpu = new List<double>(), gpu = new List<double>();
         readonly List<double> cpuAll = new List<double>(), gpuAll = new List<double>();
         readonly FrameTiming[] ft = new FrameTiming[1];
-        long memStart, memMax, procMax;
+        long memStart, memMax, procMax; // procMax: pico de memoria reservada por Unity (la del proceso no la da Mono)
         bool started;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -67,9 +67,9 @@ namespace UncleExtraction
         static string Mem(out long proc)
         {
             proc = 0;
-            try { using var me = System.Diagnostics.Process.GetCurrentProcess(); proc = me.PrivateMemorySize64; } catch { }
+            proc = Profiler.GetTotalReservedMemoryLong();
             return $"mem_unity={Profiler.GetTotalAllocatedMemoryLong() / 1048576}MB reservada={Profiler.GetTotalReservedMemoryLong() / 1048576}MB " +
-                   $"mono={Profiler.GetMonoUsedSizeLong() / 1048576}/{Profiler.GetMonoHeapSizeLong() / 1048576}MB gfx={Profiler.GetAllocatedMemoryForGraphicsDriver() / 1048576}MB proceso={proc / 1048576}MB";
+                   $"mono={Profiler.GetMonoUsedSizeLong() / 1048576}/{Profiler.GetMonoHeapSizeLong() / 1048576}MB gfx={Profiler.GetAllocatedMemoryForGraphicsDriver() / 1048576}MB";
         }
 
         void Flush()
@@ -95,7 +95,7 @@ namespace UncleExtraction
             string mem = Mem(out long proc); procMax = Math.Max(procMax, proc);
             Debug.Log($"[Perf] resumen duracion={span:0}s cuadros={all.Count} fps_medio={all.Count / Mathf.Max(1f, span):0.0} cuadro_ms p50={Pct(all, 0.5f):0.00} p95={Pct(all, 0.95f):0.00} p99={Pct(all, 0.99f):0.00} max={Pct(all, 1f):0.0} " +
                       $"cuadros_>33ms={all.FindAll(x => x > 33.3f).Count} cpu_ms media={Avg(cpuAll):0.00} p95={Pct(cpuAll, 0.95f):0.00} gpu_ms media={Avg(gpuAll):0.00} p95={Pct(gpuAll, 0.95f):0.00} " +
-                      $"mem_unity_inicio={memStart / 1048576}MB final={Profiler.GetTotalAllocatedMemoryLong() / 1048576}MB pico={memMax / 1048576}MB proceso_pico={procMax / 1048576}MB {mem}");
+                      $"mem_unity_inicio={memStart / 1048576}MB final={Profiler.GetTotalAllocatedMemoryLong() / 1048576}MB pico={memMax / 1048576}MB reservada_pico={procMax / 1048576}MB {mem}");
         }
     }
 }
