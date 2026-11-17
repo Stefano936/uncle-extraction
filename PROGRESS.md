@@ -12,7 +12,7 @@
 
 ### Sesión 13: controles, primera partida guiada, cooperación y justicia del tío
 
-**Build de referencia: `{BUILD}`** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`, ZIP `{ZIP}`). Respaldo anterior: `Builds/UncleExtraction_Candidate_69e9c6f/`. Matriz de requisitos con evidencia por nivel: `docs/MATRIZ_REQUISITOS.md`.
+**Build de referencia: `ver VERSION.txt (última: commit de cierre de la sesión 13)`** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`, ZIP `Builds/UncleExtraction_s13.zip`). Respaldo anterior: `Builds/UncleExtraction_Candidate_69e9c6f/`. Matriz de requisitos con evidencia por nivel: `docs/MATRIZ_REQUISITOS.md`.
 
 **Hallazgos A–M (revisión del dueño), todos reproducidos antes de corregir salvo F (revisión de código):**
 
@@ -45,9 +45,9 @@
 | Entrada real, interfaz, flujo, marcador | `40d17af` | **29/29** |
 | Red en localhost (12 escenarios) | build `07dbc8f` | 11 PASS + `race` FAIL (rechazos=0); repetido ×3: 3/3 PASS → intermitencia de tiempos del escenario |
 | Red en localhost (12 escenarios) | build `83e55c7` | **12/12 PASS** |
-| Red en localhost tras la corrección de orientación | build `{NETBUILD}` | {NETRES} |
+| Red en localhost tras la corrección de orientación | build `439900f` | **12/12 PASS** (coop 33 s y netsim 53 s: el tío ahora gira hacia quien ataca; más lento que en `83e55c7`, sigue ganando) |
 | Auditoría de interfaz | build `07dbc8f` | EN 15/15; ES 11/15 (texto «Reducir inclinación de cámara» recortado en Opciones → acortado) |
-| Auditoría de interfaz (Opciones con volúmenes y Marcar) | build `{UIBUILD}` | {UIRES} |
+| Auditoría de interfaz (Opciones con volúmenes y Marcar) | build `439900f` | **ES 15/15, EN 15/15** (5 aspectos × texto 100/125/150 %); después se acortó el rótulo «Volumen de avisos», que se achicaba a 720p/150 % |
 | Capturas de la build | `aac5b90` | cara del tío normal / enojado (gira hacia el jugador) / recuperándose; manos nuevas (`docs/capturas/sesion13/`) |
 
 **No verificado en esta sesión:** LAN real, dos equipos por internet (Relay solo desde una PC en sesiones anteriores), revisión humana. La gracia de desconexión no se ejercita en `clientdrop` (el anfitrión termina enseguida): evidencia E, no L. En `latejoin` el bot del anfitrión quedó trabado con la cabeza del tío afuera de la camioneta (no es criterio del escenario; inestabilidad conocida del autopiloto).
@@ -82,6 +82,6 @@
 
 ## Próxima acción exacta
 
-1. **Vos:** revisar la candidata `69e9c6f` con `REVISION_CANDIDATA.txt` (iluminación, controles, carrito, extracción); si podés, también a batería.
-2. **Con otra PC:** el punto 5 del guion (Relay entre dos equipos en redes distintas) y LAN por IP.
-3. Sin equipos: repetir el banco a batería (`perf_bench.ps1 -Device 1 -Quality low` y `high`) para confirmar la hipótesis de alimentación y ajustar Baja si hace falta.
+1. **Vos (15–20 min):** jugar la build con `REVISION_CANDIDATA.txt`: guía de primeros pasos, agarre mantener/alternar, Q, flechas, marcador (clic central), cara del tío girando al preparar golpes, volúmenes. Anotar en `docs/OBSERVACIONES_PRUEBAS.md`.
+2. **Con otra PC:** Relay entre dos equipos en redes distintas (punto 5 del guion) y LAN por IP; ver nombres/colores de compañeros, marcador del otro y la gracia de desconexión (cerrar un juego a mitad de ronda).
+3. **Desarrollo siguiente (sin depender de nadie):** prueba automática de la prioridad de E (compañero caído / mano anclada / camioneta / carrito); escenario de red que ejercite la gracia de desconexión con el anfitrión siguiendo la ronda; más detalle en la malla del tío (hoy kit facetado + cejas y boca propias); revisar la duración de `coop`/`netsim` tras el giro del tío (balance, no regla).

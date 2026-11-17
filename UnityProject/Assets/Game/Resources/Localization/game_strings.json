@@ -609,8 +609,8 @@
   },
   {
    "key": "settings.alerts",
-   "en": "Alerts volume (attacks, marks)",
-   "es_UY": "Volumen de avisos (ataques, marcas)"
+   "en": "Alerts volume",
+   "es_UY": "Volumen de avisos"
   }
  ]
 }
