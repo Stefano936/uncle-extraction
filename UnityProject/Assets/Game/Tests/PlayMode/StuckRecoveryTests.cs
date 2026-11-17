@@ -23,6 +23,9 @@ namespace UncleExtraction.Tests
         {
             GrabRegistry.Verbose = false;
             LabInput.ClearSimulated();
+            // investigacion de ritmo de cuadros: UE_TEST_FPS=30|60|120 limita los cuadros (sin vsync); sin variable, libre
+            if (int.TryParse(System.Environment.GetEnvironmentVariable("UE_TEST_FPS"), out int cap) && cap > 0) { QualitySettings.vSyncCount = 0; Application.targetFrameRate = cap; }
+            frames0 = Time.frameCount; time0 = Time.realtimeSinceStartup;
             SceneManager.LoadScene(Scene);
             yield return null; yield return new WaitForFixedUpdate();
             for (float t = 0; t < 5f && PlayerControls.Local == null; t += Time.unscaledDeltaTime) yield return null;
@@ -36,8 +39,12 @@ namespace UncleExtraction.Tests
             npc.brainEnabled = false;
         }
 
+        int frames0; float time0;
+        /// Cuadros por segundo reales desde el inicio de la prueba (se registran con cada resultado).
+        protected string Fps => $"fps_reales={(Time.frameCount - frames0) / Mathf.Max(0.01f, Time.realtimeSinceStartup - time0):0} limite={(Application.targetFrameRate > 0 ? Application.targetFrameRate.ToString() : "libre")} fixed={1f / Time.fixedDeltaTime:0}Hz";
+
         [TearDown]
-        public void Clear() => LabInput.ClearSimulated();
+        public void Clear() { LabInput.ClearSimulated(); Debug.Log($"[Stuck] fin {TestContext.CurrentContext.Test.Name}: {TestContext.CurrentContext.Result.Outcome.Status} {Fps}"); Application.targetFrameRate = -1; }
 
         // ---------- entradas de jugador ----------
         static Vector3 Flat(Vector3 v) { v.y = 0; return v; }
@@ -52,7 +59,7 @@ namespace UncleExtraction.Tests
         void MoveWorld(Vector3 dir)
         {
             dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; return; }
-            Vector3 local = Quaternion.Euler(0, -player.transform.eulerAngles.y, 0) * dir.normalized;
+            Vector3 local = Quaternion.Euler(0, -player.Yaw, 0) * dir.normalized; // relativo a la mirada ordenada (como WASD), no al giro interpolado del cuerpo
             LabInput.SimulatedMove = new Vector2(local.x, local.z);
         }
         static void Hold(Act a, bool on) => LabInput.Simulated[(int)a] = on;
@@ -258,7 +265,7 @@ namespace UncleExtraction.Tests
             Assert.IsTrue(cart.Strap(), $"deberia poder cargarlo: {cart.LastFailure}");
             for (float t = 0; t < 1.5f && !cart.IsStrapped; t += Time.deltaTime) yield return null;
             Assert.IsTrue(cart.IsStrapped);
-            yield return new WaitForSeconds(0.3f);
+            for (int k = 0; k < 18; k++) yield return new WaitForFixedUpdate(); // 0,3 s de fisica (independiente de los FPS)
             var crb = cart.GetComponent<Rigidbody>();
             Quaternion inv = Quaternion.Inverse(crb.rotation);
             Vector3 relP = inv * (body.Body.position - crb.position); Quaternion relR = inv * body.Body.rotation;
@@ -270,7 +277,7 @@ namespace UncleExtraction.Tests
             crb.linearVelocity = Vector3.zero; crb.angularVelocity = Vector3.zero;
             crb.position = pos; crb.rotation = rot; cart.transform.SetPositionAndRotation(pos, rot);
             body.TeleportTo(pos + rot * relP, rot * relR);
-            yield return new WaitForSeconds(0.4f);
+            for (int k = 0; k < 24; k++) yield return new WaitForFixedUpdate(); // 0,4 s de fisica: la hoja se cierra igual a 30 o a 2000 FPS
             Debug.Log($"[Stuck] armado: puerta a {door.angle:0} grados; contactos: {Contacts()}");
         }
 
@@ -365,7 +372,7 @@ namespace UncleExtraction.Tests
             bool through = Through();
             Debug.Log($"[Stuck] {pose} carrito atravesado (trabado={jammed}): {(through ? "SALE: " + how : "NO SALE")} en {Time.time - t0:0.0} s; correa={cart.IsStrapped}");
             Assert.IsTrue(through, $"el carrito no paso la puerta tras {attempts} intentos (en {Flat(cart.transform.position)})");
-            Assert.IsTrue(strappedThrough, $"solo salio soltando la correa ({how}): un jugador solo deberia poder sacarlo cargado");
+            Assert.IsTrue(strappedThrough, $"solo salio soltando la correa ({how}): un jugador solo deberia poder sacarlo cargado [{Fps}]");
         }
     
         /// Medicion (no criterio): par y fuerza en el borde con que la puerta del bar se cierra sola desde 45 grados.

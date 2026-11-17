@@ -84,8 +84,11 @@ namespace UncleExtraction
 
         public Vector3 HandTarget(int hand)
         {
-            var t = cam ? cam.transform : transform;
             Vector3 o = holdOffset; if (hand == 0) o.x = -o.x;
+            // Desde la mirada ordenada y no desde el transform de la camara: la camara se orienta una vez por cuadro y, con
+            // dos pasos de fisica en un mismo cuadro (menos de 60 FPS), la mano apuntaba mas alla del giro (medido a 30 FPS).
+            if (motor) return motor.EyePosition + motor.LookRotation * o;
+            var t = cam ? cam.transform : transform;
             return t.TransformPoint(o);
         }
 

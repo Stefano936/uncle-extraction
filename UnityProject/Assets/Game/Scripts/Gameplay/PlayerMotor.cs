@@ -56,6 +56,11 @@ namespace UncleExtraction
         public bool ControlsEnabled => State == PlayerState.Active;
         public float Yaw => yaw;
         public float Pitch => pitch;
+        /// Orientacion de la mirada ordenada (yaw, pitch y giro al caer), igual a la que dibuja la camara pero sin depender
+        /// del cuadro: la usan los agarres en cada paso de fisica.
+        public Quaternion LookRotation => Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(pitch, 0f, roll);
+        /// Posicion del ojo (pivote de camara) en el mundo.
+        public Vector3 EyePosition => (rb ? rb.position : transform.position) + Vector3.up * (cameraPivot ? cameraPivot.localPosition.y : standEyeHeight); // pose de fisica, no la interpolada
         public PlayerControls Controls => controls;
 
         /// Entrada simulada para pruebas automaticas en el anfitrion (null = usar los controles del jugador).

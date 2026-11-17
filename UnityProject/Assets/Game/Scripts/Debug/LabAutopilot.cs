@@ -222,7 +222,7 @@ namespace UncleExtraction
         void MoveWorld(Vector3 dir)
         {
             dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; return; }
-            Vector3 local = Quaternion.Euler(0, -player.transform.eulerAngles.y, 0) * dir.normalized;
+            Vector3 local = Quaternion.Euler(0, -player.Yaw, 0) * dir.normalized; // relativo a la mirada ordenada (como WASD), no al giro interpolado del cuerpo
             LabInput.SimulatedMove = new Vector2(local.x, local.z);
         }
 
