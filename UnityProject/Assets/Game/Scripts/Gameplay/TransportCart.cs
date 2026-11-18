@@ -20,6 +20,7 @@ namespace UncleExtraction
         public bool IsStrapped => Mirror ? nStrapped.Value : strap != null;
         public int StrapCount { get => Mirror ? nStrapCount.Value : strapCount; private set => strapCount = value; }
         ConfigurableJoint strap; Rigidbody rb; Vector3 spawnPos; Quaternion spawnRot;
+        public Vector3 SpawnPos => spawnPos; public Quaternion SpawnRot => spawnRot;
 
         void Awake() { Instance = this; rb = GetComponent<Rigidbody>(); spawnPos = transform.position; spawnRot = transform.rotation; }
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
@@ -170,6 +171,13 @@ namespace UncleExtraction
             foreach (var j in GetComponents<ConfigurableJoint>()) DestroyImmediate(j);
             rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero;
             rb.position = spawnPos; rb.rotation = spawnRot; transform.SetPositionAndRotation(spawnPos, spawnRot);
+            Teleport(this, spawnPos, spawnRot);
+        }
+        /// Salto sin interpolacion en los invitados (sesion 17): al reiniciar o guardar el carrito no se lo ve cruzar el bar.
+        public static void Teleport(TransportCart c, Vector3 p, Quaternion r)
+        {
+            var nt = c ? c.GetComponent<Unity.Netcode.Components.NetworkTransform>() : null;
+            if (nt && nt.IsSpawned && nt.IsServer) { try { nt.Teleport(p, r, c.transform.localScale); } catch (System.Exception e) { Debug.LogWarning("[Cart] teleport: " + e.Message); } }
         }
     }
 }

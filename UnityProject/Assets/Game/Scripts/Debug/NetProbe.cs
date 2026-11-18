@@ -20,8 +20,11 @@ namespace UncleExtraction
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Init()
         {
+#if UE_PLAYER_BUILD
+            return; // build de jugadores: sin sondas de QA
+#endif
             var a = Environment.GetCommandLineArgs();
-            if (a.Contains("-ueProbe") || a.Contains("-ueProbeStage") || a.Contains("-ueProbeRestartAt") || a.Contains("-ueQuitAtRound"))
+            if (a.Contains("-ueProbeCycle") || a.Contains("-ueProbe") || a.Contains("-ueProbeStage") || a.Contains("-ueProbeRestartAt") || a.Contains("-ueQuitAtRound"))
             { var go = new GameObject("NetProbe"); DontDestroyOnLoad(go); go.AddComponent<NetProbe>(); }
         }
         static string Arg(string k) { var a = Environment.GetCommandLineArgs(); int i = Array.IndexOf(a, k); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; }
@@ -35,6 +38,7 @@ namespace UncleExtraction
             var a = Environment.GetCommandLineArgs();
             if (a.Contains("-ueProbeStage") && NetAuth.IsServer) StartCoroutine(Stage());
             var rs = Arg("-ueProbeRestartAt");
+            if (a.Contains("-ueProbeCycle") && NetAuth.IsServer) StartCoroutine(HostCycle());
             if (rs != null && NetAuth.IsServer && float.TryParse(rs, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float at)) StartCoroutine(RestartAt(at));
             var qa = Arg("-ueQuitAtRound"); // invitado: salir del juego cuando el reloj replicado de la ronda llega a s
             if (qa != null && float.TryParse(qa, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float qs))
@@ -43,6 +47,7 @@ namespace UncleExtraction
                 Debug.Log($"[Probe] sale de la partida a los {RoundDirector.Instance.Elapsed:0.0} s de ronda"); Application.Quit(); yield break;
             }
             var probe = Arg("-ueProbe");
+            if (probe == "cycle") yield return GuestCycle();
             if (probe == "toggle") yield return Toggle();
             else if (probe == "mark") yield return Mark();
         }
@@ -72,6 +77,52 @@ namespace UncleExtraction
             RoundDirector.Instance.Restart();
             yield return null; yield return null;
             Debug.Log($"[Probe] anfitrion: reinicio; marcadores activos={(CoopMarkers.Instance ? CoopMarkers.Instance.ActiveCount : -1)}");
+        }
+
+        /// Anfitrion (sesion 17): tres rondas seguidas sin que nadie vuelva a entrar: Sin carrito, Sin carrito y Estandar,
+        /// tirando la torre una vez en cada ronda (la decision la toma el anfitrion, como en el juego).
+        IEnumerator HostCycle()
+        {
+            var r = RoundDirector.Instance;
+            var modes = new[] { ChallengeMode.NoCart, ChallengeMode.NoCart, ChallengeMode.Standard };
+            for (int i = 0; i < modes.Length; i++)
+            {
+                if (i > 0) { r.challenge = modes[i]; r.Restart(); }
+                else if (r.CurrentChallenge != modes[0]) { r.challenge = modes[0]; r.Restart(); }
+                if (NpcBrain.Instance) NpcBrain.Instance.brainEnabled = false;
+                yield return Wait(4f);
+                r.TowerFall(Vector3.right);
+                Debug.Log($"[Probe] anfitrion: ronda {r.Restarts} modo {r.CurrentChallenge} torre tirada");
+                yield return Wait(4f);
+            }
+            Debug.Log("[Probe] anfitrion: ciclo terminado");
+        }
+
+        /// Invitado (sesion 17): en cada ronda nueva comprueba el carrito segun el modo y que la torre empieza armada y cae una vez.
+        IEnumerator GuestCycle()
+        {
+            var r = RoundDirector.Instance; int seen = -1, rounds = 0;
+            for (float t = 0; t < 60f && rounds < 3; t += Time.unscaledDeltaTime)
+            {
+                if (r.Restarts != seen && r.State == RoundState.Running && !r.InLobby)
+                {
+                    seen = r.Restarts; rounds++;
+                    yield return Wait(1.5f);
+                    var cart = TransportCart.Instance; var props = BarProps.Instance;
+                    bool visible = false, usable = false;
+                    if (cart) { foreach (var rr in cart.GetComponentsInChildren<Renderer>()) visible |= rr.enabled; foreach (var s in cart.GetComponentsInChildren<GrabSocket>()) usable |= s.enabled; }
+                    bool nocart = r.CurrentChallenge == ChallengeMode.NoCart;
+                    Check($"ronda{rounds}_carrito_{r.CurrentChallenge}", nocart ? (!visible && !usable) : (visible && usable), $"ronda={r.Restarts} visible={visible} agarrable={usable} pos={(cart ? cart.transform.position.ToString() : "-")}");
+                    int f0 = props ? props.Falls : -1;
+                    Check($"ronda{rounds}_torre_armada", props && !props.Fallen, $"caidas_previas={f0}");
+                    for (float w = 0; w < 6f && props && !props.Fallen; w += Time.unscaledDeltaTime) yield return null;
+                    yield return Wait(0.5f);
+                    Check($"ronda{rounds}_torre_cae_una_vez", props && props.Fallen && props.Falls == f0 + 1, $"caidas={(props ? props.Falls : -1)}");
+                }
+                yield return null;
+            }
+            Debug.Log($"[Probe] fin cycle ok={ok}/{total} rondas={rounds}");
+            yield return Wait(1f); Application.Quit();
         }
 
         // ---------- invitado ----------

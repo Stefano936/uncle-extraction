@@ -16,4 +16,8 @@ Inventario de lo que entra en la build. Lo pide la biblia 03: «Si utiliza un as
 | Escenario nocturno: techo, terminaciones, carteles, calle, edificios, camioneta, luces, cielo | Generado al construir la escena (`Editor/BarDressing.cs`) | Geometría primitiva y materiales escritos en este repositorio; cielo con el sombreador procedural de Unity | Propio del proyecto | En uso |
 | Texturas de asfalto y losetas | `Assets/Game/Art/Materials/Textures/Generated/` | Ruido procedural generado por `BarDressing` (sin fuentes externas) | Propio del proyecto | En uso |
 | Sombreador de texto 3D `UncleExtraction/WorldText` | `Assets/Game/Art/Shaders/WorldText.shader` | Escrito en este repositorio | Propio del proyecto | En uso |
+| Sonidos de la sesión 15 (contacto del clic, resbalón, tensión de tela, ruedas y golpes del carrito, pestillo, ambiente de bar, remate de victoria, vasos) | Generados al ejecutar (`SfxSynth.cs`) | Síntesis propia en el código | Propio del proyecto | En uso; provisionales |
+| Manos, ropa del tío, detalles de la camioneta, barricada y torre de vasos | Generados al ejecutar (`HandRig`, `UncleOutfit`, `VanDetails`, `Challenges`, `BarProps`) | Primitivas y materiales escritos en este repositorio | Propio del proyecto | En uso |
+| Líneas nuevas del tío y del barman (DLG_101–DLG_109) | `dialogue_en_es.csv` | Escritas en este repositorio | Propio del proyecto | Subtítulos; sin voz (guion grabable en `docs/GUION_VOZ.md`) |
+| Clips y cápsulas de tienda (borradores) | `docs/lanzamiento/` | Capturas del juego real | Propio del proyecto | Borradores para revisión |
 | Música | — | — | — | No hay |

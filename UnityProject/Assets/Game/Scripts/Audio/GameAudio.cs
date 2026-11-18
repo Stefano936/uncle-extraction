@@ -16,6 +16,30 @@ namespace UncleExtraction
         NpcState lastNpc; RoundState lastRound; VanDoors.Phase lastVan; int lastAttacks;
         readonly Dictionary<PlayerMotor, int> falls = new Dictionary<PlayerMotor, int>();
         string held0 = "", held1 = "";
+        float nextStrain; AudioSource amb, roll; Vector3 lastCartVel; float lastBump;
+
+        /// Ambiente del bar (bucle, efectos) y ruedas del carrito (bucle 3D que sigue al carrito; volumen y tono por velocidad;
+        /// golpe suave cuando frena de golpe contra algo). Solo presentacion, en todos los pares.
+        void LoopSources()
+        {
+            if (!amb) { amb = gameObject.AddComponent<AudioSource>(); amb.clip = SfxSynth.Get("ambience"); amb.loop = true; amb.spatialBlend = 0f; amb.playOnAwake = false; }
+            bool live = round && round.State == RoundState.Running;
+            amb.volume = 0.22f * GameSettings.EffectsVolume; if (live && !amb.isPlaying) amb.Play();
+            var cart = TransportCart.Instance; if (!cart) return;
+            if (!roll)
+            {
+                var go = new GameObject("CartRoll"); go.transform.SetParent(cart.transform, false);
+                roll = go.AddComponent<AudioSource>(); roll.clip = SfxSynth.Get("cart_roll"); roll.loop = true; roll.spatialBlend = 1f; roll.minDistance = 2f; roll.maxDistance = 25f; roll.rolloffMode = AudioRolloffMode.Linear; roll.volume = 0f; roll.Play();
+            }
+            var rb = cart.GetComponent<Rigidbody>();
+            Vector3 v = rb ? rb.linearVelocity : Vector3.zero; if (rb && rb.isKinematic) v = (cart.transform.position - lastCartPos) / Mathf.Max(1e-4f, Time.deltaTime);
+            lastCartPos = cart.transform.position;
+            float sp = new Vector3(v.x, 0, v.z).magnitude;
+            roll.volume = Mathf.Clamp01(sp / 2.5f) * 0.6f * GameSettings.EffectsVolume; roll.pitch = 0.8f + Mathf.Clamp01(sp / 3f) * 0.5f;
+            if ((lastCartVel - v).magnitude > 1.3f && lastCartVel.magnitude > 1f && Time.time - lastBump > 0.35f) { Play3D("cart_bump", cart.transform.position + Vector3.up * 0.5f, 0.8f); lastBump = Time.time; }
+            lastCartVel = v;
+        }
+        Vector3 lastCartPos;
 
         void Awake() { Instance = this; }
         void OnDestroy() { if (Instance == this) Instance = null; }
@@ -52,6 +76,7 @@ namespace UncleExtraction
 
         void Update()
         {
+            LoopSources();
             if (npc && body)
             {
                 var st = npc.State;
@@ -79,20 +104,29 @@ namespace UncleExtraction
             {
                 string a = local.HeldSocketId(0), b = local.HeldSocketId(1);
                 if ((a != "" && held0 == "") || (b != "" && held1 == "")) Play2D("grab", 0.7f);
-                if ((a == "" && held0 != "") || (b == "" && held1 != "")) Play2D("release", 0.6f);
+                // soltar a proposito (sin el boton) vs resbalarse (el boton sigue apretado: lo arrancaron, distancia, golpe)
+                bool lostA = a == "" && held0 != "", lostB = b == "" && held1 != "";
+                if (lostA || lostB)
+                {
+                    bool slipped = (lostA && LabInput.RawHeld(Act.GrabLeft)) || (lostB && LabInput.RawHeld(Act.GrabRight));
+                    Play2D(slipped ? "slip" : "release", slipped ? 0.75f : 0.6f);
+                }
                 held0 = a; held1 = b;
+                // tension alta: la tela cruje cada tanto (cuanto mas tension, mas seguido)
+                float tn = Mathf.Max(a != "" ? local.Tension01(0) : 0f, b != "" ? local.Tension01(1) : 0f);
+                if (tn > 0.65f && Time.time >= nextStrain) { Play2D("strain", 0.25f + 0.35f * tn); nextStrain = Time.time + Mathf.Lerp(1.1f, 0.45f, tn); }
             }
             var van = VanDoors.Instance;
             if (van)
             {
                 var ph = van.CurrentPhase;
-                if (ph == VanDoors.Phase.Closed && lastVan != VanDoors.Phase.Closed) Play3D("van_close", van.closePoint, 1f);
+                if (ph == VanDoors.Phase.Closed && lastVan != VanDoors.Phase.Closed) { Play3D("van_close", van.closePoint, 1f); Play3D("latch", van.closePoint, 0.9f); }
                 lastVan = ph;
             }
             if (round)
             {
                 var rs = round.State;
-                if (rs != lastRound && rs == RoundState.Success) Play2D("success", 0.8f);
+                if (rs != lastRound && rs == RoundState.Success) Play2D("win_sting", 0.8f);
                 if (rs != lastRound && rs == RoundState.Timeout) Play2D("timeout", 0.8f);
                 lastRound = rs;
             }

@@ -59,3 +59,4 @@ DLG_057,shake_windup,uncle,100,25,alcohol_party,I am about to make this everybod
 DLG_058,recover,uncle,30,25,alcohol_party,My confidence needs a chair.,Mi confianza necesita una silla.,My confidence needs a chair.,Mi confianza necesita una silla.,NOT_RECORDED
 DLG_059,van_approach,uncle,30,25,alcohol_party,"If this is a kidnapping, the service is inconsistent.","Si esto es un secuestro, el servicio es irregular.","If this is a kidnapping, the service is inconsistent.","Si esto es un secuestro, el servicio es irregular.",NOT_RECORDED
 DLG_060,secured,uncle,60,25,alcohol_party,I was helping the entire time.,Estuve ayudando todo el tiempo.,I was helping the entire time.,Estuve ayudando todo el tiempo.,NOT_RECORDED
+DLG_061,last_call,uncle,70,6,alcohol_party,"Last call? Then I'm one short.","¿Última ronda? Entonces me falta una.","Last call? Then I'm one short.","¿Última ronda? Entonces me falta una.",NOT_RECORDED

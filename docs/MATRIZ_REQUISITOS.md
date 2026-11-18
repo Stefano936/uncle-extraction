@@ -1,6 +1,6 @@
 # Matriz de requisitos — alcance inicial (alcohol, un bar, camioneta fija, 1 a 4 jugadores)
 
-Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 14) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 14 (2026-11-17). Cada evidencia nombra su build o commit cuando no es la candidata vigente.
+Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 14) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 17 (2026-11-18, rama `s17-demo`, demo `b44386d`, QA `1bc221d`). Cada evidencia nombra su build o commit cuando no es la candidata vigente.
 
 **Niveles de evidencia:** **C** = existe en código y compila · **E** = probado en el editor (PlayMode/EditMode) · **B** = probado en la build · **L** = procesos en localhost · **R1** = Relay desde una PC · **R2** = dos equipos y redes distintas · **H** = revisado por una persona.
 **Estados:** completo · parcial · faltante · pospuesto (justificado) · bloqueado.
@@ -70,6 +70,42 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Calidad Alta/Baja, detección de integrada | Media | `GraphicsQuality` | completo | B (banco RTX/Iris) | Banco a batería (H/dueño) |
 | Banco reproducible y tandas protegidas | Media | `Bench.cs`, `perf_bench.ps1`, `Guard.psm1` | completo | B | — |
 
+## Producción y rejugabilidad (sesión 15)
+
+| Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
+| --- | --- | --- | --- | --- | --- |
+| Respuesta inmediata al clic y sensación de agarre (contacto, confirmación, tensión, resbalón, liberación) | Alta | `HandRig.Pulse`, `GameAudio` (grab_try, grab, strain, slip, release) | completo (implementación) / verificación parcial | C, B (capturas) | **H: ¿se siente?** |
+| Carrito físico (ruedas, traqueteo, golpes contra el marco) | Media | `GameAudio.LoopSources` (cart_roll por velocidad, cart_bump) | completo | C | H |
+| Final con peso (portazo, pestillo, remate breve, «Otra ronda» enseguida) | Media | `latch`, `win_sting`, resultados existentes | completo | C, B (clip `cierre`) | H |
+| Reacciones del tío a eventos reales (camioneta, levantarse, golpe frenado, vasos) | Media | `UncleDialogue` + DLG_101–109 | completo | C, B (subtítulos en clips) | Voz grabada (guion listo) |
+| Bar que reacciona: torre de vasos que distrae al tío | Media | `BarProps` (anfitrión decide, RPC a todos, una vez por ronda, se rearma) | completo | E (`ReplayFeatureTests`) | L con 2+ procesos; H |
+| Desafíos opcionales: Sin carrito, Ruta estrecha | Media | `Challenges` (modo replicado; barricada estática igual en todos los pares; ruta alternativa) | completo | E (ganan solo: 21,7 s y 40,4 s) | Viabilidad con 4 personas (H) |
+| Parte de extracción con datos reales y vista para captura | Media | `RoundStats` (anfitrión registra, RPC a invitados), `GameFlowUI.CleanView` | completo | E, B (clip `cierre`: «Cerraron con 9 s de margen») | H: ¿lo comparten? |
+| Ropa del tío con volumen y costuras; luces que no laven; malla sin facetas | Alta | `UncleOutfit`, `BarDressing`, `Finishing`; sesión 16: normales calculadas (60°) en la malla del kit | parcial | B (antes/después sesión 15 y 16) | Modelado nuevo (silueta, manos con dedos) |
+| Camioneta con detalle y luz que orienta | Alta | `VanDetails` | completo (implementación) | B (capturas con 4 procesos) | H |
+| Barra, puerta y carrito: vetas, desgaste, herrajes | Alta | `Finishing` (sesión 16): acero cepillado, pintura gastada, goma, madera oscura con normales; moldura, desgaste y apoyapiés en la barra; marco, placas y bisagras en la puerta | completo (implementación) / verificación parcial | B (primeros planos `docs/capturas/sesion16/`) | **H** de cerca |
+| Demo distribuible + material de tienda | Alta | `Builds/UncleExtraction_Demo_s15.zip`, `docs/lanzamiento/` | completo (borradores) | — | Revisión del dueño; video con OBS/ffmpeg |
+| Destrabe del autopiloto (carrito en la puerta) | Media | `LabAutopilot.MoveWorld` | completo | E (12/12 intentos completos) | — |
+
+## Sesión 17 (auditoría y demo)
+
+| Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
+| --- | --- | --- | --- | --- | --- |
+| Sin carrito persiste en rondas seguidas; Estándar devuelve un carrito jugable | Alta | `Challenges` (reaplica por ronda replicada), `TransportCart.Teleport` | completo | E (3× Sin carrito → Estándar gana con carrito), L (`cycle` 9/9) | H en red |
+| Torre de vasos rearmada en todos los pares, una caída por ronda | Alta | `BarProps` + `TowerFallRpc(ronda)` | completo | E, L (`cycle`) | H |
+| Versión y protocolo con una sola fuente; incompatibilidad con mensaje claro y reintento | Alta | `GameVersion` 0.17.0/2, admisión `NetSession.Decide` | completo | E, L (`compat` en los dos sentidos contra la demo s16) | R2 con dos versiones |
+| Nombres por bytes UTF-8 reales; parte estructurado traducido en cada cliente | Alta | `PlayerMotor.Sanitize`, `Loc.Escape`, `RoundStats.Report` | completo | E (tildes, emoji, `\|`, `=`, límite), L (parte llega al invitado) | H con nombres raros en red |
+| Disputa por un agarre: un solo dueño, evidencia atada al intento; caso de juego normal | Alta | `LabAutopilot.RaceRun`, `net_smoke` `race`/`race_natural` | completo | L (`race` 5 PASS; `race_natural` 12/12 nunca dos a la vez, disputa real 5/12) | R2 con personas |
+| Las pruebas no modifican el proyecto | Alta | `.mat` del tío sin `_EMISSION`; `NpcPresentation` en copias; `run_tests.ps1` | completo | E (PlayMode completa 168/168 con assets sin cambios) | — |
+| Tandas aisladas: bloqueo atómico, solo procesos propios, puerto libre | Media | `Guard.psm1` (mutex), `net_smoke` | completo | autoprueba PASS | — |
+| Build de jugadores y ZIP verificable | Alta | `BuildTools -uePlayer`, `make_demo_zip.ps1` | completo | B (copia descomprimida: menú, argumentos de QA ignorados), SHA-256 | H |
+| Ayudas que dicen el botón, quién tiene el punto y siguen al dispositivo | Alta | `GrabFeedback`, `InputBindings.PadActive` | completo (implementación) | E (`Hints_FollowTheDeviceInUse`) | **H**: primer agarre < 60 s |
+| Secuencia audiovisual completa del agarre (bloque 3) | Media | parcial: anillo, línea de tensión, sonidos de sesión 15 | parcial | — | Diseño y prueba con personas |
+| Campana de última ronda (distracción con costo) | Media | `BarProps.RingBell`, `NpcBrain.HearBell` | completo (implementación) | E (suena una vez, espera, tope, rearme) | H de a dos; L en red |
+| Otra ronda con nueva condición inicial (karaoke) | Media | `ChallengeMode.Karaoke` | completo (implementación) | E (×2, vuelve a la barra, gana arrastrando 31,8 s) | H; L con grupo |
+| Rendimiento comparable y sesión larga de 4 | Media | banco de vistas fijas, `long4` | completo (medido) | B (Alta/Baja igual o mejor que s16), L (`long4` 10/10, +≤1 MB) | Profiler de Unity; GPU integrada confirmada |
+| Arte del bloque 5, remate del cierre, clip con sonido | Media | — | faltante | — | Siguiente sesión; grabador con permiso |
+
 ## Bloqueos externos
 
 | Tema | Paso mínimo del dueño |
@@ -78,4 +114,5 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Revisión humana (H) | `REVISION_CANDIDATA.txt` y `PRUEBA_HUMANA.txt` junto al ejecutable. |
 | Steam | Cuenta de Steamworks, pago de Steam Direct, App ID. |
 | IL2CPP | Visual Studio 2022 con «Desarrollo de juegos con C++». |
-| Voz y música | Grabaciones propias o recursos con licencia comercial. |
+| Voz y música | Grabaciones propias o recursos con licencia comercial (guion: `docs/GUION_VOZ.md`). |
+| Video del tráiler y clips en MP4 | Permiso para instalar ffmpeg u OBS (los clips actuales son WebP de juego real). |

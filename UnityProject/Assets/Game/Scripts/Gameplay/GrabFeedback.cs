@@ -13,6 +13,7 @@ namespace UncleExtraction
         public AimState State { get; private set; }
         public GrabSocket Aimed { get; private set; }
 
+        static readonly bool NoHud = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0; // material de tienda
         Transform ring; Mesh ringMesh; Material ringMat; TextMesh label; LineRenderer[] lines = new LineRenderer[2];
         Transform warn; TextMesh warnLabel; Material warnMat; Mesh warnMesh;
         /// Texto del bloqueo marcado en el mundo ("" = nada que marcar). Para pruebas.
@@ -32,6 +33,7 @@ namespace UncleExtraction
             label.characterSize = 0.011f; label.fontSize = 64;
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font) { label.font = font; lgo.GetComponent<MeshRenderer>().sharedMaterial = font.material; }
+            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) lgo.GetComponent<MeshRenderer>().enabled = false; // material de tienda
             for (int h = 0; h < 2; h++)
             {
                 var go = new GameObject(h == 0 ? "Tension_L" : "Tension_R"); go.transform.SetParent(null, false);
@@ -104,7 +106,17 @@ namespace UncleExtraction
                 Color col = State == AimState.Valid ? new Color(0.95f, 0.91f, 0.81f, 0.95f) : State == AimState.Busy ? new Color(0.94f, 0.47f, 0.38f, 0.95f) : new Color(0.72f, 0.76f, 0.75f, 0.6f);
                 if (ringMat) ringMat.color = col;
                 string n = SocketName(Aimed);
-                label.text = State == AimState.Valid ? n : State == AimState.Busy ? Loc.T("grab.aim_busy", ("socket", n)) : Loc.T("grab.aim_far", ("socket", n));
+                // sesion 17: con que boton se agarra (mano libre, segun el dispositivo en uso) y QUIEN lo tiene si esta ocupado
+                string keys = "";
+                if (State == AimState.Valid)
+                {
+                    bool l = hands.HeldSocketId(0) == "", r = hands.HeldSocketId(1) == "";
+                    keys = l && r ? InputBindings.Display(Act.GrabLeft) + " / " + InputBindings.Display(Act.GrabRight) : l ? InputBindings.Display(Act.GrabLeft) : InputBindings.Display(Act.GrabRight);
+                }
+                string holder = State == AimState.Busy ? PlayerHands.HolderName(Aimed, hands) : "";
+                label.text = NoHud ? "" : State == AimState.Valid ? Loc.T("grab.aim_valid", ("socket", n), ("keys", keys))
+                    : State == AimState.Busy ? (holder != "" ? Loc.T("grab.aim_busy_by", ("socket", n), ("player", holder)) : Loc.T("grab.aim_busy", ("socket", n)))
+                    : Loc.T("grab.aim_far", ("socket", n));
                 label.color = col; label.transform.localPosition = new Vector3(0f, 0.11f, 0f);
             }
             // que bloquea el cierre de la camioneta (con el tio adentro y el jugador a menos de 7 m de la abertura)

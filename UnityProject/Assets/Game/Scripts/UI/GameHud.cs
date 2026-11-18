@@ -21,7 +21,7 @@ namespace UncleExtraction
         Text timer, objective, objectiveDetail, prompt, toast, fallTitle, fallDetail, attackTitle, attackHint, attackSub, effortHint;
         Image promptBar, attackIcon, fallBar; RectTransform attackBox, promptBox, fallBox, toastBox, subBox; Text subtitle;
         public string SubtitleText => subBox && subBox.gameObject.activeSelf ? subtitle.text : "";
-        float objectiveUntil;
+        float objectiveUntil; ChallengeMode shownChallenge = ChallengeMode.Standard;
 
         public HandState StateOf(int h) => hand[h] != null ? hand[h].s : HandState.Unavailable;
         public string AttackText => attackBox && attackBox.gameObject.activeSelf ? attackTitle.text : "";
@@ -40,6 +40,7 @@ namespace UncleExtraction
             builtScale = Ui.TextScale;
             round = FindAnyObjectByType<RoundDirector>(); npc = FindAnyObjectByType<NpcBrain>();
             canvas = Ui.Canvas("HUD", 10); root = Ui.Stretch("Root", canvas.transform);
+            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) canvas.enabled = false; // material de tienda (sesion 15)
             // manos: abajo a la izquierda y a la derecha
             for (int h = 0; h < 2; h++)
             {
@@ -124,6 +125,7 @@ namespace UncleExtraction
             root.Find("Energy/EnergyLabel").GetComponent<Text>().text = Loc.T("hud.energy");
             objective.text = Loc.T("hud.objective"); objectiveDetail.text = Loc.T("hud.objective_detail");
             fallTitle.text = Loc.T("hud.fall_title");
+            shownChallenge = (ChallengeMode)255; // Update vuelve a poner el aviso del desafio tras reetiquetar
         }
 
         static string Key(string s) => s.Replace("{key}", InputBindings.Display(Act.Interact)).Replace("{release}", InputBindings.Display(Act.ReleaseAll));
@@ -132,6 +134,10 @@ namespace UncleExtraction
         {
             if (builtScale > 0f && Mathf.Abs(builtScale - Ui.TextScale) > 0.01f) { Rebuild(); return; }
             if (!root) return;
+            // desafio: se anuncia en el objetivo desde el arranque (sesion 15)
+            var chm = round ? round.CurrentChallenge : ChallengeMode.Standard;
+            if (objectiveDetail && chm != shownChallenge) { shownChallenge = chm; objectiveDetail.text = chm == ChallengeMode.Standard ? Loc.T("hud.objective_detail") : Loc.T("challenge.hint_" + chm.ToString().ToLowerInvariant()); }
+
             var pc = PlayerControls.Local; var motor = pc ? pc.GetComponent<PlayerMotor>() : null; var hands = pc ? pc.GetComponent<PlayerHands>() : null;
             bool running = round && round.State == RoundState.Running && !round.InLobby; // en la sala no hay HUD de juego
             bool show = motor && hands && running && !(GameFlowUI.Instance && GameFlowUI.Instance.Paused);

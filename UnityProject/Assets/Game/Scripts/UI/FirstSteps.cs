@@ -40,7 +40,7 @@ namespace UncleExtraction
         void Build()
         {
             if (box) Destroy(box.gameObject);
-            if (!canvas) canvas = Ui.Canvas("FirstSteps", 15);
+            if (!canvas) { canvas = Ui.Canvas("FirstSteps", 15); if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) canvas.enabled = false; }
             builtScale = Ui.TextScale;
             box = Ui.PanelBox("Guide", canvas.transform, new Vector2(0f, 0.5f), new Vector2(Ui.Margin, 60), new Vector2(Ui.K(470), Ui.K(150))); box.pivot = new Vector2(0f, 0.5f);
             title = Ui.Label(box, "Title", "", Ui.FontHud, Ui.Focus, TextAnchor.UpperLeft, true);
@@ -93,6 +93,14 @@ namespace UncleExtraction
             var hands = pc.GetComponent<PlayerHands>();
             bool any = hands && (hands.HeldSocketId(0) != "" || hands.HeldSocketId(1) != "");
             bool both = hands && hands.HeldSocketId(0) != "" && hands.HeldSocketId(1) != "";
+            // si el jugador ya va por delante de la guia (el tio camino a la camioneta, atado o adentro), salta a la camioneta:
+            // no tiene sentido seguir explicando ataques mientras ya lo esta llevando (sesion 15)
+            if (step < Step.Transport && step > Step.Grab)
+            {
+                float dNow = UncleToVan();
+                bool ahead = (TransportCart.Instance && TransportCart.Instance.IsStrapped) || (ExtractionZone.Instance && ExtractionZone.Instance.AllPointsInside) || (dNow >= 0f && dNow < 6f);
+                if (ahead) { Go(Step.Extract); Render(); return; }
+            }
             switch (step)
             {
                 case Step.Move: if (walked > 1.5f) Go(Step.Aim); break; // solo lo caminado con la guia visible

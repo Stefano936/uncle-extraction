@@ -303,11 +303,16 @@ namespace UncleExtraction
             return true;
         }
 
+        /// Inicio alternativo por condicion de ronda (sesion 17: karaoke). Devuelve true si cambio.
+        Vector3? spawnOverride;
+        public bool SetSpawnOverride(Vector3? p) { bool ch = spawnOverride != p; spawnOverride = p; return ch; }
+        public Vector3 SpawnPosition => spawnOverride ?? spawnPos;
+        public Quaternion SpawnRotation => spawnRot;
         public void ResetState()
         {
             Posture = NpcPosture.Upright; desiredWalkVelocity = desiredFacing = resistForce = Vector3.zero;
             SetKinematic(false);
-            TeleportTo(spawnPos, spawnRot);
+            TeleportTo(SpawnPosition, spawnRot);
             SetStrength(true);
         }
     }

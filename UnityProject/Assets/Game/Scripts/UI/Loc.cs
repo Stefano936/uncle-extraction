@@ -66,7 +66,7 @@ namespace UncleExtraction
             var parts = coded.Split('|');
             if (!Has(parts[0])) return coded;
             var args = new List<(string, string)>();
-            for (int i = 1; i < parts.Length; i++) { int eq = parts[i].IndexOf('='); if (eq > 0) args.Add((parts[i].Substring(0, eq), parts[i].Substring(eq + 1))); }
+            for (int i = 1; i < parts.Length; i++) { int eq = parts[i].IndexOf('='); if (eq > 0) args.Add((parts[i].Substring(0, eq), Unescape(parts[i].Substring(eq + 1)))); }
             return T(parts[0], args.ToArray());
         }
 
@@ -74,7 +74,20 @@ namespace UncleExtraction
         public static string Code(string key, params (string name, string value)[] args)
         {
             var sb = new System.Text.StringBuilder(key);
-            foreach (var (n, v) in args) sb.Append('|').Append(n).Append('=').Append(v);
+            foreach (var (n, v) in args) sb.Append('|').Append(n).Append('=').Append(Escape(v));
+            return sb.ToString();
+        }
+        /// Los valores (nombres de jugador) pueden traer «|» o «=»: se escapan para que no rompan el mensaje (sesion 17).
+        public static string Escape(string v) => (v ?? "").Replace("\\", "\\\\").Replace("|", "\\p").Replace("=", "\\e");
+        public static string Unescape(string v)
+        {
+            if (string.IsNullOrEmpty(v) || v.IndexOf('\\') < 0) return v;
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < v.Length; i++)
+            {
+                if (v[i] == '\\' && i + 1 < v.Length) { char c = v[++i]; sb.Append(c == 'p' ? '|' : c == 'e' ? '=' : c); }
+                else sb.Append(v[i]);
+            }
             return sb.ToString();
         }
 

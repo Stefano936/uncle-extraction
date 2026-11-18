@@ -17,6 +17,14 @@ namespace UncleExtraction
         public bool autoPartySize = true;
         /// Dificultad elegida en el menu; la aplica el anfitrion al empezar.
         public static Difficulty? RequestedDifficulty;
+        /// Desafio elegido en el menu/sala (sesion 15); lo aplica el anfitrion. -ueChallenge NoCart|Narrow para pruebas.
+        public static ChallengeMode? RequestedChallenge = ParseChallenge();
+        static ChallengeMode? ParseChallenge() { var a = System.Environment.GetCommandLineArgs(); for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueChallenge" && System.Enum.TryParse(a[i + 1], true, out ChallengeMode m)) return m; return null; }
+        public ChallengeMode challenge = ChallengeMode.Standard;
+        readonly NetworkVariable<ChallengeMode> nChallenge = new NetworkVariable<ChallengeMode>(ChallengeMode.Standard);
+        public ChallengeMode CurrentChallenge => Mirror ? nChallenge.Value : challenge;
+        /// Anfitrion, en la sala o en solitario antes de empezar: elegir desafio (los invitados quedan sin LISTO para confirmar).
+        public void SetChallenge(ChallengeMode m) { if (!NetAuth.IsServer || (!InLobby && NetSession.Mode != NetMode.Solo)) return; challenge = m; foreach (var pm in PlayerMotor.All) if (pm && pm.Controls && !pm.Controls.IsHostPlayer) pm.Controls.SetReadyServer(false); }
 
         readonly NetworkVariable<RoundState> nState = new NetworkVariable<RoundState>(RoundState.Running);
         readonly NetworkVariable<float> nElapsed = new NetworkVariable<float>();
@@ -66,7 +74,7 @@ namespace UncleExtraction
         public string LastStressReport { get; private set; } = "";
         public bool StressRunning { get; private set; }
 
-        void Start() { if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; }
+        void Start() { if (VanDoors.Instance && !VanDoors.Instance.GetComponent<VanDetails>()) VanDoors.Instance.gameObject.AddComponent<VanDetails>(); if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; if (NetAuth.IsServer && RequestedChallenge.HasValue) challenge = RequestedChallenge.Value; }
         public override void OnNetworkSpawn()
         {
             if (IsServer && NetSession.Mode != NetMode.Solo) { inLobby = true; nLobby.Value = true; Debug.Log("[Lobby] sala abierta"); }
@@ -105,7 +113,22 @@ namespace UncleExtraction
 
         /// Anfitrion: dificultad desde la sala (los invitados la ven de solo lectura).
         public void SetDifficulty(Difficulty d) { if (NetAuth.IsServer && InLobby) { difficulty = d; foreach (var pm in PlayerMotor.All) if (pm && pm.Controls && !pm.Controls.IsHostPlayer) pm.Controls.SetReadyServer(false); } }
-        void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); }
+        void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); if (!GetComponent<RoundStats>()) gameObject.AddComponent<RoundStats>(); if (!GetComponent<Challenges>()) gameObject.AddComponent<Challenges>(); if (!GetComponent<BarProps>()) gameObject.AddComponent<BarProps>(); }
+        /// Anfitrion: la torre de vasos se cae para todos (sesion 15).
+        public void TowerFall(Vector3 dir) { if (IsSpawned && IsServer) TowerFallRpc(dir, Restarts); else if (BarProps.Instance) BarProps.Instance.Fall(dir, Restarts); }
+        [Rpc(SendTo.Everyone)] void TowerFallRpc(Vector3 dir, int round) { if (BarProps.Instance) BarProps.Instance.Fall(dir, round); }
+        /// Campana de ultima ronda (sesion 17): la decide el anfitrion; suena en todos con el numero de ronda.
+        public void BellRang() { if (IsSpawned && IsServer) BellRpc(Restarts); else if (BarProps.Instance) BarProps.Instance.BellFx(Restarts); }
+        [Rpc(SendTo.Everyone)] void BellRpc(int round) { if (BarProps.Instance) BarProps.Instance.BellFx(round); }
+        /// Parte de extraccion: lo arma el anfitrion y llega igual a todos (sesion 15).
+        public const int MaxReportBytes = 12000;
+        public void PublishReport(string json)
+        {
+            if (!IsSpawned || !IsServer) return;
+            if (System.Text.Encoding.UTF8.GetByteCount(json) > MaxReportBytes) { Debug.LogWarning("[Report] parte demasiado grande: se envia sin momentos"); var r = RoundStats.Last; r.moments.Clear(); json = JsonUtility.ToJson(r); }
+            ReportRpc(json);
+        }
+        [Rpc(SendTo.NotServer)] void ReportRpc(string json) => RoundStats.Receive(json);
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
 
         void Update()
@@ -120,6 +143,7 @@ namespace UncleExtraction
                 if (nState.Value != state) nState.Value = state;
                 if (Mathf.Abs(nElapsed.Value - elapsed) > 0.1f) nElapsed.Value = elapsed;
                 if (nDifficulty.Value != difficulty) nDifficulty.Value = difficulty;
+                if (nChallenge.Value != challenge) nChallenge.Value = challenge;
                 if (nParty.Value != partySize) nParty.Value = partySize;
                 if (nRestarts.Value != restarts) nRestarts.Value = restarts;
                 if (!Mathf.Approximately(nTimeBonus.Value, timeBonus)) nTimeBonus.Value = timeBonus;
@@ -174,7 +198,11 @@ namespace UncleExtraction
             if (ok) BackToLobby();
         }
         /// Atajos de diagnostico (R = reiniciar): editor, build de desarrollo o -ueDebug.
+#if UE_PLAYER_BUILD
+        public static bool DiagnosticKeys => false; // build de jugadores: sin atajos ni laboratorios
+#else
         public static bool DiagnosticKeys => Application.isEditor || Debug.isDebugBuild || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueDebug") >= 0;
+#endif
 
         public void Restart()
         {

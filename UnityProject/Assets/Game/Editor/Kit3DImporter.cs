@@ -24,6 +24,13 @@ namespace UncleExtraction.EditorTools
             mi.importAnimation = uncle;
             mi.optimizeGameObjects = false;                      // conservar huesos y marcadores accesibles
             mi.importCameras = false; mi.importLights = false;
+            if (uncle)
+            {   // sesion 16: normales calculadas con suavizado de 60 grados. Las del archivo son planas (aspecto facetado):
+                // asi cabeza, panza, nariz, brazos y piernas se ven redondos y los bordes de ropa y calzado siguen marcados.
+                mi.importNormals = ModelImporterNormals.Calculate; mi.normalSmoothingAngle = 60f;
+                mi.normalCalculationMode = ModelImporterNormalCalculationMode.AngleWeighted;
+                mi.importTangents = ModelImporterTangents.CalculateMikk;
+            }
         }
 
         void OnPreprocessAnimation()

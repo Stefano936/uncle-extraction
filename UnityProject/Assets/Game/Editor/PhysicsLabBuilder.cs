@@ -129,6 +129,7 @@ namespace UncleExtraction.EditorTools
             if (!kitDoor) foreach (var side in new[] { -1f, 1f })
                 NoCollider(LocalPrim(PrimitiveType.Cube, "Door_Knob", door.transform, new Vector3(1.3f, 1.0f, side * 0.06f), new Vector3(0.12f, 0.03f, 0.05f), metalM));
             door.AddComponent<ExitDoor>();
+            if (spec.kitVisuals) Finishing.DoorTrims(env, door.transform, new Vector3(dx, 0f, dz), 1.5f, 2.1f); // sesion 16: marco y herrajes
 
             // Camioneta fija y zona de extraccion (detras de las puertas traseras)
             // Camioneta de pasajeros hueca (kit 3D: 2,52 x 5,38 x 2,33 m). Abertura trasera en z = -9,25 con dos hojas;

@@ -82,6 +82,7 @@ namespace UncleExtraction
         }
 
         /// Pide una linea para un evento; devuelve true si se mostro (respeta prioridad, enfriamiento y memoria reciente).
+        bool inVanSaid; int lastCut;
         public bool Say(string ev)
         {
             var cands = Load().FindAll(l => l.ev == ev);
@@ -102,7 +103,7 @@ namespace UncleExtraction
         void Update()
         {
             if (!round || !npc || !body) return;
-            if (round.Restarts != lastRestarts) { lastRestarts = round.Restarts; grabbedOnce = strapped = secured = nearVan = doorBlocked = roundStarted = false; falls.Clear(); }
+            if (round.Restarts != lastRestarts) { lastRestarts = round.Restarts; grabbedOnce = strapped = secured = nearVan = doorBlocked = roundStarted = inVanSaid = false; falls.Clear(); }
             bool running = round.State == RoundState.Running && !round.InLobby;
             if (running && !roundStarted) { roundStarted = true; Say("round_start"); }
             if (round.State != lastRound) { if (round.State == RoundState.Timeout) Say("round_timeout"); lastRound = round.State; }
@@ -133,6 +134,11 @@ namespace UncleExtraction
             if (cart && cart.IsStrapped && !strapped) { strapped = true; Say("cart_seated"); } else if (cart && !cart.IsStrapped) strapped = false;
             var van = VanDoors.Instance; var zone = ExtractionZone.Instance;
             if (van && !nearVan && Vector3.Distance(body.Body.position, van.closePoint) < 4f) { nearVan = true; Say("van_approach"); }
+            // sesion 15: reacciones a eventos reales de la ronda
+            var zz = ExtractionZone.Instance;
+            if (zz && zz.AllPointsInside && !inVanSaid) { inVanSaid = true; Say("in_van"); }
+            if (body.Posture == NpcPosture.Upright && lastPosture == NpcPosture.Fallen) Say("stood_up");
+            if (npc.Interrupted > lastCut) { lastCut = npc.Interrupted; Say("attack_cut"); }
             if (van && zone && zone.AllPointsInside && !zone.Secured)
             {
                 bool blocked = van.BlockReason().StartsWith("van.part_outside");

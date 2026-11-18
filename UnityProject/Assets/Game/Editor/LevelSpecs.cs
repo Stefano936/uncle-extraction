@@ -89,6 +89,7 @@ namespace UncleExtraction.EditorTools
                         r.sharedMaterial = r.name == "CounterTop" ? Finishing.Lit("Counter_Top", new Color(0.36f, 0.2f, 0.12f), 0.5f, 0f, bt, bn, 0.3f, new Vector2(4, 1))
                                                                   : Finishing.Lit("Counter_Front", new Color(0.5f, 0.3f, 0.18f), 0.25f, 0f, bt, bn, 0.6f, new Vector2(4, 1));
                 }
+                Finishing.BarTrims(env, new Vector3(4.5f, 0.54f, 8.85f), new Vector3(4.12f, 1.08f, 0.9f)); // sesion 16: moldura, desgaste, apoyapies
                 // Banquetas del kit (0,54 x 0,83 m): obstaculos fijos a los costados del banco del tio, no en su camino
                 foreach (var x in new[] { 2.8f, 6.3f })
                 {

@@ -35,8 +35,13 @@ namespace UncleExtraction
             {   // argumentos de prueba: entrar directo una sola vez por proceso (al volver al menu, quedarse en el menu)
                 argsForwarded = true;
                 string scene = GameScene;
+#if UE_PLAYER_BUILD
+                // build de jugadores (sesion 17): sin escenas ni autopiloto por argumento; solo entrar a una partida por IP o codigo
+                foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueJoinCode") { SceneManager.LoadScene(scene); return; }
+#else
                 for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueScene") scene = a[i + 1];
                 foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueJoinCode" || s == "-ueAutopilot") { SceneManager.LoadScene(scene); return; }
+#endif
             }
             canvas = Ui.Canvas("Menu", 0);
             var skin = UiSkin.Load();
@@ -47,6 +52,8 @@ namespace UncleExtraction
             title.fontSize = title.resizeTextMaxSize = 112; title.resizeTextMinSize = 72; // logo: no crece con el tamaño de texto
             title.rectTransform.offsetMin = new Vector2(Ui.Margin, 0); title.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin);
             var tag = Ui.Label(canvas.transform, "Tagline", "", Ui.FontSection, Ui.Focus, TextAnchor.UpperLeft);
+            var ver = Ui.Label(canvas.transform, "Version", $"v{GameVersion.Number} · protocolo {GameVersion.Protocol}", Ui.FontHud - 4, Ui.Muted, TextAnchor.LowerRight); // diagnostico (sesion 17)
+            ver.rectTransform.offsetMin = new Vector2(0, 12); ver.rectTransform.offsetMax = new Vector2(-16, 0);
             tag.rectTransform.offsetMin = new Vector2(Ui.Margin + 6, 0); tag.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin - 140);
             tag.gameObject.AddComponent<LocText>().key = "lobby.tagline";
             status = Ui.Label(canvas.transform, "Status", "", Ui.FontHud + 4, Ui.Danger, TextAnchor.LowerCenter);
@@ -132,6 +139,9 @@ namespace UncleExtraction
                     var diff = B("lobby.difficulty", null, 60);
                     diff.onClick.AddListener(() => { GameSettings.SoloDifficulty = (Difficulty)(((int)GameSettings.SoloDifficulty + 1) % 3); GameSettings.Save(); Relabel(diff); });
                     Relabel(diff);
+                    var ch = B("challenge.title", null, 60); // desafio opcional: la ronda estandar es la entrada principal
+                    ch.onClick.AddListener(() => { GameSettings.Challenge = (ChallengeMode)(((int)GameSettings.Challenge + 1) % Challenges.ModeCount); RelabelChallenge(ch); });
+                    RelabelChallenge(ch);
                     if (p == Page.Solo)
                     {
                         B("button.start", () => { SelectedScene = GameScene; Play(NetMode.Solo); });
@@ -191,6 +201,7 @@ namespace UncleExtraction
         }
         static bool Typing() { var s = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null; var f = s ? s.GetComponent<InputField>() : null; return f && f.isFocused; }
 
+        static void RelabelChallenge(Button b) => b.GetComponentInChildren<Text>().text = $"{Loc.T("challenge.title")}: {Loc.T("challenge." + GameSettings.Challenge.ToString().ToLowerInvariant())}";
         void Relabel(Button diff)
         {
             var d = GameSettings.SoloDifficulty;
@@ -217,6 +228,7 @@ namespace UncleExtraction
             if (mode == NetMode.Client && ipField) NetSession.Address = ipField.text.Trim();
             if (portField && ushort.TryParse(portField.text, out var p)) NetSession.Port = p;
             RoundDirector.RequestedDifficulty = GameSettings.SoloDifficulty;
+            RoundDirector.RequestedChallenge = GameSettings.Challenge;
             GameSettings.Save();
             SceneManager.LoadScene(SelectedScene);
         }

@@ -26,8 +26,10 @@ namespace UncleExtraction.EditorTools
             if (normal) { m.SetTexture("_BumpMap", normal); m.SetFloat("_BumpScale", bump); m.EnableKeyword("_NORMALMAP"); if (tiling.HasValue) m.SetTextureScale("_BumpMap", tiling.Value); }
             else { m.SetTexture("_BumpMap", null); m.DisableKeyword("_NORMALMAP"); }
             // el tio senaliza preparacion con un brillo (bloque de propiedades); el material lo admite con emision negra por defecto
-            if (emissionReady) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black); m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
-            else { m.DisableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black); }
+            // sesion 17: el asset NO lleva _EMISSION (URP se la quitaba al de la camisa al dibujarlo en el editor y PlayMode dejaba el
+            // proyecto modificado). emissionReady solo deja la emision en negro; NpcPresentation la activa en copias en ejecucion.
+            m.DisableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black);
+            if (emissionReady) m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             EditorUtility.SetDirty(m); return m;
         }
 
@@ -88,10 +90,10 @@ namespace UncleExtraction.EditorTools
             var map = new System.Collections.Generic.Dictionary<string, Material>
             {
                 // musculosa gastada, camisa de fiesta, bermuda de corderoy, piel con brillo de transpiracion, zapatos de cuero
-                { "cream",   Lit("Uncle_Undershirt", new Color(0.86f, 0.82f, 0.72f), 0.12f, 0f, fabric, fabricN, 0.35f, new Vector2(3, 3), true) },
-                { "wine",    Lit("Uncle_Shirt", new Color(0.78f, 0.16f, 0.18f), 0.18f, 0f, fabric, fabricN, 0.5f, new Vector2(2, 2), true) },
+                { "cream",   Lit("Uncle_Undershirt", new Color(0.78f, 0.74f, 0.64f), 0.1f, 0f, fabric, fabricN, 0.35f, new Vector2(3, 3), true) },
+                { "wine",    Lit("Uncle_Shirt", new Color(0.7f, 0.12f, 0.15f), 0.12f, 0f, fabric, fabricN, 0.5f, new Vector2(2, 2), true) },
                 { "mustard", Lit("Uncle_Shorts", new Color(0.82f, 0.56f, 0.16f), 0.1f, 0f, fabric, fabricN, 0.7f, new Vector2(4, 4), true) },
-                { "skin",    Lit("Uncle_Skin", new Color(0.95f, 0.66f, 0.5f), 0.42f, 0f, null, null, 0f, null, true) },
+                { "skin",    Lit("Uncle_Skin", new Color(0.84f, 0.55f, 0.41f), 0.3f, 0f, null, null, 0f, null, true) },
                 { "shoe",    Lit("Uncle_Shoe", new Color(0.2f, 0.11f, 0.06f), 0.6f, 0f, null, null, 0f, null, true) },
                 { "white",   Lit("Uncle_EyeWhite", new Color(0.95f, 0.92f, 0.82f), 0.85f, 0f, null, null, 0f, null, true) },
                 { "pupil",   Lit("Uncle_Pupil", new Color(0.03f, 0.03f, 0.03f), 0.9f, 0f, null, null, 0f, null, true) },
@@ -138,13 +140,109 @@ namespace UncleExtraction.EditorTools
         }
 
         // ---------- carrito propio sobre la geometria funcional (0,90 x 1,40 m, asa en el extremo corto a 1,0 m)
+
+        // ---------- sesion 16: texturas propias para que metal, pintura, madera y tela se distingan de cerca ----------
+        /// Textura repetible de 256 px generada por una funcion (u, v en 0..1, rnd); se guarda como PNG en Generated/.
+        static Texture2D Gen(string name, System.Func<float, float, System.Random, Color> f, int seed)
+        {
+            string path = $"{TexDir}/Generated/{name}.png";
+            if (!File.Exists(path))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                const int N = 256; var t = new Texture2D(N, N, TextureFormat.RGB24, true); var rnd = new System.Random(seed);
+                for (int y = 0; y < N; y++) for (int x = 0; x < N; x++) t.SetPixel(x, y, f(x / (float)N, y / (float)N, rnd));
+                t.Apply(); File.WriteAllBytes(path, t.EncodeToPNG()); Object.DestroyImmediate(t);
+                AssetDatabase.ImportAsset(path);
+                var ti = (TextureImporter)AssetImporter.GetAtPath(path); ti.wrapMode = TextureWrapMode.Repeat; ti.filterMode = FilterMode.Trilinear; ti.anisoLevel = 8; ti.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+        static float P(float x, float y) => Mathf.PerlinNoise(x, y);
+        /// Acero cepillado: vetas finas en una direccion (se ve el sentido del pulido con la luz rasante).
+        public static Texture2D BrushedMetal() => Gen("metal_brushed", (u, v, r) =>
+        {
+            float g = 0.72f + 0.12f * P(u * 3f, v * 140f) + 0.06f * P(u * 40f, v * 600f) + 0.03f * (float)r.NextDouble();
+            return new Color(g, g, g * 1.02f);
+        }, 11);
+        /// Pintura gastada: color pleno con desconchados que dejan ver el metal y rayones; el color lo pone el material.
+        public static Texture2D WornPaint() => Gen("paint_worn", (u, v, r) =>
+        {
+            float chip = P(u * 9f + 3f, v * 9f + 7f) * 0.75f + P(u * 31f, v * 31f) * 0.25f;
+            float scratch = Mathf.Abs(Mathf.Sin((u * 0.8f + v * 0.25f) * 140f + P(u * 4f, v * 4f) * 6f)) > 0.985f ? 1f : 0f;
+            float k = 0.9f + 0.1f * P(u * 60f, v * 60f);
+            if (chip > 0.72f || scratch > 0f) return new Color(0.45f, 0.45f, 0.47f); // metal a la vista (lo tiñe el color del material)
+            return new Color(k, k, k);
+        }, 23);
+        /// Goma: grano fino irregular.
+        public static Texture2D RubberGrain() => Gen("rubber_grain", (u, v, r) => { float g = 0.8f + 0.2f * P(u * 70f, v * 70f) + 0.05f * (float)r.NextDouble(); return new Color(g, g, g); }, 37);
+        /// Madera barnizada oscura de molduras (veta larga).
+        public static Texture2D DarkGrain() => Gen("wood_dark_grain", (u, v, r) =>
+        {
+            float ring = Mathf.Sin((v * 14f + P(u * 2f, v * 6f) * 3f) * Mathf.PI * 2f) * 0.5f + 0.5f;
+            float g = 0.75f + 0.18f * ring + 0.07f * P(u * 80f, v * 8f);
+            return new Color(g, g * 0.92f, g * 0.86f);
+        }, 41);
+
+        static Material TexMat(string name, Color c, float smooth, float metal, Texture2D tex, float bump, Vector2 tiling)
+        {
+            var nrm = tex ? NormalFrom(AssetDatabase.GetAssetPath(tex), tex.name, bump * 6f) : null;
+            return Lit(name, c, smooth, metal, tex, nrm, bump, tiling);
+        }
+
+        /// Barra: moldura barnizada en el canto, franja gastada donde se apoyan los codos y apoyapies de bronce con soportes.
+        /// Sin colision (no compite con la baranda de anclaje, que es la que se agarra).
+        public static void BarTrims(Transform env, Vector3 counterCenter, Vector3 counterSize)
+        {
+            var g = new GameObject("Bar_Trims").transform; g.SetParent(env, false);
+            var molding = TexMat("Bar_Molding", new Color(0.24f, 0.12f, 0.06f), 0.62f, 0f, DarkGrain(), 0.35f, new Vector2(6, 1));
+            var worn = TexMat("Bar_Worn", new Color(0.55f, 0.36f, 0.2f), 0.2f, 0f, DarkGrain(), 0.25f, new Vector2(6, 1));
+            var brass = TexMat("Bar_Brass", new Color(0.78f, 0.58f, 0.26f), 0.72f, 0.9f, BrushedMetal(), 0.15f, new Vector2(1, 8));
+            float front = counterCenter.z - counterSize.z * 0.5f, top = counterCenter.y + counterSize.y * 0.5f;
+            NoCol(PrimitiveType.Cube, "Molding", g, new Vector3(counterCenter.x, top - 0.02f, front - 0.025f), new Vector3(counterSize.x + 0.04f, 0.05f, 0.06f), Quaternion.identity, molding);
+            NoCol(PrimitiveType.Cube, "Elbow_Wear", g, new Vector3(counterCenter.x, top + 0.002f, front + 0.12f), new Vector3(counterSize.x - 0.3f, 0.004f, 0.14f), Quaternion.identity, worn);
+            NoCol(PrimitiveType.Cylinder, "Foot_Rail", g, new Vector3(counterCenter.x, 0.2f, front - 0.17f), new Vector3(0.05f, (counterSize.x - 0.2f) * 0.5f, 0.05f), Quaternion.Euler(0, 0, 90), brass);
+            for (int i = 0; i < 5; i++)
+            {
+                float x = counterCenter.x - (counterSize.x - 0.4f) * 0.5f + i * (counterSize.x - 0.4f) / 4f;
+                NoCol(PrimitiveType.Cube, "Rail_Bracket", g, new Vector3(x, 0.2f, front - 0.085f), new Vector3(0.03f, 0.04f, 0.17f), Quaternion.identity, brass);
+            }
+        }
+
+        /// Puerta de salida: marco de madera alrededor de la abertura (fijo) y, en la hoja, placa de empuje, placa de patada y
+        /// bisagras de metal cepillado (se mueven con la hoja). Sin colision.
+        public static void DoorTrims(Transform env, Transform leaf, Vector3 openingCenter, float width, float height)
+        {
+            var frame = TexMat("Door_Frame", new Color(0.3f, 0.17f, 0.09f), 0.45f, 0f, DarkGrain(), 0.35f, new Vector2(1, 4));
+            var steel = TexMat("Door_Steel", new Color(0.66f, 0.67f, 0.7f), 0.7f, 0.85f, BrushedMetal(), 0.2f, new Vector2(1, 4));
+            var g = new GameObject("Door_Trims").transform; g.SetParent(env, false);
+            foreach (var s in new[] { -1f, 1f })
+                NoCol(PrimitiveType.Cube, "Jamb", g, openingCenter + new Vector3(s * (width * 0.5f + 0.05f), height * 0.5f, 0f), new Vector3(0.1f, height + 0.1f, 0.36f), Quaternion.identity, frame);
+            NoCol(PrimitiveType.Cube, "Header", g, openingCenter + new Vector3(0f, height + 0.05f, 0f), new Vector3(width + 0.3f, 0.12f, 0.36f), Quaternion.identity, frame);
+            if (!leaf) return;
+            foreach (var z in new[] { -0.045f, 0.045f })
+            {
+                NoCol(PrimitiveType.Cube, "Push_Plate", leaf, leaf.TransformPoint(new Vector3(1.25f, 1.15f, z)), new Vector3(0.12f, 0.34f, 0.006f), leaf.rotation, steel);
+                NoCol(PrimitiveType.Cube, "Kick_Plate", leaf, leaf.TransformPoint(new Vector3(0.75f, 0.12f, z)), new Vector3(1.36f, 0.2f, 0.006f), leaf.rotation, steel);
+            }
+            foreach (var y in new[] { 0.3f, 1.05f, 1.8f }) NoCol(PrimitiveType.Cylinder, "Hinge", leaf, leaf.TransformPoint(new Vector3(0.02f, y, 0f)), new Vector3(0.05f, 0.07f, 0.05f), leaf.rotation, steel);
+        }
+
+        static GameObject NoCol(PrimitiveType t, string n, Transform parent, Vector3 worldPos, Vector3 scale, Quaternion worldRot, Material m)
+        {
+            var g = GameObject.CreatePrimitive(t); g.name = n; Object.DestroyImmediate(g.GetComponent<Collider>());
+            g.transform.SetParent(parent, true); g.transform.position = worldPos; g.transform.rotation = worldRot;
+            var ls = parent.lossyScale; g.transform.localScale = new Vector3(scale.x / ls.x, scale.y / ls.y, scale.z / ls.z);
+            g.GetComponent<Renderer>().sharedMaterial = m; return g;
+        }
+
         public static void Cart(Transform ct)
         {
             foreach (var r in ct.GetComponentsInChildren<Renderer>(true)) r.enabled = false; // primitivos funcionales y piezas del kit
             var g = new GameObject("Cart_Visual").transform; g.SetParent(ct, false);
-            var paint = Lit("Cart_Paint", new Color(0.95f, 0.42f, 0.1f), 0.55f, 0.2f);        // naranja de seguridad: se lee de lejos
-            var steel = Lit("Cart_Steel", new Color(0.62f, 0.63f, 0.66f), 0.6f, 0.85f);
-            var rubber = Lit("Cart_Rubber", new Color(0.05f, 0.05f, 0.055f), 0.2f);
+            // sesion 16: pintura gastada (desconchados y rayones), acero cepillado y goma con grano: se distinguen de cerca
+            var paint = TexMat("Cart_Paint", new Color(0.95f, 0.42f, 0.1f), 0.42f, 0.15f, WornPaint(), 0.3f, new Vector2(2, 2));  // naranja de seguridad
+            var steel = TexMat("Cart_Steel", new Color(0.66f, 0.67f, 0.7f), 0.68f, 0.88f, BrushedMetal(), 0.2f, new Vector2(1, 3));
+            var rubber = TexMat("Cart_Rubber", new Color(0.06f, 0.06f, 0.065f), 0.12f, 0f, RubberGrain(), 0.4f, new Vector2(2, 2));
             var wood = AssetDatabase.LoadAssetAtPath<Material>("Assets/Game/Art/Materials/MAT_Wood_Boards.mat");
             var deck = wood ? Lit("Cart_Deck", new Color(0.82f, 0.68f, 0.52f), 0.3f, 0f, wood.GetTexture("_BaseMap") as Texture2D, wood.GetTexture("_BumpMap") as Texture2D, 0.5f, new Vector2(1, 0.5f)) : Lit("Cart_Deck", new Color(0.55f, 0.38f, 0.22f), 0.3f);
             GameObject Box(string n, Vector3 p, Vector3 s, Material m) { var b = GameObject.CreatePrimitive(PrimitiveType.Cube); b.name = n; Object.DestroyImmediate(b.GetComponent<Collider>()); b.transform.SetParent(g, false); b.transform.localPosition = p; b.transform.localScale = s; b.GetComponent<Renderer>().sharedMaterial = m; return b; }

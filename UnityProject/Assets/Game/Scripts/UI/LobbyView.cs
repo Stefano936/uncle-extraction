@@ -17,7 +17,7 @@ namespace UncleExtraction
         readonly Button copyBtn;
         float copiedUntil;
         public string CodeText => codeText && codeText.gameObject.activeInHierarchy ? codeText.text : "";
-        readonly Button readyBtn, startBtn, diffBtn, leaveBtn;
+        readonly Button readyBtn, startBtn, diffBtn, leaveBtn; Button chBtn;
         bool wasVisible;
 
         public string MembersText => members ? members.text : "";
@@ -39,6 +39,7 @@ namespace UncleExtraction
             difficulty = Ui.Label(Root, "Difficulty", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft, true);
             var drt = difficulty.rectTransform; drt.anchorMin = drt.anchorMax = new Vector2(1, 1); drt.pivot = new Vector2(1, 1); drt.anchoredPosition = new Vector2(-48, -170 - d); drt.sizeDelta = new Vector2(400, 40);
             diffBtn = Ui.Button(Root, "DiffBtn", "", new Vector2(1, 1), new Vector2(-48, -220 - d), new Vector2(400, 64), () => { var d = round.CurrentDifficulty; round.SetDifficulty((Difficulty)(((int)d + 1) % 3)); });
+            chBtn = Ui.Button(Root, "ChallengeBtn", "", new Vector2(1, 1), new Vector2(-48, -294 - d), new Vector2(400, 64), () => round.SetChallenge((ChallengeMode)(((int)round.CurrentChallenge + 1) % Challenges.ModeCount)));
             diffBtn.GetComponent<RectTransform>().pivot = new Vector2(1, 1);
             // codigo de sala (internet): visible para todos, con copiar (UI_SPEC 3: lobby.code, button.copy_code)
             codeLabel = Ui.Label(Root, "CodeLabel", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperLeft);
@@ -88,6 +89,11 @@ namespace UncleExtraction
             difficulty.text = Loc.T("lobby.difficulty");
             diffBtn.GetComponentInChildren<Text>().text = dn + (host ? "  ▸" : "");
             diffBtn.interactable = host; // invitados: solo lectura
+            // desafio (sesion 15): visible para todos antes de empezar; lo cambia el anfitrion con el mismo boton + Mayus/clic der.
+            string chn = Loc.T("challenge." + round.CurrentChallenge.ToString().ToLowerInvariant());
+            // el rotulo queda en «Dificultad» (entra con texto al 150 %); el desafio va dentro de su boton, visible para todos
+            if (chBtn) chBtn.GetComponentInChildren<Text>().text = $"{Loc.T("challenge.title")}: {chn}" + (host ? "  ▸" : "");
+            if (chBtn) chBtn.interactable = host;
             // accion clara: «LISTO» para confirmar; ya confirmado se marca con ✓ (pulsar de nuevo lo deshace)
             readyBtn.GetComponentInChildren<Text>().text = local && local.Ready ? "✓ " + Loc.T("button.ready") : Loc.T("button.ready");
             bool all = RoundDirector.AllReady(out string waiting);

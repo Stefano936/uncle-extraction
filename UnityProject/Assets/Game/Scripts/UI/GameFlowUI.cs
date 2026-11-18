@@ -83,7 +83,7 @@ namespace UncleExtraction
 
         void BuildResults()
         {
-            float detailTop = 30 + Ui.K(90), statsTop = detailTop + Ui.K(80), retryY = -(statsTop + Ui.K(230));
+            float detailTop = 30 + Ui.K(90), statsTop = detailTop + Ui.K(80), retryY = -(statsTop + Ui.K(420)); // sesion 15: lugar para el parte
             resultsRoot = Ui.PanelBox("Results", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(Ui.K(900), -retryY + 90 + Ui.ButtonH + 48));
             Ui.FitInCanvas(resultsRoot);
             resTitle = Ui.Label(resultsRoot, "Title", "", Ui.FontTitle + 10, Ui.Text, TextAnchor.UpperCenter, true); Inset(resTitle, 20, 30, 20, 0); Top(resTitle, 30, detailTop - 34);
@@ -92,6 +92,9 @@ namespace UncleExtraction
             resStats.rectTransform.offsetMin = new Vector2(120, resultsRoot.sizeDelta.y + retryY + 8);
             resRetry = Btn(resultsRoot, "Retry", "button.retry_same", retryY, () => { if (NetSession.Mode == NetMode.Solo) round.Restart(); else round.BackToLobby(); }); // en red: vuelve a la sala con confirmacion limpia
             resMenu = Btn(resultsRoot, "Menu", "button.back_menu", retryY - 90, () => NetSession.LeaveToMenu());
+            // vista limpia para capturas: solo el parte, sin botones ni HUD; cualquier tecla o clic vuelve
+            var shot = Ui.Button(resultsRoot, "Snapshot", "", new Vector2(1f, 0f), new Vector2(-16, 16), new Vector2(Ui.K(210), Ui.K(48)), () => CleanView(true)); // abajo a la derecha: no pisa el titulo
+            shot.GetComponent<RectTransform>().pivot = new Vector2(1f, 0f); var st = shot.GetComponentInChildren<Text>(); st.fontSize = Ui.FontHud; st.gameObject.AddComponent<LocText>().key = "report.snapshot";
             resultsRoot.gameObject.SetActive(false);
         }
 
@@ -174,8 +177,18 @@ namespace UncleExtraction
             EventSystem.current?.SetSelectedGameObject(leave.gameObject);
         }
 
+        /// Vista para capturas (sesion 15): oculta HUD, botones y guia; deja el panel del parte. Cualquier tecla/clic vuelve.
+        public bool CleanViewOn { get; private set; }
+        void CleanView(bool on)
+        {
+            CleanViewOn = on;
+            foreach (var name in new[] { "HUD", "FirstSteps", "CoopMarkers" }) { var go = GameObject.Find(name); if (go) { var c = go.GetComponent<Canvas>(); if (c) c.enabled = !on; } }
+            foreach (var b in new[] { "Retry", "Menu", "Snapshot" }) { var t = resultsRoot.Find(b); if (t) t.gameObject.SetActive(!on); }
+        }
+
         void UpdateResults(bool ended)
         {
+            if (CleanViewOn && (!ended || UnityEngine.InputSystem.Keyboard.current?.anyKey.wasPressedThisFrame == true || UnityEngine.InputSystem.Mouse.current?.leftButton.wasPressedThisFrame == true)) CleanView(false);
             bool show = ended && Time.unscaledTime - resultsSince > 0.4f;
             if (resultsRoot.gameObject.activeSelf != show)
             {
@@ -189,7 +202,11 @@ namespace UncleExtraction
             resDetail.text = Loc.T(win ? "round.success_detail" : "round.timeout_detail");
             int falls = 0; foreach (var pm in PlayerMotor.All) if (pm) falls += pm.FallCount;
             string time = win ? $"{(int)(round.Elapsed / 60f)}:{(int)(round.Elapsed % 60f):00}" : "—";
-            resStats.text = $"{Loc.T("round.time")}:  {time}\n{Loc.T("round.falls")}:  {falls}\n{Loc.T("lobby.difficulty")}:  {Loc.T(round.CurrentDifficulty == Difficulty.Relaxed ? "lobby.relaxed" : round.CurrentDifficulty == Difficulty.Hard ? "lobby.hard" : "lobby.normal")}\n{Loc.T(round.PartySize == 1 ? "lobby.players_one" : "lobby.players_other", ("count", round.PartySize.ToString()))}"
+            var report = RoundStats.Last != null && RoundStats.Last.round == round.Restarts ? RoundStats.Last : null; // solo el parte de ESTA ronda
+            string rep = RoundStats.Render(report);
+            string feat = RoundStats.Featured(report); if (feat != "") resDetail.text = feat; // destacado de la ronda (hecho real)
+            if (rep != "") resStats.text = rep + "\n" + Loc.T(round.PartySize == 1 ? "lobby.players_one" : "lobby.players_other", ("count", round.PartySize.ToString())) + " · " + Loc.T(round.CurrentDifficulty == Difficulty.Relaxed ? "lobby.relaxed" : round.CurrentDifficulty == Difficulty.Hard ? "lobby.hard" : "lobby.normal") + (win ? "" : "\n" + Loc.T("round.hint"));
+            else resStats.text = $"{Loc.T("round.time")}:  {time}\n{Loc.T("round.falls")}:  {falls}\n{Loc.T("lobby.difficulty")}:  {Loc.T(round.CurrentDifficulty == Difficulty.Relaxed ? "lobby.relaxed" : round.CurrentDifficulty == Difficulty.Hard ? "lobby.hard" : "lobby.normal")}\n{Loc.T(round.PartySize == 1 ? "lobby.players_one" : "lobby.players_other", ("count", round.PartySize.ToString()))}"
                             + (win ? "" : "\n\n" + Loc.T("round.hint"));
             // reintentar: el anfitrion decide; un invitado espera al anfitrion (o sale)
             bool host = NetAuth.IsServer;

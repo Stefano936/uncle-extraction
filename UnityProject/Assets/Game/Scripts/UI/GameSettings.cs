@@ -12,6 +12,8 @@ namespace UncleExtraction
         /// Categorias (sesion 13): efectos del mundo (agarres, golpes, puertas) y avisos (señales de ataque, marcadores, fin de
         /// ronda). Voz y musica no existen todavia (sin fuentes con licencia). Se multiplican por el volumen general.
         public static float EffectsVolume = 1f, AlertsVolume = 1f;
+        /// Desafio elegido para la proxima partida (no se guarda: cada sesion empieza en la ronda estandar).
+        public static ChallengeMode Challenge = ChallengeMode.Standard;
         public static Difficulty SoloDifficulty = Difficulty.Normal;
         public static bool AttackSubtitles = true;
         public static bool ProfanityFilter;

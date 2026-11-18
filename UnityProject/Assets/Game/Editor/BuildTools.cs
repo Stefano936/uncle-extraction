@@ -28,13 +28,19 @@ namespace UncleExtraction.EditorTools
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, impl);
             PlayerSettings.runInBackground = true; // el anfitrion (M2) no debe congelarse sin foco; tambien las pruebas de humo
             if (!File.Exists(PhysicsLabBuilder.ScenePath) || !File.Exists(PhysicsLabBuilder.BarScenePath) || !File.Exists(FrontendBuilder.ScenePath)) PhysicsLabBuilder.Build();
+            // sesion 17: build de JUGADORES (-uePlayer): solo escenas de distribucion y sin sondas/autopiloto/capturas/atajos de
+            // diagnostico (simbolo UE_PLAYER_BUILD). La de QA (por defecto) conserva laboratorios y herramientas de verificacion.
+            bool player = System.Array.IndexOf(Environment.GetCommandLineArgs(), "-uePlayer") >= 0 && !dev;
             var opts = new BuildPlayerOptions
             {
-                scenes = new[] { FrontendBuilder.ScenePath, PhysicsLabBuilder.BarScenePath, PhysicsLabBuilder.ScenePath, PhysicsLabBuilder.ArticulatedLabScenePath },
+                scenes = player ? new[] { FrontendBuilder.ScenePath, PhysicsLabBuilder.BarScenePath }
+                                : new[] { FrontendBuilder.ScenePath, PhysicsLabBuilder.BarScenePath, PhysicsLabBuilder.ScenePath, PhysicsLabBuilder.ArticulatedLabScenePath },
                 target = BuildTarget.StandaloneWindows64,
                 locationPathName = Path.Combine(outDir, "UncleExtraction.exe"),
-                options = dev ? BuildOptions.Development : BuildOptions.None // dev: simulador de red y logs de depuracion
+                options = dev ? BuildOptions.Development : BuildOptions.None, // dev: simulador de red y logs de depuracion
+                extraScriptingDefines = player ? new[] { "UE_PLAYER_BUILD" } : null
             };
+            PlayerSettings.bundleVersion = GameVersion.Number; // unica fuente de version (sesion 17)
             var report = BuildPipeline.BuildPlayer(opts);
             var s = report.summary;
             Debug.Log($"[Build] dev={dev} backend={impl} result={s.result} errors={s.totalErrors} warnings={s.totalWarnings} size={s.totalSize} time={s.totalTime} path={opts.locationPathName}");
@@ -47,7 +53,8 @@ namespace UncleExtraction.EditorTools
                 // version de origen: commit, si habia cambios sin commitear y cuando se genero (cada resultado se asocia a esto)
                 string head = Git("rev-parse --short HEAD"), dirty = Git("status --porcelain --untracked-files=no");
                 File.WriteAllText(Path.Combine(outDir, "VERSION.txt"),
-                    $"Commit de origen: {head}{(dirty != "" ? " + cambios sin commitear" : "")}\nGenerada: {DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}\nTipo: {(dev ? "desarrollo" : "release")} {impl}\n");
+                    $"Commit de origen: {head}{(dirty != "" ? " + cambios sin commitear" : "")}\nGenerada: {DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}\nTipo: {(dev ? "desarrollo" : player ? "jugadores" : "release QA")} {impl}\n" +
+                    $"Version: {GameVersion.Number}\nProtocolo de red: {GameVersion.Protocol}\nEditor: {Application.unityVersion}\nRama: {Git("rev-parse --abbrev-ref HEAD")}\n");
             }
             return s.result == BuildResult.Succeeded;
         }

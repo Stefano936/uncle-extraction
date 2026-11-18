@@ -232,7 +232,7 @@ namespace UncleExtraction.EditorTools
             foreach (var s in new[] { -1f, 1f })
             {
                 B("Sconce", new Vector3(doorX + s * 1.25f, 2.05f, outer - 0.08f), new Vector3(0.14f, 0.22f, 0.12f), sconce, g);
-                L("Sconce_Light", LightType.Point, new Vector3(doorX + s * 1.25f, 2.0f, outer - 0.45f), Tungsten, 1.4f, 4.5f, g);
+                L("Sconce_Light", LightType.Point, new Vector3(doorX + s * 1.25f, 2.0f, outer - 0.45f), Tungsten, 0.95f, 4.5f, g);
             }
             // vecinos pegados al bar (cierran la vista desde la vereda; fuera del area jugable)
             var brick = Lit("Neighbour_Brick", new Color(0.24f, 0.13f, 0.1f), 0.1f);
@@ -284,7 +284,7 @@ namespace UncleExtraction.EditorTools
             Can("Bar_A", new Vector3(3.2f, 0f, 8.3f), true);
             Can("Bar_B", new Vector3(5.8f, 0f, 8.3f), false);
             // luz de presentacion del tio: frontal, desde el salon, para leer cara y manos contra la barra
-            L("Uncle_Key", LightType.Spot, new Vector3(4.5f, 2.8f, 5.2f), new Color(1f, 0.86f, 0.72f), 2.6f, 6f, g, false, new Vector3(4.5f, 1.2f, 7.6f), 55f);
+            L("Uncle_Key", LightType.Spot, new Vector3(4.5f, 2.8f, 5.2f), new Color(1f, 0.84f, 0.68f), 1.7f, 6f, g, false, new Vector3(4.5f, 1.2f, 7.6f), 55f); // sesion 15: lavaba la camisa
             var fill = new GameObject("Character_Fill"); fill.transform.SetParent(g, false);
             var fl = fill.AddComponent<Light>(); fl.type = LightType.Point; fl.color = new Color(1f, 0.88f, 0.76f); fl.intensity = 0.7f; fl.range = 2.6f; fl.shadows = LightShadows.None;
             fill.AddComponent<CharacterFill>();
@@ -292,7 +292,7 @@ namespace UncleExtraction.EditorTools
                 Pendant("Table", p, 2.4f, 4.2f, false, false);
             // salon y recorrido: relleno calido sin sombra (para que nada importante quede en negro)
             L("Fill_Hall", LightType.Point, new Vector3(1.5f, 1.9f, 4.5f), new Color(1f, 0.8f, 0.6f), 1.8f, 9f, g);
-            L("Fill_Door", LightType.Point, new Vector3(0.3f, 1.9f, 0.4f), new Color(1f, 0.82f, 0.62f), 1.4f, 6f, g);
+            L("Fill_Door", LightType.Point, new Vector3(0.3f, 1.9f, 0.4f), new Color(1f, 0.82f, 0.62f), 1.0f, 6f, g);
             L("Fill_Cart", LightType.Point, new Vector3(5.4f, 1.9f, 2.4f), new Color(1f, 0.8f, 0.6f), 1.4f, 5f, g);
             // karaoke: cenital magenta sobre la tarima
             L("Karaoke_Spot", LightType.Spot, new Vector3(-7f, 2.85f, 6.6f), NeonMagenta, 6f, 6f, g, false, new Vector3(-7.4f, 0.2f, 8.6f), 70f);
@@ -356,7 +356,7 @@ namespace UncleExtraction.EditorTools
             V(PrimitiveType.Cylinder, "Lamp_Pole", g, p + Vector3.up * 2.2f, new Vector3(0.12f, 2.2f, 0.12f), pole);
             B("Lamp_Arm", p + new Vector3(-0.7f, 4.35f, 0f), new Vector3(1.5f, 0.07f, 0.07f), pole, g);
             B("Lamp_Head", p + new Vector3(-1.35f, 4.27f, 0f), new Vector3(0.5f, 0.1f, 0.24f), head, g);
-            L("Street_Light", LightType.Spot, p + new Vector3(-1.35f, 4.2f, 0f), Sodium, 22f, 12f, g, true, p + new Vector3(-2.6f, 0f, -1.5f), 105f);
+            L("Street_Light", LightType.Spot, p + new Vector3(-1.35f, 4.2f, 0f), Sodium, 13f, 12f, g, true, p + new Vector3(-2.6f, 0f, -1.5f), 105f);
             var paint = Lit("Road_Paint", new Color(0.85f, 0.72f, 0.25f), 0.3f);
             for (float x = -14f; x < 15f; x += 3f) B("Lane_Dash", new Vector3(x, 0.006f, -16.8f), new Vector3(1.6f, 0.012f, 0.14f), paint, g);
             var bin = Lit("Bin", new Color(0.12f, 0.25f, 0.16f), 0.35f, 0.4f);
@@ -464,7 +464,7 @@ namespace UncleExtraction.EditorTools
             T Get<T>() where T : VolumeComponent { if (!profile.TryGet<T>(out var c)) { c = profile.Add<T>(true); AssetDatabase.AddObjectToAsset(c, profile); } c.active = true; return c; }
             var tm = Get<Tonemapping>(); tm.mode.Override(TonemappingMode.ACES);
             var bloom = Get<Bloom>(); bloom.threshold.Override(1.25f); bloom.intensity.Override(0.4f); bloom.scatter.Override(0.6f);
-            var ca = Get<ColorAdjustments>(); ca.postExposure.Override(0.7f); ca.contrast.Override(14f); ca.saturation.Override(6f);
+            var ca = Get<ColorAdjustments>(); ca.postExposure.Override(0.45f); ca.contrast.Override(18f); ca.saturation.Override(10f); // sesion 15: menos lavado, colores con cuerpo
             var vig = Get<Vignette>(); vig.intensity.Override(0.24f); vig.smoothness.Override(0.45f);
             EditorUtility.SetDirty(profile); AssetDatabase.SaveAssets();
             var go = new GameObject("PostFX"); go.transform.SetParent(root, false);

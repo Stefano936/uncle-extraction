@@ -31,7 +31,7 @@ namespace UncleExtraction.Tests
         {
             yield return LoadGame("Bar_LastRound");
             var hud = GameHud.Instance; Assert.IsNotNull(hud, "HUD del kit en la escena de juego");
-            Assert.IsTrue(hud.Visible);
+            var rd = RoundDirector.Instance; Assert.IsTrue(hud.Visible, $"HUD oculto: ronda={(rd ? rd.State.ToString() : "-")} sala={(rd && rd.InLobby)} pausa={(GameFlowUI.Instance && GameFlowUI.Instance.Paused)} local={(PlayerControls.Local != null)} modo={NetSession.Mode}");
             var npc = Object.FindAnyObjectByType<NpcBrain>(); npc.brainEnabled = false;
             var body = npc.GetComponent<NpcBody>(); var hands = PlayerControls.Local.GetComponent<PlayerHands>(); var player = hands.GetComponent<PlayerMotor>();
             Assert.AreEqual(GameHud.HandState.Free, hud.StateOf(0));

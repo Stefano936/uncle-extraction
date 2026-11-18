@@ -21,6 +21,19 @@ namespace UncleExtraction
         {
             if (armL) armL0 = armL.localRotation; if (armR) armR0 = armR.localRotation;
             if (legL) legL0 = legL.localRotation; if (legR) legR0 = legR.localRotation;
+            // sesion 17: el brillo de aviso necesita _EMISSION. Se activa en COPIAS de los materiales de la malla del tio (una por
+            // renderer, al empezar), no en los .mat del proyecto: en el editor URP le quitaba la palabra clave al asset de la
+            // camisa al dibujarlo y PlayMode dejaba el proyecto modificado.
+            if (bodyRenderers != null)
+                foreach (var r in bodyRenderers)
+                {
+                    if (!r || r.sharedMaterials.Length <= 1) continue;
+                    foreach (var m in r.materials)
+                    {
+                        if (!m || !m.HasProperty(EmissionId)) continue;
+                        m.EnableKeyword("_EMISSION"); m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; m.SetColor(EmissionId, Color.black);
+                    }
+                }
         }
 
         void Update()
@@ -66,6 +79,7 @@ namespace UncleExtraction
             Pose(armL, armL0, aL); Pose(armR, armR0, aR); Pose(legL, legL0, lL); Pose(legR, legR0, lR);
             if (indicator)
             {
+                if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) showInd = false; // material de tienda
                 indicator.gameObject.SetActive(showInd);
                 if (showInd)
                 {

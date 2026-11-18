@@ -69,7 +69,7 @@ namespace UncleExtraction
 
         void Awake() { Instance = this; body = GetComponent<NpcBody>(); rng = new System.Random(seed); Budget = LabBalance.NpcBudget; }
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
-        void Start() { RefreshPlayers(); Budget = BudgetMax; ScheduleNextAttack(); if (!GetComponent<UncleFace>()) gameObject.AddComponent<UncleFace>(); MapLimbs(); }
+        void Start() { RefreshPlayers(); Budget = BudgetMax; ScheduleNextAttack(); if (!GetComponent<UncleFace>()) gameObject.AddComponent<UncleFace>(); if (body && body.Articulated && !GetComponent<UncleOutfit>()) gameObject.AddComponent<UncleOutfit>(); MapLimbs(); }
 
         public void RefreshPlayers() { players.Clear(); players.AddRange(PlayerMotor.All); }
 
@@ -104,6 +104,10 @@ namespace UncleExtraction
                     if (!WriggleAttempt && !SideStillFree(CurrentAttack.id, side, HeldLimbs()))
                     {   // le sujetaron el miembro que iba a usar: el golpe se corta (respuesta anticipable: no cambia de miembro)
                         Interrupted++; Debug.Log($"[Npc] {CurrentAttack.id} {side} cortado: le sujetaron el miembro");
+                        bool wantArm = CurrentAttack.id != AttackId.Kick, wantRight = side == AttackSide.Right;
+                        foreach (var l in GrabRegistry.Links)
+                            if (l != null && l.socket && limbOf.TryGetValue(l.socket, out var lm) && lm.arm == wantArm && (side == AttackSide.None || lm.right == wantRight))
+                            { RoundStats.AttackCut(l.owner as PlayerHands); break; }
                         ScheduleNextAttack(); Enter(NpcState.Recover, 0.8f, "lo frenaron"); break;
                     }
                     if (Now < stateUntil - LabBalance.DirectionLockBeforeActive && !WriggleAttempt)
@@ -181,6 +185,8 @@ namespace UncleExtraction
                 body.desiredFacing = toDecoy;
                 body.desiredWalkVelocity = !Grabbed && !Strapped && Flat3(currentDecoy.Position - transform.position).magnitude > 0.8f ? toDecoy * 0.8f : Vector3.zero;
             }
+            else if (State == NpcState.Distracted) { body.desiredFacing = Flat(distractPoint - transform.position); body.desiredWalkVelocity = Vector3.zero; } // mira el desastre
+            if (BellWindow && State == NpcState.Anchor && !AttackPending) body.desiredFacing = Flat(distractPoint - transform.position); // campana: mira al barman sin soltarse
         }
 
         /// Direccion hacia el banco pasando por la puerta del escenario cuando esta afuera (vereda, rampa, camioneta).
@@ -450,6 +456,31 @@ namespace UncleExtraction
         float distractionReadyAt; int distractionUses; DecoyGlass currentDecoy;
         public const float DistractionDuration = 2.5f, DistractionCooldown = 12f;
         public int DistractionUses => distractionUses;
+
+        Vector3 distractPoint;
+        /// Campana de ultima ronda (sesion 17): si esta aferrado a la barra, NO se suelta solo: se da vuelta hacia el barman
+        /// unos segundos y en esa ventana soltarle la mano cuesta menos de la mitad (hace falta un compañero en la barra).
+        /// Sin anclaje se distrae como con el vaso. Posterga el siguiente ataque hasta despues de la ventana.
+        public float BellUntil { get; private set; } = -1f;
+        public bool BellWindow => Now < BellUntil;
+        public bool HearBell(Vector3 barman, float dur)
+        {
+            if (!NetAuth.IsServer || AttackPending || State == NpcState.Secured || State == NpcState.Carried || Strapped || body.Posture != NpcPosture.Upright) return false;
+            distractPoint = barman;
+            if (nextAttackAt < Now + dur + 1f) nextAttackAt = Now + dur + 1f;
+            if (IsAnchored) { BellUntil = Now + dur; Debug.Log($"[Npc] campana: mira al barman {dur:0.0}s aferrado (soltarlo cuesta menos)"); return true; }
+            currentDecoy = null; Enter(NpcState.Distracted, dur, "¡Última ronda!"); Debug.Log($"[Npc] campana: distraido {dur:0.0}s"); return true;
+        }
+        /// Distraccion por un evento del bar (sesion 15: torre de vasos). Mismo estado que el vaso señuelo: se suelta de la barra
+        /// y mira el lugar unos segundos. No interrumpe un ataque en curso ni actua cargado, atado o caido.
+        public bool DistractBy(Vector3 at, float dur, string why)
+        {
+            if (!NetAuth.IsServer || AttackPending || State == NpcState.Secured || State == NpcState.Carried || Strapped || body.Posture != NpcPosture.Upright) return false;
+            distractPoint = at; currentDecoy = null;
+            if (IsAnchored) ReleaseAnchor("distraido");
+            Enter(NpcState.Distracted, dur, why); Debug.Log($"[Npc] distraido por el bar {dur:0.0}s ({why})");
+            return true;
+        }
 
         bool TryDistract()
         {

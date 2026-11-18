@@ -1102,8 +1102,8 @@
     },
     {
       "key": "error.version",
-      "en": "Your game versions do not match.",
-      "es_UY": "Las versiones del juego no coinciden.",
+      "en": "Your game versions don't match. Everyone needs the same version: update and try again from the room.",
+      "es_UY": "Las versiones del juego no coinciden. Todos tienen que usar la misma: actualizá y volvé a intentar desde la sala.",
       "scope": "connection",
       "max_width_reference_px": 810,
       "font_reference_px": 29,

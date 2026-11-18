@@ -60,6 +60,9 @@ namespace UncleExtraction
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
         void Start()
         {
+#if UE_PLAYER_BUILD
+            enabled = false; return; // build de jugadores: sin autopiloto
+#endif
             var args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {
@@ -70,6 +73,7 @@ namespace UncleExtraction
                     pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart
                                 : args[i + 1].Equals("race", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Race : AutopilotMode.Drag;
                 if (args[i] == "-ueRaceAt" && i + 1 < args.Length) long.TryParse(args[i + 1], out raceAtUnixMs);
+                if (args[i] == "-ueRaceNatural") raceNatural = true;
                 if (args[i] == "-ueRepeat" && i + 1 < args.Length) int.TryParse(args[i + 1], out repeatLeft);
                 if (args[i] == "-ueDropAt" && i + 1 < args.Length) dropAt = args[i + 1];   // prueba: salir del juego en "strap" o "closing"
                 if (args[i] == "-ueNoClose") noClose = true;
@@ -174,7 +178,11 @@ namespace UncleExtraction
             if (routine != null) StopCoroutine(routine);
             routine = null; Running = false; Status = "";
             LabInput.ClearSimulated();
+            raceMode = false;
+            // sesion 17: la carrera apaga la IA del tio en el anfitrion; al terminar, cancelar o reiniciar se restaura lo que habia
+            if (brainSaved) { brainSaved = false; if (npc) npc.brainEnabled = brainBefore; Log($"carrera: IA del tio restaurada ({brainBefore})"); }
         }
+        bool brainSaved, brainBefore, raceNatural;
 
         public void ResetState() => StopRun();
         void OnDisable() => StopRun();
@@ -219,9 +227,39 @@ namespace UncleExtraction
             return new Vector3(L.doorX, 0f, dz + (meOut ? 0.9f : -0.9f));
         }
 
+        /// Desafio «Ruta estrecha»: si el jugador va a cruzar la barricada fuera del paso, primero va al paso (como haria una persona).
+        Vector3 ViaNarrowGap(Vector3 dir)
+        {
+            var ch = RoundDirector.Instance ? RoundDirector.Instance.CurrentChallenge : ChallengeMode.Standard;
+            if (ch != ChallengeMode.Narrow || GameObject.Find("Challenge_Narrow") == null) return dir;
+            float z = Challenges.BarricadeZ, gx = -2.6f; Vector3 me = Me;
+            bool south = me.z < z, crossing = south ? dir.z > 0.05f : dir.z < -0.05f;
+            if (!crossing || Mathf.Abs(me.z - z) > 3.5f) return dir;
+            if (Mathf.Abs(me.x - gx) < 0.35f) return new Vector3(0f, 0f, south ? 1f : -1f);   // en el paso: derecho
+            return new Vector3(gx, 0f, z + (south ? -0.9f : 0.9f)) - me;                     // ir a la boca del paso
+        }
+
+        float moveSince, unstickUntil; Vector3 moveFrom, unstickDir; bool raceMode;
+        /// Veces que el autopiloto se destrabo en esta corrida (registro de pruebas).
+        public int Unsticks { get; private set; }
         void MoveWorld(Vector3 dir)
         {
-            dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; return; }
+            dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; moveSince = Time.time; moveFrom = Me; return; }
+            dir = ViaNarrowGap(dir);
+            // sesion 15: destrabarse. Si quiere caminar y en 2,5 s no avanzo 0,15 m (p. ej. contra la hoja entreabierta de la
+            // puerta: el fallo intermitente del carrito en el laboratorio articulado), se corre 1 s de costado y reintenta,
+            // como haria una persona. Antes se quedaba empujando hasta que se acababa el tiempo.
+            if (raceMode) { moveSince = Time.time; moveFrom = Me; } // en la carrera se quedan pegados a proposito
+            else if (Time.time < unstickUntil) dir = unstickDir;
+            else if (Time.time - moveSince > 2.5f)
+            {
+                if (Vector3.Distance(Me, moveFrom) < 0.15f)
+                {
+                    unstickDir = Vector3.Cross(Vector3.up, dir).normalized * (UnityEngine.Random.value < 0.5f ? 1f : -1f) - dir.normalized * 0.4f;
+                    unstickUntil = Time.time + 1.0f; Unsticks++; Log($"trabado en {Me} (no avanza): se corre de costado y reintenta");
+                }
+                moveSince = Time.time; moveFrom = Me;
+            }
             Vector3 local = Quaternion.Euler(0, -player.Yaw, 0) * dir.normalized; // relativo a la mirada ordenada (como WASD), no al giro interpolado del cuerpo
             LabInput.SimulatedMove = new Vector2(local.x, local.z);
         }
@@ -423,12 +461,43 @@ namespace UncleExtraction
         {
             var belt = GrabSocket.ById("belt");
             bool second = player.Controls && player.Controls.IsSpawned && player.Controls.OwnerClientId % 2 == 1;
-            Vector3 stand = second ? L.raceStandR : L.raceStandL;
-            while (Vector3.Distance(Me, stand) > 0.15f) { Status = "yendo al punto de carrera"; MoveWorld(stand - Me); LookAt(belt.Position); yield return null; }
-            LabInput.SimulatedMove = Vector2.zero;
+            // sesion 16: los dos se paran FRENTE AL CINTURON segun hacia donde mira el tio ahora (no en puntos fijos del mapa)
+            // y no aprietan hasta tener el cinturon como candidato: asi la prueba mide de verdad la disputa por el mismo punto
+            // la prueba mide la disputa por un punto, no la IA: en el anfitrion el tio queda quieto durante la carrera
+            // sesion 17 (-ueRaceNatural): caso de JUEGO NORMAL, sin reubicar jugadores y con la IA del tio activa (se corre con
+            // latencia simulada). Cada uno se acerca desde donde esta; se registran las aproximaciones fallidas aparte.
+            if (NetAuth.IsServer && npc && !raceNatural) { brainBefore = npc.brainEnabled; brainSaved = true; npc.brainEnabled = false; }
+            Log($"carrera: modo={(raceNatural ? "natural" : "escenificada")} ia_tio={(npc ? npc.brainEnabled : false)}");
+            Vector3 StandNow()
+            {
+                Vector3 toward = Flat(belt.Position - body.Body.position); if (toward.sqrMagnitude < 1e-3f) toward = body.Forward; toward.Normalize();
+                return Flat(belt.Position) + toward * 0.7f + Vector3.Cross(Vector3.up, toward) * (second ? 0.36f : -0.36f);
+            }
+            Vector3 stand = StandNow();
+            raceMode = true;
             long now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            while (now() < raceAtUnixMs) { LookAt(belt.Position); Status = "esperando la senal"; yield return null; }
-            Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")}");
+            while (now() < raceAtUnixMs)
+            {   // hasta la señal: pararse frente al cinturon (recalculado si el cuerpo se mueve) y apuntarle. El ANFITRION, que tiene
+                // la autoridad, ubica a los dos jugadores en sus lugares (si no, uno le tapaba el camino al otro y apuntaba a otra parte)
+                stand = StandNow();
+                if (NetAuth.IsServer && !raceNatural)
+                    foreach (var pm in PlayerMotor.All)
+                    {
+                        if (!pm || !pm.Controls) continue;
+                        bool sec = pm.Controls.OwnerClientId % 2 == 1;
+                        Vector3 tw = Flat(belt.Position - body.Body.position); if (tw.sqrMagnitude < 1e-3f) tw = body.Forward; tw.Normalize();
+                        Vector3 p = Flat(belt.Position) + tw * 0.7f + Vector3.Cross(Vector3.up, tw) * (sec ? 0.36f : -0.36f);
+                        pm.Body.position = p; pm.transform.position = p; pm.Body.linearVelocity = Vector3.zero;
+                    }
+                if (Vector3.Distance(Me, stand) > 0.15f) MoveWorld(stand - Me); else LabInput.SimulatedMove = Vector2.zero;
+                LookAt(belt.Position);
+                Status = hands.Candidate == belt ? "esperando la senal (apunta al cinturon)" : "yendo al cinturon";
+                yield return null;
+            }
+            LabInput.SimulatedMove = Vector2.zero;
+            raceMode = false;
+            if (hands.Candidate != belt) Log($"aproximacion fallida: al llegar la senal el candidato era {(hands.Candidate ? hands.Candidate.socketId : "-")} (dist {Vector3.Distance(Eye, belt.Position):0.00})");
+            Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")} yo={Me} destino={stand} cinturon={belt.Position} dist={Vector3.Distance(Eye, belt.Position):0.00}");
             for (float t = 0; t < 2f; t += Time.deltaTime) { LookAt(belt.Position); SetHold(0, true); yield return null; }
             Log($"resultado carrera: mano izq = '{hands.HeldSocketId(0)}' aviso='{hands.LastFeedback}'");
             SetHold(0, false); yield return null;

@@ -2,7 +2,7 @@
 
 ## Abrir
 
-1. Doble clic en `Builds\UncleExtraction\UncleExtraction.exe` (se genera en la PC de desarrollo; no está en Git).
+1. Doble clic en `UncleExtraction.exe` (en la demo, junto a este archivo). La versión y el protocolo de red están en `VERSION.txt` y abajo a la derecha del menú: **para jugar juntos, todos tienen que tener la misma versión** (si no, el juego lo dice y se puede volver a intentar desde la sala).
 2. Menú: **Jugar solo** → tocar **Dificultad** hasta la deseada → **Iniciar extracción**. La primera vez aparece una guía corta (Primeros pasos) que se puede omitir o repetir desde la pausa. Los laboratorios de diagnóstico solo aparecen con `-ueDebug` o en la build de desarrollo. El escenario principal usa el tío de 11 cuerpos (ragdoll reducido, malla del kit). **Laboratorio** conserva el tío anterior de primitivas (un solo cuerpo) para comparar, y **Laboratorio: tío articulado (prueba)** es el laboratorio con el tío nuevo.
 3. **Jugar con amigos** (2 a 4 jugadores):
    - **Por internet:** el anfitrión elige **Crear sala por internet** y pasa el **código de sala** que aparece en la sala (botón **Copiar código**); los demás lo escriben y eligen **Unirse con código**. No hace falta abrir puertos ni conocer la IP.
@@ -49,6 +49,9 @@ En los menús, el mando navega con la cruceta o el stick, acepta con A/cruz y vu
 - Si el carrito se tuerce en la puerta del bar, alcanza con ponerse en el eje de la puerta y tirar derecho del asa. La puerta tiene una manija que se puede agarrar para sostenerla abierta.
 - Con una sola mano no alcanza para arrastrarlo caído; usá las dos o el carrito.
 - El vaso de cerveza (sobre una mesa) distrae al tío si lo llevás y lo apoyás a su vista: suelta la barra unos segundos.
+- **Campana de última ronda** (en la punta de la barra, E): el tío se da vuelta hacia el barman unos segundos. Si está aferrado a la barra no se suelta solo, pero en esa ventana soltarle la mano cuesta menos de la mitad: sirve de a dos (uno toca, otro le suelta la mano). Espera de 20 s y dos por ronda.
+- **Desafíos** (menú o sala, botón Desafío): Ronda estándar, Sin carrito, Ruta estrecha y **Arranca en el karaoke** (el tío empieza aferrado a la baranda de la tarima, al otro lado del salón).
+- Al apuntar, el rótulo dice con qué botón agarrar (cambia solo si pasás de teclado a mando) y, si el punto está ocupado, quién lo tiene.
 - Tomarlo de los tobillos ayuda a entrarlo «con los pies primero»; si las piernas quedan afuera, no se puede cerrar.
 
 ## Prueba guiada
