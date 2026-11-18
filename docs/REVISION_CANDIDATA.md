@@ -39,6 +39,12 @@ Marcá cada punto **OK**, **Raro** (anotá qué) o **Mal**.
 - [ ] Solo el anfitrión ve **Reintentar** en la pausa; el invitado pide reintentar desde los resultados.
 - [ ] Un jugador cierra el juego a mitad de ronda: todos ven el aviso, el reloj suma tiempo en el momento y a los 10 s el tío se ajusta al grupo. (No se puede volver a entrar a la misma ronda: limitación conocida.)
 
+## 6. Sesión 15 (5 min)
+- [ ] Cada clic se nota en la mano al instante; resbalar suena distinto que soltar.
+- [ ] Probar el desafío **Ruta estrecha** y **Sin carrito** (menú Jugar solo → Desafío). ¿Se entiende por dónde pasar?
+- [ ] Empujar el carrito rápido contra la torre de vasos junto a la salida: ¿se rompen y el tío se distrae?
+- [ ] El parte de extracción al final: ¿cuenta lo que pasó? Botón «Vista para captura».
+
 ## Datos
 | Campo | Valor |
 | --- | --- |

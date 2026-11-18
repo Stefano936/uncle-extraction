@@ -7,6 +7,7 @@ Juego cooperativo de comedia física en primera persona, de 1 a 4 jugadores: sac
 - Solo o cooperativo de 2 a 4: anfitrión autoritativo (Netcode for GameObjects), sala con LISTO, **internet por Relay con código de sala** y red local por IP.
 - Extracción real con cierre de puertas, carrito, cuatro ataques anunciados, vaso señuelo, ayuda para levantarse y primera partida guiada.
 - Cooperación: marcador contextual (clic central: tío, carrito, camioneta o un punto, con el nombre y color de quien marca), nombres de los compañeros y aviso de «caído»; el tío solo ataca con las extremidades que nadie le sujeta; una desconexión no cambia la ronda de golpe (10 s de gracia).
+- Rejugabilidad: desafíos *Sin carrito* y *Ruta estrecha*, torre de vasos que distrae al tío y parte de extracción con lo que pasó de verdad (vista para captura).
 - Controles: WASD o flechas, clic izquierdo y derecho para cada mano (mantener o alternar), E, Q, Shift, Ctrl, Espacio, clic central, Esc; reasignables. Interfaz EN/es_UY, texto hasta 150 %, volúmenes general / efectos / avisos, calidad gráfica Alta/Baja.
 
 Pendiente: voz y música, revisión humana, prueba entre dos equipos y Steam. Matriz de requisitos: [docs/MATRIZ_REQUISITOS.md](docs/MATRIZ_REQUISITOS.md).

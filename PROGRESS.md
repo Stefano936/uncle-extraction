@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-17, sesión 14 (cierre de guía, alternar, miembro elegido, frente del tío, prioridad de E, red en procesos separados). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+Última actualización: 2026-11-18, sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Estado vigente
 
@@ -10,39 +10,37 @@
 
 **Niveles de evidencia:** PM = PlayMode en el editor; EM = EditMode; AUTO = partida completa con entradas de jugador simuladas; NET = procesos de la build en **localhost** (no LAN ni internet); VIS = auditoría y capturas reales de la build. **Ninguna fila tiene prueba humana.**
 
-### Sesión 14: cerrar los sistemas nuevos de la sesión 13 y sus interacciones
+### Sesión 15: producción — lo que se ve, se oye y se siente; rejugabilidad; material de lanzamiento
 
-**Candidata: commit de cierre de la sesión 14 (ver `VERSION.txt`; código = `8417620`)** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`, ZIP `Builds/UncleExtraction_s14.zip`). Referencia anterior conservada: `Builds/UncleExtraction_Candidate_4509f5b/` (sesión 13). Capturas: `docs/capturas/sesion14/`. Matriz con evidencia por nivel y build: `docs/MATRIZ_REQUISITOS.md`.
+**Rama:** `s15-produccion` (sin fusionar a `main`). **Candidata:** ver `Builds/UncleExtraction/VERSION.txt` (rama `s15-produccion`); ZIP de demo `Builds/UncleExtraction_Demo_s15.zip`. **Referencia de la sesión 14 conservada:** `Builds/UncleExtraction_Ref_s14/` y `Builds/UncleExtraction_Ref_s14.zip` (`85998c0`). Comparativa: `docs/capturas/sesion15/antes_despues.jpg` (mismas vistas fijas con `tools/windows/compare_shots.sh`).
 
-| | Hallazgo (revisión del dueño) | Reproducción | Corrección | Evidencia |
-| --- | --- | --- | --- | --- |
-| A | La guía nunca terminaba al ganar (Extract no pasaba a Done; Update se detenía con la ronda terminada; la prueba llamaba a Skip) | Por lectura de código y con la prueba nueva | Ganar = completada; omitir = omitida; perder guarda el paso y el reintento/otra partida siguen; oculta no avanza ni corre tiempos; solo cuenta lo caminado con la guía visible (sin saltos de un cuadro); el traslado acepta arrastrar o carrito | PM `GuideLifecycleTests` 3/3 (el autopiloto gana arrastrando: Move > … > Transport > Extract y queda completada) |
-| B | Alternar: con el botón sostenido al volver de un bloqueo, se armaba solo | Código de `4509f5b`: **4/20 combinaciones FAIL** (Alternar × reasignación/foco, ambas manos) | El rearmado (`needRelease`) vale para los dos modos; Esc que cancela una reasignación ya no abre la pausa | PM 20/20 (mano × modo × pausa con Esc / Opciones / reasignación / foco / reinicio) + Q; NET `guesttoggle` 6/6 |
-| C | Manotazo/patada sin elegir lado; las poses no correspondían al miembro libre | Por código; prueba con las reglas normales de selección | El anfitrión elige un miembro libre del lado del objetivo (lado anatómico) y lo replica; poses izquierda/derecha; si le sujetan ese miembro durante la preparación el golpe se corta («lo frenaron») | PM 6 casos de sujeción con `TryNaturalAttackForTest` (mismas reglas que la decisión normal, no `ForceAttack`) |
+**Qué cambia al jugar**
+- **Manos:** antebrazos mate que salen hacia las esquinas inferiores (antes: cilindros con tapas a la vista); cada clic aprieta y empuja la mano al instante con un roce de tela, antes de la confirmación del anfitrión.
+- **Sonido (síntesis propia):** contacto del clic, resbalón (te lo arrancaron con el botón apretado) distinto de soltar, crujido de tela con tensión alta, ruedas del carrito según velocidad y golpes contra el marco, pestillo al cerrar, ambiente de bar, remate breve al ganar, vasos.
+- **El tío reacciona a lo que pasa:** se da cuenta de que está en la camioneta, se levanta, le frenan un golpe, se rompen vasos (líneas nuevas DLG_101–109, con guion grabable en `docs/GUION_VOZ.md`).
+- **Ropa y luz:** cuello abierto, bolsillo con costura, botones, ruedos, cinturón con hebilla; menos exposición y luces que lavaban la camisa; piel y camisa con tono propio.
+- **Camioneta:** burletes, ventanillas, manijas y bisagras en las hojas; piso con nervaduras; luz que marca dónde acomodar al tío y huellas con luz en el lugar desde donde se cierra; menos brillo saturado.
+- **Bar que reacciona:** torre de vasos junto a la salida; si el carrito, el tío o alguien pasa rápido, se cae, el barman reacciona y el tío se distrae 2,5 s (se suelta de la barra). Una vez por ronda.
+- **Desafíos opcionales** (menú solo o sala, anunciados en el objetivo y en el parte): *Sin carrito* y *Ruta estrecha* (barricada de cajones con un solo paso de 1,2 m y marca amarilla en el piso). La ronda estándar sigue siendo la principal.
+- **Parte de extracción:** tiempo, caídas, ataques del tío (y cuántos frenaron), momentos reales con su minuto (primer agarre, mano soltada, carrito, camioneta, cierre, torre) y destacados solo positivos; «Vista para captura» sin HUD.
 
-**Frente del tío (revisión pedida):** las poses de ataque se seguían generando hacia el frente viejo (golpe hacia la nuca); el arco del piso seguía el giro del cuerpo y no la dirección fijada; el impacto se medía desde el pecho (la patada lo echa atrás: el jugador quedaba a 28° fuera de un arco de 40°); las propias piernas y brazos del tío «tapaban» su golpe. Corregido: poses en el marco de la cara, arco e impacto con la misma dirección (replicada a los clientes) y el mismo punto, y sus partes ya no bloquean. PM: el miembro elegido avanza 0,33–0,69 m hacia la zona anunciada (el otro ≤ 0,11 m) y el jugador dentro del arco recibe el golpe; arco = impacto con el jugador a 0/90/180/270°.
-
-**Prioridad de E:** regla pura `ChooseInteract` (compañero caído > mano anclada > camioneta > carrito), objetivo fijo mientras se mantiene E, línea de visión, el progreso se reinicia al cambiar de objetivo. EM con los cuatro a la vez; PM en el bar con la mano anclada.
-
-**Desconexión (política):** el tiempo extra del grupo más chico llega en el acto (ya no se pierde por reloj durante la gracia), resistencia y ataques cambian una vez a los 10 s, aviso localizado para todos (antes solo lo veía el anfitrión, sin traducir). La gracia **no** es una reconexión: la admisión sigue rechazando entrar con la ronda empezada (limitación documentada del alcance inicial).
-
-**Presentación:** el subtítulo sube si iba a tapar la cara del tío; manos que bajan abiertas al caer y tiemblan con esfuerzo; la guía se reconstruye al cambiar el tamaño de texto en partida.
-
-**Experiencia de juego que cambia:** el tío se da vuelta y te mira cuando te va a pegar, con el brazo o la pierna que tiene libre, y el golpe va adonde marca el piso; sujetarle el brazo que levantó lo frena. Alternar no agarra solo al volver de un menú. La guía te acompaña hasta ganar (con o sin carrito). Con latencia, Alternar espera la confirmación del anfitrión en vez de desarmarse. Si alguien se va al final, el reloj ayuda en el acto.
+**Carrito en la puerta (investigado):** en las tandas que fallaban, el jugador del autopiloto quedaba 200 s empujando la hoja entreabierta de la puerta de salida; una persona la empuja o la rodea. Era el autopiloto abandonando una situación recuperable, no un atasco del juego: se agregó destrabe genérico (si camina y no avanza en 2,5 s, se corre de costado). Fallo anterior registrado en el historial de la sesión 14.
 
 #### Verificación (cada resultado con su build)
 
 | Prueba | Código / build | Resultado |
 | --- | --- | --- |
-| EditMode | `09433df` (código) | **64/64**, 1 ignorada |
-| PlayMode completa | `8417620` (código) | **160/162**: 1 omitida, 1 FAIL `SoloAttemptTests_Articulated.SoloAttempt_Cart_Normal` (bot de carrito: el tío se suelta en la puerta, vuelve al banco y el bot abandona). Aislado: **3/3 PASS** (56, 38, 26 s). En tandas completas falló 2 de 3 veces en esta sesión: intermitencia del bot, posiblemente dependiente del orden; abierta. `lab_fail_m28` (sin límite de FPS) pasó esta vez |
-| PlayMode dirigidas (ataques, entrada real, guía, interacción, interfaz) | `8417620` | AttackSignal 51/51; entrada/guía/interfaz/interacción 41/41 |
-| Hallazgo B reproducido sobre el código anterior | `GrabIntent` de `4509f5b` | 16/20 (4 FAIL, como se describe arriba) |
-| Red: escenarios nuevos | builds `09433df` → `cd01c30` → `8417620` | `guesttoggle` PASS 6/6 (confirmación 61 ms); `guesttoggle_sim` **FAIL 3/6** en `09433df` (la ventana de 0,6 s desarmaba antes de la confirmación a 653 ms) → corregido → PASS 6/6; `marks` PASS 4/4; `grace` PASS (gracia 10 s, sigue jugando, termina por reloj después del ajuste); `graceend` PASS (baja con 6,9 s restantes, +25 s ya, ajuste a los 10 s) — las primeras corridas de `grace`/`graceend` fueron NOT_RUN por el armado del escenario (el bot ganaba antes / la desconexión llegaba tarde), corregido |
-| Red: regresión completa (17 escenarios, localhost) | build `8417620` | **17/17 PASS**: coop, repeat, lose, netsim, race, hostleave, clientdrop, loaddrop, closedrop, party3, party4, latejoin, guesttoggle (confirmación 44 ms), guesttoggle_sim (625 ms), marks, grace, graceend |
-| Auditoría de interfaz con guía, marcador y cambio de tamaño en partida | build `8417620` | **ES 15/15, EN 15/15** |
-| Intento con carrito del laboratorio articulado | `58ceaa7` y `8417620` (código) | Tandas: 2 FAIL de 3 (mismo patrón: soltado en la puerta, vuelve al banco, el bot abandona). Aislado: 4/4 PASS |
-| Capturas de la build | `8417620` | `docs/capturas/sesion14/`: patada (pierna elegida, cara enojada, subtítulo arriba), caída (manos abajo), arrastre (puños agarrando) |
+| EditMode | `2b36fd4` (código) | 64/64, 1 ignorada |
+| PlayMode: desafíos, torre, parte, guía, entrada real | `2b36fd4` → `9fbdbe3` | Sin carrito: gana solo en 21,7 s; Ruta estrecha: gana solo en 40,4 s por el paso; torre: el carrito a 2,2 m/s la tira y el tío se distrae; se rearma al reiniciar; guía y entrada real verdes |
+| PlayMode: intentos completos solo (laboratorio, articulado) + desafíos | `9fbdbe3` (código) | **12/12** (incluye los intentos con carrito del laboratorio articulado) |
+| PlayMode completa | {PM} | {PMRES} |
+| Red en localhost (17 escenarios, incluye 4 procesos y latencia simulada) | build `9fbdbe3` | {NET} |
+| Cuatro procesos reales con capturas | build `S15` previa | Sala con selector de desafío, agarres simultáneos, carrito, cierre de la camioneta (`.local-setup/clips/cuatro_*.png`) |
+| Capturas comparables antes/después | builds `85998c0` y `S15` | `docs/capturas/sesion15/antes_despues.jpg` |
+| Clips de juego real | build `S15` | 3 verticales + 2 horizontales (WebP) en `docs/lanzamiento/clips/` |
+| Relay desde una PC / dos equipos / personas | — | **NOT_RUN** en esta sesión |
+
+**Material de lanzamiento (borradores, sin publicar):** `docs/lanzamiento/` — referencia de mercado, textos de tienda ES/EN, cápsulas desde capturas reales, lista de tomas del tráiler, clips verticales, plan de pruebas sin instrucciones y de difusión.
 
 ### Pendientes reales (en orden)
 
@@ -74,6 +72,7 @@
 
 ## Próxima acción exacta
 
-1. **Vos (20 min):** jugar la candidata de la sesión 14 con `REVISION_CANDIDATA.txt` (junto al ejecutable): ganar con la guía sin omitirla; Alternar + pausa con el botón sostenido; sujetar un brazo del tío y mirar con cuál pega; E sobre la mano aferrada. Anotar en `docs/OBSERVACIONES_PRUEBAS.md`.
-2. **Con otra PC:** Relay entre dos equipos en redes distintas y LAN por IP: marcador del otro, nombres/colores, cerrar un juego a mitad de ronda (aviso y ajuste).
-3. **Desarrollo siguiente (sin depender de nadie):** compañero caído real en 2 procesos para la prioridad de E (L); captura con 2 procesos de la etiqueta «CAÍDO»; malla del tío con más detalle; balance de duración de `coop`/`netsim` tras el giro del tío (más lentos que antes de la corrección, siguen ganando).
+1. **Vos (25 min, sin explicar nada):** pasale `Builds/UncleExtraction_Demo_s15.zip` a alguien que no lo vio, con `docs/lanzamiento/PLAN_PRUEBAS_Y_DIFUSION.md` §1 (tiempo al primer agarre, dónde se estanca, si pide otra ronda, qué le contaría a un amigo). Anotar en `docs/OBSERVACIONES_PRUEBAS.md`.
+2. **Con otra PC y 2–4 personas:** cooperativo por código de sala con el desafío *Ruta estrecha* y la torre de vasos; revisar el parte al final.
+3. **Revisar borradores** de `docs/lanzamiento/` (textos, cápsulas, tomas del tráiler) y decidir si fusionar `s15-produccion` en `main`.
+4. **Desarrollo siguiente (sin depender de nadie):** malla del tío con más detalle (silueta y ropa con volumen real), materiales de la barra, puerta y carrito (vetas, desgaste, herrajes), grabación de video (requiere tu permiso para instalar ffmpeg u OBS), música con licencia.

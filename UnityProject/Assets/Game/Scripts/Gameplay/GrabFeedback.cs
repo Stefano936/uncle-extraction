@@ -13,6 +13,7 @@ namespace UncleExtraction
         public AimState State { get; private set; }
         public GrabSocket Aimed { get; private set; }
 
+        static readonly bool NoHud = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0; // material de tienda
         Transform ring; Mesh ringMesh; Material ringMat; TextMesh label; LineRenderer[] lines = new LineRenderer[2];
         Transform warn; TextMesh warnLabel; Material warnMat; Mesh warnMesh;
         /// Texto del bloqueo marcado en el mundo ("" = nada que marcar). Para pruebas.
@@ -105,7 +106,7 @@ namespace UncleExtraction
                 Color col = State == AimState.Valid ? new Color(0.95f, 0.91f, 0.81f, 0.95f) : State == AimState.Busy ? new Color(0.94f, 0.47f, 0.38f, 0.95f) : new Color(0.72f, 0.76f, 0.75f, 0.6f);
                 if (ringMat) ringMat.color = col;
                 string n = SocketName(Aimed);
-                label.text = State == AimState.Valid ? n : State == AimState.Busy ? Loc.T("grab.aim_busy", ("socket", n)) : Loc.T("grab.aim_far", ("socket", n));
+                label.text = NoHud ? "" : State == AimState.Valid ? n : State == AimState.Busy ? Loc.T("grab.aim_busy", ("socket", n)) : Loc.T("grab.aim_far", ("socket", n));
                 label.color = col; label.transform.localPosition = new Vector3(0f, 0.11f, 0f);
             }
             // que bloquea el cierre de la camioneta (con el tio adentro y el jugador a menos de 7 m de la abertura)

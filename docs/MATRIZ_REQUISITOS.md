@@ -1,6 +1,6 @@
 # Matriz de requisitos — alcance inicial (alcohol, un bar, camioneta fija, 1 a 4 jugadores)
 
-Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 14) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 14 (2026-11-17). Cada evidencia nombra su build o commit cuando no es la candidata vigente.
+Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 14) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 15 (2026-11-18, rama `s15-produccion`). Cada evidencia nombra su build o commit cuando no es la candidata vigente.
 
 **Niveles de evidencia:** **C** = existe en código y compila · **E** = probado en el editor (PlayMode/EditMode) · **B** = probado en la build · **L** = procesos en localhost · **R1** = Relay desde una PC · **R2** = dos equipos y redes distintas · **H** = revisado por una persona.
 **Estados:** completo · parcial · faltante · pospuesto (justificado) · bloqueado.
@@ -70,6 +70,23 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Calidad Alta/Baja, detección de integrada | Media | `GraphicsQuality` | completo | B (banco RTX/Iris) | Banco a batería (H/dueño) |
 | Banco reproducible y tandas protegidas | Media | `Bench.cs`, `perf_bench.ps1`, `Guard.psm1` | completo | B | — |
 
+## Producción y rejugabilidad (sesión 15)
+
+| Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
+| --- | --- | --- | --- | --- | --- |
+| Respuesta inmediata al clic y sensación de agarre (contacto, confirmación, tensión, resbalón, liberación) | Alta | `HandRig.Pulse`, `GameAudio` (grab_try, grab, strain, slip, release) | completo (implementación) / verificación parcial | C, B (capturas) | **H: ¿se siente?** |
+| Carrito físico (ruedas, traqueteo, golpes contra el marco) | Media | `GameAudio.LoopSources` (cart_roll por velocidad, cart_bump) | completo | C | H |
+| Final con peso (portazo, pestillo, remate breve, «Otra ronda» enseguida) | Media | `latch`, `win_sting`, resultados existentes | completo | C, B (clip `cierre`) | H |
+| Reacciones del tío a eventos reales (camioneta, levantarse, golpe frenado, vasos) | Media | `UncleDialogue` + DLG_101–109 | completo | C, B (subtítulos en clips) | Voz grabada (guion listo) |
+| Bar que reacciona: torre de vasos que distrae al tío | Media | `BarProps` (anfitrión decide, RPC a todos, una vez por ronda, se rearma) | completo | E (`ReplayFeatureTests`) | L con 2+ procesos; H |
+| Desafíos opcionales: Sin carrito, Ruta estrecha | Media | `Challenges` (modo replicado; barricada estática igual en todos los pares; ruta alternativa) | completo | E (ganan solo: 21,7 s y 40,4 s) | Viabilidad con 4 personas (H) |
+| Parte de extracción con datos reales y vista para captura | Media | `RoundStats` (anfitrión registra, RPC a invitados), `GameFlowUI.CleanView` | completo | E, B (clip `cierre`: «Cerraron con 9 s de margen») | H: ¿lo comparten? |
+| Ropa del tío con volumen y costuras; luces que no laven | Alta | `UncleOutfit`, `BarDressing` (exposición, focos), `Finishing` (tonos) | parcial | B (antes/después) | Malla nueva del tío (modelado) |
+| Camioneta con detalle y luz que orienta | Alta | `VanDetails` | completo (implementación) | B (capturas con 4 procesos) | H |
+| Barra, puerta y carrito: vetas, desgaste, herrajes | Alta | — | faltante | — | Pasada de materiales |
+| Demo distribuible + material de tienda | Alta | `Builds/UncleExtraction_Demo_s15.zip`, `docs/lanzamiento/` | completo (borradores) | — | Revisión del dueño; video con OBS/ffmpeg |
+| Destrabe del autopiloto (carrito en la puerta) | Media | `LabAutopilot.MoveWorld` | completo | E (12/12 intentos completos) | — |
+
 ## Bloqueos externos
 
 | Tema | Paso mínimo del dueño |
@@ -78,4 +95,5 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Revisión humana (H) | `REVISION_CANDIDATA.txt` y `PRUEBA_HUMANA.txt` junto al ejecutable. |
 | Steam | Cuenta de Steamworks, pago de Steam Direct, App ID. |
 | IL2CPP | Visual Studio 2022 con «Desarrollo de juegos con C++». |
-| Voz y música | Grabaciones propias o recursos con licencia comercial. |
+| Voz y música | Grabaciones propias o recursos con licencia comercial (guion: `docs/GUION_VOZ.md`). |
+| Video del tráiler y clips en MP4 | Permiso para instalar ffmpeg u OBS (los clips actuales son WebP de juego real). |
