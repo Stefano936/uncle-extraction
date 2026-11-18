@@ -1,10 +1,11 @@
-# Pruebas de Unity en modo batch con control de efectos (sesion 17).
+﻿# Pruebas de Unity en modo batch con control de efectos (sesion 17).
 # - Toma el bloqueo comun (una tanda a la vez) y lo libera solo si es suyo.
 # - Saca una instantanea de los archivos versionados de UnityProject (Assets, ProjectSettings, Packages) antes y despues:
 #   si una prueba los modifica, la tanda FALLA y lista los archivos (no se restauran solos: hay que encontrar el origen).
 # Uso: powershell -ExecutionPolicy Bypass -File tools\windows\run_tests.ps1 [-Platform EditMode,PlayMode] [-Filter <regex>]
 param([string[]]$Platform = @('EditMode', 'PlayMode'), [string]$Filter = '', [string]$Tag = '')
 $ErrorActionPreference = 'Continue'
+$Platform = @($Platform | ForEach-Object { $_ -split ',' } | Where-Object { $_ })  # -File pasa 'EditMode,PlayMode' como un solo texto
 Import-Module (Join-Path $PSScriptRoot 'Guard.psm1') -Force
 $Repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $Project = Join-Path $Repo 'UnityProject'
