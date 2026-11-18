@@ -324,7 +324,7 @@ namespace UncleExtraction
             if (!ownCam) ownCam = cameraPivot.GetComponentInChildren<Camera>();
             if (ownCam && ownCam.enabled) ownCam.fieldOfView = GameSettings.FieldOfView;
             var st = State;
-            float targetRoll = st == PlayerState.Fallen ? (GameSettings.ReduceMotion ? 12f : 65f) : 0f; // comodidad: inclinacion menor al caer
+            float targetRoll = st == PlayerState.Fallen ? (GameSettings.ReduceMotion ? 12f : 40f) : 0f; // comodidad: inclinacion menor al caer
             float targetEye = st == PlayerState.Fallen ? 0.45f : (Crouching ? crouchEyeHeight : standEyeHeight);
             roll = Mathf.MoveTowards(roll, targetRoll, 260f * dt);
             Vector3 lp = cameraPivot.localPosition;
