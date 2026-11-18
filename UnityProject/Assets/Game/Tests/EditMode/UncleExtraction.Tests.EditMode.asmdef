@@ -1,7 +1,7 @@
 {
     "name": "UncleExtraction.Tests.EditMode",
     "rootNamespace": "UncleExtraction.Tests",
-    "references": [ "UncleExtraction.Runtime", "Unity.Netcode.Runtime", "UnityEngine.TestRunner", "UnityEditor.TestRunner" ],
+    "references": [ "UncleExtraction.Runtime", "Unity.Netcode.Runtime", "Unity.Collections", "UnityEngine.TestRunner", "UnityEditor.TestRunner" ],
     "includePlatforms": [ "Editor" ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

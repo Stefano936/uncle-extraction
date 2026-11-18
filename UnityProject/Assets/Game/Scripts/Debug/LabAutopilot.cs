@@ -60,6 +60,9 @@ namespace UncleExtraction
         /// Linea de comandos de la build: -ueAutopilot drag|cart [-ueQuitOnEnd] (prueba de humo de un intento completo).
         void Start()
         {
+#if UE_PLAYER_BUILD
+            enabled = false; return; // build de jugadores: sin autopiloto
+#endif
             var args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {

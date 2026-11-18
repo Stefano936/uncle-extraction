@@ -47,6 +47,8 @@ namespace UncleExtraction
             title.fontSize = title.resizeTextMaxSize = 112; title.resizeTextMinSize = 72; // logo: no crece con el tamaño de texto
             title.rectTransform.offsetMin = new Vector2(Ui.Margin, 0); title.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin);
             var tag = Ui.Label(canvas.transform, "Tagline", "", Ui.FontSection, Ui.Focus, TextAnchor.UpperLeft);
+            var ver = Ui.Label(canvas.transform, "Version", $"v{GameVersion.Number} · protocolo {GameVersion.Protocol}", Ui.FontHud - 4, Ui.Muted, TextAnchor.LowerRight); // diagnostico (sesion 17)
+            ver.rectTransform.offsetMin = new Vector2(0, 12); ver.rectTransform.offsetMax = new Vector2(-16, 0);
             tag.rectTransform.offsetMin = new Vector2(Ui.Margin + 6, 0); tag.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin - 140);
             tag.gameObject.AddComponent<LocText>().key = "lobby.tagline";
             status = Ui.Label(canvas.transform, "Status", "", Ui.FontHud + 4, Ui.Danger, TextAnchor.LowerCenter);

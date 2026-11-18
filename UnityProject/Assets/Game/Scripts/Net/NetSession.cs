@@ -16,7 +16,7 @@ namespace UncleExtraction
     /// Linea de comandos: -ueHost [-uePort 7777] | -ueClient 127.0.0.1 [-uePort 7777]. Sin argumentos: Solo.
     public class NetSession : MonoBehaviour
     {
-        public const ushort ProtocolVersion = 1; // subir cuando cambie el contenido replicado (version de compatibilidad)
+        public const ushort ProtocolVersion = GameVersion.Protocol; // unica fuente: GameVersion
         public const int MaxPlayers = 4;
 
         public GameObject playerPrefab;
@@ -115,7 +115,7 @@ namespace UncleExtraction
         }
 
         /// Version que el cliente envia al conectarse; si no coincide con la del anfitrion se rechaza con un motivo claro.
-        public static string VersionTag => Application.version + "/" + ProtocolVersion;
+        public static string VersionTag => GameVersion.Tag;
 
         static void Approve(NetworkManager.ConnectionApprovalRequest req, NetworkManager.ConnectionApprovalResponse res)
         {

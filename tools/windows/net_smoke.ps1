@@ -13,11 +13,12 @@ $ErrorActionPreference = 'Continue'
 $Repo   = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $Exe    = Join-Path $Repo 'Builds\UncleExtraction\UncleExtraction.exe'
 $ExeDev = Join-Path $Repo 'Builds\UncleExtraction_Dev\UncleExtraction.exe'
+$RefExe = Join-Path $Repo 'Builds\UncleExtraction_Ref_s16\UncleExtraction.exe' # compatibilidad: demo anterior (sesion 17)
 $Log    = Join-Path $Repo '.local-setup\logs\net'
 New-Item -ItemType Directory -Force -Path $Log | Out-Null
 if (-not (Test-Path $Exe)) { Write-Host "Falta la build: $Exe" -ForegroundColor Red; exit 2 }
 $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
-$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin','guesttoggle','guesttoggle_sim','marks','grace','graceend')
+$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin','guesttoggle','guesttoggle_sim','marks','grace','graceend','cycle','compat')
 # QA ampliada (mas larga; -Scenario qa): dificultades y grupos, sesion larga, perdida brusca del anfitrion, rendimiento.
 # 'relay' va aparte: necesita el proyecto vinculado a Unity Cloud y prueba Relay en UNA PC.
 $Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080','perf1080low')
@@ -339,6 +340,34 @@ for ($run = 1; $run -le $Runs; $run++) {
         $ok = $allSame -and (Field $finals[0] 'ronda') -eq 'Success' -and ("$started" -match "con $n jugadores")
         $detail = "procesos=$n inicio[$([regex]::Match("$started",'con \d+ jugadores').Value)] " + (($finals | ForEach-Object { "[" + (Brief $_) + "]" }) -join ' ')
         Record $label $(if ($ok) { 'PASS' } elseif (-not $started) { 'NOT_RUN' } else { 'FAIL' }) $detail
+      }
+      'cycle' {
+        # sesion 17: tres rondas seguidas con el mismo grupo (Sin carrito, Sin carrito, Estandar) y la torre tirada en cada
+        # una; el invitado comprueba carrito ausente/presente segun el modo y torre armada al empezar y caida una sola vez.
+        $r = PairRetry $label $tag @('-ueProbeCycle','-ueChallenge','NoCart') @('-ueProbe','cycle') 90
+        if ($r) { $fin = Last $r.c '\[Probe\] fin cycle'; $okN = [regex]::Match("$fin", 'ok=(\d+)/(\d+)')
+          $bad = (@(Grep $r.c '\[Probe\] paso=') | Where-Object { $_ -match 'ok=False' } | ForEach-Object { [regex]::Match($_, 'paso=(\S+)').Groups[1].Value }) -join ','
+          $stale = (Grep $r.c 'descartada').Count
+          $pass = $okN.Success -and $okN.Groups[1].Value -eq $okN.Groups[2].Value -and [int]$okN.Groups[2].Value -ge 9
+          Record $label $(if ($pass) { 'PASS' } else { 'FAIL' }) "sonda $($okN.Value) eventos_viejos_descartados=$stale$(if ($bad) { " fallaron=$bad" })$(if (-not $fin) { ' (la sonda no termino)' })" }
+      }
+      'compat' {
+        # sesion 17: compatibilidad de version. Anfitrion nuevo + invitado de la demo anterior, y al reves: el que entra tiene
+        # que ser rechazado con el motivo de version y volver al menu (puede reintentar).
+        if (-not (Test-Path $RefExe)) { Record $label 'NOT_RUN' "falta la build de referencia $RefExe"; break }
+        $res = @()
+        foreach ($pair in @(@{ h = $Exe; c = $RefExe; n = 'nuevo<-viejo' }, @{ h = $RefExe; c = $Exe; n = 'viejo<-nuevo' }))
+        {
+          $hostG = Start-Game "${tag}_$($pair.n -replace '[<-]','')_host" (HostArgs @() 2) $pair.h; Start-Sleep 5
+          $cliG = Start-Game "${tag}_$($pair.n -replace '[<-]','')_client" (ClientArgs @()) $pair.c; Start-Sleep 14
+          Stop-Game $cliG; Stop-Game $hostG
+          $rej = (Grep $hostG 'rechazo de conexion .*error.version').Count -gt 0
+          $saw = (Grep $cliG 'error.version').Count -gt 0
+          $menu = (Grep $cliG '\[Menu\] en el menu').Count -ge 2
+          $res += "$($pair.n): rechazo=$rej motivo_visto=$saw vuelve_al_menu=$menu"
+        }
+        $ok = ($res | Where-Object { $_ -match 'rechazo=True motivo_visto=True vuelve_al_menu=True' }).Count -eq 2
+        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ($res -join ' | ')
       }
       'latejoin' {
         # anfitrion solo (espera 1 jugador) con la ronda en curso; un cliente llega a los 14 s y debe ser rechazado con motivo

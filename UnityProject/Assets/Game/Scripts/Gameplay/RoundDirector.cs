@@ -115,11 +115,17 @@ namespace UncleExtraction
         public void SetDifficulty(Difficulty d) { if (NetAuth.IsServer && InLobby) { difficulty = d; foreach (var pm in PlayerMotor.All) if (pm && pm.Controls && !pm.Controls.IsHostPlayer) pm.Controls.SetReadyServer(false); } }
         void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); if (!GetComponent<RoundStats>()) gameObject.AddComponent<RoundStats>(); if (!GetComponent<Challenges>()) gameObject.AddComponent<Challenges>(); if (!GetComponent<BarProps>()) gameObject.AddComponent<BarProps>(); }
         /// Anfitrion: la torre de vasos se cae para todos (sesion 15).
-        public void TowerFall(Vector3 dir) { if (IsSpawned && IsServer) TowerFallRpc(dir); else if (BarProps.Instance) BarProps.Instance.Fall(dir); }
-        [Rpc(SendTo.Everyone)] void TowerFallRpc(Vector3 dir) { if (BarProps.Instance) BarProps.Instance.Fall(dir); }
+        public void TowerFall(Vector3 dir) { if (IsSpawned && IsServer) TowerFallRpc(dir, Restarts); else if (BarProps.Instance) BarProps.Instance.Fall(dir, Restarts); }
+        [Rpc(SendTo.Everyone)] void TowerFallRpc(Vector3 dir, int round) { if (BarProps.Instance) BarProps.Instance.Fall(dir, round); }
         /// Parte de extraccion: lo arma el anfitrion y llega igual a todos (sesion 15).
-        public void PublishReport(string report) { if (IsSpawned && IsServer) ReportRpc(new Unity.Collections.FixedString4096Bytes(report.Length > 4000 ? report.Substring(0, 4000) : report)); }
-        [Rpc(SendTo.NotServer)] void ReportRpc(Unity.Collections.FixedString4096Bytes r) => RoundStats.LastReport = r.ToString();
+        public const int MaxReportBytes = 12000;
+        public void PublishReport(string json)
+        {
+            if (!IsSpawned || !IsServer) return;
+            if (System.Text.Encoding.UTF8.GetByteCount(json) > MaxReportBytes) { Debug.LogWarning("[Report] parte demasiado grande: se envia sin momentos"); var r = RoundStats.Last; r.moments.Clear(); json = JsonUtility.ToJson(r); }
+            ReportRpc(json);
+        }
+        [Rpc(SendTo.NotServer)] void ReportRpc(string json) => RoundStats.Receive(json);
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
 
         void Update()
@@ -189,7 +195,11 @@ namespace UncleExtraction
             if (ok) BackToLobby();
         }
         /// Atajos de diagnostico (R = reiniciar): editor, build de desarrollo o -ueDebug.
+#if UE_PLAYER_BUILD
+        public static bool DiagnosticKeys => false; // build de jugadores: sin atajos ni laboratorios
+#else
         public static bool DiagnosticKeys => Application.isEditor || Debug.isDebugBuild || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueDebug") >= 0;
+#endif
 
         public void Restart()
         {

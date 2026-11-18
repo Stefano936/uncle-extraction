@@ -781,6 +781,46 @@
    "key": "report.the_uncle",
    "en": "The uncle",
    "es_UY": "El tío"
+  },
+  {
+   "key": "report.f_close_call",
+   "en": "CLOSED WITH {v} S TO SPARE",
+   "es_UY": "CERRARON CON {v} S DE MARGEN"
+  },
+  {
+   "key": "report.f_coordinated",
+   "en": "TEAMWORK: {name} unhooked him while he was distracted",
+   "es_UY": "JUGADA EN EQUIPO: {name} lo soltó de la barra mientras estaba distraído"
+  },
+  {
+   "key": "report.f_cut",
+   "en": "{name} stopped {v} hit(s) by holding the limb",
+   "es_UY": "{name} frenó {v} golpe(s) sujetándole el miembro"
+  },
+  {
+   "key": "report.f_quick_unanchor",
+   "en": "Off the bar in {v} s",
+   "es_UY": "Fuera de la barra en {v} s"
+  },
+  {
+   "key": "report.f_help",
+   "en": "{name} picked up teammates {v} time(s)",
+   "es_UY": "{name} levantó compañeros {v} vez/veces"
+  },
+  {
+   "key": "report.f_time",
+   "en": "Extracted in {time}",
+   "es_UY": "Extraído en {time}"
+  },
+  {
+   "key": "report.m_coordinated",
+   "en": "{name} unhooked him during the distraction",
+   "es_UY": "{name} lo soltó durante la distracción"
+  },
+  {
+   "key": "report.m_bell",
+   "en": "{name} rang the last-call bell",
+   "es_UY": "{name} tocó la campana de última ronda"
   }
  ]
 }

@@ -19,8 +19,16 @@ namespace UncleExtraction
 
         void Awake() { Instance = this; }
         void OnDestroy() { if (Instance == this) Instance = null; }
+        int builtRound = -1;
         void Start() { Build(); }
         public void ResetState() { Build(); }
+        /// Sesion 17: la torre sigue al numero de ronda REPLICADO en todos los pares (antes solo el anfitrion la rearmaba y un
+        /// invitado podia quedar con la torre caida y sin efecto en la ronda siguiente).
+        void Update()
+        {
+            var r = RoundDirector.Instance; if (!r) return;
+            if (r.Restarts != builtRound) { Build(); builtRound = r.Restarts; }
+        }
 
         void Build()
         {
@@ -69,14 +77,18 @@ namespace UncleExtraction
             if (v.magnitude < TriggerSpeed) return;
             string who = rb.GetComponentInParent<TransportCart>() ? "carrito" : NpcBody.Of(rb) ? "tio" : rb.GetComponent<PlayerMotor>().playerName;
             Debug.Log($"[Props] torre de vasos al piso por {who} a {v.magnitude:0.0} m/s");
-            RoundDirector.Instance.TowerFall(v.normalized); RoundStats.Tower(who == "carrito" ? Loc.T("report.the_cart") : who == "tio" ? Loc.T("report.the_uncle") : who);
+            RoundDirector.Instance.TowerFall(v.normalized); RoundStats.Tower(who == "carrito" ? 1 : who == "tio" ? 2 : 0, who == "carrito" || who == "tio" ? "" : who);
             if (NpcBrain.Instance) NpcBrain.Instance.DistractBy(TowerPos + Vector3.up, DistractSeconds, "¡Los vasos!");
         }
 
         /// En todos los pares (RPC): los vasos caen, suena y reacciona el barman.
-        public void Fall(Vector3 dir)
+        /// round: numero de ronda en que la decidio el anfitrion; un evento de otra ronda se descarta.
+        public void Fall(Vector3 dir, int round = -1)
         {
+            var rd = RoundDirector.Instance;
+            if (round >= 0 && rd && round != rd.Restarts) { Debug.Log($"[Props] caida de la ronda {round} descartada (ronda actual {rd.Restarts})"); return; }
             if (fallen) return; fallen = true; Falls++;
+            Debug.Log($"[Props] torre al piso (ronda {(rd ? rd.Restarts : -1)}, caidas {Falls})");
             IgnoreActors();
             foreach (var g in glasses) if (g) { g.isKinematic = false; g.AddForce((dir * 1.6f + Random.insideUnitSphere * 0.9f + Vector3.up * 0.8f) * g.mass, ForceMode.Impulse); g.AddTorque(Random.insideUnitSphere * 0.05f, ForceMode.Impulse); }
             if (GameAudio.Instance) GameAudio.Instance.Play3D("glass_crash", TowerPos + Vector3.up, 1f);

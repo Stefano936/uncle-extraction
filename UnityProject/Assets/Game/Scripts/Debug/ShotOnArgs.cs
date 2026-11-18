@@ -17,6 +17,9 @@ namespace UncleExtraction
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Init()
         {
+#if UE_PLAYER_BUILD
+            return; // build de jugadores: sin capturas ni ataques forzados de QA
+#endif
             foreach (var a in Environment.GetCommandLineArgs())
                 if (a == "-ueShot" || a == "-ueShotMenu" || a == "-ueForceAttack" || a == "-ueFaceUncle" || a == "-ueFrames" || a == "-uePose")
                 {

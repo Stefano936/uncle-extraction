@@ -24,11 +24,25 @@ namespace UncleExtraction
         readonly NetworkVariable<PlayerState> nState = new NetworkVariable<PlayerState>(PlayerState.Active);
         readonly NetworkVariable<Unity.Collections.FixedString32Bytes> nName = new NetworkVariable<Unity.Collections.FixedString32Bytes>();
         /// Nombre elegido en Opciones: lo sanea el anfitrion (sin etiquetas, maximo 20) y lo replica; vacio = «Jugador N».
+        /// Bytes UTF-8 utiles del tipo replicado del nombre (FixedString32Bytes: 29).
+        public const int MaxNameBytes = 29, MaxNameChars = 20;
+        /// Nombre valido para mostrar y replicar (sesion 17): sin etiquetas de texto enriquecido ni controles, recortado por
+        /// CARACTERES COMPLETOS (emoji y tildes no se parten) hasta 20 visibles y 29 bytes UTF-8. «|» y «=» se permiten: los
+        /// mensajes los escapan (Loc.Code) y el parte viaja estructurado. Vacio = el juego usa el nombre por defecto.
         public static string Sanitize(string n)
         {
             if (string.IsNullOrWhiteSpace(n)) return "";
-            n = n.Replace("<", "").Replace(">", "").Replace('\n', ' ').Trim();
-            return n.Length > 20 ? n.Substring(0, 20) : n;
+            var sb = new System.Text.StringBuilder();
+            foreach (char ch in n) { if (ch == '<' || ch == '>') continue; sb.Append(char.IsControl(ch) ? ' ' : ch); }
+            n = sb.ToString().Trim();
+            var e = System.Globalization.StringInfo.GetTextElementEnumerator(n); var outp = new System.Text.StringBuilder(); int count = 0, bytes = 0;
+            while (e.MoveNext())
+            {
+                string el = e.GetTextElement(); int b = System.Text.Encoding.UTF8.GetByteCount(el);
+                if (count + 1 > MaxNameChars || bytes + b > MaxNameBytes) break;
+                outp.Append(el); count++; bytes += b;
+            }
+            return outp.ToString().Trim();
         }
         [Rpc(SendTo.Server)]
         void NameRpc(string name, RpcParams p = default) { if (p.Receive.SenderClientId == OwnerClientId) { string s = Sanitize(name); if (s != "") nName.Value = s; } }

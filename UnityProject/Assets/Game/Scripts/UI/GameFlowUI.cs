@@ -202,7 +202,9 @@ namespace UncleExtraction
             resDetail.text = Loc.T(win ? "round.success_detail" : "round.timeout_detail");
             int falls = 0; foreach (var pm in PlayerMotor.All) if (pm) falls += pm.FallCount;
             string time = win ? $"{(int)(round.Elapsed / 60f)}:{(int)(round.Elapsed % 60f):00}" : "—";
-            string rep = RoundStats.Render(RoundStats.LastReport);
+            var report = RoundStats.Last != null && RoundStats.Last.round == round.Restarts ? RoundStats.Last : null; // solo el parte de ESTA ronda
+            string rep = RoundStats.Render(report);
+            string feat = RoundStats.Featured(report); if (feat != "") resDetail.text = feat; // destacado de la ronda (hecho real)
             if (rep != "") resStats.text = rep + "\n" + Loc.T(round.PartySize == 1 ? "lobby.players_one" : "lobby.players_other", ("count", round.PartySize.ToString())) + " · " + Loc.T(round.CurrentDifficulty == Difficulty.Relaxed ? "lobby.relaxed" : round.CurrentDifficulty == Difficulty.Hard ? "lobby.hard" : "lobby.normal") + (win ? "" : "\n" + Loc.T("round.hint"));
             else resStats.text = $"{Loc.T("round.time")}:  {time}\n{Loc.T("round.falls")}:  {falls}\n{Loc.T("lobby.difficulty")}:  {Loc.T(round.CurrentDifficulty == Difficulty.Relaxed ? "lobby.relaxed" : round.CurrentDifficulty == Difficulty.Hard ? "lobby.hard" : "lobby.normal")}\n{Loc.T(round.PartySize == 1 ? "lobby.players_one" : "lobby.players_other", ("count", round.PartySize.ToString()))}"
                             + (win ? "" : "\n\n" + Loc.T("round.hint"));

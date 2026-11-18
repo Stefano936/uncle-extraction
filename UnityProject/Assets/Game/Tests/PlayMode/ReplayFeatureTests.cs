@@ -41,9 +41,9 @@ namespace UncleExtraction.Tests
             yield return Play(ChallengeMode.NoCart);
             Debug.Log($"[Test] sin carrito: {round.State} en {round.Elapsed:0.0}s");
             Assert.AreEqual(RoundState.Success, round.State, "uno solo puede ganar sin carrito");
-            StringAssert.Contains("challenge.played_nocart", RoundStats.LastReport);
-            round.challenge = ChallengeMode.Standard; round.Restart(); yield return null; yield return null;
-            Assert.Less(Vector3.Distance(cart.transform.position, new Vector3(5.6f, 0, 2.4f)), 1.5f, "vuelve a la ronda estandar con el carrito en su lugar");
+            Assert.AreEqual("NoCart", RoundStats.Last.challenge, "el parte registra el desafio");
+            round.challenge = ChallengeMode.Standard; round.Restart(); yield return new WaitForSeconds(0.3f);
+            Assert.Less(Vector3.Distance(cart.transform.position, cart.SpawnPos), 1.5f, $"vuelve a la ronda estandar con el carrito en su lugar (esta en {cart.transform.position}, inicio {cart.SpawnPos})");
         }
 
         [UnityTest]
@@ -57,7 +57,7 @@ namespace UncleExtraction.Tests
             yield return Play(ChallengeMode.Narrow);
             Debug.Log($"[Test] ruta estrecha: {round.State} en {round.Elapsed:0.0}s");
             Assert.AreEqual(RoundState.Success, round.State, "la ruta alternativa es viable para uno solo");
-            StringAssert.Contains("report.m_first_grab", RoundStats.LastReport, "el parte trae momentos reales");
+            Assert.IsTrue(RoundStats.Last.moments.Exists(m => m.key == "first_grab"), "el parte trae momentos reales");
         }
 
         [UnityTest]
