@@ -21,7 +21,7 @@ namespace UncleExtraction
         static void Init()
         {
             var a = Environment.GetCommandLineArgs();
-            if (a.Contains("-ueProbe") || a.Contains("-ueProbeStage") || a.Contains("-ueProbeRestartAt"))
+            if (a.Contains("-ueProbe") || a.Contains("-ueProbeStage") || a.Contains("-ueProbeRestartAt") || a.Contains("-ueQuitAtRound"))
             { var go = new GameObject("NetProbe"); DontDestroyOnLoad(go); go.AddComponent<NetProbe>(); }
         }
         static string Arg(string k) { var a = Environment.GetCommandLineArgs(); int i = Array.IndexOf(a, k); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; }
@@ -36,6 +36,12 @@ namespace UncleExtraction
             if (a.Contains("-ueProbeStage") && NetAuth.IsServer) StartCoroutine(Stage());
             var rs = Arg("-ueProbeRestartAt");
             if (rs != null && NetAuth.IsServer && float.TryParse(rs, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float at)) StartCoroutine(RestartAt(at));
+            var qa = Arg("-ueQuitAtRound"); // invitado: salir del juego cuando el reloj replicado de la ronda llega a s
+            if (qa != null && float.TryParse(qa, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float qs))
+            {
+                while (RoundDirector.Instance && RoundDirector.Instance.Elapsed < qs) yield return null;
+                Debug.Log($"[Probe] sale de la partida a los {RoundDirector.Instance.Elapsed:0.0} s de ronda"); Application.Quit(); yield break;
+            }
             var probe = Arg("-ueProbe");
             if (probe == "toggle") yield return Toggle();
             else if (probe == "mark") yield return Mark();

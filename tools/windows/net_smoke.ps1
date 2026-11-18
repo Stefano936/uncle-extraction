@@ -274,9 +274,9 @@ for ($run = 1; $run -le $Runs; $run++) {
         # -ueNoClose: el anfitrion nunca cierra la camioneta, asi la ronda dura mas que la gracia y termina por reloj
         $hx = @('-ueAutopilot','drag','-ueAutopilotDelay','2','-ueQuitOnEnd','-ueNoClose','-ueRoundTime', $(if ($end) { '40' } else { '60' }))
         $hostG = Start-Game "${tag}_host" (HostArgs $hx); Start-Sleep 4
-        $cliG = Start-Game "${tag}_client" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueNoClose'))
-        $deadline = (Get-Date).AddSeconds(60); while ((Get-Date) -lt $deadline -and (Grep $hostG 'ronda iniciada con 2').Count -eq 0) { Start-Sleep -Milliseconds 300 }
-        Start-Sleep $(if ($end) { 33 } else { 14 }); $cliG.p.Kill()
+        # el invitado sale solo cuando SU reloj replicado de ronda llega a 33 s (graceend: quedan 7 s) o 14 s (grace)
+        $cliG = Start-Game "${tag}_client" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3','-ueNoClose','-ueQuitAtRound', $(if ($end) { '33' } else { '14' })))
+        $null = $cliG.p.WaitForExit(120000); if (-not $cliG.p.HasExited) { $cliG.p.Kill() }
         $null = $hostG.p.WaitForExit($(if ($end) { 140000 } else { 300000 })); Stop-Game $hostG
         if ((Crashed $hostG) -or (Crashed $cliG)) { Record $label 'BLOCKED' "crash; ver $Log\${tag}_*.log"; break }
         $drop = @(Grep $hostG '\[Round\] baja de jugador'); $adj = @(Grep $hostG '\[Round\] grupo 2 -> 1 tras la gracia')
