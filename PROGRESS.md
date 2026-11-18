@@ -34,7 +34,7 @@
 | PlayMode: desafíos, torre, parte, guía, entrada real | `2b36fd4` → `9fbdbe3` | Sin carrito: gana solo en 21,7 s; Ruta estrecha: gana solo en 40,4 s por el paso; torre: el carrito a 2,2 m/s la tira y el tío se distrae; se rearma al reiniciar; guía y entrada real verdes |
 | PlayMode: intentos completos solo (laboratorio, articulado) + desafíos | `9fbdbe3` (código) | **12/12** (incluye los intentos con carrito del laboratorio articulado) |
 | PlayMode completa | {PM} | {PMRES} |
-| Red en localhost (17 escenarios, incluye 4 procesos y latencia simulada) | build `9fbdbe3` | {NET} |
+| Red en localhost (17 escenarios, incluye 4 procesos y latencia simulada) | build `9fbdbe3` | **16/17 PASS**; `race` FAIL (rechazos=0). Repetido ×3: 1 PASS, 2 FAIL. Causa vista en el registro: el invitado tenía como candidato el antebrazo y no el cinturón, así que no hubo disputa simultánea que medir; la invariante (un solo ganador, nunca dos manos en el mismo punto) se cumplió en las 4 corridas. En las sesiones 13–14 había pasado 3/3: **abierto**, revisar la puntería del autopiloto en la carrera |
 | Cuatro procesos reales con capturas | build `S15` previa | Sala con selector de desafío, agarres simultáneos, carrito, cierre de la camioneta (`.local-setup/clips/cuatro_*.png`) |
 | Capturas comparables antes/después | builds `85998c0` y `S15` | `docs/capturas/sesion15/antes_despues.jpg` |
 | Clips de juego real | build `S15` | 3 verticales + 2 horizontales (WebP) en `docs/lanzamiento/clips/` |
