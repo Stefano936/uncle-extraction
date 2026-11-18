@@ -18,7 +18,7 @@ namespace UncleExtraction
         static void Init()
         {
             foreach (var a in Environment.GetCommandLineArgs())
-                if (a == "-ueShot" || a == "-ueShotMenu" || a == "-ueForceAttack" || a == "-ueFaceUncle")
+                if (a == "-ueShot" || a == "-ueShotMenu" || a == "-ueForceAttack" || a == "-ueFaceUncle" || a == "-ueFrames")
                 {
                     var go = new GameObject("ShotOnArgs"); DontDestroyOnLoad(go); go.AddComponent<ShotOnArgs>();
                     return;
@@ -40,6 +40,7 @@ namespace UncleExtraction
             {
                 if (a[i] == "-ueShot") StartCoroutine(Capture(Parse(a[i + 1], 3f), true));
                 if (a[i] == "-ueForceAttack") StartCoroutine(Force(Parse(a[i + 1], 5f)));
+                if (a[i] == "-ueFrames") StartCoroutine(Frames(a[i + 1]));
                 if (a[i] == "-ueFaceUncle") StartCoroutine(FaceUncle(Parse("x@" + a[i + 1], 3f).at));
             }
             yield break;
@@ -91,6 +92,19 @@ namespace UncleExtraction
                 yield return new WaitForFixedUpdate();
             }
             Debug.Log("[Shot] jugador frente al tio");
+        }
+
+        /// -ueFrames carpeta@inicio@segundos@fps (sesion 15): secuencia de cuadros de juego REAL para clips (sin ffmpeg).
+        /// Fija Time.captureFramerate: el juego avanza exactamente 1/fps por cuadro aunque guardar tarde (clip parejo).
+        IEnumerator Frames(string spec)
+        {
+            var p = spec.Split('@'); if (p.Length < 4) yield break;
+            string dir = p[0]; float start = float.Parse(p[1], CultureInfo.InvariantCulture), dur = float.Parse(p[2], CultureInfo.InvariantCulture); int fps = int.Parse(p[3], CultureInfo.InvariantCulture);
+            System.IO.Directory.CreateDirectory(dir);
+            yield return WaitGame(start);
+            Time.captureFramerate = fps; int n = Mathf.CeilToInt(dur * fps);
+            for (int i = 0; i < n; i++) { yield return new WaitForEndOfFrame(); ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"f{i:0000}.png")); }
+            Time.captureFramerate = 0; Debug.Log($"[Shot] {n} cuadros en {dir}");
         }
 
         IEnumerator Force((string id, float at) p)

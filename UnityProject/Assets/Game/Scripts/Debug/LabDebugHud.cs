@@ -41,6 +41,8 @@ namespace UncleExtraction
 
         static readonly bool DebugArg = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueDebug") >= 0;
 
+        /// -ueCleanCapture: material de tienda/clips sin textos de depuracion (sesion 15).
+        public static readonly bool CleanCapture = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueCleanCapture") >= 0;
         void OnGUI()
         {
             Styles();
@@ -86,7 +88,7 @@ namespace UncleExtraction
             string timer = round ? (round.TimeLimit > 0 ? $"{Mathf.Max(0, round.TimeLimit - round.Elapsed):0}s" : "sin limite") : "";
             if (!kitHud) GUI.Label(new Rect(W / 2 - 150, 8, 300, 26), $"{(LevelLayout.Current ? LevelLayout.Current.displayName : "")}  {timer}", mid);
 
-            if (autopilot && autopilot.Running) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
+            if (autopilot && autopilot.Running && !CleanCapture) GUI.Label(new Rect(0, 40, W, 26), $"AUTOPILOTO ({autopilot.Mode}): {autopilot.Status}", mid);
             if (Time.unscaledTime < NetSession.StatusUntil && !kitHud) GUI.Label(new Rect(0, H * 0.72f, W, 30), NetSession.StatusMessage, mid);
             bool techLines = !kitHud || Debug.isDebugBuild || Application.isEditor || panel || DebugArg;
             if (!techLines) { if (panel) DrawPanel(W, H); return; } // prueba con personas: sin textos tecnicos sobre el juego

@@ -11,7 +11,7 @@ namespace UncleExtraction
     public class BarProps : MonoBehaviour, IResettable
     {
         public static BarProps Instance { get; private set; }
-        public static readonly Vector3 TowerPos = new Vector3(2.7f, 0f, 1.2f);
+        public static readonly Vector3 TowerPos = new Vector3(-1.5f, 0f, 0.5f); // junto a la salida: cae si el carrito toma mal la curva (en 2,7/1,2 el carrito la tiraba siempre al arrancar)
         public const float TriggerSpeed = 1.2f, DistractSeconds = 2.5f;
         GameObject root; readonly List<Rigidbody> glasses = new List<Rigidbody>(); bool fallen;
         public bool Fallen => fallen;

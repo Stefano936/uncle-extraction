@@ -39,7 +39,7 @@ namespace UncleExtraction
         {
             builtScale = Ui.TextScale;
             round = FindAnyObjectByType<RoundDirector>(); npc = FindAnyObjectByType<NpcBrain>();
-            canvas = Ui.Canvas("HUD", 10); root = Ui.Stretch("Root", canvas.transform);
+            canvas = Ui.Canvas("HUD", 10); if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) canvas.enabled = false; // material de tienda (sesion 15) root = Ui.Stretch("Root", canvas.transform);
             // manos: abajo a la izquierda y a la derecha
             for (int h = 0; h < 2; h++)
             {

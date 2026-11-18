@@ -32,6 +32,7 @@ namespace UncleExtraction
             label.characterSize = 0.011f; label.fontSize = 64;
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font) { label.font = font; lgo.GetComponent<MeshRenderer>().sharedMaterial = font.material; }
+            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) lgo.GetComponent<MeshRenderer>().enabled = false; // material de tienda
             for (int h = 0; h < 2; h++)
             {
                 var go = new GameObject(h == 0 ? "Tension_L" : "Tension_R"); go.transform.SetParent(null, false);
