@@ -80,6 +80,8 @@ namespace UncleExtraction
             if (fs) fs.HideForTool();
             // aviso de ataque (preparacion de la patada): titulo, consejo y subtitulo no se pisan
             if (NpcBrain.Instance) { NpcBrain.Instance.ForceAttack(AttackId.Kick); yield return Seconds(0.25f); yield return Check("hud_attack"); yield return Seconds(2.5f); }
+            // La captura de marcadores ya se hizo. Dejar que caduquen antes de acercar la camara para el A/B.
+            while (cm && cm.ActiveCount > 0) yield return null;
             if (NpcBrain.Instance && me)
             {
                 var npc = NpcBrain.Instance;

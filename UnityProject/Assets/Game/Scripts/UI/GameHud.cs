@@ -365,7 +365,7 @@ namespace UncleExtraction
             promptBar.transform.parent.gameObject.SetActive(progress > 0.01f);
         }
 
-        static float AttackTop(bool contextual) => contextual ? 84f : Mathf.Max(150f, Ui.Margin * 0.5f + Ui.K(96) + 14f);
+        static float AttackTop(bool contextual) => contextual ? Ui.Margin * 0.5f + 64f + 12f : Mathf.Max(150f, Ui.Margin * 0.5f + Ui.K(96) + 14f);
 
         /// El subtitulo no tapa la cara del tio (sesion 14): en su lugar bajo quedaba sobre la barbilla con el tio de cerca.
         /// Si la cabeza proyectada se cruza con ese lugar, sube debajo del reloj y del aviso de ataque (1,5 s de histeresis).
