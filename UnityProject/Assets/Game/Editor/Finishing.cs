@@ -14,6 +14,7 @@ namespace UncleExtraction.EditorTools
         const string TexDir = "Assets/Game/Art/Materials/Textures";
 
         // ---------- materiales
+        public static readonly Color EmissionFloor = new Color(0.002f, 0.002f, 0.002f, 1f);
         public static Material Lit(string name, Color c, float smooth, float metal = 0f, Texture2D tex = null, Texture2D normal = null, float bump = 0.5f, Vector2? tiling = null, bool emissionReady = false)
         {
             Directory.CreateDirectory(MatDir);
@@ -26,7 +27,7 @@ namespace UncleExtraction.EditorTools
             if (normal) { m.SetTexture("_BumpMap", normal); m.SetFloat("_BumpScale", bump); m.EnableKeyword("_NORMALMAP"); if (tiling.HasValue) m.SetTextureScale("_BumpMap", tiling.Value); }
             else { m.SetTexture("_BumpMap", null); m.DisableKeyword("_NORMALMAP"); }
             // el tio senaliza preparacion con un brillo (bloque de propiedades); el material lo admite con emision negra por defecto
-            if (emissionReady) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black); m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
+            if (emissionReady) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", EmissionFloor); // casi negro, NO negro: URP apaga _EMISSION al validar un material con emision negra (pasaba al correr PlayMode, sesion 17) m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
             else { m.DisableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black); }
             EditorUtility.SetDirty(m); return m;
         }

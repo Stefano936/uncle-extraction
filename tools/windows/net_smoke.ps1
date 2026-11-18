@@ -28,8 +28,14 @@ $results = @()
 Import-Module (Join-Path $PSScriptRoot 'Guard.psm1') -Force
 if (-not $NoPreflight) { try { Assert-Preflight -Builds @('UncleExtraction','UncleExtraction_Dev') } catch { Write-Host $_ -ForegroundColor Red; exit 2 } }
 try { Enter-BatchLock 'net_smoke' } catch { Write-Host $_ -ForegroundColor Red; exit 2 }
-# Procesos del juego que quedaron vivos de una corrida anterior ocupan el puerto 7777: cerrarlos (solo los de Builds\)
-Get-Process UncleExtraction -ErrorAction SilentlyContinue | Where-Object { $_.Path -like (Join-Path $Repo 'Builds\*') } | ForEach-Object { Write-Host "Cerrando proceso previo $($_.Id)"; $_ | Stop-Process -Force }
+# Sesion 17: NO se cierran procesos ajenos (un juego abierto a mano, otra copia). Esta tanda solo detiene los que lanzo
+# (Start-Tracked + finally). Si el puerto 7777 esta ocupado por otro, se usa el siguiente UDP libre y se informa.
+$others = @(Get-Process UncleExtraction -ErrorAction SilentlyContinue)
+if ($others.Count) { Write-Host "Aviso: hay $($others.Count) proceso(s) UncleExtraction ajenos a esta tanda; no se tocan" }
+$Port = 7777
+$busy = @(Get-NetUDPEndpoint -ErrorAction SilentlyContinue | ForEach-Object { [int]$_.LocalPort })
+while ($busy -contains $Port) { $Port++ }
+if ($Port -ne 7777) { Write-Host "Puerto 7777 ocupado: la tanda usa $Port" }
 Start-Sleep 1
 
 function Start-Game($name, [string[]]$extra, [string]$exe = $Exe) {
@@ -53,8 +59,8 @@ function RttRange($g, $pat) {
   $v = (Grep $g $pat) | ForEach-Object { [int]([regex]::Match($_, $pat).Groups[1].Value) }
   if ($v) { return "{0}-{1} ms" -f ($v | Measure-Object -Minimum).Minimum, ($v | Measure-Object -Maximum).Maximum } else { return '-' }
 }
-function HostArgs([string[]]$x, [int]$expect = 2) { @('-ueHost','-ueListen','127.0.0.1','-uePort','7777','-ueExpectPlayers',"$expect") + $x }
-function ClientArgs([string[]]$x) { @('-ueClient','127.0.0.1','-uePort','7777') + $x }
+function HostArgs([string[]]$x, [int]$expect = 2) { @('-ueHost','-ueListen','127.0.0.1','-uePort',"$Port",'-ueExpectPlayers',"$expect") + $x }
+function ClientArgs([string[]]$x) { @('-ueClient','127.0.0.1','-uePort',"$Port") + $x }
 
 # Dos procesos: anfitrion y cliente. Devuelve $null si alguno crasheo al arrancar (registro conservado).
 function Pair($tag, [string[]]$h, [string[]]$c, [int]$timeout, [string]$exe = $Exe, [switch]$waitHost) {
@@ -65,7 +71,7 @@ function Pair($tag, [string[]]$h, [string[]]$c, [int]$timeout, [string]$exe = $E
   else { $null = $cliG.p.WaitForExit($timeout * 1000); $null = $hostG.p.WaitForExit(25000) }
   Stop-Game $cliG; Stop-Game $hostG
   if ((Crashed $hostG) -or (Crashed $cliG)) { return $null }
-  if ((Grep $hostG 'begin Host ok=False').Count -gt 0) { Record "$tag" 'BLOCKED' "el anfitrion no pudo escuchar en 7777 (puerto ocupado)"; return 'blocked' }
+  if ((Grep $hostG 'begin Host ok=False').Count -gt 0) { Record "$tag" 'BLOCKED' "el anfitrion no pudo escuchar en $Port (puerto ocupado)"; return 'blocked' }
   return @{ h = $hostG; c = $cliG }
 }
 function PairRetry($label, $tag, [string[]]$h, [string[]]$c, [int]$timeout, [string]$exe = $Exe, [switch]$waitHost) {
