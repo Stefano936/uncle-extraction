@@ -34,22 +34,33 @@ namespace UncleExtraction
         static void Save(string k, int v) { try { PlayerPrefs.SetInt(k, v); PlayerPrefs.Save(); } catch { } }
 
         void Awake() { Instance = this; }
-        void OnDestroy() { if (Instance == this) Instance = null; if (box) Destroy(box.gameObject); }
+        void OnDestroy() { if (Instance == this) Instance = null; if (canvas) Destroy(canvas.gameObject); }
 
-        void Start()
+        float builtScale = -1f; Canvas canvas;
+        void Build()
         {
-            var canvas = Ui.Canvas("FirstSteps", 15);
+            if (box) Destroy(box.gameObject);
+            if (!canvas) canvas = Ui.Canvas("FirstSteps", 15);
+            builtScale = Ui.TextScale;
             box = Ui.PanelBox("Guide", canvas.transform, new Vector2(0f, 0.5f), new Vector2(Ui.Margin, 60), new Vector2(Ui.K(470), Ui.K(150))); box.pivot = new Vector2(0f, 0.5f);
             title = Ui.Label(box, "Title", "", Ui.FontHud, Ui.Focus, TextAnchor.UpperLeft, true);
             title.rectTransform.offsetMin = new Vector2(20, 0); title.rectTransform.offsetMax = new Vector2(-20, -12);
             body = Ui.Label(box, "Body", "", Ui.FontHud + 2, Ui.Text, TextAnchor.UpperLeft);
             body.rectTransform.offsetMin = new Vector2(20, 14); body.rectTransform.offsetMax = new Vector2(-20, -(14 + Ui.K(28)));
             box.gameObject.SetActive(false);
+        }
+
+        void Start()
+        {
+            Build();
             if (!Completed && System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueAutopilot") < 0) Go(SavedStep);
         }
 
         public void Begin() { Go(Step.Move); }
         public void Skip() { Finish(Outcome.Skipped); }
+        /// Herramientas (auditoria de interfaz): mostrar/ocultar sin tocar el progreso guardado del jugador.
+        public void ShowForTool() { step = Step.Move; visibleAge = 0f; }
+        public void HideForTool() { step = Step.Done; }
         void Finish(Outcome o) { step = Step.Done; Save(PrefState, (int)o); Save(PrefStep, 0); Debug.Log($"[Guide] {(o == Outcome.Completed ? "completada" : "omitida")}"); }
 
         void Go(Step s)
@@ -64,6 +75,7 @@ namespace UncleExtraction
         void Update()
         {
             var round = RoundDirector.Instance; var pc = PlayerControls.Local; var npc = NpcBrain.Instance;
+            if (builtScale != Ui.TextScale) Build(); // tamaño de texto cambiado en plena partida
             // fin de ronda: ganar completa la guia; perder la deja donde estaba (se retoma en el proximo intento)
             if (round && !round.InLobby && round.State != lastState)
             {

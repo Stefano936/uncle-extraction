@@ -70,6 +70,13 @@ namespace UncleExtraction
             RoundDirector.Instance.StartFromLobby();
             yield return Seconds(3f);
             yield return Check("hud");
+            // sesion 14: guia de primeros pasos, marcador de un compañero y cambio de tamaño de texto en plena partida
+            var fs = FirstSteps.Instance; if (fs) { fs.ShowForTool(); yield return Frames(3); yield return Check("hud_guide"); }
+            var cm = CoopMarkers.Instance; var me = PlayerControls.Local;
+            if (cm && me && NpcBrain.Instance) { cm.Show(me.OwnerClientId, me.GetComponent<PlayerMotor>().playerName, MarkKind.Uncle, NpcBrain.Instance.transform.position); yield return Frames(3); yield return Check("hud_mark"); }
+            float ts0 = Ui.TextScale; Ui.TextScale = ts0 >= 1.4f ? 1f : 1.5f; GameSettings.TextScale = Ui.TextScale; yield return Frames(4);
+            yield return Check("hud_textsize_live"); Ui.TextScale = ts0; GameSettings.TextScale = ts0; yield return Frames(4);
+            if (fs) fs.HideForTool();
             // aviso de ataque (preparacion de la patada): titulo, consejo y subtitulo no se pisan
             if (NpcBrain.Instance) { NpcBrain.Instance.ForceAttack(AttackId.Kick); yield return Seconds(0.25f); yield return Check("hud_attack"); yield return Seconds(2.5f); }
             var flow = GameFlowUI.Instance;

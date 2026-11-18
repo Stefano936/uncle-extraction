@@ -180,6 +180,7 @@ namespace UncleExtraction
             promptBox.gameObject.SetActive(label != "" && !fallen);
             if (label != "") { prompt.text = Key(Loc.Coded(label)); promptBar.fillAmount = hands.InteractProgress01; promptBar.transform.parent.gameObject.SetActive(hands.InteractProgress01 > 0.01f); }
             var dlg = UncleDialogue.Instance; string line = dlg ? dlg.Current : "";
+            if (line != "") PlaceSubtitle();
             // jerarquia: si el aviso de peligro y el subtitulo no entran juntos (pantallas bajas con texto grande), manda el aviso
             subBox.gameObject.SetActive(line != "" && !(attackBox.gameObject.activeSelf && Overlap(attackBox, subBox)));
             if (line != "") subtitle.text = $"<b>{Loc.T(dlg.CurrentSpeaker == "bartender" ? "dialogue.bartender" : "dialogue.uncle")}:</b> {line}";
@@ -187,6 +188,31 @@ namespace UncleExtraction
             bool toastOn = (Time.time < hands.FeedbackUntil && hands.LastFeedback != "" || grabToast) && !fallen;
             toastBox.gameObject.SetActive(toastOn);
             if (toastOn) toast.text = Key(Loc.Coded(Time.time < hands.FeedbackUntil && hands.LastFeedback != "" ? hands.LastFeedback : GrabIntent.Feedback));
+        }
+
+        /// El subtitulo no tapa la cara del tio (sesion 14): en su lugar bajo quedaba sobre la barbilla con el tio de cerca.
+        /// Si la cabeza proyectada se cruza con ese lugar, sube debajo del reloj y del aviso de ataque (1,5 s de histeresis).
+        float subHighUntil;
+        public bool SubtitleHigh { get; private set; }
+        void PlaceSubtitle()
+        {
+            float h = Ui.K(64), low = 460 + Ui.K(110) - 110, w = subBox.rect.width;
+            var cam = Camera.main; var body = npc ? npc.GetComponent<NpcBody>() : null;
+            if (cam && body && body.head && canvas)
+            {
+                float sf = canvas.scaleFactor;
+                Vector3 c = cam.WorldToScreenPoint(body.head.position + Vector3.up * 0.1f);
+                if (c.z > 0f)
+                {
+                    float r = (cam.WorldToScreenPoint(body.head.position + Vector3.up * 0.1f + cam.transform.right * 0.32f) - c).magnitude;
+                    float top = (low + h) * sf, bottom = low * sf, cx = Screen.width * 0.5f;
+                    if (c.y + r > bottom && c.y - r < top && Mathf.Abs(c.x - cx) < r + w * 0.5f * sf) subHighUntil = Time.time + 1.5f;
+                }
+            }
+            SubtitleHigh = Time.time < subHighUntil;
+            float bannerBottom = Mathf.Max(150f, Ui.Margin * 0.5f + Ui.K(96) + 14f) + 24 + Ui.K(44) + Ui.K(34) + Ui.K(28);
+            float y = SubtitleHigh ? root.rect.height - bannerBottom - 16f - h : low;
+            if (Mathf.Abs(subBox.anchoredPosition.y - y) > 0.5f) subBox.anchoredPosition = new Vector2(0f, y);
         }
 
         void UpdateHand(HandUi u, int h, PlayerHands hands, bool control)

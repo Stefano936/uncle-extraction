@@ -322,13 +322,18 @@ namespace UncleExtraction
             if (!t) return;
             var s = HeldSocket(hand);
             Vector3 p = s ? Vector3.Lerp(HandTarget(hand), s.Position, 0.85f) : HandTarget(hand);
-            t.position = Vector3.Lerp(t.position, p, Smooth.Factor(0.5f));
-            Color c = s == null ? free : Color.Lerp(holding, strained, Tension01(hand));
+            // sesion 14: caido o levantandose, las manos bajan abiertas (sin control); con esfuerzo, el puño que sostiene tiembla
+            bool down = motor && motor.State != PlayerState.Active;
+            if (down && cam) p = cam.transform.TransformPoint(new Vector3(hand == 0 ? -0.3f : 0.3f, -0.55f, 0.55f));
+            bool straining = s && EffortActive;
+            if (straining) p += (cam ? cam.transform.right : Vector3.right) * (Mathf.Sin(Time.time * 47f + hand * 1.7f) * 0.006f) + Vector3.up * (Mathf.Sin(Time.time * 39f + hand) * 0.004f);
+            t.position = Vector3.Lerp(t.position, p, Smooth.Factor(down ? 0.15f : 0.5f));
+            Color c = s == null ? free : Color.Lerp(holding, strained, Mathf.Max(Tension01(hand), straining ? 0.6f : 0f));
             var rig = rigs[hand];
             if (rig)
             {
-                bool pending = s == null && Candidate && Ctrl(hand == 0 ? Act.GrabLeft : Act.GrabRight);
-                rig.Set(s ? 1f : pending ? 0.55f : 0.15f, s == null ? sleeveFree : c);
+                bool pending = s == null && Candidate && Ctrl(hand == 0 ? Act.GrabLeft : Act.GrabRight) && !down;
+                rig.Set(down ? 0.05f : s ? 1f : pending ? 0.55f : 0.15f, s == null ? sleeveFree : c);
             }
             else if (r) r.material.color = c;
         }
