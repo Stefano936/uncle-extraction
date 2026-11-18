@@ -93,6 +93,14 @@ namespace UncleExtraction
             var hands = pc.GetComponent<PlayerHands>();
             bool any = hands && (hands.HeldSocketId(0) != "" || hands.HeldSocketId(1) != "");
             bool both = hands && hands.HeldSocketId(0) != "" && hands.HeldSocketId(1) != "";
+            // si el jugador ya va por delante de la guia (el tio camino a la camioneta, atado o adentro), salta a la camioneta:
+            // no tiene sentido seguir explicando ataques mientras ya lo esta llevando (sesion 15)
+            if (step < Step.Transport && step > Step.Grab)
+            {
+                float dNow = UncleToVan();
+                bool ahead = (TransportCart.Instance && TransportCart.Instance.IsStrapped) || (ExtractionZone.Instance && ExtractionZone.Instance.AllPointsInside) || (dNow >= 0f && dNow < 6f);
+                if (ahead) { Go(Step.Extract); Render(); return; }
+            }
             switch (step)
             {
                 case Step.Move: if (walked > 1.5f) Go(Step.Aim); break; // solo lo caminado con la guia visible
