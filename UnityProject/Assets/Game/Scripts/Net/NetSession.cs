@@ -102,7 +102,7 @@ namespace UncleExtraction
                     PlayerPrefab = playerPrefab,
                     EnableSceneManagement = true,    // sin esto NGO borra en el cliente los objetos de escena (tio, carrito, sistemas)
                     ConnectionApproval = true,
-                    ProtocolVersion = ProtocolVersion,
+                    ProtocolVersion = 1, // handshake de NGO FIJO: si difiere, NGO corta antes de la admision y sin motivo. La compatibilidad real la decide la admision (VersionTag) con un mensaje claro (sesion 17)
                     TickRate = 30,
                 };
                 nm.AddNetworkPrefab(playerPrefab);
