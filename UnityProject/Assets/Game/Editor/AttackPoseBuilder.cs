@@ -12,12 +12,19 @@ namespace UncleExtraction.EditorTools
     /// sacudida se autorizan por direcciones de segmento. Si un clip falta o no se mueve, se usa la pose autorizada.
     public static class AttackPoseBuilder
     {
-        // Lado derecho del tio = +x mientras mira a +z: las partes ".L" del rig (ver ArticulatedUncleBuilder)
-        const string R = ".L", Lf = ".R";
+        // Sesion 14: las direcciones se escriben en el marco de la CARA (+z adelante, +x a la derecha del tio). La malla del
+        // kit mira hacia -z de la raiz (ver NpcBody.FaceSign), asi que con el kit el marco de la cara es la raiz girada 180°.
+        // Antes se escribian sobre +z de la raiz: el golpe salia hacia la nuca. Lado anatomico: con la cara en -z, la derecha
+        // del tio son las partes ".R" (en -x); sin kit (cara en +z), las ".L".
 
         public static UncleAttackPose Build(GameObject go, NpcBody body, NpcBrain brain, RagdollVisual vis, GameObject kit, Transform t)
         {
             var pose = go.AddComponent<UncleAttackPose>(); pose.brain = brain; pose.body = body;
+            float fs = kit ? -1f : 1f;
+            string R = fs < 0f ? ".R" : ".L", Lf = fs < 0f ? ".L" : ".R";
+            Vector3 Face(Vector3 d) => new Vector3(d.x * fs, d.y, d.z * fs);       // marco de la cara -> marco de la raiz
+            Vector3 Mirror(Vector3 d) => new Vector3(-d.x, d.y, d.z);              // lado derecho -> izquierdo (marco de la cara)
+            Vector3 faceFwd = t.forward * fs;
             var parts = body.parts; int n = parts.Length;
             var restRot = parts.Select(p => p.transform.rotation).ToArray();
             int ParentIndex(int i) { var cb = parts[i].joint.connectedBody; return Array.FindIndex(parts, p => p.Body == cb || p.GetComponent<Rigidbody>() == cb); }
@@ -45,7 +52,7 @@ namespace UncleExtraction.EditorTools
                 {
                     int i = Idx(role); if (i < 0) continue;
                     Vector3 rest = restRot[i] * Vector3.up; // el eje del segmento es +y local de la parte
-                    world[i] = Quaternion.FromToRotation(rest, t.TransformDirection(dir.normalized)) * restRot[i];
+                    world[i] = Quaternion.FromToRotation(rest, t.TransformDirection(Face(dir).normalized)) * restRot[i];
                     // los hijos acompanan la rotacion del padre si no tienen direccion propia
                     foreach (var c in Enumerable.Range(0, n).Where(c => ParentIndex(c) == i && !dirs.Any(d => d.role == parts[c].role)))
                         world[c] = world[i] * Quaternion.Inverse(restRot[i]) * restRot[c];
@@ -56,6 +63,8 @@ namespace UncleExtraction.EditorTools
             // Manotazo (mano derecha): preparacion con el brazo arriba y atras; golpe cruzando por delante
             pose.slapWindup = Authored("slap_windup", ("upper_arm" + R, new Vector3(0.75f, 0.55f, -0.35f)), ("forearm" + R, new Vector3(0.25f, 0.95f, 0.1f)));
             pose.slapStrike = Authored("slap_strike", ("upper_arm" + R, new Vector3(0.2f, 0.15f, 1f)), ("forearm" + R, new Vector3(-0.8f, 0.1f, 0.6f)));
+            pose.slapWindupL = Authored("slap_windup_l", ("upper_arm" + Lf, Mirror(new Vector3(0.75f, 0.55f, -0.35f))), ("forearm" + Lf, Mirror(new Vector3(0.25f, 0.95f, 0.1f))));
+            pose.slapStrikeL = Authored("slap_strike_l", ("upper_arm" + Lf, Mirror(new Vector3(0.2f, 0.15f, 1f))), ("forearm" + Lf, Mirror(new Vector3(-0.8f, 0.1f, 0.6f))));
             // Sacudida (a quien lo agarra): brazos abiertos e inhala; en el golpe, el torso gira de lado a lado (UncleAttackPose)
             pose.shakeWindup = Authored("shake_windup", ("upper_arm" + R, new Vector3(1f, 0.25f, 0f)), ("upper_arm" + Lf, new Vector3(-1f, 0.25f, 0f)), ("chest", new Vector3(0f, 1f, -0.2f)));
             pose.shakeStrike = Authored("shake_strike", ("chest", new Vector3(0.35f, 1f, 0f)), ("upper_arm" + R, new Vector3(1f, -0.2f, 0.3f)), ("upper_arm" + Lf, new Vector3(-1f, -0.2f, -0.3f)));
@@ -64,6 +73,8 @@ namespace UncleExtraction.EditorTools
             var pushS = Authored("push_strike", ("upper_arm" + R, new Vector3(0.2f, 0.05f, 1f)), ("forearm" + R, new Vector3(0.05f, 0.1f, 1f)), ("upper_arm" + Lf, new Vector3(-0.2f, 0.05f, 1f)), ("forearm" + Lf, new Vector3(-0.05f, 0.1f, 1f)));
             var kickW = Authored("kick_windup", ("thigh" + R, new Vector3(0.05f, -0.45f, 0.9f)), ("calf" + R, new Vector3(0f, -1f, -0.35f)));
             var kickS = Authored("kick_strike", ("thigh" + R, new Vector3(0.05f, -0.55f, 0.85f)), ("calf" + R, new Vector3(0f, -0.25f, 1f)));
+            pose.kickWindupL = Authored("kick_windup_l", ("thigh" + Lf, Mirror(new Vector3(0.05f, -0.45f, 0.9f))), ("calf" + Lf, Mirror(new Vector3(0f, -1f, -0.35f))));
+            pose.kickStrikeL = Authored("kick_strike_l", ("thigh" + Lf, Mirror(new Vector3(0.05f, -0.55f, 0.85f))), ("calf" + Lf, Mirror(new Vector3(0f, -0.25f, 1f))));
 
             // Clips del kit
             pose.pushSource = pose.kickSource = "autorizada";
@@ -105,7 +116,7 @@ namespace UncleExtraction.EditorTools
                         {   // punta del segmento (hijo del hueso o el propio hueso), relativa a la pelvis, sobre el frente del tio
                             var b = effLinks[e].bone; var tip = b.childCount > 0 ? b.GetChild(0) : b;
                             pos[e, f] = tip.position - (pelvisBone ? pelvisBone.position : t.position);
-                            fwd[e, f] = Vector3.Dot(pos[e, f], t.forward);
+                            fwd[e, f] = Vector3.Dot(pos[e, f], faceFwd);
                         }
                     }
                     int bestE = 0; float bestRange = -1f;
@@ -132,8 +143,8 @@ namespace UncleExtraction.EditorTools
                 // (brazos atras, mas legible) y el golpe del clip.
                 if (FromClip("Push", "forearm", out var pw, out var ps, out var pinfo)) { pose.pushStrike = ps; pose.pushSource = pinfo + "; preparacion autorizada (la del clip mueve 0,09 m)"; }
                 else pose.pushSource = "autorizada (" + pinfo + ")";
-                if (FromClip("Kick", "calf", out var kw, out var ks, out var kinfo)) { pose.kickWindup = kw; pose.kickStrike = ks; pose.kickSource = kinfo; }
-                else pose.kickSource = "autorizada (" + kinfo + ")";
+                // patada: autorizada para los dos lados (el clip patea con una sola pierna y no se puede espejar con seguridad)
+                pose.kickSource = "autorizada, derecha e izquierda (el clip del kit usa una sola pierna)";
                 RestoreAll();
             }
             Debug.Log($"[AttackPoses] empujon: {pose.pushSource}; patada: {pose.kickSource}; manotazo y sacudida: autorizadas");

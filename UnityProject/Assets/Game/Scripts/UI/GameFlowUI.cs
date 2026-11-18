@@ -122,7 +122,7 @@ namespace UncleExtraction
             bool ended = round.State != RoundState.Running;
             if (ended && resultsSince < 0f) { resultsSince = Time.unscaledTime; CloseOverlays(); paused = false; if (Time.timeScale == 0f) Time.timeScale = 1f; }
             if (!ended) resultsSince = -1f;
-            if (LabInput.Pressed(Act.Pause) && !ended && !InputBindings.Listening)
+            if (LabInput.Pressed(Act.Pause) && !ended && !InputBindings.Listening && !InputBindings.JustListened)
             {
                 if (confirmRoot) { Destroy(confirmRoot.gameObject); confirmRoot = null; ShowPause(); }
                 else if (options != null) { /* Esc dentro de opciones: lo maneja el boton Volver */ }

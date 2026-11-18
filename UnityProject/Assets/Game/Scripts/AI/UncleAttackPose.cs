@@ -15,6 +15,9 @@ namespace UncleExtraction
         public NpcBrain brain; public NpcBody body;
         public Pose slapWindup = new Pose(), slapStrike = new Pose(), pushWindup = new Pose(), pushStrike = new Pose();
         public Pose kickWindup = new Pose(), kickStrike = new Pose(), shakeWindup = new Pose(), shakeStrike = new Pose();
+        /// Variantes del lado IZQUIERDO del tio (sesion 14): las de arriba son del derecho. El cerebro elige el miembro libre.
+        public Pose slapWindupL = new Pose(), slapStrikeL = new Pose(), kickWindupL = new Pose(), kickStrikeL = new Pose();
+        static Pose Pick(Pose right, Pose left, AttackSide s) => s == AttackSide.Left && left != null && left.targets.Length > 0 ? left : right;
         public string pushSource = "", kickSource = "";
 
         Quaternion[] current;
@@ -31,12 +34,12 @@ namespace UncleExtraction
             if (brain.State == NpcState.Windup)
             {
                 rate = 1f / Mathf.Max(0.2f, brain.CurrentAttack.windup * 0.45f); // llega a la pose antes de la mitad de la preparacion
-                return id == AttackId.Slap ? slapWindup : id == AttackId.Push ? pushWindup : id == AttackId.Kick ? kickWindup : shakeWindup;
+                return id == AttackId.Slap ? Pick(slapWindup, slapWindupL, brain.Side) : id == AttackId.Push ? pushWindup : id == AttackId.Kick ? Pick(kickWindup, kickWindupL, brain.Side) : shakeWindup;
             }
             if (brain.State == NpcState.Attack)
             {
                 rate = 14f; // golpe rapido (ventana activa ~0,2 s)
-                return id == AttackId.Slap ? slapStrike : id == AttackId.Push ? pushStrike : id == AttackId.Kick ? kickStrike : shakeStrike;
+                return id == AttackId.Slap ? Pick(slapStrike, slapStrikeL, brain.Side) : id == AttackId.Push ? pushStrike : id == AttackId.Kick ? Pick(kickStrike, kickStrikeL, brain.Side) : shakeStrike;
             }
             return null;
         }

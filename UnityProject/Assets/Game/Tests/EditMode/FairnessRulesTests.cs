@@ -44,6 +44,26 @@ namespace UncleExtraction.Tests
             Assert.AreEqual(0.5f, Smooth.Factor(0.5f, 1f / 60f), 1e-4f, "a 60 fps queda igual que antes");
         }
 
+        [Test] public void Side_IsTheFreeLimb_PreferringTheTargetSide()
+        {
+            Assert.AreEqual(AttackSide.Right, NpcBrain.ChooseSide(AttackId.Slap, L(), 1f), "libre los dos: el del lado del objetivo");
+            Assert.AreEqual(AttackSide.Left, NpcBrain.ChooseSide(AttackId.Slap, L(), -1f));
+            Assert.AreEqual(AttackSide.Left, NpcBrain.ChooseSide(AttackId.Slap, L(ra: true), 1f), "brazo derecho sujeto: manotazo con el izquierdo");
+            Assert.AreEqual(AttackSide.Right, NpcBrain.ChooseSide(AttackId.Slap, L(la: true), -1f), "brazo izquierdo sujeto: con el derecho");
+            Assert.AreEqual(AttackSide.Left, NpcBrain.ChooseSide(AttackId.Kick, L(rl: true), 1f), "tobillo derecho sujeto: patea con la izquierda");
+            Assert.AreEqual(AttackSide.Right, NpcBrain.ChooseSide(AttackId.Kick, L(ll: true), -1f));
+            Assert.AreEqual(AttackSide.None, NpcBrain.ChooseSide(AttackId.Slap, L(true, true), 1f), "sin brazos libres no hay miembro");
+            Assert.AreEqual(AttackSide.None, NpcBrain.ChooseSide(AttackId.Push, L(), 1f), "el empujon usa los dos");
+        }
+        [Test] public void GrabbingTheChosenLimb_DuringWindup_CutsTheAttack()
+        {
+            Assert.IsTrue(NpcBrain.SideStillFree(AttackId.Slap, AttackSide.Right, L(la: true)), "sujetar el otro brazo no lo corta");
+            Assert.IsFalse(NpcBrain.SideStillFree(AttackId.Slap, AttackSide.Right, L(ra: true)), "sujetar el brazo elegido lo corta");
+            Assert.IsFalse(NpcBrain.SideStillFree(AttackId.Kick, AttackSide.Left, L(ll: true)));
+            Assert.IsFalse(NpcBrain.SideStillFree(AttackId.Push, AttackSide.None, L(la: true)), "empujon: cualquier brazo sujeto lo corta");
+            Assert.IsTrue(NpcBrain.SideStillFree(AttackId.Shake, AttackSide.None, L(true, true, true, true)), "la sacudida no depende de miembros");
+        }
+
         RoundDirector NewRound(Difficulty d, int party)
         {
             var go = new GameObject("RoundTest"); var r = go.AddComponent<RoundDirector>();

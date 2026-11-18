@@ -141,7 +141,7 @@ namespace UncleExtraction
             Listening = true;
             var sub = InputSystem.onAnyButtonPress.CallOnce(ctrl =>
             {
-                Listening = false;
+                Listening = false; ListenEndedFrame = Time.frameCount;
                 if (ctrl.device is Gamepad) { done?.Invoke("", null); return; }
                 if (ctrl.path.EndsWith("/escape")) { done?.Invoke("", null); return; }
                 string p = "<" + (ctrl.device is Mouse ? "Mouse" : "Keyboard") + ">/" + ctrl.name;
@@ -154,6 +154,9 @@ namespace UncleExtraction
 #endif
         }
         public static bool Listening { get; private set; }
+        /// Cuadro en que termino la ultima escucha: la tecla que la cerro (Escape) no debe ademas abrir/cerrar la pausa.
+        public static int ListenEndedFrame { get; private set; } = -10;
+        public static bool JustListened => Time.frameCount - ListenEndedFrame <= 1;
         class Stop : IDisposable { readonly Action a; public Stop(Action a) { this.a = a; } public void Dispose() => a(); }
     }
 }

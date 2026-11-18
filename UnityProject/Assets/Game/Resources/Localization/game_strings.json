@@ -611,6 +611,11 @@
    "key": "settings.alerts",
    "en": "Alerts volume",
    "es_UY": "Volumen de avisos"
+  },
+  {
+   "key": "tut.transport",
+   "en": "Take him to the van: drag him (both hands pull harder) or bring the cart, put him next to it and press {key} to load and strap him.",
+   "es_UY": "Llevalo a la camioneta: arrastralo (con las dos manos tirás más) o traé el carrito, ponelo al lado y tocá {key} para cargarlo y atarlo."
   }
  ]
 }

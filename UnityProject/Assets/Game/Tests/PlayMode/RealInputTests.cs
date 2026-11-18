@@ -1,3 +1,4 @@
+using IDisposable = System.IDisposable;
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
@@ -40,7 +41,8 @@ namespace UncleExtraction.Tests
         [TearDown]
         public void Clear()
         {
-            LabInput.ClearSimulated(); LabInput.TestFocus = false; GameSettings.GrabToggle = false; GrabIntent.Reset();
+            LabInput.ClearSimulated(); LabInput.TestFocus = false; LabInput.TestFocusLost = false; GameSettings.GrabToggle = false; GrabIntent.Reset();
+            if (GameFlowUI.Instance) GameFlowUI.Instance.SetPaused(false);
             if (kb != null) InputSystem.RemoveDevice(kb); if (mouse != null) InputSystem.RemoveDevice(mouse);
             InputSystem.settings.backgroundBehavior = bg0; InputSystem.settings.editorInputBehaviorInPlayMode = ed0;
             InputBindings.ResetAll(); InputBindings.SaveAll();
@@ -126,6 +128,60 @@ namespace UncleExtraction.Tests
             Assert.AreNotEqual("", hands.HeldSocketId(1), "sigue agarrado");
             yield return Buttons(false, true); yield return Buttons(false, false); yield return Frames(6);
             Assert.AreEqual("", hands.HeldSocketId(1), "otra pulsacion suelta");
+        }
+
+        public enum Blocker { PauseClosedWithEscape, OptionsFromPause, Rebinding, FocusLost, RoundRestart }
+
+        /// Hallazgo B (sesion 14): con el boton sostenido durante un bloqueo, al volver la mano queda libre hasta una
+        /// pulsacion NUEVA, en los dos modos y con las dos manos; Q y la otra mano siguen funcionando.
+        [UnityTest]
+        public IEnumerator HeldButtonAcrossBlocking_DoesNotGrabOrArm_UntilANewPress(
+            [Values(0, 1)] int hand, [Values(false, true)] bool toggle,
+            [Values(Blocker.PauseClosedWithEscape, Blocker.OptionsFromPause, Blocker.Rebinding, Blocker.FocusLost, Blocker.RoundRestart)] Blocker blocker)
+        {
+            GameSettings.GrabToggle = toggle; GrabIntent.Reset();
+            bool l = hand == 0, r = hand == 1;
+            yield return FaceUncle(); yield return Frames(3);
+            yield return Buttons(l, r); yield return Frames(4);
+            if (toggle) { Assert.AreNotEqual("", hands.HeldSocketId(hand), "alternar: un clic agarra"); }
+            else Assert.AreNotEqual("", hands.HeldSocketId(hand), "mantener: agarra con el boton apretado");
+            // el boton sigue FISICAMENTE apretado durante todo el bloqueo
+            IDisposable listen = null;
+            switch (blocker)
+            {
+                case Blocker.PauseClosedWithEscape: GameFlowUI.Instance.SetPaused(true); break;
+                case Blocker.OptionsFromPause:
+                    GameFlowUI.Instance.SetPaused(true); yield return Frames(2);
+                    GameObject.Find("FlowUI/Pause/Settings")?.GetComponent<Button>()?.onClick.Invoke(); break;
+                case Blocker.Rebinding: listen = InputBindings.Listen(InputBindings.Id(Act.Interact), (a, b) => { }); break;
+                case Blocker.FocusLost: LabInput.TestFocusLost = true; break;
+                case Blocker.RoundRestart: RoundDirector.Instance.Restart(); break;
+            }
+            yield return Frames(6);
+            Assert.AreEqual("", hands.HeldSocketId(hand), $"{blocker}: la mano se suelta");
+            switch (blocker)
+            {
+                case Blocker.PauseClosedWithEscape:
+                    InputSystem.QueueStateEvent(kb, new KeyboardState(Key.Escape)); yield return Frames(2); yield return Keys(); break;
+                case Blocker.OptionsFromPause:
+                    GameObject.Find("FlowUI/Options/Back")?.GetComponent<Button>()?.onClick.Invoke(); yield return Frames(2);
+                    GameFlowUI.Instance.SetPaused(false); break;
+                case Blocker.Rebinding:
+                    InputSystem.QueueStateEvent(kb, new KeyboardState(Key.Escape)); yield return Frames(2); yield return Keys(); listen?.Dispose(); break;
+                case Blocker.FocusLost: LabInput.TestFocusLost = false; break;
+                case Blocker.RoundRestart: yield return FaceUncle(); break;
+            }
+            yield return Frames(3);
+            Assert.IsFalse(GameFlowUI.BlockingInput, $"{blocker}: el bloqueo termino");
+            yield return Frames(10);
+            Assert.AreEqual("", hands.HeldSocketId(hand), $"{blocker}/{(toggle ? "alternar" : "mantener")}: con el mismo boton sostenido la mano queda libre");
+            Assert.IsFalse(GrabIntent.Armed(hand), "y no queda armada");
+            yield return FaceUncle(); yield return Frames(2);
+            yield return Buttons(false, false); yield return Buttons(l, r); yield return Frames(4);
+            Assert.AreNotEqual("", hands.HeldSocketId(hand), "una pulsacion nueva agarra");
+            if (toggle) yield return Buttons(false, false);
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.Q)); yield return Frames(3); yield return Keys(); yield return Frames(3);
+            Assert.AreEqual("", hands.HeldSocketId(hand), "Q suelta");
         }
 
         [UnityTest]

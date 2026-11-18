@@ -3,21 +3,35 @@ using UnityEngine.UI;
 
 namespace UncleExtraction
 {
-    /// Guia de la primera partida (sesion 13): una indicacion por vez, que avanza al detectar la accion real del jugador
-    /// LOCAL. No detiene la partida de nadie (en cooperativo cada uno ve la suya). Se omite desde la pausa, se repite desde
-    /// la pausa, y no vuelve a aparecer sola una vez terminada u omitida (preferencia «ue.firstSteps»). Los textos usan las
-    /// teclas asignadas y el modo de agarre elegido (mantener o alternar).
+    /// Guia de la primera partida: una indicacion por vez, que avanza al detectar la accion real del jugador LOCAL. No
+    /// detiene la partida de nadie (en cooperativo cada uno ve la suya). Los textos usan las teclas asignadas y el modo de
+    /// agarre elegido.
+    /// Ciclo (sesion 14, hallazgo A):
+    /// - GANAR la ronda con la guia activa la completa (estado Completed): ya sabe hacer todo lo necesario.
+    /// - OMITIR desde la pausa la cierra (estado Skipped). Ninguna de las dos vuelve a aparecer sola.
+    /// - PERDER no la completa: el paso actual se guarda y la proxima ronda (reintento, menu y otra partida, otro proceso)
+    ///   sigue desde ahi.
+    /// - REPETIR desde la pausa empieza de nuevo (sin borrar el estado hasta que vuelva a terminar u omitirse).
+    /// - Oculta (pausa, Opciones, sala, fin de ronda) no avanza ni corre sus tiempos: nada avanza por acciones de otros
+    ///   mientras el jugador no la ve.
+    /// - Traslado: vale el carrito o arrastrarlo; el paso avanza con el tio atado al carrito o acercado a la camioneta.
     public class FirstSteps : MonoBehaviour
     {
         public static FirstSteps Instance { get; private set; }
-        enum Step { Move, Aim, Grab, Release, TwoHands, Attack, Recover, Cart, Extract, Done }
+        public enum Step { Move, Aim, Grab, Release, TwoHands, Attack, Recover, Transport, Extract, Done }
+        public enum Outcome { None = 0, Completed = 1, Skipped = 2 }
+        const string PrefState = "ue.firstSteps", PrefStep = "ue.firstSteps.step";
         Step step = Step.Done;
-        float stepStart; Vector3 movedFrom; bool sawHold;
+        float visibleAge, walked; Vector3 lastPos; bool sawHold; float startDist = -1f; RoundState lastState = RoundState.Running;
         RectTransform box; Text title, body;
         public string CurrentKey => step == Step.Done ? "" : "tut." + step.ToString().ToLowerInvariant();
         public bool Active => step != Step.Done;
+        public Step Current => step;
 
-        public static bool Completed { get { try { return PlayerPrefs.GetInt("ue.firstSteps", 0) == 1; } catch { return false; } } }
+        public static Outcome Saved { get { try { return (Outcome)PlayerPrefs.GetInt(PrefState, 0); } catch { return Outcome.None; } } }
+        public static bool Completed => Saved != Outcome.None; // terminada u omitida: no se muestra sola
+        static Step SavedStep { get { try { int s = PlayerPrefs.GetInt(PrefStep, 0); return s >= 0 && s < (int)Step.Done ? (Step)s : Step.Move; } catch { return Step.Move; } } }
+        static void Save(string k, int v) { try { PlayerPrefs.SetInt(k, v); PlayerPrefs.Save(); } catch { } }
 
         void Awake() { Instance = this; }
         void OnDestroy() { if (Instance == this) Instance = null; if (box) Destroy(box.gameObject); }
@@ -31,17 +45,18 @@ namespace UncleExtraction
             body = Ui.Label(box, "Body", "", Ui.FontHud + 2, Ui.Text, TextAnchor.UpperLeft);
             body.rectTransform.offsetMin = new Vector2(20, 14); body.rectTransform.offsetMax = new Vector2(-20, -(14 + Ui.K(28)));
             box.gameObject.SetActive(false);
-            if (!Completed && System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueAutopilot") < 0) Begin();
+            if (!Completed && System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueAutopilot") < 0) Go(SavedStep);
         }
 
         public void Begin() { Go(Step.Move); }
-        public void Skip() { Go(Step.Done); try { PlayerPrefs.SetInt("ue.firstSteps", 1); PlayerPrefs.Save(); } catch { } }
+        public void Skip() { Finish(Outcome.Skipped); }
+        void Finish(Outcome o) { step = Step.Done; Save(PrefState, (int)o); Save(PrefStep, 0); Debug.Log($"[Guide] {(o == Outcome.Completed ? "completada" : "omitida")}"); }
 
         void Go(Step s)
         {
-            step = s; stepStart = Time.time; sawHold = false;
-            var pc = PlayerControls.Local; if (pc) movedFrom = pc.transform.position;
-            if (s == Step.Done) { try { PlayerPrefs.SetInt("ue.firstSteps", 1); PlayerPrefs.Save(); } catch { } }
+            step = s; visibleAge = 0f; sawHold = false; startDist = -1f;
+            walked = 0f; var pc = PlayerControls.Local; if (pc) lastPos = pc.transform.position;
+            if (s != Step.Done) Save(PrefStep, (int)s);
         }
 
         static string GrabKeys(int hand) => InputBindings.Display(hand == 0 ? Act.GrabLeft : Act.GrabRight);
@@ -49,26 +64,51 @@ namespace UncleExtraction
         void Update()
         {
             var round = RoundDirector.Instance; var pc = PlayerControls.Local; var npc = NpcBrain.Instance;
-            bool show = step != Step.Done && pc && round && !round.InLobby && round.State == RoundState.Running && !GameFlowUI.BlockingInput;
+            // fin de ronda: ganar completa la guia; perder la deja donde estaba (se retoma en el proximo intento)
+            if (round && !round.InLobby && round.State != lastState)
+            {
+                if (round.State == RoundState.Success && Active) Finish(Outcome.Completed);
+                if (lastState != RoundState.Running && round.State == RoundState.Running && Active && pc) { walked = 0f; visibleAge = 0f; }
+                lastState = round.State;
+            }
+            bool live = step != Step.Done && pc && round && !round.InLobby && round.State == RoundState.Running;
+            bool show = live && !GameFlowUI.BlockingInput;
             if (box && box.gameObject.activeSelf != show) box.gameObject.SetActive(show);
-            if (step == Step.Done || !pc || !round || round.InLobby || round.State != RoundState.Running) return;
+            if (!show) { if (pc) lastPos = pc.transform.position; return; } // oculta: ni avanza ni corre el tiempo
+            visibleAge += Time.deltaTime;
+            Vector3 now = pc.transform.position; float step1 = Vector3.Distance(new Vector3(now.x, 0, now.z), new Vector3(lastPos.x, 0, lastPos.z)); lastPos = now;
+            if (step1 < 0.6f) walked += step1; // un salto de un cuadro (teletransporte, rescate, fisica que se pone al dia al salir de la pausa) no es caminar
             var hands = pc.GetComponent<PlayerHands>();
             bool any = hands && (hands.HeldSocketId(0) != "" || hands.HeldSocketId(1) != "");
             bool both = hands && hands.HeldSocketId(0) != "" && hands.HeldSocketId(1) != "";
-            float age = Time.time - stepStart;
             switch (step)
             {
-                case Step.Move: if (Vector3.Distance(pc.transform.position, movedFrom) > 1.5f) Go(Step.Aim); break;
-                case Step.Aim: if (hands && hands.Candidate && hands.Candidate.body && hands.Candidate.body.GetComponentInParent<NpcBody>()) Go(Step.Grab); else if (any) Go(Step.Release); break;
+                case Step.Move: if (walked > 1.5f) Go(Step.Aim); break; // solo lo caminado con la guia visible
+                case Step.Aim: if (hands && hands.Candidate && hands.Candidate.body && NpcBody.Of(hands.Candidate.body)) Go(Step.Grab); else if (any) Go(Step.Release); break;
                 case Step.Grab: if (any) Go(Step.Release); break;
                 case Step.Release: if (any) sawHold = true; if (sawHold && !any) Go(Step.TwoHands); break;
                 case Step.TwoHands: if (both) Go(Step.Attack); break;
-                case Step.Attack: if (npc && (npc.State == NpcState.Windup || npc.State == NpcState.Attack)) Go(Step.Recover); else if (age > 45f) Go(Step.Cart); break;
-                case Step.Recover: if (npc && npc.State == NpcState.Recover) sawHold = true; if ((sawHold && npc && npc.State != NpcState.Recover) || age > 30f) Go(Step.Cart); break;
-                case Step.Cart: if (TransportCart.Instance && TransportCart.Instance.IsStrapped) Go(Step.Extract); else if (age > 90f) Go(Step.Extract); break;
-                case Step.Extract: break; // termina con la ronda
+                case Step.Attack: if (npc && (npc.State == NpcState.Windup || npc.State == NpcState.Attack)) Go(Step.Recover); else if (visibleAge > 45f) Go(Step.Transport); break;
+                case Step.Recover: if (npc && npc.State == NpcState.Recover) sawHold = true; if ((sawHold && npc && npc.State != NpcState.Recover) || visibleAge > 30f) Go(Step.Transport); break;
+                case Step.Transport:
+                {
+                    float d = UncleToVan();
+                    if (startDist < 0f && d >= 0f) startDist = d;
+                    bool strapped = TransportCart.Instance && TransportCart.Instance.IsStrapped;
+                    bool dragged = d >= 0f && startDist > 0f && (d < startDist * 0.5f || d < 5f); // arrastrandolo, sin carrito
+                    if (strapped || dragged || (ExtractionZone.Instance && ExtractionZone.Instance.AllPointsInside)) Go(Step.Extract);
+                    break;
+                }
+                case Step.Extract: break; // termina al ganar la ronda
             }
-            if (show) Render();
+            if (step != Step.Done) Render();
+        }
+
+        static float UncleToVan()
+        {
+            var v = VanDoors.Instance; var b = NpcBrain.Instance ? NpcBrain.Instance.GetComponent<NpcBody>() : null;
+            if (!v || !b) return -1f;
+            Vector3 a = b.ChestPosition, c = v.closePoint; a.y = c.y = 0f; return Vector3.Distance(a, c);
         }
 
         void Render()
@@ -85,7 +125,7 @@ namespace UncleExtraction
                 case Step.TwoHands: body.text = Loc.T("tut.twohands", ("effort", InputBindings.Display(Act.Effort))); break;
                 case Step.Attack: body.text = Loc.T("tut.attack", ("dodge", InputBindings.Display(Act.Dodge))); break;
                 case Step.Recover: body.text = Loc.T("tut.recover", ("key", InputBindings.Display(Act.Interact))); break;
-                case Step.Cart: body.text = Loc.T("tut.cart", ("key", InputBindings.Display(Act.Interact))); break;
+                case Step.Transport: body.text = Loc.T("tut.transport", ("key", InputBindings.Display(Act.Interact))); break;
                 case Step.Extract: body.text = Loc.T("tut.extract", ("key", InputBindings.Display(Act.Interact))); break;
             }
         }

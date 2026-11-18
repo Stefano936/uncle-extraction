@@ -18,6 +18,8 @@ namespace UncleExtraction
         Material outlineMat, fillMat;
         AttackId lastId = (AttackId)(-1); float flashUntil;
         public bool Visible { get; private set; }
+        /// Direccion a la que apunta el arco del piso (pruebas: tiene que coincidir con la del impacto).
+        public Vector3 AimDirection => root ? root.forward : Vector3.zero;
         public float Fill01 { get; private set; }
 
         void Awake()
@@ -82,7 +84,9 @@ namespace UncleExtraction
             Fill01 = windup ? Mathf.Clamp01(1f - brain.StateTimeLeft / Mathf.Max(0.05f, def.windup)) : 1f;
 
             Vector3 basePos = body.Body.position; basePos.y = body.transform.position.y + 0.03f; // raiz al nivel del piso
-            root.SetPositionAndRotation(basePos, Quaternion.LookRotation(body.Forward, Vector3.up));
+            // el arco apunta a donde va el golpe (la misma direccion que decide el impacto), no a donde gira el cuerpo
+            Vector3 aim = ring ? body.Forward : brain.AttackDirectionShared; aim.y = 0f; if (aim.sqrMagnitude < 1e-4f) aim = body.Forward;
+            root.SetPositionAndRotation(basePos, Quaternion.LookRotation(aim, Vector3.up));
             Sector(outline, ring ? range - 0.06f : range - 0.05f, range, arc);
             Sector(fill, ring ? 0.3f : 0.25f, Mathf.Lerp(ring ? 0.3f : 0.25f, range, Fill01), arc);
             // Color de apoyo (no es la unica senal): el contorno queda tenue y el relleno se intensifica al acercarse el golpe

@@ -69,7 +69,7 @@ namespace UncleExtraction
 
         void Awake() { Instance = this; body = GetComponent<NpcBody>(); rng = new System.Random(seed); Budget = LabBalance.NpcBudget; }
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
-        void Start() { RefreshPlayers(); Budget = BudgetMax; ScheduleNextAttack(); if (!GetComponent<UncleFace>()) gameObject.AddComponent<UncleFace>(); }
+        void Start() { RefreshPlayers(); Budget = BudgetMax; ScheduleNextAttack(); if (!GetComponent<UncleFace>()) gameObject.AddComponent<UncleFace>(); MapLimbs(); }
 
         public void RefreshPlayers() { players.Clear(); players.AddRange(PlayerMotor.All); }
 
@@ -101,6 +101,11 @@ namespace UncleExtraction
             switch (State)
             {
                 case NpcState.Windup:
+                    if (!WriggleAttempt && !SideStillFree(CurrentAttack.id, side, HeldLimbs()))
+                    {   // le sujetaron el miembro que iba a usar: el golpe se corta (respuesta anticipable: no cambia de miembro)
+                        Interrupted++; Debug.Log($"[Npc] {CurrentAttack.id} {side} cortado: le sujetaron el miembro");
+                        ScheduleNextAttack(); Enter(NpcState.Recover, 0.8f, "lo frenaron"); break;
+                    }
                     if (Now < stateUntil - LabBalance.DirectionLockBeforeActive && !WriggleAttempt)
                     {   // giro limitado hacia el objetivo durante la preparacion
                         var t = NearestPlayer(out _);
@@ -246,20 +251,71 @@ namespace UncleExtraction
         /// Extremidades controladas por jugadores (GDD: un brazo sujeto no puede dar manotazos; con los dos brazos sujetos no
         /// hay empujon; con los tobillos sujetos no hay patada). Se mira la ocupacion real de los puntos de este tio.
         public struct Limbs { public bool leftArm, rightArm, leftLeg, rightLeg; }
-        public Limbs HeldLimbs()
+        /// Lado ANATOMICO del tio (su izquierda/derecha mirando hacia donde mira su cara). Los ids de los puntos
+        /// ("forearm_l"...) son del tio central y en el articulado quedan del lado contrario, asi que el lado de cada punto se
+        /// mide una vez en reposo: posicion lateral respecto de la cara (sesion 14).
+        readonly Dictionary<GrabSocket, (bool arm, bool right)> limbOf = new Dictionary<GrabSocket, (bool, bool)>();
+        void MapLimbs()
         {
-            var r = new Limbs();
+            limbOf.Clear();
+            Vector3 right = Vector3.Cross(Vector3.up, body.Forward);
             foreach (var s in GrabSocket.All)
             {
-                if (!s || !s.body || GrabRegistry.OccupancyOf(s) == 0 || !body.Owns(s.body)) continue;
-                string id = s.socketId;
-                if (id == "forearm_l" || id == "shoulder_l") r.leftArm = true;
-                else if (id == "forearm_r" || id == "shoulder_r") r.rightArm = true;
-                else if (id == "ankle_l") r.leftLeg = true;
-                else if (id == "ankle_r") r.rightLeg = true;
+                if (!s || !s.body || !body.Owns(s.body)) continue;
+                string id = s.socketId; bool arm = id.StartsWith("forearm") || id.StartsWith("shoulder"), leg = id.StartsWith("ankle");
+                if (!arm && !leg) continue;
+                limbOf[s] = (arm, Vector3.Dot(s.Position - transform.position, right) > 0f);
+            }
+        }
+        public Limbs HeldLimbs()
+        {
+            if (limbOf.Count == 0) MapLimbs();
+            var r = new Limbs();
+            foreach (var kv in limbOf)
+            {
+                if (!kv.Key || GrabRegistry.OccupancyOf(kv.Key) == 0) continue;
+                if (kv.Value.arm) { if (kv.Value.right) r.rightArm = true; else r.leftArm = true; }
+                else { if (kv.Value.right) r.rightLeg = true; else r.leftLeg = true; }
             }
             return r;
         }
+
+        /// Miembro elegido para el ataque en curso (manotazo: un brazo; patada: una pierna; empujon y sacudida: ninguno).
+        public AttackSide Side => Mirror ? (AttackSide)nSide.Value : side;
+        AttackSide side;
+        readonly NetworkVariable<byte> nSide = new NetworkVariable<byte>();
+        readonly NetworkVariable<float> nAttackYaw = new NetworkVariable<float>();
+        /// Direccion del golpe (la del impacto y la del arco del piso) en todos los pares.
+        public Vector3 AttackDirectionShared => Mirror ? Quaternion.Euler(0, nAttackYaw.Value, 0) * Vector3.forward : AttackDirection;
+
+        /// Regla pura (probada en EditMode): miembro libre para el ataque; prefiere el lado donde esta el objetivo
+        /// (targetRight > 0 = a la derecha del tio). None si el ataque no usa un solo miembro o no queda ninguno libre.
+        public static AttackSide ChooseSide(AttackId id, Limbs held, float targetRight)
+        {
+            bool l, r;
+            if (id == AttackId.Slap) { l = !held.leftArm; r = !held.rightArm; }
+            else if (id == AttackId.Kick) { l = !held.leftLeg; r = !held.rightLeg; }
+            else return AttackSide.None;
+            if (l && r) return targetRight >= 0f ? AttackSide.Right : AttackSide.Left;
+            return r ? AttackSide.Right : l ? AttackSide.Left : AttackSide.None;
+        }
+        /// El miembro elegido sigue libre (si lo sujetan durante la preparacion, el golpe se corta: ver UpdateTimedStates).
+        public static bool SideStillFree(AttackId id, AttackSide s, Limbs held)
+        {
+            if (s == AttackSide.None) return id != AttackId.Push || !(held.leftArm || held.rightArm);
+            if (id == AttackId.Slap) return s == AttackSide.Right ? !held.rightArm : !held.leftArm;
+            if (id == AttackId.Kick) return s == AttackSide.Right ? !held.rightLeg : !held.leftLeg;
+            return true;
+        }
+        public int Interrupted { get; private set; }
+        string missWhy = "";
+        /// Por que el ultimo golpe no alcanzo a nadie (registro y pruebas).
+        public string LastMiss { get; private set; } = "";
+        /// Pruebas: intenta un ataque con las MISMAS reglas que la decision normal (postura, espacio, extremidades libres,
+        /// eleccion de miembro); no es ForceAttack. Y vuelve al reposo sin golpear para probar otra eleccion.
+        public bool TryNaturalAttackForTest() { RefreshPlayers(); return TryStartAttack(); }
+        public void CancelAttackForTest() { side = AttackSide.None; Enter(NpcState.Loiter, 0f, ""); }
+        public bool LimbOf(GrabSocket s, out bool arm, out bool right) { if (limbOf.Count == 0) MapLimbs(); arm = right = false; if (!s || !limbOf.TryGetValue(s, out var v)) return false; arm = v.arm; right = v.right; return true; }
 
         /// Regla pura (probada en EditMode): ataques posibles segun agarres, postura, distancia y extremidades libres.
         public static List<AttackId> AvailableAttacks(bool grabbed, bool upright, bool playerInReach, Limbs held)
@@ -300,10 +356,14 @@ namespace UncleExtraction
             lockedDir = t ? Flat(t.transform.position - transform.position) : body.Forward;
             if (lockedDir.sqrMagnitude < 0.01f) lockedDir = body.Forward;
             AttackDirection = lockedDir;
+            // miembro: el libre del lado del objetivo; queda fijo toda la preparacion (no cambia en silencio)
+            float tr = Vector3.Dot(lockedDir, Vector3.Cross(Vector3.up, body.Forward));
+            side = ChooseSide(id, HeldLimbs(), tr);
+            if (side == AttackSide.None && (id == AttackId.Slap || id == AttackId.Kick)) side = tr >= 0f ? AttackSide.Right : AttackSide.Left; // forzado con todo sujeto
             float windup = LabBalance.Windup(id, RoundDirector.Instance ? RoundDirector.Instance.difficulty : Difficulty.Normal);
             Enter(NpcState.Windup, windup, "prepara " + CurrentAttack.label);
             AttacksStarted++;
-            Debug.Log($"[Npc] windup {id} {windup:0.00}s forced={forced}");
+            Debug.Log($"[Npc] windup {id} lado={side} {windup:0.00}s forced={forced}");
             return true;
         }
 
@@ -349,16 +409,18 @@ namespace UncleExtraction
             }
             else
             {
-                var sorted = new List<(PlayerMotor p, float d)>();
+                var sorted = new List<(PlayerMotor p, float d)>(); missWhy = "";
                 foreach (var p in players)
                 {
                     if (!p) continue;
-                    Vector3 to = p.transform.position + Vector3.up * 1.0f - origin; Vector3 flat = Flat3(to);
+                    // distancia y angulo desde el mismo punto donde se dibuja el arco del piso (la pelvis): el pecho se mueve con
+                    // la pose (la patada lo echa atras) y el impacto dejaba de coincidir con lo anunciado (sesion 14)
+                    Vector3 flat = Flat3(p.transform.position - body.Body.position);
                     float d = flat.magnitude;
-                    if (d > CurrentAttack.range + LabBalance.CapsuleRadius) continue;
-                    if (Vector3.Angle(AttackDirection, flat) > CurrentAttack.arcDeg * 0.5f) continue;
+                    if (d > CurrentAttack.range + LabBalance.CapsuleRadius) { missWhy = $"{p.playerName} lejos {d:0.00} m"; continue; }
+                    if (Vector3.Angle(AttackDirection, flat) > CurrentAttack.arcDeg * 0.5f) { missWhy = $"{p.playerName} fuera del arco {Vector3.Angle(AttackDirection, flat):0}°"; continue; }
                     if (Physics.Linecast(origin, p.transform.position + Vector3.up * 1.0f, out var hit, ~0, QueryTriggerInteraction.Ignore)
-                        && hit.rigidbody != p.Body && hit.rigidbody != body.Body) continue; // bloqueado por geometria
+                        && hit.rigidbody != p.Body && !body.Owns(hit.rigidbody)) { missWhy = $"{p.playerName} tapado por {hit.collider.name}"; continue; } // bloqueado por geometria (sus propias partes no tapan: sesion 14)
                     sorted.Add((p, d));
                 }
                 sorted.Sort((a, b) => a.d.CompareTo(b.d));
@@ -373,7 +435,8 @@ namespace UncleExtraction
                 Vector3 dv = dir * (CurrentAttack.deltaV * impact) + Vector3.up * 1.2f;
                 if (p.ApplyImpact(dv, CurrentAttack.composureLoss * impact, CurrentAttack.label)) HitsLanded++;
             }
-            Debug.Log($"[Npc] active {CurrentAttack.id}: targets={targets.Count}");
+            Debug.Log($"[Npc] active {CurrentAttack.id}: targets={targets.Count}{(targets.Count == 0 && missWhy != "" ? " (" + missWhy + ")" : "")}");
+            LastMiss = targets.Count == 0 ? missWhy : "";
         }
 
         void ScheduleNextAttack()
@@ -456,6 +519,8 @@ namespace UncleExtraction
             if (nState.Value != state) nState.Value = state;
             var fi = new FixedString64Bytes(intent); if (!nIntent.Value.Equals(fi)) nIntent.Value = fi;
             if (nAttack.Value != currentAttack.id) nAttack.Value = currentAttack.id;
+            if (nSide.Value != (byte)side) nSide.Value = (byte)side;
+            float yaw = Mathf.Atan2(AttackDirection.x, AttackDirection.z) * Mathf.Rad2Deg; if (Mathf.Abs(Mathf.DeltaAngle(nAttackYaw.Value, yaw)) > 0.5f) nAttackYaw.Value = yaw;
             float end = NetAuth.ServerNow + Mathf.Max(0f, stateUntil - Time.time);
             if (Mathf.Abs(nStateEnd.Value - end) > 0.05f) nStateEnd.Value = end;
             float b = BudgetMax > 0f ? budget / BudgetMax : 0f; if (Mathf.Abs(nBudget01.Value - b) > 0.01f) nBudget01.Value = b;

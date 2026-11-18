@@ -15,7 +15,9 @@ namespace UncleExtraction
         public static Vector2? SimulatedMove;
         /// Pruebas con dispositivos simulados en un editor sin ventana: tratar la ventana como enfocada y el cursor como capturado.
         public static bool TestFocus;
-        public static bool Focused => TestFocus || Application.isFocused;
+        /// Solo pruebas: simula que la ventana perdio el foco.
+        public static bool TestFocusLost;
+        public static bool Focused => !TestFocusLost && (TestFocus || Application.isFocused);
 
         public static Vector2 Move() => SimulatedMove ?? RealMove();
 

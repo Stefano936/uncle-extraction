@@ -11,7 +11,8 @@ namespace UncleExtraction
     /// - Alternar: una pulsacion arma la mano y otra la suelta. Si en 0,6 s no hubo agarre (nada que agarrar o rechazo), se
     ///   desarma y lo avisa: no queda una accion armada que agarre despues de forma inesperada. Una liberacion forzada o Q
     ///   la desarman.
-    /// - Menus, pausa, campos de texto, reasignacion o ventana sin foco: las manos se sueltan y hay que volver a hacer clic.
+    /// - Menus, pausa, campos de texto, reasignacion o ventana sin foco: las manos se sueltan y hay que SOLTAR y volver a
+    ///   hacer clic (en los dos modos: un boton que sigue apretado al volver no agarra ni arma).
     /// Las entradas simuladas (autopiloto, pruebas con LabInput.Simulated) no pasan por esta politica.
     public static class GrabIntent
     {
@@ -39,10 +40,13 @@ namespace UncleExtraction
                 bool holding = hands && hands.HeldSocketId(h) != "";
                 bool lost = wasHolding[h] && !holding; wasHolding[h] = holding;
                 if (blocked || release) { latched[h] = false; needRelease[h] = raw || blocked; held[h] = false; continue; }
+                if (!raw) needRelease[h] = false; // rearmado comun a los dos modos: el boton tiene que soltarse de verdad
                 if (Toggle)
                 {
                     if (lost) latched[h] = false;
-                    if (rawDown)
+                    // un boton que seguia apretado al cerrar la pausa, Opciones o al recuperar el foco no cuenta como
+                    // pulsacion nueva (hallazgo B, sesion 14): la mano queda libre hasta soltar y volver a apretar
+                    if (rawDown && !needRelease[h])
                     {
                         if (latched[h] || holding) latched[h] = false;
                         else { latched[h] = true; armedAt[h] = Time.unscaledTime; }
@@ -53,7 +57,6 @@ namespace UncleExtraction
                 }
                 else
                 {
-                    if (!raw) needRelease[h] = false;
                     if (lost && raw) needRelease[h] = true;
                     held[h] = raw && !needRelease[h];
                 }
