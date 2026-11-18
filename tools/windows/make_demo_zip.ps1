@@ -1,4 +1,4 @@
-# Demo para compartir (sesion 17): empaqueta la build de JUGADORES (BuildTools -uePlayer: solo Frontend y Bar_LastRound,
+﻿# Demo para compartir (sesion 17): empaqueta la build de JUGADORES (BuildTools -uePlayer: solo Frontend y Bar_LastRound,
 # sin sondas, autopiloto, capturas ni atajos de diagnostico), calcula su SHA-256, la descomprime en OTRA carpeta y hace
 # una prueba de humo sobre la copia descomprimida:
 #   1) arranque normal: llega al menu sin excepciones;
@@ -34,7 +34,10 @@ try {
   $win = @('-screen-fullscreen', '0', '-screen-width', '800', '-screen-height', '450')
   # 1) arranque normal
   $log1 = Join-Path $dst 'smoke_menu.log'
-  $p = Start-Tracked $exe ($win + @('-logFile', "`"$log1`"")); Start-Sleep 20; Stop-AllTracked; Start-Sleep 1
+  # el primer arranque de una copia nueva tarda (sombreadores, antivirus): hasta 60 s para llegar al menu
+  $p = Start-Tracked $exe ($win + @('-logFile', "`"$log1`"")); $t0 = Get-Date
+  while (((Get-Date) - $t0).TotalSeconds -lt 60 -and -not ((Get-Content $log1 -Raw -ErrorAction SilentlyContinue) -match '\[Menu\]')) { Start-Sleep 1 }
+  $results += "segundos hasta el menu: $([math]::Round(((Get-Date) - $t0).TotalSeconds))"; Start-Sleep 3; Stop-AllTracked; Start-Sleep 1
   $l1 = Get-Content $log1 -Raw -ErrorAction SilentlyContinue
   $menu = $l1 -match '\[Menu\]'; $exc = ([regex]::Matches("$l1", 'Exception')).Count
   $results += "arranque normal: menu=$menu excepciones=$exc"
