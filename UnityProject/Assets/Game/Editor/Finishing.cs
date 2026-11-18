@@ -91,6 +91,9 @@ namespace UncleExtraction.EditorTools
             var material = Lit("S19_" + id, Color.white, 1f, 0f, color, normal, bump, tiling ?? Vector2.one);
             material.SetFloat("_SmoothnessTextureChannel", 1f);
             material.EnableKeyword("_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A");
+            // URP sincroniza este alias para herramientas antiguas al guardar materiales existentes.
+            material.SetTexture("_MainTex", color);
+            material.SetTextureScale("_MainTex", tiling ?? Vector2.one);
             return material;
         }
 
