@@ -35,8 +35,13 @@ namespace UncleExtraction
             {   // argumentos de prueba: entrar directo una sola vez por proceso (al volver al menu, quedarse en el menu)
                 argsForwarded = true;
                 string scene = GameScene;
+#if UE_PLAYER_BUILD
+                // build de jugadores (sesion 17): sin escenas ni autopiloto por argumento; solo entrar a una partida por IP o codigo
+                foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueJoinCode") { SceneManager.LoadScene(scene); return; }
+#else
                 for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueScene") scene = a[i + 1];
                 foreach (var s in a) if (s == "-ueHost" || s == "-ueClient" || s == "-ueJoinCode" || s == "-ueAutopilot") { SceneManager.LoadScene(scene); return; }
+#endif
             }
             canvas = Ui.Canvas("Menu", 0);
             var skin = UiSkin.Load();

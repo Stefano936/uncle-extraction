@@ -43,9 +43,10 @@ try {
   $log2 = Join-Path $dst 'smoke_qa_args.log'; $shot = Join-Path $dst 'no_deberia_existir.png'
   $p = Start-Tracked $exe ($win + @('-ueScene', 'PhysicsLab', '-ueAutopilot', 'drag', '-ueProbe', 'toggle', '-ueShot', "`"$shot`"@3", '-logFile', "`"$log2`"")); Start-Sleep 20; Stop-AllTracked; Start-Sleep 1
   $l2 = Get-Content $log2 -Raw -ErrorAction SilentlyContinue
-  $qa = ([regex]::Matches("$l2", '\[Autopilot\]|\[Probe\]|\[Shot\]')).Count; $lab = $l2 -match 'PhysicsLab\b.*(cargada|loaded)'; $shotMade = Test-Path $shot
-  $results += "argumentos de QA: lineas_qa=$qa captura=$shotMade laboratorio=$lab"
-  if ($qa -gt 0 -or $shotMade -or $lab) { $exit = 1 }
+  # el laboratorio no esta en la build ni se intenta cargar; el juego se queda en el menu
+  $qa = ([regex]::Matches("$l2", '\[Autopilot\]|\[Probe\]|\[Shot\]')).Count; $lab = $l2 -match "Scene 'PhysicsLab'|PhysicsLab"; $menu2 = $l2 -match '\[Menu\]'; $shotMade = Test-Path $shot
+  $results += "argumentos de QA: lineas_qa=$qa captura=$shotMade laboratorio_mencionado=$lab queda_en_menu=$menu2"
+  if ($qa -gt 0 -or $shotMade -or $lab -or -not $menu2) { $exit = 1 }
   $results += "copia descomprimida: $dst"
 } catch { Write-Host "ERROR: $_"; $exit = 1 }
 finally { Stop-AllTracked; Exit-BatchLock }
