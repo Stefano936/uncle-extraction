@@ -42,6 +42,7 @@ namespace UncleExtraction
 
         IEnumerator Start()
         {
+            GameSettings.Hud = HudProfile.Contextual;
             Directory.CreateDirectory(dir);
             tag = $"{Screen.width}x{Screen.height}_t{Mathf.RoundToInt(Ui.TextScale * 100)}";
             dir = Path.GetFullPath(dir);
@@ -79,6 +80,34 @@ namespace UncleExtraction
             if (fs) fs.HideForTool();
             // aviso de ataque (preparacion de la patada): titulo, consejo y subtitulo no se pisan
             if (NpcBrain.Instance) { NpcBrain.Instance.ForceAttack(AttackId.Kick); yield return Seconds(0.25f); yield return Check("hud_attack"); yield return Seconds(2.5f); }
+            // La captura de marcadores ya se hizo. Dejar que caduquen antes de acercar la camara para el A/B.
+            while (cm && cm.ActiveCount > 0) yield return null;
+            if (NpcBrain.Instance && me)
+            {
+                var npc = NpcBrain.Instance;
+                npc.brainEnabled = false;
+                npc.ReleaseAnchor("ui audit");
+                var motor = me.GetComponent<PlayerMotor>();
+                var body = npc.GetComponent<NpcBody>();
+                var socket = GrabSocket.ById("belt");
+                if (body && socket)
+                {
+                    Vector3 at = socket.Position + body.Forward * 0.9f;
+                    at.y = 0f;
+                    motor.Body.position = motor.transform.position = at;
+                    for (int i = 0; i < 6; i++)
+                    {
+                        Vector3 to = socket.Position - motor.EyePosition;
+                        motor.SetYawPitch(Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg, -Mathf.Atan2(to.y, new Vector2(to.x, to.z).magnitude) * Mathf.Rad2Deg);
+                        yield return new WaitForFixedUpdate();
+                    }
+                    yield return Check("hud_contextual_aim");
+                    GameSettings.Hud = HudProfile.Detailed;
+                    yield return Frames(4);
+                    yield return Check("hud_detailed_aim");
+                    GameSettings.Hud = HudProfile.Contextual;
+                }
+            }
             var flow = GameFlowUI.Instance;
             flow.SetPaused(true); yield return Frames(4);
             yield return Check("pause");

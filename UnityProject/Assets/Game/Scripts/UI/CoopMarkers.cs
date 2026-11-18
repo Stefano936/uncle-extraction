@@ -105,10 +105,12 @@ namespace UncleExtraction
                 seenRestarts = round.Restarts; foreach (var m in marks.Values) m.until = 0f;
             }
             bool live = cam && round && !round.InLobby && round.State == RoundState.Running;
+            var hud = GameHud.Instance;
+            bool danger = hud && hud.Visible && hud.AttentionRequired;
             var me = PlayerControls.Local ? PlayerControls.Local.GetComponent<PlayerMotor>() : null;
             foreach (var m in marks.Values)
             {
-                bool on = live && Time.time < m.until; if (m.ui.gameObject.activeSelf != on) m.ui.gameObject.SetActive(on);
+                bool on = live && !danger && Time.time < m.until; if (m.ui.gameObject.activeSelf != on) m.ui.gameObject.SetActive(on);
                 if (!on) continue;
                 var w = WorldPos(m);
                 float dist = me ? Vector3.Distance(me.transform.position, w) : 0f;

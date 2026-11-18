@@ -81,40 +81,62 @@ namespace UncleExtraction
 
         public static string SocketName(GrabSocket s) => s == null ? "" : Loc.Has("grab.socket." + s.socketId) ? Loc.T("grab.socket." + s.socketId) : s.label;
 
+        public static AimState ResolveAim(PlayerHands hands, out GrabSocket socket)
+        {
+            socket = null;
+            if (!hands || !hands.cam || !hands.cam.isActiveAndEnabled || !hands.CanGrab
+                || !LabInput.Focused || GameFlowUI.BlockingInput) return AimState.None;
+            string left = hands.HeldSocketId(0), right = hands.HeldSocketId(1);
+            if (left != "" && right != "") return AimState.None;
+            socket = hands.Candidate;
+            if (socket)
+            {
+                bool ownGrip = left == socket.socketId || right == socket.socketId;
+                return PlayerHands.OccupancyOf(socket) >= socket.capacity && (!ownGrip || GameSettings.Hud == HudProfile.Contextual)
+                    ? AimState.Busy : AimState.Valid;
+            }
+            socket = hands.AimedOutOfReach;
+            return socket ? AimState.OutOfReach : AimState.None;
+        }
+
+        static string GrabKeys(PlayerHands hands)
+        {
+            bool left = hands.HeldSocketId(0) == "", right = hands.HeldSocketId(1) == "";
+            if (left && right) return InputBindings.Display(Act.GrabLeft) + " / " + InputBindings.Display(Act.GrabRight);
+            return InputBindings.Display(left ? Act.GrabLeft : Act.GrabRight);
+        }
+
+        public static string ContextInstruction(PlayerHands hands, AimState state, GrabSocket socket)
+        {
+            if (state == AimState.Valid)
+                return Loc.T(GrabIntent.Toggle ? "grab.context_toggle" : "grab.context_hold", ("keys", GrabKeys(hands)));
+            if (state == AimState.OutOfReach) return Loc.T("grab.context_far");
+            if (state != AimState.Busy) return "";
+            string holder = PlayerHands.HolderName(socket, hands);
+            return holder != "" ? Loc.T("grab.context_busy_by", ("player", holder)) : Loc.T("grab.context_busy");
+        }
+
         void LateUpdate()
         {
             bool local = IsLocalPlayer && hands && hands.cam && hands.cam.isActiveAndEnabled;
-            var motor = hands ? hands.GetComponent<PlayerMotor>() : null;
-            bool canAct = local && motor && motor.ControlsEnabled && !GameFlowUI.BlockingInput;
-            // estado del punto apuntado
-            Aimed = null; State = AimState.None;
-            if (canAct)
-            {
-                var c = hands.Candidate;
-                if (c && !(hands.HeldSocketId(0) == c.socketId && hands.HeldSocketId(1) == c.socketId))
-                { Aimed = c; State = PlayerHands.OccupancyOf(c) >= c.capacity && hands.HeldSocketId(0) != c.socketId && hands.HeldSocketId(1) != c.socketId ? AimState.Busy : AimState.Valid; }
-                else if (hands.AimedOutOfReach) { Aimed = hands.AimedOutOfReach; State = AimState.OutOfReach; }
-            }
-            bool both = hands && hands.HeldSocketId(0) != "" && hands.HeldSocketId(1) != "";
-            ring.gameObject.SetActive(Aimed && !both);
+            bool contextual = GameSettings.Hud == HudProfile.Contextual;
+            GrabSocket aimed = null;
+            State = local ? ResolveAim(hands, out aimed) : AimState.None;
+            Aimed = aimed;
+            ring.gameObject.SetActive(!contextual && Aimed);
             if (ring.gameObject.activeSelf)
             {
                 var cam = hands.cam.transform;
                 ring.position = Aimed.Position; ring.rotation = Quaternion.LookRotation(Aimed.Position - cam.position, cam.up);
-                float pulse = 1f + 0.06f * Mathf.Sin(Time.time * 10f);
+                float pulse = GameSettings.ReduceMotion ? 1f : 1f + 0.06f * Mathf.Sin(Time.time * 10f);
                 Ring(ringMesh, State == AimState.Valid ? 0.09f * pulse : 0.08f, State == AimState.Busy ? 0.03f : 0.018f, State == AimState.OutOfReach);
                 Color col = State == AimState.Valid ? new Color(0.95f, 0.91f, 0.81f, 0.95f) : State == AimState.Busy ? new Color(0.94f, 0.47f, 0.38f, 0.95f) : new Color(0.72f, 0.76f, 0.75f, 0.6f);
                 if (ringMat) ringMat.color = col;
                 string n = SocketName(Aimed);
                 // sesion 17: con que boton se agarra (mano libre, segun el dispositivo en uso) y QUIEN lo tiene si esta ocupado
-                string keys = "";
-                if (State == AimState.Valid)
-                {
-                    bool l = hands.HeldSocketId(0) == "", r = hands.HeldSocketId(1) == "";
-                    keys = l && r ? InputBindings.Display(Act.GrabLeft) + " / " + InputBindings.Display(Act.GrabRight) : l ? InputBindings.Display(Act.GrabLeft) : InputBindings.Display(Act.GrabRight);
-                }
+                string keys = State == AimState.Valid ? GrabKeys(hands) : "";
                 string holder = State == AimState.Busy ? PlayerHands.HolderName(Aimed, hands) : "";
-                label.text = NoHud ? "" : State == AimState.Valid ? Loc.T("grab.aim_valid", ("socket", n), ("keys", keys))
+                label.text = NoHud ? "" : State == AimState.Valid ? Loc.T("grab.aim_valid", ("socket", n), ("key", keys))
                     : State == AimState.Busy ? (holder != "" ? Loc.T("grab.aim_busy_by", ("socket", n), ("player", holder)) : Loc.T("grab.aim_busy", ("socket", n)))
                     : Loc.T("grab.aim_far", ("socket", n));
                 label.color = col; label.transform.localPosition = new Vector3(0f, 0.11f, 0f);
@@ -122,7 +144,8 @@ namespace UncleExtraction
             // que bloquea el cierre de la camioneta (con el tio adentro y el jugador a menos de 7 m de la abertura)
             BlockShown = "";
             var van = VanDoors.Instance; var zone = ExtractionZone.Instance;
-            if (local && van && zone && !zone.Secured && zone.AllPointsInside && Vector3.Distance(hands.transform.position, van.closePoint) < 7f)
+            bool showBlock = !contextual || !NoHud && GameHud.Instance && GameHud.Instance.ShowVanBlockMarker;
+            if (local && showBlock && van && zone && !zone.Secured && zone.AllPointsInside && Vector3.Distance(hands.transform.position, van.closePoint) < 7f)
             {
                 string why = van.BlockReason();
                 if (why != "" && van.BlockPoint.HasValue && van.CurrentPhase != VanDoors.Phase.Closing) BlockShown = why;
@@ -131,9 +154,9 @@ namespace UncleExtraction
                 {
                     var cam = hands.cam.transform;
                     warn.position = van.BlockPoint.Value + Vector3.up * 0.25f; warn.rotation = Quaternion.LookRotation(warn.position - cam.position, cam.up);
-                    float pulse = 1f + 0.12f * Mathf.Sin(Time.time * 8f); warn.localScale = Vector3.one * pulse;
+                    float pulse = contextual || GameSettings.ReduceMotion ? 1f : 1f + 0.12f * Mathf.Sin(Time.time * 8f); warn.localScale = Vector3.one * pulse;
                     var col = new Color(0.91f, 0.66f, 0.29f, 0.95f); if (warnMat) warnMat.color = col;
-                    warnLabel.text = Loc.Coded(BlockShown); warnLabel.color = col;
+                    warnLabel.text = contextual ? "" : Loc.Coded(BlockShown); warnLabel.color = col;
                 }
             }
             else warn.gameObject.SetActive(false);
@@ -141,14 +164,14 @@ namespace UncleExtraction
             // tension de cada mano
             for (int h = 0; h < 2; h++)
             {
-                var lr = lines[h]; var s = local && hands ? hands.HeldSocket(h) : null;
+                var lr = lines[h]; var s = !contextual && local ? hands.HeldSocket(h) : null;
                 lr.gameObject.SetActive(s);
                 if (!s) continue;
                 float t = hands.Tension01(h);
                 Vector3 from = hands.HandVisual(h) ? hands.HandVisual(h).position : hands.HandTarget(h);
-                Vector3 jitter = hands.EffortActive ? Random.insideUnitSphere * 0.006f : Vector3.zero;
+                Vector3 jitter = hands.EffortActive && !GameSettings.ReduceMotion ? Random.insideUnitSphere * 0.006f : Vector3.zero;
                 lr.SetPosition(0, from + jitter); lr.SetPosition(1, s.Position);
-                float blink = t > 0.75f ? (Mathf.Sin(Time.time * 30f) > 0f ? 1f : 0.35f) : 1f;
+                float blink = t > 0.75f && !GameSettings.ReduceMotion ? (Mathf.Sin(Time.time * 30f) > 0f ? 1f : 0.35f) : 1f;
                 lr.widthMultiplier = Mathf.Lerp(0.008f, 0.03f, t);
                 Color c = Color.Lerp(new Color(0.24f, 0.65f, 0.63f, 0.7f), new Color(0.94f, 0.47f, 0.38f, 0.95f), t);
                 c.a *= blink; lr.startColor = lr.endColor = c;

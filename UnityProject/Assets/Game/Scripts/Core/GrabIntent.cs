@@ -23,26 +23,65 @@ namespace UncleExtraction
         static int frame = -1;
         static readonly bool[] held = new bool[2], latched = new bool[2], needRelease = new bool[2], prevRaw = new bool[2], wasHolding = new bool[2];
         static readonly float[] armedAt = new float[2];
+        static readonly bool[] releaseRequested = new bool[2];
+        static PlayerHands intentOwner;
+        static int intentRound = -1;
         public static string Feedback = ""; public static float FeedbackUntil;
 
         public static bool Toggle => GameSettings.GrabToggle;
+        public static void Refresh() => Step();
         public static bool Held(int hand) { Step(); return held[hand]; }
         public static bool Armed(int hand) { Step(); return latched[hand]; }
-        public static void Reset() { for (int h = 0; h < 2; h++) { held[h] = latched[h] = prevRaw[h] = wasHolding[h] = false; needRelease[h] = true; } frame = -1; }
+        public static bool ConsumeReleaseRequest(int hand)
+        {
+            Step();
+            bool requested = releaseRequested[hand];
+            releaseRequested[hand] = false;
+            return requested;
+        }
+
+        public static void ClearFeedback() { Feedback = ""; FeedbackUntil = 0f; }
+
+        public static void Reset()
+        {
+            for (int h = 0; h < 2; h++)
+            {
+                held[h] = latched[h] = prevRaw[h] = wasHolding[h] = releaseRequested[h] = false;
+                needRelease[h] = true;
+            }
+            ClearFeedback();
+            frame = -1;
+        }
 
         static void Step()
         {
             if (frame == Time.frameCount) return; frame = Time.frameCount;
             var pc = PlayerControls.Local; var hands = pc ? pc.GetComponent<PlayerHands>() : null;
+            int round = RoundDirector.Instance ? RoundDirector.Instance.Restarts : -1;
+            if (intentOwner != hands || intentRound != round)
+            {
+                ClearFeedback();
+                System.Array.Clear(releaseRequested, 0, releaseRequested.Length);
+                intentOwner = hands;
+                intentRound = round;
+            }
             bool blocked = GameFlowUI.BlockingInput || !LabInput.Focused || (!LabInput.TestFocus && Cursor.lockState != CursorLockMode.Locked);
             bool release = !blocked && LabInput.RawPressedForGameplay(Act.ReleaseAll);
+            if (blocked || release) ClearFeedback();
             for (int h = 0; h < 2; h++)
             {
                 bool raw = !blocked && LabInput.RawHeld(h == 0 ? Act.GrabLeft : Act.GrabRight);
                 bool rawDown = raw && !prevRaw[h]; prevRaw[h] = raw;
                 bool holding = hands && hands.HeldSocketId(h) != "";
-                bool lost = wasHolding[h] && !holding; wasHolding[h] = holding;
-                if (blocked || release) { latched[h] = false; needRelease[h] = raw || blocked; held[h] = false; continue; }
+                bool lost = wasHolding[h] && !holding;
+                if (!wasHolding[h] && holding) { releaseRequested[h] = false; ClearFeedback(); }
+                wasHolding[h] = holding;
+                if (blocked || release)
+                {
+                    releaseRequested[h] = !blocked && (releaseRequested[h] || holding);
+                    latched[h] = false; needRelease[h] = raw || blocked; held[h] = false;
+                    continue;
+                }
                 if (!raw) needRelease[h] = false; // rearmado comun a los dos modos: el boton tiene que soltarse de verdad
                 if (Toggle)
                 {
@@ -51,7 +90,12 @@ namespace UncleExtraction
                     // pulsacion nueva (hallazgo B, sesion 14): la mano queda libre hasta soltar y volver a apretar
                     if (rawDown && !needRelease[h])
                     {
-                        if (latched[h] || holding) latched[h] = false;
+                        ClearFeedback();
+                        if (latched[h] || holding)
+                        {
+                            if (holding) releaseRequested[h] = true;
+                            latched[h] = false;
+                        }
                         else { latched[h] = true; armedAt[h] = Time.unscaledTime; }
                     }
                     bool aiming = hands && hands.Candidate;
@@ -61,6 +105,8 @@ namespace UncleExtraction
                 }
                 else
                 {
+                    if (holding && held[h] && !raw) releaseRequested[h] = true;
+                    if (rawDown) ClearFeedback();
                     if (lost && raw) needRelease[h] = true;
                     held[h] = raw && !needRelease[h];
                 }

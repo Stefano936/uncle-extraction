@@ -136,8 +136,8 @@ namespace UncleExtraction
         void Apply(float k)
         {
             float e = 1f - (1f - k) * (1f - k); // salida suave
-            cg.alpha = Mathf.Lerp(0.35f, 1f, e);
-            var fit = GetComponent<FitInCanvas>(); float s = (fit ? fit.Scale : 1f) * Mathf.Lerp(0.97f, 1f, e);
+            cg.alpha = GameSettings.ReduceMotion ? 1f : Mathf.Lerp(0.35f, 1f, e);
+            var fit = GetComponent<FitInCanvas>(); float s = (fit ? fit.Scale : 1f) * (GameSettings.ReduceMotion ? 1f : Mathf.Lerp(0.97f, 1f, e));
             transform.localScale = new Vector3(s, s, 1f);
         }
     }

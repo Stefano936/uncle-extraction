@@ -8,6 +8,7 @@ namespace UncleExtraction
     /// compostura (solo al recibir golpes o baja), reloj (oculto sin limite), objetivo, aviso de ataque con icono, texto y
     /// subtitulo descriptivo, interaccion con progreso, avisos breves y caida con recuperacion. Al terminar la ronda se
     /// limpian los avisos de juego. Solo presenta: no decide nada.
+    [DefaultExecutionOrder(50)]
     public class GameHud : MonoBehaviour
     {
         public enum HandState { Free, Pending, Holding, Strained, Released, Unavailable }
@@ -17,15 +18,26 @@ namespace UncleExtraction
         RoundDirector round; NpcBrain npc; Canvas canvas; RectTransform root;
         class HandUi { public RectTransform box; public Image icon; public Text title, state, socket; public Image tension; public HandState s; public float releasedUntil; public string lastHeld = ""; }
         readonly HandUi[] hand = new HandUi[2];
-        Image energy, composure; RectTransform composureBox; float composureShowUntil, lastComposure = 100f;
+        Image energy, composure, timerPanel, promptPanel; RectTransform energyBox, composureBox, reticle; float composureShowUntil, lastComposure = 100f;
         Text timer, objective, objectiveDetail, prompt, toast, fallTitle, fallDetail, attackTitle, attackHint, attackSub, effortHint;
-        Image promptBar, attackIcon, fallBar; RectTransform attackBox, promptBox, fallBox, toastBox, subBox; Text subtitle;
+        Color promptPanelColor;
+        Image promptBar, promptTrack, attackIcon, fallBar; RectTransform attackBox, promptBox, fallBox, toastBox, subBox; Text subtitle;
         public string SubtitleText => subBox && subBox.gameObject.activeSelf ? subtitle.text : "";
         float objectiveUntil; ChallengeMode shownChallenge = ChallengeMode.Standard;
+        HudProfile shownProfile = (HudProfile)(-1);
+        int shownRound = -1;
+        bool readyAnnounced, energyLow;
+        float energyUntil, noticeSince;
+        string notice = "";
+
+        public bool AttentionRequired { get; private set; }
+        public bool AimPromptVisible { get; private set; }
+        public bool ShowVanBlockMarker { get; private set; }
+        public string ShownInteraction { get; private set; } = "";
 
         public HandState StateOf(int h) => hand[h] != null ? hand[h].s : HandState.Unavailable;
-        public string AttackText => attackBox && attackBox.gameObject.activeSelf ? attackTitle.text : "";
-        public string PromptText => promptBox && promptBox.gameObject.activeSelf ? prompt.text : "";
+        public string AttackText => Visible && attackBox && attackBox.gameObject.activeSelf ? attackTitle.text : "";
+        public string PromptText => Visible && promptBox && promptBox.gameObject.activeSelf ? prompt.text : "";
         public bool Visible => root && root.gameObject.activeSelf;
 
         void Awake() { Instance = this; }
@@ -59,7 +71,7 @@ namespace UncleExtraction
             }
             // energia (abajo al centro) y compostura
             float energyH = 84f + Ui.K(20) - 20f;
-            var eb = Ui.PanelBox("Energy", root, new Vector2(0.5f, 0f), new Vector2(0, Ui.Margin), new Vector2(420, energyH));
+            var eb = energyBox = Ui.PanelBox("Energy", root, new Vector2(0.5f, 0f), new Vector2(0, Ui.Margin), new Vector2(420, energyH));
             Ui.Icon(eb, "Icon", "energy", new Vector2(0, 0.5f), new Vector2(36, 0), 44, Ui.Focus);
             // etiqueta a la izquierda y ayuda a la derecha, cada una en su mitad (con texto grande no se pisan)
             var el = Ui.Label(eb, "Label", "", Ui.FontHud, Ui.Muted, TextAnchor.UpperLeft, true); el.name = "EnergyLabel";
@@ -71,6 +83,7 @@ namespace UncleExtraction
             composure = Ui.Bar(composureBox, "Bar", new Vector2(0.5f, 0.5f), new Vector2(26, 0), new Vector2(320, 20), false, out _);
             // reloj y objetivo (arriba)
             var tb = Ui.PanelBox("Timer", root, new Vector2(0.5f, 1f), new Vector2(0, -Ui.Margin * 0.5f), new Vector2(200, 64));
+            timerPanel = tb.GetComponent<Image>();
             timer = Ui.Label(tb, "Text", "", Ui.FontTimer, Ui.Text, TextAnchor.MiddleCenter, true);
             var ob = Ui.PanelBox("Objective", root, new Vector2(0f, 1f), new Vector2(Ui.Margin, -Ui.Margin * 0.5f), new Vector2(460 + 160 * (Ui.TextScale - 1f), Ui.K(96)));
             objective = Ui.Label(ob, "Title", "", Ui.FontSection, Ui.Text, TextAnchor.UpperLeft, true); HalfRow(objective, 0f, 1f, 20f, 16f, 10f, Ui.K(44));
@@ -83,8 +96,12 @@ namespace UncleExtraction
             attackSub = Ui.Label(attackBox, "Subtitle", "", Ui.FontHud, Ui.Muted, TextAnchor.LowerLeft); Inset(attackSub, 120, 0, 20, 8); attackSub.rectTransform.offsetMax = new Vector2(-20, -(14 + Ui.K(44) + Ui.K(34)));
             // interaccion (abajo al centro, encima de la energia)
             promptBox = Ui.PanelBox("Prompt", root, new Vector2(0.5f, 0f), new Vector2(0, 300 + Ui.K(50) - 50), new Vector2(820, Ui.K(80)));
+            promptPanel = promptBox.GetComponent<Image>();
+            promptPanelColor = promptPanel.color;
+            reticle = Ui.Rect("Reticle", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(6f, 6f));
+            Ui.Image(reticle, "Dot", null, Ui.Text, false).gameObject.AddComponent<Outline>().effectColor = Ui.Ink;
             prompt = Ui.Label(promptBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter, true); Inset(prompt, 20, 4, 20, 18);
-            promptBar = Ui.Bar(promptBox, "Progress", new Vector2(0.5f, 0f), Vector2.zero, new Vector2(820, 12), true, out _);
+            promptBar = Ui.Bar(promptBox, "Progress", new Vector2(0.5f, 0f), Vector2.zero, new Vector2(820, 12), true, out promptTrack);
             // subtitulos del tio (catalogo de dialogos; sin voz grabada)
             subBox = Ui.PanelBox("Subtitle", root, new Vector2(0.5f, 0f), new Vector2(0, 460 + Ui.K(110) - 110), new Vector2(980 * (1f + (Ui.TextScale - 1f) * 0.5f), Ui.K(64)));
             subtitle = Ui.Label(subBox, "Text", "", Ui.FontBody, Ui.Text, TextAnchor.MiddleCenter); Inset(subtitle, 20, 4, 20, 4);
@@ -95,7 +112,7 @@ namespace UncleExtraction
             fallTitle = Ui.Label(fallBox, "Title", "", Ui.FontSection + 4, Ui.Text, TextAnchor.UpperCenter, true); Inset(fallTitle, 20, 16, 20, 0);
             fallDetail = Ui.Label(fallBox, "Detail", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.MiddleCenter); Inset(fallDetail, 20, Ui.K(30), 20, 0);
             fallBar = Ui.Bar(fallBox, "Progress", new Vector2(0.5f, 0f), new Vector2(0, 18), new Vector2(520, 18), false, out _);
-            objectiveUntil = Time.time + 12f;
+            shownProfile = (HudProfile)(-1);
             Loc.Changed += Relabel; Relabel();
         }
 
@@ -125,7 +142,6 @@ namespace UncleExtraction
             root.Find("Energy/EnergyLabel").GetComponent<Text>().text = Loc.T("hud.energy");
             objective.text = Loc.T("hud.objective"); objectiveDetail.text = Loc.T("hud.objective_detail");
             fallTitle.text = Loc.T("hud.fall_title");
-            shownChallenge = (ChallengeMode)255; // Update vuelve a poner el aviso del desafio tras reetiquetar
         }
 
         static string Key(string s) => s.Replace("{key}", InputBindings.Display(Act.Interact)).Replace("{release}", InputBindings.Display(Act.ReleaseAll));
@@ -134,21 +150,29 @@ namespace UncleExtraction
         {
             if (builtScale > 0f && Mathf.Abs(builtScale - Ui.TextScale) > 0.01f) { Rebuild(); return; }
             if (!root) return;
-            // desafio: se anuncia en el objetivo desde el arranque (sesion 15)
-            var chm = round ? round.CurrentChallenge : ChallengeMode.Standard;
-            if (objectiveDetail && chm != shownChallenge) { shownChallenge = chm; objectiveDetail.text = chm == ChallengeMode.Standard ? Loc.T("hud.objective_detail") : Loc.T("challenge.hint_" + chm.ToString().ToLowerInvariant()); }
-
             var pc = PlayerControls.Local; var motor = pc ? pc.GetComponent<PlayerMotor>() : null; var hands = pc ? pc.GetComponent<PlayerHands>() : null;
             bool running = round && round.State == RoundState.Running && !round.InLobby; // en la sala no hay HUD de juego
             bool show = motor && hands && running && !(GameFlowUI.Instance && GameFlowUI.Instance.Paused);
             root.gameObject.SetActive(show);
-            if (!show) return;
+            AttentionRequired = AimPromptVisible = ShowVanBlockMarker = false;
+            ShownInteraction = "";
+            if (!show) { notice = ""; energyUntil = 0f; return; }
             bool control = motor.ControlsEnabled;
+            bool contextual = GameSettings.Hud == HudProfile.Contextual;
+            if (GameSettings.Hud != shownProfile) ApplyProfile(contextual);
+            if (shownRound != round.Restarts)
+            {
+                shownRound = round.Restarts;
+                readyAnnounced = energyLow = false;
+                energyUntil = composureShowUntil = 0f;
+                lastComposure = motor.Composure;
+                notice = "";
+                objectiveUntil = Time.time + (contextual ? 7f : 12f);
+                foreach (var u in hand) { u.lastHeld = ""; u.releasedUntil = 0f; }
+            }
 
             for (int h = 0; h < 2; h++) UpdateHand(hand[h], h, hands, control);
-            energy.fillAmount = Mathf.Lerp(energy.fillAmount, motor.Energy / LabBalance.EnergyMax, Smooth.Factor(0.2f)); // suavizado solo visual
-            bool anyHeld = hands.AnyHeld;
-            effortHint.text = !control ? "" : anyHeld ? $"{InputBindings.Display(Act.Effort)}: {Loc.T("hud.effort")}" : Loc.T("hud.grip_first");
+            UpdateEnergy(motor, hands, contextual, control);
             if (motor.Composure < lastComposure - 0.5f) composureShowUntil = Time.time + 4f;
             lastComposure = motor.Composure;
             composureBox.gameObject.SetActive(Time.time < composureShowUntil || motor.Composure < 40f);
@@ -156,14 +180,19 @@ namespace UncleExtraction
 
             float limit = round.TimeLimit;
             timer.transform.parent.gameObject.SetActive(limit > 0f);
-            if (limit > 0f) { float left = Mathf.Max(0f, limit - round.Elapsed); timer.text = $"{(int)(left / 60f):0}:{(int)(left % 60f):00}"; timer.color = left < 30f ? Ui.Danger : Ui.Text; }
-            objective.transform.parent.gameObject.SetActive(Time.time < objectiveUntil);
+            if (limit > 0f)
+            {
+                float left = Mathf.Max(0f, limit - round.Elapsed);
+                timer.text = $"{(int)(left / 60f):0}:{(int)(left % 60f):00}";
+                timer.color = left < 30f ? Ui.Danger : contextual ? Ui.Muted : Ui.Text;
+                timerPanel.enabled = !contextual || left < 30f;
+            }
 
             // ataque (prioridad: caida/control > ataque > ayuda contextual)
             bool windup = npc && (npc.State == NpcState.Windup || npc.State == NpcState.Attack) && !npc.WriggleAttempt;
             bool wriggle = npc && npc.State == NpcState.Windup && npc.WriggleAttempt;
             bool exhausted = npc && npc.State == NpcState.ForcedRecovery;
-            attackBox.gameObject.SetActive(windup || wriggle || exhausted);
+            attackBox.gameObject.SetActive(windup || wriggle || !contextual && exhausted);
             if (windup)
             {
                 var id = npc.CurrentAttack.id;
@@ -181,28 +210,170 @@ namespace UncleExtraction
             fallBox.gameObject.SetActive(fallen);
             if (fallen) { fallDetail.text = Loc.T(motor.State == PlayerState.Fallen ? "hud.getting_up" : "hud.recovering"); fallBar.fillAmount = 1f - Mathf.Clamp01(motor.StateTimeLeft / LabBalance.FallLockMax); }
 
-            // interaccion y avisos breves
-            string label = control ? hands.InteractLabel : "";
-            promptBox.gameObject.SetActive(label != "" && !fallen);
-            if (label != "") { prompt.text = Key(Loc.Coded(label)); promptBar.fillAmount = hands.InteractProgress01; promptBar.transform.parent.gameObject.SetActive(hands.InteractProgress01 > 0.01f); }
+            AttentionRequired = contextual && (fallen || windup || wriggle);
+            if (contextual) attackBox.gameObject.SetActive(!fallen && (windup || wriggle));
+            reticle.gameObject.SetActive(contextual && control && !AttentionRequired && LabInput.Focused);
+            string interaction = control ? hands.InteractLabel : "";
+            string feedback = Time.time < hands.FeedbackUntil ? hands.LastFeedback : "";
+            string intent = Time.time < GrabIntent.FeedbackUntil ? GrabIntent.Feedback : "";
+            if (contextual)
+                ContextPrompt(hands, interaction, feedback, intent, control);
+            else
+            {
+                SetPrompt(interaction == "" || fallen ? "" : Key(Loc.Coded(interaction)), hands.InteractProgress01);
+                string message = feedback != "" ? feedback : intent;
+                toastBox.gameObject.SetActive(!fallen && message != "");
+                if (message != "") toast.text = Key(Loc.Coded(message));
+            }
+            UpdateObjective(contextual);
             var dlg = UncleDialogue.Instance; string line = dlg ? dlg.Current : "";
-            if (line != "") PlaceSubtitle();
-            // jerarquia: si el aviso de peligro y el subtitulo no entran juntos (pantallas bajas con texto grande), manda el aviso
-            subBox.gameObject.SetActive(line != "" && !(attackBox.gameObject.activeSelf && Overlap(attackBox, subBox)));
+            if (line != "") PlaceSubtitle(contextual);
+            bool subtitleFits = !(attackBox.gameObject.activeSelf && Overlap(attackBox, subBox));
+            subBox.gameObject.SetActive(line != "" && subtitleFits);
             if (line != "") subtitle.text = $"<b>{Loc.T(dlg.CurrentSpeaker == "bartender" ? "dialogue.bartender" : "dialogue.uncle")}:</b> {line}";
-            bool grabToast = Time.time < GrabIntent.FeedbackUntil && GrabIntent.Feedback != "";
-            bool toastOn = (Time.time < hands.FeedbackUntil && hands.LastFeedback != "" || grabToast) && !fallen;
-            toastBox.gameObject.SetActive(toastOn);
-            if (toastOn) toast.text = Key(Loc.Coded(Time.time < hands.FeedbackUntil && hands.LastFeedback != "" ? hands.LastFeedback : GrabIntent.Feedback));
+
         }
+
+        void ApplyProfile(bool contextual)
+        {
+            bool wasBuilt = (int)shownProfile >= 0;
+            shownProfile = GameSettings.Hud;
+            if (wasBuilt && Time.time < objectiveUntil && contextual) objectiveUntil = Mathf.Min(objectiveUntil, Time.time + 7f);
+            foreach (var u in hand) u.box.gameObject.SetActive(!contextual);
+            timer.fontSize = Mathf.RoundToInt(Ui.K(contextual ? Ui.FontHud + 2 : Ui.FontTimer));
+            timer.resizeTextMaxSize = timer.fontSize;
+            timer.resizeTextMinSize = timer.fontSize * 2 / 3;
+
+            Vector2 anchor = new Vector2(0.5f, contextual ? 0.5f : 0f);
+            promptBox.anchorMin = promptBox.anchorMax = anchor;
+            promptBox.pivot = new Vector2(0.5f, contextual ? 1f : 0f);
+            promptBox.anchoredPosition = new Vector2(0f, contextual ? -28f : 300 + Ui.K(50) - 50);
+            promptBox.sizeDelta = new Vector2(820f, Ui.K(contextual ? 64f : 80f));
+            prompt.fontSize = Mathf.RoundToInt(Ui.K(contextual ? Ui.FontHud + 2 : Ui.FontBody));
+            prompt.resizeTextMaxSize = prompt.fontSize;
+            prompt.resizeTextMinSize = prompt.fontSize * 2 / 3;
+            prompt.supportRichText = !contextual;
+            prompt.text = "";
+            promptPanel.color = promptPanelColor;
+            promptTrack.rectTransform.sizeDelta = new Vector2(820f, 12f);
+            prompt.color = Ui.Text;
+            Inset(prompt, 20, 4, 20, contextual ? 10 : 18);
+            attackBox.anchoredPosition = new Vector2(0f, -AttackTop(contextual));
+            subHighUntil = 0f;
+            notice = "";
+        }
+
+        void UpdateObjective(bool contextual)
+        {
+            var challenge = round.CurrentChallenge;
+            if (challenge != shownChallenge)
+            {
+                shownChallenge = challenge;
+                objectiveUntil = Time.time + (contextual ? 7f : 12f);
+            }
+
+            var zone = ExtractionZone.Instance;
+            if (contextual && !readyAnnounced && zone && zone.PoseReady && zone.AllPointsInside)
+            {
+                readyAnnounced = true;
+                objectiveUntil = Time.time + 7f;
+            }
+            bool show = Time.time < objectiveUntil && (!contextual || !AttentionRequired && !ShownInteraction.StartsWith("van."));
+            objective.transform.parent.gameObject.SetActive(show);
+            if (!show) return;
+            bool close = contextual && readyAnnounced && zone && zone.AllPointsInside;
+            objectiveDetail.text = Loc.T(close ? "hud.goal_close" : challenge == ChallengeMode.Standard
+                ? "hud.objective_detail" : "challenge.hint_" + challenge.ToString().ToLowerInvariant());
+        }
+
+        void UpdateEnergy(PlayerMotor motor, PlayerHands hands, bool contextual, bool control)
+        {
+            float fraction = motor.Energy / LabBalance.EnergyMax;
+            energy.fillAmount = Mathf.Lerp(energy.fillAmount, fraction, Smooth.Factor(0.2f));
+            energyLow = fraction < (energyLow ? 0.32f : 0.24f);
+            if (hands.EffortActive && hands.AnyHeld && control && LabInput.Focused) energyUntil = Time.time + 1.1f;
+            energyBox.gameObject.SetActive(!contextual || control && (energyLow || Time.time < energyUntil));
+            if (contextual)
+                effortHint.text = fraction < 0.05f ? Loc.T("hud.effort_spent") : energyLow ? Loc.T("hud.effort_low") : "";
+            else
+                effortHint.text = !control ? "" : hands.AnyHeld
+                    ? $"{InputBindings.Display(Act.Effort)}: {Loc.T("hud.effort")}" : Loc.T("hud.grip_first");
+        }
+
+        void ContextPrompt(PlayerHands hands, string interaction, string feedback, string intent, bool control)
+        {
+            toastBox.gameObject.SetActive(false);
+            string text = "";
+            float progress = 0f;
+            bool recurringNotice = false;
+            if (control && LabInput.Focused && !GameFlowUI.BlockingInput && !AttentionRequired)
+            {
+                if (interaction != "")
+                {
+                    ShownInteraction = interaction;
+                    text = Key(Loc.Coded(interaction));
+                    progress = hands.InteractProgress01;
+                    ShowVanBlockMarker = interaction.StartsWith("van.") && interaction != "van.hold_close";
+                }
+                else
+                {
+                    var aim = GrabFeedback.ResolveAim(hands, out var socket);
+                    if (feedback == "grab.lost_distance") text = Loc.T(feedback);
+                    else if (aim == GrabFeedback.AimState.Busy || aim == GrabFeedback.AimState.OutOfReach)
+                    {
+                        AimPromptVisible = true;
+                        text = GrabFeedback.ContextInstruction(hands, aim, socket);
+                        recurringNotice = true;
+                    }
+                    else if (intent != "") text = Loc.T(intent);
+                    else if (aim == GrabFeedback.AimState.Valid)
+                    {
+                        AimPromptVisible = true;
+                        text = GrabFeedback.ContextInstruction(hands, aim, socket);
+                    }
+                    else if (feedback != "hud.grip_busy" && feedback != "hud.too_far")
+                    {
+                        text = Key(Loc.Coded(feedback));
+                        recurringNotice = true;
+                    }
+                }
+            }
+            if (text != notice) { notice = text; noticeSince = Time.unscaledTime; }
+            bool muted = recurringNotice && Time.unscaledTime - noticeSince > 2f;
+            Color panel = promptPanelColor;
+            if (muted) panel.a *= 0.65f;
+            promptPanel.color = panel;
+            prompt.color = muted ? Ui.Muted : Ui.Text;
+            SetPrompt(text, progress);
+        }
+
+        void SetPrompt(string label, float progress)
+        {
+            promptBox.gameObject.SetActive(label != "");
+            if (label == "") return;
+            if (prompt.text != label)
+            {
+                prompt.text = label;
+                if (shownProfile == HudProfile.Contextual)
+                {
+                    float width = Mathf.Clamp(prompt.preferredWidth + 44f, 200f, 820f);
+                    promptBox.sizeDelta = new Vector2(width, promptBox.sizeDelta.y);
+                    promptTrack.rectTransform.sizeDelta = new Vector2(width, 12f);
+                }
+            }
+            promptBar.fillAmount = progress;
+            promptBar.transform.parent.gameObject.SetActive(progress > 0.01f);
+        }
+
+        static float AttackTop(bool contextual) => contextual ? Ui.Margin * 0.5f + 64f + 12f : Mathf.Max(150f, Ui.Margin * 0.5f + Ui.K(96) + 14f);
 
         /// El subtitulo no tapa la cara del tio (sesion 14): en su lugar bajo quedaba sobre la barbilla con el tio de cerca.
         /// Si la cabeza proyectada se cruza con ese lugar, sube debajo del reloj y del aviso de ataque (1,5 s de histeresis).
         float subHighUntil;
         public bool SubtitleHigh { get; private set; }
-        void PlaceSubtitle()
+        void PlaceSubtitle(bool contextual)
         {
-            float h = Ui.K(64), low = 460 + Ui.K(110) - 110, w = subBox.rect.width;
+            float h = Ui.K(64), low = contextual ? 228f : 460 + Ui.K(110) - 110, w = subBox.rect.width;
             var cam = Camera.main; var body = npc ? npc.GetComponent<NpcBody>() : null;
             if (cam && body && body.head && canvas)
             {
@@ -216,9 +387,15 @@ namespace UncleExtraction
                 }
             }
             SubtitleHigh = Time.time < subHighUntil;
-            float bannerBottom = Mathf.Max(150f, Ui.Margin * 0.5f + Ui.K(96) + 14f) + 24 + Ui.K(44) + Ui.K(34) + Ui.K(28);
+            float bannerBottom = AttackTop(contextual) + 24 + Ui.K(44) + Ui.K(34) + Ui.K(28);
             float y = SubtitleHigh ? root.rect.height - bannerBottom - 16f - h : low;
-            if (Mathf.Abs(subBox.anchoredPosition.y - y) > 0.5f) subBox.anchoredPosition = new Vector2(0f, y);
+            subBox.anchoredPosition = new Vector2(0f, y);
+            if (contextual && (fallBox.gameObject.activeSelf && Overlap(fallBox, subBox)
+                || promptBox.gameObject.activeSelf && Overlap(promptBox, subBox)))
+            {
+                float gap = fallBox.gameObject.activeSelf ? fallBox.rect.height * 0.5f - 44f : 24f;
+                subBox.anchoredPosition = new Vector2(0f, root.rect.height * 0.5f + gap);
+            }
         }
 
         void UpdateHand(HandUi u, int h, PlayerHands hands, bool control)
@@ -227,14 +404,15 @@ namespace UncleExtraction
             float t = hands.Tension01(h);
             if (held == "" && u.lastHeld != "") u.releasedUntil = Time.time + 0.6f;
             u.lastHeld = held;
-            bool button = LabInput.HeldForGameplay(h == 0 ? Act.GrabLeft : Act.GrabRight);
+
             HandState s;
             if (!control) s = HandState.Unavailable;
             else if (held != "") s = (u.s == HandState.Strained ? t > 0.5f : t > 0.65f) ? HandState.Strained : HandState.Holding; // histeresis visual
+            else if (hands.IsGrabPending(h)) s = HandState.Pending;
             else if (Time.time < u.releasedUntil) s = HandState.Released;
-            else if (button && hands.Candidate) s = HandState.Pending; // pedido enviado, todavia sin agarre confirmado
             else s = HandState.Free;
             u.s = s;
+            if (shownProfile == HudProfile.Contextual) return;
             u.state.text = Loc.T(s == HandState.Free ? "hud.free" : s == HandState.Pending ? "hud.pending" : s == HandState.Holding ? "hud.holding" : s == HandState.Strained ? "hud.strained" : s == HandState.Released ? "hud.released" : "hud.unavailable");
             u.state.color = s == HandState.Strained ? Ui.Danger : s == HandState.Holding ? Ui.Accent : s == HandState.Unavailable ? Ui.Muted : Ui.Text;
             var sock = GrabSocket.ById(held);

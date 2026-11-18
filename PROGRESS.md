@@ -1,6 +1,26 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-18, sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+Última actualización: 2026-11-18, sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+
+## Sesión 18 · variante de HUD y feedback de agarre
+
+**Rama de evaluación** `codex/s18-hud-agarre`, desde `main` en `c21dce7`. Builds Windows Mono QA y desarrollo de `dc892ce`, editor **6000.3.28f1**, versión 0.17.0, protocolo 2.
+
+- **Contextual** es la opción inicial. En reposo quedan la mira y el reloj de perfil bajo. La pista central usa el dispositivo y la asignación en uso, identifica al titular de un agarre ocupado y da prioridad a los avisos de peligro y las interacciones. **Detallado** mantiene las tarjetas, barras de tensión y rótulos en el mundo.
+- La mano se cierra parcialmente al pedir agarre y cierra del todo con la confirmación. La tensión tiene gesto de muñeca y sonido. El registro autoritativo distingue soltada y pérdida en el anfitrión. El invitado usa la intención local y la caída replicada para elegir el sonido, con un roce neutro para las causas indeterminadas.
+
+| Verificación propia de la sesión 18 | Código o build | Resultado |
+| --- | --- | --- |
+| Builds Windows Mono QA y desarrollo | `dc892ce` | **PASS**, 0 errores |
+| Auditoría rápida de interfaz en español e inglés | `dc892ce` | **6/6 PASS por idioma**, 720p y 21:9, texto 100/125/150 %, ambos perfiles. Se corrigió el cruce inicial del aviso de ataque con el reloj. |
+| `guesttoggle`, `guesttoggle_sim` y `race` en localhost | `dc892ce` | **3/3 PASS**. Las sondas del invitado dieron 9/9 cada una, con confirmación a 68 y 610 ms, respectivamente. En la disputa hubo un solo titular simultáneo del cinturón. |
+| EditMode | `dc892ce` | **75 PASS**, 1 omitida |
+| PlayMode dirigido a HUD, entrada real, guía y prioridades de interacción | `dc892ce` | **40/40 PASS**. Los archivos versionados de Unity quedaron iguales en ambas tandas. |
+| Regresión PlayMode completa, primera pasada | antes de `728da9f` | **169 PASS, 1 omitida, 1 FAIL** en la comprobación nueva del panel de energía. La comprobación pasó tras consultar la visibilidad efectiva del panel. |
+
+Registros locales en `.local-setup/logs/unity/`, `.local-setup/logs/net/` y `.local-setup/shots/s18_final_*/`. Unity se ejecutó con una ruta corta al checkout tras detectar el límite de longitud durante la importación inicial de URP.
+
+El [guion A/B y las hipótesis de la sesión 18](docs/PRUEBA_HUD_S18.md) reúnen la validación humana y la entrega a Claude.
 
 ## Estado vigente
 

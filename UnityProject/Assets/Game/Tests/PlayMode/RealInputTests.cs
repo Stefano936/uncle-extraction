@@ -20,6 +20,9 @@ namespace UncleExtraction.Tests
         Keyboard kb; Mouse mouse;
         InputSettings.BackgroundBehavior bg0; InputSettings.EditorInputBehaviorInPlayMode ed0;
         PlayerMotor player; PlayerHands hands; NpcBrain npc;
+        HudProfile hud0;
+        int savedHud;
+        string lang0;
 
         [UnitySetUp]
         public IEnumerator Load()
@@ -33,6 +36,9 @@ namespace UncleExtraction.Tests
             SceneManager.LoadScene("Bar_LastRound");
             yield return null; yield return new WaitForFixedUpdate();
             for (float t = 0; t < 5f && PlayerControls.Local == null; t += Time.unscaledDeltaTime) yield return null;
+            hud0 = GameSettings.Hud;
+            savedHud = PlayerPrefs.GetInt("ue.hudProfile", -1);
+            lang0 = Loc.Language;
             player = Object.FindAnyObjectByType<PlayerMotor>(); hands = player.GetComponent<PlayerHands>();
             npc = Object.FindAnyObjectByType<NpcBrain>(); npc.brainEnabled = false;
             yield return null;
@@ -43,6 +49,10 @@ namespace UncleExtraction.Tests
         {
             LabInput.ClearSimulated(); LabInput.TestFocus = false; LabInput.TestFocusLost = false; GameSettings.GrabToggle = false; GrabIntent.Reset();
             if (GameFlowUI.Instance) GameFlowUI.Instance.SetPaused(false);
+            GameSettings.Hud = hud0;
+            if (savedHud < 0) PlayerPrefs.DeleteKey("ue.hudProfile");
+            else PlayerPrefs.SetInt("ue.hudProfile", savedHud);
+            if (lang0 != null && Loc.Language != lang0) Loc.SetLanguage(lang0);
             if (kb != null) InputSystem.RemoveDevice(kb); if (mouse != null) InputSystem.RemoveDevice(mouse);
             InputSystem.settings.backgroundBehavior = bg0; InputSystem.settings.editorInputBehaviorInPlayMode = ed0;
             InputBindings.ResetAll(); InputBindings.SaveAll();
@@ -136,6 +146,119 @@ namespace UncleExtraction.Tests
             Assert.AreNotEqual("", hands.HeldSocketId(1), "sigue agarrado");
             yield return Buttons(false, true); yield return Buttons(false, false); yield return Frames(6);
             Assert.AreEqual("", hands.HeldSocketId(1), "otra pulsacion suelta");
+        }
+
+        [UnityTest]
+        public IEnumerator ToggleAudio_DistinguishesReleaseWhilePressed_FromLossWithButtonUp()
+        {
+            GameSettings.GrabToggle = true;
+            GrabIntent.Reset();
+            yield return FaceUncle();
+            var audio = GameAudio.Instance;
+            int Count(string id) => audio.Played.TryGetValue(id, out int n) ? n : 0;
+            int contact = Count("grab"), release = Count("release"), slip = Count("slip"), tries = Count("grab_try");
+
+            yield return Buttons(false, true);
+            yield return Buttons(false, false);
+            Assert.AreEqual(tries + 1, Count("grab_try"));
+            Assert.AreEqual(contact + 1, Count("grab"));
+            Assert.IsNotEmpty(hands.HeldSocketId(1));
+            yield return Buttons(false, true);
+            Assert.IsEmpty(hands.HeldSocketId(1));
+            Assert.AreEqual(release + 1, Count("release"));
+            Assert.AreEqual(slip, Count("slip"));
+            Assert.AreEqual(tries + 1, Count("grab_try"), "soltar con otro toque no vuelve a intentar agarrar");
+
+            yield return Buttons(false, false);
+            yield return FaceUncle();
+            yield return Buttons(false, true);
+            yield return Buttons(false, false);
+            var link = GrabRegistry.Find(hands, 1);
+            Assert.IsNotNull(link);
+            GrabRegistry.Release(link.id, ReleaseReason.Distance);
+            yield return Frames(3);
+            Assert.IsEmpty(hands.HeldSocketId(1));
+            Assert.AreEqual(slip + 1, Count("slip"));
+            Assert.AreEqual(release + 1, Count("release"));
+        }
+
+        [UnityTest]
+        public IEnumerator HudProfile_ChangesFromPause_AndAimUsesOnePromptWithLiveBindings()
+        {
+            GameSettings.Hud = HudProfile.Contextual;
+            Loc.SetLanguage(Loc.En);
+            npc.ReleaseAnchor("test");
+            yield return FaceUncle();
+
+            var hud = GameHud.Instance;
+            yield return Keys(Key.F); yield return Keys(); // el dispositivo activo vuelve a teclado/raton
+            var root = GameObject.Find("HUD/Root").transform;
+            var left = root.Find("LeftHand");
+            Assert.IsFalse(left.gameObject.activeSelf);
+            Assert.IsFalse(root.Find("Energy").gameObject.activeInHierarchy, $"energía en reposo: {player.Energy}");
+            Assert.IsTrue(root.Find("Reticle").gameObject.activeInHierarchy);
+            Assert.IsNull(GameObject.Find("Grab_Aim_Label"));
+            Assert.IsTrue(hud.AimPromptVisible, hud.PromptText);
+            StringAssert.Contains(InputBindings.Display(Act.GrabLeft), hud.PromptText);
+            InputBindings.Set(Act.GrabLeft, "<Keyboard>/f");
+            yield return Frames(2);
+            StringAssert.Contains(InputBindings.Display(Act.GrabLeft), hud.PromptText);
+
+            var pad = InputSystem.AddDevice<Gamepad>();
+            try
+            {
+                pad.MakeCurrent();
+                InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.South));
+                Loc.SetLanguage(Loc.EsUY);
+                yield return Frames(2);
+                StringAssert.Contains("Mantené LT / RT", hud.PromptText);
+                InputSystem.QueueStateEvent(pad, new GamepadState { rightTrigger = 1f });
+                yield return Frames(3);
+                Assert.IsNotEmpty(hands.HeldSocketId(1), "RT agarra por la via real");
+                Assert.IsNull(GameObject.Find("Tension_R"));
+                InputSystem.QueueStateEvent(pad, new GamepadState());
+                yield return Frames(3);
+                Assert.IsEmpty(hands.HeldSocketId(1));
+            }
+            finally { InputSystem.RemoveDevice(pad); }
+
+            GameFlowUI.Instance.SetPaused(true);
+            yield return Frames(2);
+            Assert.IsFalse(hud.Visible);
+            GameObject.Find("FlowUI/Pause/Settings").GetComponent<Button>().onClick.Invoke();
+            yield return Frames(2);
+            GameObject.Find("FlowUI/Options/settings.hud").GetComponent<Button>().onClick.Invoke();
+            Assert.AreEqual(HudProfile.Contextual, GameSettings.Hud, "el cambio es un borrador hasta Aplicar");
+            GameObject.Find("FlowUI/Options/Apply").GetComponent<Button>().onClick.Invoke();
+            Assert.AreEqual(HudProfile.Detailed, GameSettings.Hud);
+            GameObject.Find("FlowUI/Options/Back").GetComponent<Button>().onClick.Invoke();
+            GameFlowUI.Instance.SetPaused(false);
+            yield return FaceUncle();
+            Assert.IsTrue(left.gameObject.activeInHierarchy);
+            var worldLabel = GameObject.Find("Grab_Aim_Label").GetComponent<TextMesh>();
+            StringAssert.Contains(InputBindings.Display(Act.GrabLeft), worldLabel.text);
+            StringAssert.DoesNotContain("{key}", worldLabel.text);
+            Assert.IsFalse(hud.AimPromptVisible);
+        }
+
+        [UnityTest]
+        public IEnumerator PendingToggle_IsCancelledByPauseBeforeConfirmation()
+        {
+            GameSettings.GrabToggle = true;
+            GrabIntent.Reset();
+            player.SetYawPitch(player.Yaw, -80f);
+            yield return Frames(3);
+            Assert.IsNull(hands.Candidate);
+            yield return Buttons(true, false);
+            Assert.IsTrue(GrabIntent.Armed(0));
+
+            GameFlowUI.Instance.SetPaused(true);
+            yield return Frames(3);
+            GameFlowUI.Instance.SetPaused(false);
+            yield return Frames(3);
+            Assert.IsFalse(GrabIntent.Armed(0));
+            Assert.IsFalse(hands.IsGrabPending(0));
+            Assert.IsEmpty(hands.HeldSocketId(0));
         }
 
         public enum Blocker { PauseClosedWithEscape, OptionsFromPause, Rebinding, FocusLost, RoundRestart }
