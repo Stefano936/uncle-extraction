@@ -168,6 +168,9 @@ namespace UncleExtraction
             if (Mathf.Abs(nDodgeReady.Value - dr) > 0.05f) nDodgeReady.Value = dr;
         }
 
+        const float LoadedSpeedTransition = 0.18f;
+        float loadSpeedLimit = LabBalance.WalkSpeed;
+
         void FixedUpdate()
         {
             if (!Auth) return;
@@ -175,7 +178,10 @@ namespace UncleExtraction
             if (Time.time < dodgeUntil) return;
 
             Vector2 input = state == PlayerState.Active ? MoveInput() : Vector2.zero;
-            float speed = crouching ? LabBalance.CrouchSpeed : (hands != null && hands.AnyHeld ? LabBalance.LoadedSpeed : LabBalance.WalkSpeed);
+            bool loaded = hands != null && hands.AnyHeld;
+            float loadStep = (LabBalance.WalkSpeed - LabBalance.LoadedSpeed) / LoadedSpeedTransition * Time.fixedDeltaTime;
+            loadSpeedLimit = loaded ? Mathf.MoveTowards(loadSpeedLimit, LabBalance.LoadedSpeed, loadStep) : LabBalance.WalkSpeed;
+            float speed = crouching ? LabBalance.CrouchSpeed : loadSpeedLimit;
             Vector3 wish = (Quaternion.Euler(0, yaw, 0) * new Vector3(input.x, 0, input.y)) * speed;
             Vector3 v = rb.linearVelocity; Vector3 hv = new Vector3(v.x, 0, v.z);
             bool grounded = IsGrounded();
@@ -339,6 +345,7 @@ namespace UncleExtraction
         {
             if (!Auth) return;
             if (hands) hands.ReleaseAll(ReleaseReason.Reset);
+            loadSpeedLimit = LabBalance.WalkSpeed;
             state = PlayerState.Active; composure = LabBalance.ComposureMax; energy = LabBalance.EnergyMax;
             invulnUntil = stateUntil = composureRegenAt = energyRegenAt = dodgeReadyAt = dodgeUntil = 0f;
             if (crouching) SetCrouch(false);
