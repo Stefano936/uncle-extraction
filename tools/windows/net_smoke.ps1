@@ -21,7 +21,7 @@ $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
 $All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin','guesttoggle','guesttoggle_sim','marks','grace','graceend','cycle','compat','race_natural')
 # QA ampliada (mas larga; -Scenario qa): dificultades y grupos, sesion larga, perdida brusca del anfitrion, rendimiento.
 # 'relay' va aparte: necesita el proyecto vinculado a Unity Cloud y prueba Relay en UNA PC.
-$Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080','perf1080low')
+$Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080','perf1080low','long4')
 $Wanted = if ($Scenario -eq 'all') { $All } elseif ($Scenario -eq 'qa') { $Qa } else { $Scenario -split ',' | ForEach-Object { $_.Trim() } }
 $results = @()
 # Guardia (sesion 12): sintaxis y VERSION.txt al dia, una sola tanda a la vez, y al cancelar se cierran SOLO sus procesos
@@ -197,6 +197,17 @@ for ($run = 1; $run -le $Runs; $run++) {
         $growth = if ($mem.Count -ge 4) { $mem[-1] - $mem[2] } else { 0 }
         $ok = $fs.Count -ge 8 -and $wins -eq $fs.Count -and $exc -eq 0 -and $growth -lt 64
         Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "rondas=$($fs.Count) victorias=$wins excepciones=$exc mem_unity_ventanas=$($mem -join ',') crecimiento=$growth MB $(PerfLine $g)"
+      }
+      'long4' {
+        # sesion 17: 4 jugadores (4 procesos en UNA PC) y 10 rondas seguidas (-ueRepeat 9), memoria por ventana en cada proceso.
+        $g = Party $tag 4 1500 @('-ueRepeat','9') @('-uePerf','15')
+        if ($null -eq $g) { Record $label 'BLOCKED' 'crash al arrancar algun proceso'; break }
+        $fs = @(Finals $g[0]); $wins = @($fs | Where-Object { (Field $_ 'ronda') -eq 'Success' }).Count
+        $exc = 0; foreach ($x in $g) { $exc += (Grep $x 'Exception').Count }
+        $growths = foreach ($x in $g) { $m = @(Grep $x '\[Perf\] ventana' | ForEach-Object { [int]([regex]::Match($_, 'mem_unity=(\d+)MB').Groups[1].Value) }); if ($m.Count -ge 4) { $m[-1] - $m[2] } else { 0 } }
+        $maxG = ($growths | Measure-Object -Maximum).Maximum
+        $ok = $fs.Count -ge 10 -and $wins -eq $fs.Count -and $exc -eq 0 -and $maxG -lt 64
+        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ("rondas_anfitrion=$($fs.Count) victorias=$wins excepciones=$exc crecimiento_mem_por_proceso=$($growths -join ',') MB | " + ((0..3 | ForEach-Object { "p$($_): " + (PerfLine $g[$_]) }) -join ' | '))
       }
       'perf1' {
         $g = Solo $tag @('-uePerf','10') 330

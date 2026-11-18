@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-18, sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+Última actualización: 2026-11-18, sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Estado vigente
 
@@ -9,6 +9,53 @@
 **Qué se puede jugar:** Bar_LastRound solo o en cooperativo de 2 a 4 (internet por Relay con código de sala; red local por IP). Tío articulado de 11 cuerpos con poses de ataque; bar de noche con techo, luces cálidas, neones y calle; camioneta con carrocería propia; carrito con modelo propio; tío con ropa, materiales y gorro de fiesta; vaso señuelo, ayuda para levantarse, extracción con puertas. Interfaz del kit (menú, sala, HUD, pausa, opciones, resultados, errores), EN/es_UY, controles reasignables, opciones guardadas, mando en menús y juego. Sonido sintetizado y subtítulos del tío; sin voz ni música.
 
 **Niveles de evidencia:** PM = PlayMode en el editor; EM = EditMode; AUTO = partida completa con entradas de jugador simuladas; NET = procesos de la build en **localhost** (no LAN ni internet); VIS = auditoría y capturas reales de la build. **Ninguna fila tiene prueba humana.**
+
+### Sesión 17: correcciones de la auditoría, demo para compartir con resultados asociados
+
+**Rama:** `s17-demo` (desde `s15-produccion`, auditada en `1ca19d7`; sin fusionar a `main`: lo decide Stefano). **Versión 0.17.0, protocolo de red 2** (una sola fuente: `GameVersion`; se ve en el menú, `VERSION.txt`, registros y admisión). La prueba humana anterior del dueño (demo s15) sigue como entrada propia en `docs/OBSERVACIONES_PRUEBAS.md`.
+
+**Demo para compartir:** `Builds/UncleExtraction_Demo_s17.zip` (38,8 MB), build **de jugadores** de `b44386d` (solo menú y bar; sin sondas, autopiloto, capturas, laboratorios ni atajos de diagnóstico; `-ueScene`/`-ueAutopilot` se ignoran). SHA-256 `57d883e47b03dba0dac57be5c0d34c2daf352d1554e4d0308a73cda94c51362f` (también en `UncleExtraction_Demo_s17.zip.sha256`). Incluye `VERSION.txt`, `LEEME.txt`, `PRUEBA_HUMANA.txt` y `VOLVER_A_PROBAR.txt`. Generada y verificada con `tools/windows/make_demo_zip.ps1`: descomprimida en otra carpeta, llega al menú en 20 s sin excepciones y con argumentos de QA se queda en el menú (PASS). Demo anterior conservada: `UncleExtraction_Demo_s16.zip` y `Builds/UncleExtraction_Ref_s16/`. Builds de QA y desarrollo: `1bc221d` (mismo código de juego que la demo; la diferencia es solo el bloque `UE_PLAYER_BUILD`).
+
+**Correcciones (bloque 1)**
+- **Sin carrito en rondas seguidas:** el modo se reaplica en cada ronda y en todos los pares (visual, colisión y asa apagados; el anfitrión lo guarda y lo teletransporta por red). Volver a Estándar devuelve un carrito con física, en su lugar.
+- **Torre de vasos** ligada al número de ronda replicado: se rearma en todos, una caída por ronda, eventos viejos descartados.
+- **Compatibilidad de versión:** el protocolo de NGO queda fijo y la admisión compara versión/protocolo; el que entra con otra versión ve «Las versiones del juego no coinciden… actualizá y volvé a intentar desde la sala» y vuelve al menú (antes NGO cortaba sin motivo).
+- **Nombres** por capacidad UTF-8 real (29 bytes, caracteres completos; tildes, emoji, `|` y `=` se conservan); mensajes codificados con escape. **Parte** estructurado (JSON por RPC, tope en bytes, traducido en cada cliente, solo el de la ronda actual) con un momento destacado real.
+
+**Bloques 2–4**
+- **Disputa por un agarre:** `race` exige evidencia del anfitrión atada a un intento (dos jugadores distintos, SocketBusy del segundo mientras el primero lo tiene, candidato local, IA restaurada). Nuevo `race_natural`: juego normal (IA activa, sin reubicar, 80 ms ±15 simulados) con métricas aparte. El autopiloto restaura `brainEnabled` y entradas al terminar, cancelar o reiniciar.
+- **Pruebas que modificaban el proyecto:** causa encontrada — URP le quitaba `_EMISSION` al asset de la camisa la primera vez que se dibujaba en el editor (ningún script lo tocaba; confirmado con una sonda por cuadro y procesos de editor nuevos). Los `.mat` del tío ya no llevan la palabra clave; `NpcPresentation` la activa en copias en ejecución. `tools/windows/run_tests.ps1` compara los archivos versionados antes y después y **falla** si cambian.
+- **Tandas aisladas:** bloqueo atómico (mutex con nombre; una tanda cancelada se recupera; solo libera el dueño) con `guard_selftest.ps1`; `net_smoke` ya no cierra procesos ajenos y usa el siguiente puerto libre. Error de herramienta encontrado: una variable de `race_natural` pisaba los argumentos de ventana (PowerShell no distingue mayúsculas) y el escenario siguiente arrancaba mal; corregido.
+- **Perfil:** materiales de `BarProps`/`Challenges` cacheados por nombre (antes uno nuevo por reconstrucción); `AttackTelegraph` rehace sus mallas solo si cambia la forma y reutiliza arreglos (antes dos mallas nuevas por cuadro). Medido con el banco de vistas fijas (no con el Profiler de Unity).
+- **Primer minuto:** el rótulo del punto apuntado dice con qué botón agarrar y, si está ocupado, quién lo tiene; las ayudas siguen al dispositivo en uso (mando ↔ teclado en vivo).
+- **Campana de última ronda (4.1):** E en la punta de la barra; el tío mira al barman 2 s; si está aferrado no se suelta solo pero soltarle la mano cuesta el 40 % (jugada de a dos). Espera 20 s, dos por ronda (la segunda rinde la mitad), sonido y línea en todos, momento en el parte.
+- **Desafío «Arranca en el karaoke» (4.2):** el tío empieza aferrado a la baranda de la tarima, al otro lado del salón (su «casa» pasa a ser la tarima); Estándar lo devuelve a la barra. En red, «Repetir configuración» vuelve a la sala con el mismo grupo y el anfitrión elige el desafío.
+
+**No hecho en esta sesión:** arte del bloque 5 (malla nueva del tío, cuatro poses, manos que se cierran, materiales y encuadres nuevos, fondo del menú, líneas grabadas), secuencia audiovisual completa del agarre (bloque 3) y remate en el cierre de la camioneta (4.3), clip con sonido (sin grabador instalado: necesita permiso para ffmpeg/OBS).
+
+#### Verificación (sesión 17; cada resultado con su build)
+
+| Prueba | Código / build | Resultado |
+| --- | --- | --- |
+| EditMode | `475d746` (código) | **74/74**, 1 ignorada |
+| PlayMode completa (con control de assets) | `475d746` (código) | **168/168**, 1 omitida; **archivos versionados sin cambios**. `lab_fail_m28` PASS (sin límite de FPS) |
+| `lab_fail_m28` (StuckRecoveryTests_Lab) a 30/60/120 FPS | `1bc221d` (código) | **PASS** las tres (6/6 + 1 omitida cada una), assets sin cambios |
+| Sin carrito ×3 → Estándar y gana con carrito; torre ×2; campana; karaoke ×2 → Estándar y gana arrastrando | `475d746` (código) | **4/4** (karaoke: gana en 31,8 s; Estándar tras Sin carrito: 43,4 s) |
+| Autoprueba del bloqueo | — | **PASS** (4 simultáneos: 1 dueño, 3 rechazados; cancelado recuperado) |
+| Red en localhost (20 escenarios: los 17 + `cycle`, `compat`, `race_natural`) | build `032702b` | **20/20 PASS** (`cycle` 9/9; `compat` en los dos sentidos contra la demo s16; `race` con disputa atada) |
+| `race` repetido | builds `032702b` | **5 PASS** válidos; 5 corridas inválidas por el error de herramienta (anfitrión sin registro), corregido y repetido 2/2 PASS |
+| `race_natural` ×12 | build dev `032702b` | **12/12 PASS** (nunca dos a la vez); disputa real en 5/12, aproximaciones fallidas en 6/12, ganador en 11/12 |
+| Sesión larga 4 jugadores × 10 rondas (`long4`) | build `032702b` | **PASS**: 10/10 victorias, 0 excepciones, memoria +1/0/0/0 MB |
+| `long` (1 jugador, 8 rondas) / `perf4` | build `032702b` | **PASS** (+1 MB; 4 procesos en una PC: p99 11,1 ms cada uno) |
+| Auditoría de interfaz ES y EN (5 aspectos × 100/125/150 %) | build `1bc221d` | **15/15** por idioma, 0 problemas |
+| Banco de vistas fijas, Alta, 1920×1080 (×2) | `1bc221d` vs build S16 (`c7a05c7`+) | con vsync 123 fps, p99 11,1 ms (igual); sin vsync 175 vs 174 fps, p99 7,2–7,5 vs 7,4–7,9 ms |
+| Banco, Baja, sin vsync / Baja con `-Device 1` | `1bc221d` vs `1ca19d7` | 180,0 vs 179,8 fps (p99 7,08 vs 7,14 ms) / 198,7 vs 198,1 fps; **el nombre de la GPU no se registró**: no consta que `-Device 1` haya sido la Iris Xe |
+| Demo: ZIP, SHA-256, copia descomprimida | build de jugadores `b44386d` | **PASS** |
+| Relay desde una PC / dos equipos / LAN / grupos nuevos / clip | — | **NOT_RUN** (otra PC, personas y permiso para grabador) |
+
+Resultados: `.local-setup/logs/unity/tests_*_s17*.xml`, `.local-setup/logs/net/net_smoke_history.csv`, `.local-setup/logs/perf/bench_*_s17_*.csv`, `.local-setup/shots/ui_audit_s17_*/`.
+
+**Para volver a probar:** `docs/VOLVER_A_PROBAR_S17.md`. **Prueba con dos grupos nuevos (preparada):** `docs/PRUEBA_GRUPOS_S17.md`.
 
 ### Sesión 16: prueba del dueño, pulido de materiales y malla, prueba `race`
 
@@ -108,7 +155,7 @@
 
 ## Próxima acción exacta
 
-1. **Vos (25 min, sin explicar nada):** pasale `Builds/UncleExtraction_Demo_s15.zip` a alguien que no lo vio, con `docs/lanzamiento/PLAN_PRUEBAS_Y_DIFUSION.md` §1 (tiempo al primer agarre, dónde se estanca, si pide otra ronda, qué le contaría a un amigo). Anotar en `docs/OBSERVACIONES_PRUEBAS.md`.
-2. **Con otra PC y 2–4 personas:** cooperativo por código de sala con el desafío *Ruta estrecha* y la torre de vasos; revisar el parte al final.
-3. **Revisar borradores** de `docs/lanzamiento/` (textos, cápsulas, tomas del tráiler) y decidir si fusionar `s15-produccion` en `main`.
-4. **Desarrollo siguiente (sin depender de nadie):** malla del tío con más detalle (silueta y ropa con volumen real), materiales de la barra, puerta y carrito (vetas, desgaste, herrajes), grabación de video (requiere tu permiso para instalar ffmpeg u OBS), música con licencia.
+1. **Vos (15 min):** jugar `Builds/UncleExtraction_Demo_s17.zip` con `VOLVER_A_PROBAR.txt` y contarme lo que viste (y, si podés, los detalles pendientes de tu prueba de la demo s15). Lo anoto en `docs/OBSERVACIONES_PRUEBAS.md` como prueba del dueño.
+2. **Con otra PC y 2–4 personas:** `docs/PRUEBA_GRUPOS_S17.md` (grupo A: Relay entre dos PC; grupo B: 3–4 personas en redes distintas). Anotar localhost, LAN e internet por separado.
+3. **Decidir** si fusionar `s17-demo` en `main` y si se puede instalar un grabador (ffmpeg u OBS) para el clip con sonido.
+4. **Desarrollo siguiente (sin depender de nadie):** bloque 5 de arte (malla del tío con ojos/párpados/cuello, cuatro poses, manos que se cierran sobre cinturón/tela/baranda, materiales y cuatro encuadres fijos, fondo del menú), secuencia audiovisual completa del agarre y remate en el cierre de la camioneta.
