@@ -14,7 +14,6 @@ namespace UncleExtraction.EditorTools
         const string TexDir = "Assets/Game/Art/Materials/Textures";
 
         // ---------- materiales
-        public static readonly Color EmissionFloor = new Color(0.002f, 0.002f, 0.002f, 1f);
         public static Material Lit(string name, Color c, float smooth, float metal = 0f, Texture2D tex = null, Texture2D normal = null, float bump = 0.5f, Vector2? tiling = null, bool emissionReady = false)
         {
             Directory.CreateDirectory(MatDir);
@@ -27,9 +26,10 @@ namespace UncleExtraction.EditorTools
             if (normal) { m.SetTexture("_BumpMap", normal); m.SetFloat("_BumpScale", bump); m.EnableKeyword("_NORMALMAP"); if (tiling.HasValue) m.SetTextureScale("_BumpMap", tiling.Value); }
             else { m.SetTexture("_BumpMap", null); m.DisableKeyword("_NORMALMAP"); }
             // el tio senaliza preparacion con un brillo (bloque de propiedades); el material lo admite con emision negra por defecto
-            if (emissionReady) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", EmissionFloor); m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
-            // casi negro, NO negro: URP apaga _EMISSION al validar un material con emision negra (pasaba al correr PlayMode, sesion 17)
-            else { m.DisableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black); }
+            // sesion 17: el asset NO lleva _EMISSION (URP se la quitaba al de la camisa al dibujarlo en el editor y PlayMode dejaba el
+            // proyecto modificado). emissionReady solo deja la emision en negro; NpcPresentation la activa en copias en ejecucion.
+            m.DisableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black);
+            if (emissionReady) m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             EditorUtility.SetDirty(m); return m;
         }
 
