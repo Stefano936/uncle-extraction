@@ -64,6 +64,22 @@ namespace UncleExtraction.Tests
             Assert.IsTrue(NpcBrain.SideStillFree(AttackId.Shake, AttackSide.None, L(true, true, true, true)), "la sacudida no depende de miembros");
         }
 
+        [Test] public void InteractPriority_AllFourAtOnce_IsComprehensible()
+        {
+            var K = PlayerHands.InteractKind.None;
+            Assert.AreEqual(PlayerHands.InteractKind.HelpUp, PlayerHands.ChooseInteract(true, true, true, true, K, false), "compañero caido que se mira primero");
+            Assert.AreEqual(PlayerHands.InteractKind.Unanchor, PlayerHands.ChooseInteract(false, true, true, true, K, false));
+            Assert.AreEqual(PlayerHands.InteractKind.Van, PlayerHands.ChooseInteract(false, false, true, true, K, false), "camioneta antes que carrito");
+            Assert.AreEqual(PlayerHands.InteractKind.Cart, PlayerHands.ChooseInteract(false, false, false, true, K, false));
+            Assert.AreEqual(PlayerHands.InteractKind.None, PlayerHands.ChooseInteract(false, false, false, false, K, false));
+        }
+        [Test] public void InteractPriority_HoldingE_KeepsTheTarget_WhileItStaysValid()
+        {
+            Assert.AreEqual(PlayerHands.InteractKind.Van, PlayerHands.ChooseInteract(true, false, true, false, PlayerHands.InteractKind.Van, true), "cerrando la camioneta, un compañero que cae a la vista no corta el cierre");
+            Assert.AreEqual(PlayerHands.InteractKind.HelpUp, PlayerHands.ChooseInteract(true, false, false, false, PlayerHands.InteractKind.Van, true), "si el objetivo deja de valer, pasa al siguiente");
+            Assert.AreEqual(PlayerHands.InteractKind.HelpUp, PlayerHands.ChooseInteract(true, false, true, false, PlayerHands.InteractKind.Van, false), "al soltar E vuelve la prioridad normal");
+        }
+
         RoundDirector NewRound(Difficulty d, int party)
         {
             var go = new GameObject("RoundTest"); var r = go.AddComponent<RoundDirector>();

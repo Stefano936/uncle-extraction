@@ -207,56 +207,98 @@ namespace UncleExtraction
             foreach (var l in broken) { GrabRegistry.Release(l.id, ReleaseReason.Distance); Feedback("grab.lost_distance"); }
         }
 
+        public enum InteractKind { None, HelpUp, Unanchor, Van, Cart }
+        /// Objetivo de E de este cuadro (pruebas y aviso).
+        public InteractKind InteractTarget { get; private set; }
+        InteractKind sticky; PlayerMotor stickyMate;
+
+        /// Regla de prioridad de E (sesion 14; probada en EditMode). Orden: compañero caido que se mira > mano anclada que
+        /// se mira > camioneta (tio adentro, desde afuera) > carrito cercano. Mientras se MANTIENE E sobre un objetivo que sigue
+        /// valido, no se cambia a otro aunque aparezca uno de mas prioridad: el progreso no se corta por mirar a otro lado.
+        public static InteractKind ChooseInteract(bool helpUp, bool unanchor, bool van, bool cart, InteractKind held, bool holdingE)
+        {
+            if (holdingE && held != InteractKind.None)
+            {
+                bool still = held == InteractKind.HelpUp ? helpUp : held == InteractKind.Unanchor ? unanchor : held == InteractKind.Van ? van : held == InteractKind.Cart && cart;
+                if (still) return held;
+            }
+            return helpUp ? InteractKind.HelpUp : unanchor ? InteractKind.Unanchor : van ? InteractKind.Van : cart ? InteractKind.Cart : InteractKind.None;
+        }
+
+        /// Linea de vision desde la camara: no se interactua a traves de paredes, barra o puertas.
+        bool Visible(Vector3 target, Rigidbody targetBody)
+        {
+            Vector3 o = cam.transform.position, d = target - o; float len = d.magnitude; if (len < 0.05f) return true;
+            var hits = Physics.RaycastAll(o, d / len, Mathf.Max(0f, len - 0.25f), ~0, QueryTriggerInteraction.Ignore); // los ultimos 25 cm no cuentan: la mano apoyada en la barra, el compañero sobre el piso
+            foreach (var h in hits)
+            {
+                var rb = h.rigidbody;
+                if (rb == null) return false;                                   // geometria estatica en el medio
+                if (rb == this.rb || rb == targetBody) continue;
+                if (NpcBody.Of(rb) && targetBody && NpcBody.Of(targetBody) == NpcBody.Of(rb)) continue; // otra parte del mismo tio
+                if (rb.GetComponent<PlayerMotor>()) continue;                   // otros jugadores no tapan
+                if (!rb.isKinematic && rb.mass < 15f) continue;                  // objetos sueltos chicos (vasos, banquetas)
+                return false;
+            }
+            return true;
+        }
+
         void HandleInteract()
         {
             interactLabel = "";
             var npc = NpcBrain.Instance; var cart = TransportCart.Instance;
-            // 0) Ayudar a un compañero caido que se mira de cerca: mantener E acelera su levantada
+            var van = VanDoors.Instance; var zone = ExtractionZone.Instance;
+            bool holdingE = Ctrl(Act.Interact);
+            // candidatos validos este cuadro
+            PlayerMotor mate = null;
             foreach (var other in PlayerMotor.All)
             {
                 if (!other || other == motor || other.State != PlayerState.Fallen) continue;
                 Vector3 to = other.transform.position + Vector3.up * 0.4f - cam.transform.position;
                 if (to.magnitude > 1.9f || Vector3.Angle(cam.transform.forward, to) > 40f) continue;
-                interactLabel = Loc.Code("interact.help_up", ("player", other.playerName));
-                if (Ctrl(Act.Interact) && other.AssistGetUp(Time.deltaTime)) interactProgress = Mathf.Clamp01(1f - other.StateTimeLeft / LabBalance.FallLockMax);
-                return;
+                if (!Visible(other.transform.position + Vector3.up * 0.4f, other.Body)) continue;
+                if (mate == null || (sticky == InteractKind.HelpUp && other == stickyMate)) mate = other;
             }
-            // 1) Desanclar: mantener E sobre la mano anclada del tio 0,9 s
+            bool unanchor = false;
             if (npc && npc.IsAnchored && npc.AnchorHandSocket)
             {
                 Vector3 to = npc.AnchorHandSocket.Position - cam.transform.position;
-                bool aiming = to.magnitude <= LabBalance.GrabReach + 0.3f && Vector3.Angle(cam.transform.forward, to) < 30f;
-                if (aiming)
-                {
+                unanchor = to.magnitude <= LabBalance.GrabReach + 0.3f && Vector3.Angle(cam.transform.forward, to) < 30f && Visible(npc.AnchorHandSocket.Position, npc.AnchorHandSocket.body);
+            }
+            bool vanOk = van && zone && !zone.Secured && zone.AllPointsInside && van.InRange(transform.position);
+            bool cartOk = cart && Vector3.Distance(transform.position, cart.transform.position) < 2.2f && (cart.IsStrapped || cart.CanStrap);
+            var kind = ChooseInteract(mate != null, unanchor, vanOk, cartOk, sticky, holdingE);
+            if (kind != InteractTarget && InteractTarget != InteractKind.None) interactProgress = 0f; // otro objetivo: el progreso empieza de cero
+            InteractTarget = kind; sticky = holdingE ? kind : InteractKind.None; stickyMate = kind == InteractKind.HelpUp ? mate : null;
+            switch (kind)
+            {
+                case InteractKind.HelpUp:
+                    interactLabel = Loc.Code("interact.help_up", ("player", mate.playerName));
+                    if (holdingE && mate.AssistGetUp(Time.deltaTime)) interactProgress = Mathf.Clamp01(1f - mate.StateTimeLeft / LabBalance.FallLockMax);
+                    else if (!holdingE) interactProgress = 0f;
+                    break;
+                case InteractKind.Unanchor:
                     interactLabel = "interact.unanchor";
-                    if (Ctrl(Act.Interact))
+                    if (holdingE)
                     {
                         interactProgress += Time.deltaTime / LabBalance.AnchorReleaseHold;
                         if (interactProgress >= 1f) { npc.ReleaseAnchor("jugador"); interactProgress = 0f; }
                     }
                     else interactProgress = 0f;
-                    return;
+                    break;
+                case InteractKind.Van:
+                {   // con el tio adentro, mantener E 1 s desde afuera para cerrar las puertas (GDD 03)
+                    string why = van.BlockReason();
+                    if (why == "") { interactLabel = "van.hold_close"; interactProgress = holdingE ? van.HoldClose(this, Time.deltaTime) : 0f; }
+                    else { interactLabel = why; interactProgress = 0f; }
+                    break;
                 }
-            }
-            interactProgress = 0f;
-            // 2) Camioneta: con el tio adentro, mantener E 1 s desde afuera para cerrar las puertas (GDD 03)
-            var van = VanDoors.Instance; var zone = ExtractionZone.Instance;
-            if (van && zone && !zone.Secured && zone.AllPointsInside && van.InRange(transform.position))
-            {
-                string why = van.BlockReason();
-                if (why == "")
-                {
-                    interactLabel = "van.hold_close";
-                    interactProgress = Ctrl(Act.Interact) ? van.HoldClose(this, Time.deltaTime) : 0f;
-                }
-                else interactLabel = why;
-                return;
-            }
-            // 3) Carrito: E para asegurar / liberar al tio en la caja
-            if (cart && Vector3.Distance(transform.position, cart.transform.position) < 2.2f)
-            {
-                if (cart.IsStrapped) { interactLabel = "cart.unstrap"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
-                else if (cart.CanStrap) { interactLabel = "cart.strap"; if (CtrlPressed(Act.Interact) && !cart.Strap()) Feedback(cart.LastFailure); }
+                case InteractKind.Cart:
+                    interactProgress = 0f;
+                    if (cart.IsStrapped) { interactLabel = "cart.unstrap"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
+                    else { interactLabel = "cart.strap"; if (CtrlPressed(Act.Interact) && !cart.Strap()) Feedback(cart.LastFailure); }
+                    break;
+                default: interactProgress = 0f; break;
             }
         }
 

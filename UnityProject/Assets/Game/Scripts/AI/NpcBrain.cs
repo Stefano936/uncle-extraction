@@ -314,6 +314,7 @@ namespace UncleExtraction
         /// Pruebas: intenta un ataque con las MISMAS reglas que la decision normal (postura, espacio, extremidades libres,
         /// eleccion de miembro); no es ForceAttack. Y vuelve al reposo sin golpear para probar otra eleccion.
         public bool TryNaturalAttackForTest() { RefreshPlayers(); return TryStartAttack(); }
+        public bool AnchorForTest() => TryAnchor();
         public void CancelAttackForTest() { side = AttackSide.None; Enter(NpcState.Loiter, 0f, ""); }
         public bool LimbOf(GrabSocket s, out bool arm, out bool right) { if (limbOf.Count == 0) MapLimbs(); arm = right = false; if (!s || !limbOf.TryGetValue(s, out var v)) return false; arm = v.arm; right = v.right; return true; }
 
