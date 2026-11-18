@@ -1,6 +1,12 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-18, sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+Última actualización: 2026-11-18, sesión 19 (materiales del bar), sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+
+## Sesión 19 · materiales del bar
+
+**Rama de evaluación** `codex/s19-materiales-bar`, desde `main` en `863888b`. Madera barnizada y desgastada en el canto, baldosas con juntas y marcas de paso, revoque mate y roces alrededor de la manija y el marco. Los PNG originales y sus metadatos están versionados e integrados en Bar_LastRound.
+
+**Verificación:** recorrido de arrastre desde la barra hasta asegurar la camioneta en 21,8 s, PlayMode dirigido 6/6 y comparación de escena con los colliders, cuerpos rígidos, bisagra y luces idénticos a la referencia. [Capturas comparables, origen y pasos de reproducción](docs/MATERIALES_BAR_S19.md).
 
 ## Sesión 18 · variante de HUD y feedback de agarre
 
