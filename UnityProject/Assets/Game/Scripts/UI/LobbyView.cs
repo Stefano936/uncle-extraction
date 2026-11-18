@@ -91,8 +91,8 @@ namespace UncleExtraction
             diffBtn.interactable = host; // invitados: solo lectura
             // desafio (sesion 15): visible para todos antes de empezar; lo cambia el anfitrion con el mismo boton + Mayus/clic der.
             string chn = Loc.T("challenge." + round.CurrentChallenge.ToString().ToLowerInvariant());
-            difficulty.text = $"{Loc.T("lobby.difficulty")}  ·  {Loc.T("challenge.title")}: {chn}";
-            if (host && chBtn) chBtn.GetComponentInChildren<Text>().text = chn + "  ▸";
+            // el rotulo queda en «Dificultad» (entra con texto al 150 %); el desafio va dentro de su boton, visible para todos
+            if (chBtn) chBtn.GetComponentInChildren<Text>().text = $"{Loc.T("challenge.title")}: {chn}" + (host ? "  ▸" : "");
             if (chBtn) chBtn.interactable = host;
             // accion clara: «LISTO» para confirmar; ya confirmado se marca con ✓ (pulsar de nuevo lo deshace)
             readyBtn.GetComponentInChildren<Text>().text = local && local.Ready ? "✓ " + Loc.T("button.ready") : Loc.T("button.ready");

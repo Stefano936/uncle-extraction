@@ -93,7 +93,7 @@ namespace UncleExtraction
             resRetry = Btn(resultsRoot, "Retry", "button.retry_same", retryY, () => { if (NetSession.Mode == NetMode.Solo) round.Restart(); else round.BackToLobby(); }); // en red: vuelve a la sala con confirmacion limpia
             resMenu = Btn(resultsRoot, "Menu", "button.back_menu", retryY - 90, () => NetSession.LeaveToMenu());
             // vista limpia para capturas: solo el parte, sin botones ni HUD; cualquier tecla o clic vuelve
-            var shot = Ui.Button(resultsRoot, "Snapshot", "", new Vector2(1f, 0f), new Vector2(-16, 16), new Vector2(Ui.K(190), Ui.K(40)), () => CleanView(true)); // abajo a la derecha: no pisa el titulo
+            var shot = Ui.Button(resultsRoot, "Snapshot", "", new Vector2(1f, 0f), new Vector2(-16, 16), new Vector2(Ui.K(210), Ui.K(48)), () => CleanView(true)); // abajo a la derecha: no pisa el titulo
             shot.GetComponent<RectTransform>().pivot = new Vector2(1f, 0f); var st = shot.GetComponentInChildren<Text>(); st.fontSize = Ui.FontHud; st.gameObject.AddComponent<LocText>().key = "report.snapshot";
             resultsRoot.gameObject.SetActive(false);
         }
