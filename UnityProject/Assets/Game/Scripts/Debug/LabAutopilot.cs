@@ -464,7 +464,7 @@ namespace UncleExtraction
             long now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             while (now() < raceAtUnixMs) { LookAt(belt.Position); Status = hands.Candidate == belt ? "esperando la senal (apunta al cinturon)" : "esperando la senal (buscando el cinturon)"; yield return null; }
             raceMode = false;
-            Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")}");
+            Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")} yo={Me} destino={stand} cinturon={belt.Position} dist={Vector3.Distance(Eye, belt.Position):0.00}");
             for (float t = 0; t < 2f; t += Time.deltaTime) { LookAt(belt.Position); SetHold(0, true); yield return null; }
             Log($"resultado carrera: mano izq = '{hands.HeldSocketId(0)}' aviso='{hands.LastFeedback}'");
             SetHold(0, false); yield return null;
