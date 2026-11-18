@@ -74,7 +74,7 @@ namespace UncleExtraction
         public string LastStressReport { get; private set; } = "";
         public bool StressRunning { get; private set; }
 
-        void Start() { if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; if (NetAuth.IsServer && RequestedChallenge.HasValue) challenge = RequestedChallenge.Value; }
+        void Start() { if (VanDoors.Instance && !VanDoors.Instance.GetComponent<VanDetails>()) VanDoors.Instance.gameObject.AddComponent<VanDetails>(); if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; if (NetAuth.IsServer && RequestedChallenge.HasValue) challenge = RequestedChallenge.Value; }
         public override void OnNetworkSpawn()
         {
             if (IsServer && NetSession.Mode != NetMode.Solo) { inLobby = true; nLobby.Value = true; Debug.Log("[Lobby] sala abierta"); }

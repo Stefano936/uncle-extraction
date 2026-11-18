@@ -69,7 +69,7 @@ namespace UncleExtraction
 
         void Awake() { Instance = this; body = GetComponent<NpcBody>(); rng = new System.Random(seed); Budget = LabBalance.NpcBudget; }
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
-        void Start() { RefreshPlayers(); Budget = BudgetMax; ScheduleNextAttack(); if (!GetComponent<UncleFace>()) gameObject.AddComponent<UncleFace>(); MapLimbs(); }
+        void Start() { RefreshPlayers(); Budget = BudgetMax; ScheduleNextAttack(); if (!GetComponent<UncleFace>()) gameObject.AddComponent<UncleFace>(); if (body && body.Articulated && !GetComponent<UncleOutfit>()) gameObject.AddComponent<UncleOutfit>(); MapLimbs(); }
 
         public void RefreshPlayers() { players.Clear(); players.AddRange(PlayerMotor.All); }
 

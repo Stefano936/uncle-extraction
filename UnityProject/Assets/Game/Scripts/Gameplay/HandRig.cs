@@ -32,13 +32,16 @@ namespace UncleExtraction
             var skin = baseMat ? new Material(baseMat) : new Material(Shader.Find("Universal Render Pipeline/Lit")); skin.color = Skin; skin.name = "HandSkin";
             var sleeve = baseMat ? new Material(baseMat) : new Material(Shader.Find("Universal Render Pipeline/Lit")); sleeve.name = "HandCuff";
             var fabric = baseMat ? new Material(baseMat) : new Material(Shader.Find("Universal Render Pipeline/Lit")); fabric.name = "Sleeve"; fabric.color = new Color(0.16f, 0.2f, 0.27f);
-            if (fabric.HasProperty("_Smoothness")) fabric.SetFloat("_Smoothness", 0.12f);
-            if (skin.HasProperty("_Smoothness")) skin.SetFloat("_Smoothness", 0.35f);
+            fabric.color = new Color(0.11f, 0.13f, 0.17f); // tela oscura mate (el material base del cubo era metalico: parecian caños)
+            foreach (var m in new[] { fabric, skin, sleeve }) { if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", 0f); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", m == skin ? 0.32f : 0.08f); }
             float inner = side == 0 ? 1f : -1f; // el pulgar va hacia el centro de la pantalla
 
             rig.root = go.transform;
             // manga: capsula larga que sale por abajo del cuadro (sin tapas planas a la vista) y puño fino con el color de estado
-            Part(PrimitiveType.Capsule, "Sleeve", go.transform, new Vector3(0, -0.004f, -0.29f), Quaternion.Euler(90, 0, 0), new Vector3(0.1f, 0.22f, 0.092f), fabric);
+            // el antebrazo sale hacia la esquina inferior de su lado (como un brazo real), corto: no cruza el cuadro al mirar abajo
+            var arm = new GameObject("ArmPivot").transform; arm.SetParent(go.transform, false); arm.localPosition = new Vector3(0, -0.004f, -0.085f);
+            arm.localRotation = Quaternion.Euler(-28f, 18f * inner, 0f);
+            Part(PrimitiveType.Capsule, "Sleeve", arm, new Vector3(0, 0, -0.15f), Quaternion.Euler(90, 0, 0), new Vector3(0.095f, 0.14f, 0.088f), fabric);
             rig.cuff = Part(PrimitiveType.Capsule, "Cuff", go.transform, new Vector3(0, -0.002f, -0.088f), Quaternion.Euler(90, 0, 0), new Vector3(0.104f, 0.03f, 0.096f), sleeve);
             Part(PrimitiveType.Capsule, "Forearm", go.transform, new Vector3(0, 0f, -0.06f), Quaternion.Euler(90, 0, 0), new Vector3(0.066f, 0.03f, 0.056f), skin);
             Part(PrimitiveType.Sphere, "Palm", go.transform, new Vector3(0, 0, -0.005f), Quaternion.identity, new Vector3(0.088f, 0.034f, 0.1f), skin);

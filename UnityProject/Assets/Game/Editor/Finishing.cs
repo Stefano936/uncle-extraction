@@ -88,10 +88,10 @@ namespace UncleExtraction.EditorTools
             var map = new System.Collections.Generic.Dictionary<string, Material>
             {
                 // musculosa gastada, camisa de fiesta, bermuda de corderoy, piel con brillo de transpiracion, zapatos de cuero
-                { "cream",   Lit("Uncle_Undershirt", new Color(0.86f, 0.82f, 0.72f), 0.12f, 0f, fabric, fabricN, 0.35f, new Vector2(3, 3), true) },
-                { "wine",    Lit("Uncle_Shirt", new Color(0.78f, 0.16f, 0.18f), 0.18f, 0f, fabric, fabricN, 0.5f, new Vector2(2, 2), true) },
+                { "cream",   Lit("Uncle_Undershirt", new Color(0.78f, 0.74f, 0.64f), 0.1f, 0f, fabric, fabricN, 0.35f, new Vector2(3, 3), true) },
+                { "wine",    Lit("Uncle_Shirt", new Color(0.7f, 0.12f, 0.15f), 0.12f, 0f, fabric, fabricN, 0.5f, new Vector2(2, 2), true) },
                 { "mustard", Lit("Uncle_Shorts", new Color(0.82f, 0.56f, 0.16f), 0.1f, 0f, fabric, fabricN, 0.7f, new Vector2(4, 4), true) },
-                { "skin",    Lit("Uncle_Skin", new Color(0.95f, 0.66f, 0.5f), 0.42f, 0f, null, null, 0f, null, true) },
+                { "skin",    Lit("Uncle_Skin", new Color(0.84f, 0.55f, 0.41f), 0.3f, 0f, null, null, 0f, null, true) },
                 { "shoe",    Lit("Uncle_Shoe", new Color(0.2f, 0.11f, 0.06f), 0.6f, 0f, null, null, 0f, null, true) },
                 { "white",   Lit("Uncle_EyeWhite", new Color(0.95f, 0.92f, 0.82f), 0.85f, 0f, null, null, 0f, null, true) },
                 { "pupil",   Lit("Uncle_Pupil", new Color(0.03f, 0.03f, 0.03f), 0.9f, 0f, null, null, 0f, null, true) },
