@@ -257,6 +257,7 @@ for ($run = 1; $run -le $Runs; $run++) {
         # un participante, si el rechazo fue en otro punto, si hubo dos a la vez o si el candidato local no era el cinturon.
         $at = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + 17000
         $r = PairRetry $label $tag @('-ueAutopilot','race','-ueRaceAt',"$at") @('-ueAutopilot','race','-ueRaceAt',"$at",'-ueAutopilotDelay','2') 24 -waitHost
+        if ($r -and -not (Test-Path $r.h.log)) { Record $label 'BLOCKED' "el anfitrion no dejo registro (salida=$($r.h.p.ExitCode) exe=$($r.h.p.StartInfo.FileName))"; break }
         if ($r) { $e = RaceEvidence $r.h
           $aimed = @((Last $r.h 'aprieta en'), (Last $r.c 'aprieta en')) | Where-Object { $_ -match 'candidato=belt' }
           $restored = (Grep $r.h 'carrera: IA del tio restaurada \(True\)').Count -gt 0
@@ -272,8 +273,8 @@ for ($run = 1; $run -le $Runs; $run++) {
         if ($r) { $e = RaceEvidence $r.h
           $fails = (Grep $r.h 'aproximacion fallida').Count + (Grep $r.c 'aproximacion fallida').Count
           $ai = (Grep $r.h 'carrera: modo=natural ia_tio=True').Count -gt 0
-          $win = @((Last $r.h 'resultado carrera'), (Last $r.c 'resultado carrera')) | Where-Object { $_ -match "mano izq = 'belt'" }
-          Record $label $(if ($e.maxLive -le 1 -and $ai) { 'PASS' } else { 'FAIL' }) "max_simultaneos=$($e.maxLive) disputa_atada=$($e.ok) rechazos=$($e.busy) ganadores=$($win.Count) aproximaciones_fallidas=$fails ia_activa=$ai rtt=$(RttRange $r.c 'rtt=(\d+)ms')" }
+          $natWinners = @((Last $r.h 'resultado carrera'), (Last $r.c 'resultado carrera')) | Where-Object { $_ -match "mano izq = 'belt'" }
+          Record $label $(if ($e.maxLive -le 1 -and $ai) { 'PASS' } else { 'FAIL' }) "max_simultaneos=$($e.maxLive) disputa_atada=$($e.ok) rechazos=$($e.busy) ganadores=$($natWinners.Count) aproximaciones_fallidas=$fails ia_activa=$ai rtt=$(RttRange $r.c 'rtt=(\d+)ms')" }
       }
       'hostleave' {
         $hostG = Start-Game "${tag}_host" (HostArgs @()); Start-Sleep 4
