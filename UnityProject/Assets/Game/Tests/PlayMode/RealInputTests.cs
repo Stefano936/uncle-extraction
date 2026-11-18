@@ -59,7 +59,10 @@ namespace UncleExtraction.Tests
         /// Frente al tio, mirando su hombro (punto agarrable).
         IEnumerator FaceUncle(int pick = 0)
         {
-            var socket = Object.FindObjectsByType<GrabSocket>(FindObjectsSortMode.None).Where(s => s.body && s.body.GetComponentInParent<NpcBody>()).OrderByDescending(s => s.Position.y).ElementAt(pick);
+            // pick > 0: el punto mas alto que NO sostiene ya una mano (los dos hombros estan a la misma altura y su orden variaba
+            // segun la pose: a veces «el segundo» era el que ya sostenia la otra mano, que el juego excluye a proposito)
+            var all = Object.FindObjectsByType<GrabSocket>(FindObjectsSortMode.None).Where(s => s.body && s.body.GetComponentInParent<NpcBody>()).OrderByDescending(s => s.Position.y);
+            var socket = pick == 0 ? all.First() : all.First(s => s.socketId != hands.HeldSocketId(0) && s.socketId != hands.HeldSocketId(1));
             Vector3 target = socket.Position, at = target + (npc.transform.forward * 0.9f); at.y = 0f;
             if (pick == 0) { player.GetComponent<Rigidbody>().position = at; player.transform.position = at; }
             yield return new WaitForFixedUpdate();
@@ -69,7 +72,12 @@ namespace UncleExtraction.Tests
                 player.SetYawPitch(Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg, -Mathf.Atan2(to.y, f.magnitude) * Mathf.Rad2Deg);
                 yield return new WaitForFixedUpdate(); yield return null;
             }
-            Assert.IsNotNull(hands.Candidate, "deberia apuntar a un punto agarrable del tio");
+            if (!hands.Candidate)
+            {
+                var cam = Camera.main.transform; Vector3 d = socket.Position - cam.position;
+                string hits = string.Join(",", Physics.RaycastAll(cam.position, d.normalized, d.magnitude, ~0, QueryTriggerInteraction.Ignore).Select(h => $"{h.collider.name}@{h.distance:0.00}"));
+                Assert.Fail($"deberia apuntar a un punto agarrable del tio: objetivo={socket.socketId} dist={d.magnitude:0.00} ang={Vector3.Angle(cam.forward, d):0} golpes={hits} sostiene={hands.HeldSocketId(0)}/{hands.HeldSocketId(1)}");
+            }
         }
 
         [UnityTest]

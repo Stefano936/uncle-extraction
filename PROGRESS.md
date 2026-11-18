@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-11-18, sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+Última actualización: 2026-11-18, sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Estado vigente
 
@@ -9,6 +9,31 @@
 **Qué se puede jugar:** Bar_LastRound solo o en cooperativo de 2 a 4 (internet por Relay con código de sala; red local por IP). Tío articulado de 11 cuerpos con poses de ataque; bar de noche con techo, luces cálidas, neones y calle; camioneta con carrocería propia; carrito con modelo propio; tío con ropa, materiales y gorro de fiesta; vaso señuelo, ayuda para levantarse, extracción con puertas. Interfaz del kit (menú, sala, HUD, pausa, opciones, resultados, errores), EN/es_UY, controles reasignables, opciones guardadas, mando en menús y juego. Sonido sintetizado y subtítulos del tío; sin voz ni música.
 
 **Niveles de evidencia:** PM = PlayMode en el editor; EM = EditMode; AUTO = partida completa con entradas de jugador simuladas; NET = procesos de la build en **localhost** (no LAN ni internet); VIS = auditoría y capturas reales de la build. **Ninguna fila tiene prueba humana.**
+
+### Sesión 16: prueba del dueño, pulido de materiales y malla, prueba `race`
+
+**Prueba humana del dueño:** Stefano jugó la demo de la sesión 15 (`fd0bce5`) el 2026-11-18. **Los detalles por tarea quedan pendientes** de que los pase (`docs/OBSERVACIONES_PRUEBAS.md`).
+
+**Qué cambia a la vista**
+- **Tío:** la malla del kit se importa con normales calculadas (suavizado 60°): cabeza, nariz, panza, brazos y piernas se ven redondos; ropa, calzado y bordes siguen marcados (antes: todo facetado). Pasa por el mismo rig: agarres, poses, caídas, correa y extracción verificados en la regresión.
+- **Materiales que se distinguen de cerca** (texturas propias generadas con mapas de normales): acero cepillado (carrito, herrajes de la puerta), pintura naranja gastada con desconchados y rayones (carrito), goma con grano (ruedas, empuñaduras), madera barnizada oscura (molduras, marco), además de la madera y la tela del kit.
+- **Barra:** moldura barnizada en el canto, franja gastada donde se apoyan los codos y apoyapiés de bronce con soportes (sin colisión: no compite con la baranda que se agarra).
+- **Puerta de salida:** marco de madera con cabezal; en la hoja, placa de empuje, placa de patada y bisagras de metal (se mueven con la hoja).
+- Comparación: `docs/capturas/sesion16/antes_despues_y_primeros_planos.jpg` (vistas fijas de la sesión 15 contra la 16 y primeros planos con `tools/windows/closeup_shots.sh`).
+
+**Prueba de red `race` (disputa por el mismo punto):** fallaba porque el tío se movía antes de la señal y uno de los dos terminaba apuntando a otro punto (no había disputa que medir). Ahora el tío queda quieto en el anfitrión durante la prueba, el anfitrión ubica a los dos jugadores frente al cinturón hasta la señal y el criterio es la evidencia del anfitrión: rechazo «SocketBusy» en el cinturón, nunca dos a la vez y un solo ganador. **5/5 PASS** en `0fbc66a`, los dos apuntando al cinturón.
+
+#### Verificación (sesión 16)
+
+| Prueba | Código / build | Resultado |
+| --- | --- | --- |
+| `race` ×5 | build de `race: host places both players…` | **5/5 PASS** (rechazos=1, ganadores=1, apuntaban 2/2) |
+| EditMode | {EMB} | {EM} |
+| PlayMode completa | {PMB} | {PM} |
+| Red en localhost (17 escenarios) | {NETB} | {NET} |
+| Primeros planos y vistas fijas | build `S16` | `docs/capturas/sesion16/` |
+
+**Para volver a probar (vos):** ver `docs/VOLVER_A_PROBAR_S16.md`.
 
 ### Sesión 15: producción — lo que se ve, se oye y se siente; rejugabilidad; material de lanzamiento
 
