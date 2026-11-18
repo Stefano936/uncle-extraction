@@ -21,7 +21,7 @@ namespace UncleExtraction
         Text timer, objective, objectiveDetail, prompt, toast, fallTitle, fallDetail, attackTitle, attackHint, attackSub, effortHint;
         Image promptBar, attackIcon, fallBar; RectTransform attackBox, promptBox, fallBox, toastBox, subBox; Text subtitle;
         public string SubtitleText => subBox && subBox.gameObject.activeSelf ? subtitle.text : "";
-        float objectiveUntil;
+        float objectiveUntil; ChallengeMode shownChallenge = ChallengeMode.Standard;
 
         public HandState StateOf(int h) => hand[h] != null ? hand[h].s : HandState.Unavailable;
         public string AttackText => attackBox && attackBox.gameObject.activeSelf ? attackTitle.text : "";
@@ -120,6 +120,9 @@ namespace UncleExtraction
         void Relabel()
         {
             if (!root) return;
+            // desafio: se anuncia en el objetivo desde el arranque (sesion 15)
+            var chm = round ? round.CurrentChallenge : ChallengeMode.Standard;
+            if (chm != shownChallenge) { shownChallenge = chm; objectiveDetail.text = chm == ChallengeMode.Standard ? Loc.T("hud.objective_detail") : Loc.T("challenge.hint_" + chm.ToString().ToLowerInvariant()); }
             hand[0].title.text = Loc.T("hud.left"); hand[1].title.text = Loc.T("hud.right");
             root.Find("Energy/EnergyLabel").GetComponent<Text>().text = Loc.T("hud.energy");
             objective.text = Loc.T("hud.objective"); objectiveDetail.text = Loc.T("hud.objective_detail");

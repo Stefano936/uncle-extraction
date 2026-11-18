@@ -28,6 +28,7 @@ namespace UncleExtraction
         float effortTime;
         Renderer leftR, rightR; readonly HandRig[] rigs = new HandRig[2];
         public HandRig Rig(int hand) => rigs[hand];
+        public PlayerControls Controls => controls;
         bool effortActive; string interactLabel = ""; float interactProgress;
 
         bool Auth => NetAuth.IsServer;
@@ -274,6 +275,7 @@ namespace UncleExtraction
             {
                 case InteractKind.HelpUp:
                     interactLabel = Loc.Code("interact.help_up", ("player", mate.playerName));
+                    if (holdingE) RoundStats.Assisting(this, mate);
                     if (holdingE && mate.AssistGetUp(Time.deltaTime)) interactProgress = Mathf.Clamp01(1f - mate.StateTimeLeft / LabBalance.FallLockMax);
                     else if (!holdingE) interactProgress = 0f;
                     break;
@@ -282,21 +284,21 @@ namespace UncleExtraction
                     if (holdingE)
                     {
                         interactProgress += Time.deltaTime / LabBalance.AnchorReleaseHold;
-                        if (interactProgress >= 1f) { npc.ReleaseAnchor("jugador"); interactProgress = 0f; }
+                        if (interactProgress >= 1f) { npc.ReleaseAnchor("jugador"); RoundStats.Unanchored(this); interactProgress = 0f; }
                     }
                     else interactProgress = 0f;
                     break;
                 case InteractKind.Van:
                 {   // con el tio adentro, mantener E 1 s desde afuera para cerrar las puertas (GDD 03)
                     string why = van.BlockReason();
-                    if (why == "") { interactLabel = "van.hold_close"; interactProgress = holdingE ? van.HoldClose(this, Time.deltaTime) : 0f; }
+                    if (why == "") { interactLabel = "van.hold_close"; if (holdingE) RoundStats.Closing(this); interactProgress = holdingE ? van.HoldClose(this, Time.deltaTime) : 0f; }
                     else { interactLabel = why; interactProgress = 0f; }
                     break;
                 }
                 case InteractKind.Cart:
                     interactProgress = 0f;
                     if (cart.IsStrapped) { interactLabel = "cart.unstrap"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
-                    else { interactLabel = "cart.strap"; if (CtrlPressed(Act.Interact) && !cart.Strap()) Feedback(cart.LastFailure); }
+                    else { interactLabel = "cart.strap"; if (CtrlPressed(Act.Interact)) { if (cart.Strap()) RoundStats.Strapped(this); else Feedback(cart.LastFailure); } }
                     break;
                 default: interactProgress = 0f; break;
             }
@@ -330,6 +332,10 @@ namespace UncleExtraction
             t.position = Vector3.Lerp(t.position, p, Smooth.Factor(down ? 0.15f : 0.5f));
             Color c = s == null ? free : Color.Lerp(holding, strained, Mathf.Max(Tension01(hand), straining ? 0.6f : 0f));
             var rig = rigs[hand];
+            if (rig && controls && controls.IsLocal && !down && controls.Pressed(hand == 0 ? Act.GrabLeft : Act.GrabRight))
+            {   // cada clic se ve y se oye en el acto (la confirmacion del agarre llega despues, con su propio sonido)
+                rig.Pulse(); if (GameAudio.Instance) GameAudio.Instance.Play2D("grab_try", 0.45f);
+            }
             if (rig)
             {
                 bool pending = s == null && Candidate && Ctrl(hand == 0 ? Act.GrabLeft : Act.GrabRight) && !down;

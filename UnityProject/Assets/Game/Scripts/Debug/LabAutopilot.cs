@@ -219,9 +219,22 @@ namespace UncleExtraction
             return new Vector3(L.doorX, 0f, dz + (meOut ? 0.9f : -0.9f));
         }
 
+        /// Desafio «Ruta estrecha»: si el jugador va a cruzar la barricada fuera del paso, primero va al paso (como haria una persona).
+        Vector3 ViaNarrowGap(Vector3 dir)
+        {
+            var ch = RoundDirector.Instance ? RoundDirector.Instance.CurrentChallenge : ChallengeMode.Standard;
+            if (ch != ChallengeMode.Narrow || GameObject.Find("Challenge_Narrow") == null) return dir;
+            float z = Challenges.BarricadeZ, gx = -2.6f; Vector3 me = Me;
+            bool south = me.z < z, crossing = south ? dir.z > 0.05f : dir.z < -0.05f;
+            if (!crossing || Mathf.Abs(me.z - z) > 3.5f) return dir;
+            if (Mathf.Abs(me.x - gx) < 0.35f) return new Vector3(0f, 0f, south ? 1f : -1f);   // en el paso: derecho
+            return new Vector3(gx, 0f, z + (south ? -0.9f : 0.9f)) - me;                     // ir a la boca del paso
+        }
+
         void MoveWorld(Vector3 dir)
         {
             dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; return; }
+            dir = ViaNarrowGap(dir);
             Vector3 local = Quaternion.Euler(0, -player.Yaw, 0) * dir.normalized; // relativo a la mirada ordenada (como WASD), no al giro interpolado del cuerpo
             LabInput.SimulatedMove = new Vector2(local.x, local.z);
         }

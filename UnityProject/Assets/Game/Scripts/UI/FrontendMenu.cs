@@ -132,6 +132,9 @@ namespace UncleExtraction
                     var diff = B("lobby.difficulty", null, 60);
                     diff.onClick.AddListener(() => { GameSettings.SoloDifficulty = (Difficulty)(((int)GameSettings.SoloDifficulty + 1) % 3); GameSettings.Save(); Relabel(diff); });
                     Relabel(diff);
+                    var ch = B("challenge.title", null, 60); // desafio opcional: la ronda estandar es la entrada principal
+                    ch.onClick.AddListener(() => { GameSettings.Challenge = (ChallengeMode)(((int)GameSettings.Challenge + 1) % 3); RelabelChallenge(ch); });
+                    RelabelChallenge(ch);
                     if (p == Page.Solo)
                     {
                         B("button.start", () => { SelectedScene = GameScene; Play(NetMode.Solo); });
@@ -191,6 +194,7 @@ namespace UncleExtraction
         }
         static bool Typing() { var s = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null; var f = s ? s.GetComponent<InputField>() : null; return f && f.isFocused; }
 
+        static void RelabelChallenge(Button b) => b.GetComponentInChildren<Text>().text = $"{Loc.T("challenge.title")}: {Loc.T("challenge." + GameSettings.Challenge.ToString().ToLowerInvariant())}";
         void Relabel(Button diff)
         {
             var d = GameSettings.SoloDifficulty;
@@ -217,6 +221,7 @@ namespace UncleExtraction
             if (mode == NetMode.Client && ipField) NetSession.Address = ipField.text.Trim();
             if (portField && ushort.TryParse(portField.text, out var p)) NetSession.Port = p;
             RoundDirector.RequestedDifficulty = GameSettings.SoloDifficulty;
+            RoundDirector.RequestedChallenge = GameSettings.Challenge;
             GameSettings.Save();
             SceneManager.LoadScene(SelectedScene);
         }

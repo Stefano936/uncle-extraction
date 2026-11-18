@@ -17,6 +17,14 @@ namespace UncleExtraction
         public bool autoPartySize = true;
         /// Dificultad elegida en el menu; la aplica el anfitrion al empezar.
         public static Difficulty? RequestedDifficulty;
+        /// Desafio elegido en el menu/sala (sesion 15); lo aplica el anfitrion. -ueChallenge NoCart|Narrow para pruebas.
+        public static ChallengeMode? RequestedChallenge = ParseChallenge();
+        static ChallengeMode? ParseChallenge() { var a = System.Environment.GetCommandLineArgs(); for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueChallenge" && System.Enum.TryParse(a[i + 1], true, out ChallengeMode m)) return m; return null; }
+        public ChallengeMode challenge = ChallengeMode.Standard;
+        readonly NetworkVariable<ChallengeMode> nChallenge = new NetworkVariable<ChallengeMode>(ChallengeMode.Standard);
+        public ChallengeMode CurrentChallenge => Mirror ? nChallenge.Value : challenge;
+        /// Anfitrion, en la sala o en solitario antes de empezar: elegir desafio (los invitados quedan sin LISTO para confirmar).
+        public void SetChallenge(ChallengeMode m) { if (!NetAuth.IsServer || (!InLobby && NetSession.Mode != NetMode.Solo)) return; challenge = m; foreach (var pm in PlayerMotor.All) if (pm && pm.Controls && !pm.Controls.IsHostPlayer) pm.Controls.SetReadyServer(false); }
 
         readonly NetworkVariable<RoundState> nState = new NetworkVariable<RoundState>(RoundState.Running);
         readonly NetworkVariable<float> nElapsed = new NetworkVariable<float>();
@@ -66,7 +74,7 @@ namespace UncleExtraction
         public string LastStressReport { get; private set; } = "";
         public bool StressRunning { get; private set; }
 
-        void Start() { if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; }
+        void Start() { if (NetAuth.IsServer && RequestedDifficulty.HasValue) difficulty = RequestedDifficulty.Value; if (NetAuth.IsServer && RequestedChallenge.HasValue) challenge = RequestedChallenge.Value; }
         public override void OnNetworkSpawn()
         {
             if (IsServer && NetSession.Mode != NetMode.Solo) { inLobby = true; nLobby.Value = true; Debug.Log("[Lobby] sala abierta"); }
@@ -105,7 +113,13 @@ namespace UncleExtraction
 
         /// Anfitrion: dificultad desde la sala (los invitados la ven de solo lectura).
         public void SetDifficulty(Difficulty d) { if (NetAuth.IsServer && InLobby) { difficulty = d; foreach (var pm in PlayerMotor.All) if (pm && pm.Controls && !pm.Controls.IsHostPlayer) pm.Controls.SetReadyServer(false); } }
-        void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); }
+        void Awake() { Instance = this; Time.fixedDeltaTime = 1f / 60f; Physics.gravity = new Vector3(0, -9.81f, 0); if (!GetComponent<RoundStats>()) gameObject.AddComponent<RoundStats>(); if (!GetComponent<Challenges>()) gameObject.AddComponent<Challenges>(); if (!GetComponent<BarProps>()) gameObject.AddComponent<BarProps>(); }
+        /// Anfitrion: la torre de vasos se cae para todos (sesion 15).
+        public void TowerFall(Vector3 dir) { if (IsSpawned && IsServer) TowerFallRpc(dir); else if (BarProps.Instance) BarProps.Instance.Fall(dir); }
+        [Rpc(SendTo.Everyone)] void TowerFallRpc(Vector3 dir) { if (BarProps.Instance) BarProps.Instance.Fall(dir); }
+        /// Parte de extraccion: lo arma el anfitrion y llega igual a todos (sesion 15).
+        public void PublishReport(string report) { if (IsSpawned && IsServer) ReportRpc(new Unity.Collections.FixedString4096Bytes(report.Length > 4000 ? report.Substring(0, 4000) : report)); }
+        [Rpc(SendTo.NotServer)] void ReportRpc(Unity.Collections.FixedString4096Bytes r) => RoundStats.LastReport = r.ToString();
         public override void OnDestroy() { if (Instance == this) Instance = null; base.OnDestroy(); }
 
         void Update()
@@ -120,6 +134,7 @@ namespace UncleExtraction
                 if (nState.Value != state) nState.Value = state;
                 if (Mathf.Abs(nElapsed.Value - elapsed) > 0.1f) nElapsed.Value = elapsed;
                 if (nDifficulty.Value != difficulty) nDifficulty.Value = difficulty;
+                if (nChallenge.Value != challenge) nChallenge.Value = challenge;
                 if (nParty.Value != partySize) nParty.Value = partySize;
                 if (nRestarts.Value != restarts) nRestarts.Value = restarts;
                 if (!Mathf.Approximately(nTimeBonus.Value, timeBonus)) nTimeBonus.Value = timeBonus;

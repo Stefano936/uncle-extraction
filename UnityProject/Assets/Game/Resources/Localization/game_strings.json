@@ -631,6 +631,156 @@
    "key": "hud.grab_not_confirmed",
    "en": "Could not grab: try again",
    "es_UY": "No se pudo agarrar: probá de nuevo"
+  },
+  {
+   "key": "report.summary",
+   "en": "EXTRACTION REPORT  ·  Time {time}  ·  Falls {falls}",
+   "es_UY": "PARTE DE EXTRACCIÓN  ·  Tiempo {time}  ·  Caídas {falls}"
+  },
+  {
+   "key": "report.close_call",
+   "en": "Closed with {left} s to spare.",
+   "es_UY": "Cerraron con {left} s de margen."
+  },
+  {
+   "key": "report.uncle",
+   "en": "The uncle: {attacks} attacks, {hits} hits, {cut} stopped mid-swing.",
+   "es_UY": "El tío: {attacks} ataques, {hits} golpes, {cut} frenados a mitad de camino."
+  },
+  {
+   "key": "report.m_first_grab",
+   "en": "{name} grabbed him first",
+   "es_UY": "{name} lo agarró primero"
+  },
+  {
+   "key": "report.m_unanchor",
+   "en": "{name} unhooked his hand from the bar",
+   "es_UY": "{name} le soltó la mano de la barra"
+  },
+  {
+   "key": "report.m_strap",
+   "en": "{name} strapped him to the cart",
+   "es_UY": "{name} lo ató al carrito"
+  },
+  {
+   "key": "report.m_strap_",
+   "en": "Strapped to the cart",
+   "es_UY": "Atado al carrito"
+  },
+  {
+   "key": "report.m_in_van",
+   "en": "The uncle is in the van",
+   "es_UY": "El tío está en la camioneta"
+  },
+  {
+   "key": "report.m_close",
+   "en": "{name} closed the doors",
+   "es_UY": "{name} cerró las puertas"
+  },
+  {
+   "key": "report.m_help",
+   "en": "{name} helped a teammate up",
+   "es_UY": "{name} levantó a un compañero"
+  },
+  {
+   "key": "report.m_cut",
+   "en": "{name} stopped a hit by holding the limb",
+   "es_UY": "{name} frenó un golpe sujetándole el miembro"
+  },
+  {
+   "key": "report.best_hold",
+   "en": "Steady hands: {name} ({v})",
+   "es_UY": "Mano firme: {name} ({v})"
+  },
+  {
+   "key": "report.best_help",
+   "en": "Guardian angel: {name} ({v} lifts)",
+   "es_UY": "Ángel de la guarda: {name} ({v} levantadas)"
+  },
+  {
+   "key": "report.best_unanchor",
+   "en": "Unhooker: {name} ({v})",
+   "es_UY": "Desenganchador: {name} ({v})"
+  },
+  {
+   "key": "report.best_drive",
+   "en": "Cart driver: {name} ({v})",
+   "es_UY": "Chofer del carrito: {name} ({v})"
+  },
+  {
+   "key": "report.best_cut",
+   "en": "Tamer: {name} ({v} hits stopped)",
+   "es_UY": "Domador: {name} ({v} golpes frenados)"
+  },
+  {
+   "key": "report.best_close",
+   "en": "Locksmith: {name}",
+   "es_UY": "Cerrajero: {name}"
+  },
+  {
+   "key": "report.snapshot",
+   "en": "VIEW FOR SCREENSHOT",
+   "es_UY": "VISTA PARA CAPTURA"
+  },
+  {
+   "key": "challenge.title",
+   "en": "Challenge",
+   "es_UY": "Desafío"
+  },
+  {
+   "key": "challenge.standard",
+   "en": "Standard round",
+   "es_UY": "Ronda estándar"
+  },
+  {
+   "key": "challenge.nocart",
+   "en": "No cart",
+   "es_UY": "Sin carrito"
+  },
+  {
+   "key": "challenge.narrow",
+   "en": "Narrow route",
+   "es_UY": "Ruta estrecha"
+  },
+  {
+   "key": "challenge.played",
+   "en": "Challenge: {name}",
+   "es_UY": "Desafío: {name}"
+  },
+  {
+   "key": "challenge.hint_nocart",
+   "en": "No cart tonight: drag him. Two hands pull harder; take turns.",
+   "es_UY": "Hoy no hay carrito: arrastralo. Con las dos manos se tira más; túrnense."
+  },
+  {
+   "key": "challenge.hint_narrow",
+   "en": "Beer crates block the room: one 1.2 m gap on the left (yellow mark).",
+   "es_UY": "Cajones de cerveza cortan el salón: un solo paso de 1,2 m a la izquierda (marca amarilla)."
+  },
+  {
+   "key": "challenge.played_nocart",
+   "en": "Challenge: no cart",
+   "es_UY": "Desafío: sin carrito"
+  },
+  {
+   "key": "challenge.played_narrow",
+   "en": "Challenge: narrow route",
+   "es_UY": "Desafío: ruta estrecha"
+  },
+  {
+   "key": "report.m_tower",
+   "en": "{name} knocked over the glass tower",
+   "es_UY": "{name} tiró la torre de vasos"
+  },
+  {
+   "key": "report.the_cart",
+   "en": "The cart",
+   "es_UY": "El carrito"
+  },
+  {
+   "key": "report.the_uncle",
+   "en": "The uncle",
+   "es_UY": "El tío"
   }
  ]
 }
