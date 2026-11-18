@@ -221,11 +221,14 @@ namespace UncleExtraction
             }
         }
 
+        const float AimSwitchMargin = 1f; // unidades del puntaje (grados + 4 por metro)
+
         GrabSocket FindCandidate()
         {
             if (!cam) return null;
             Vector3 o = cam.transform.position, f = cam.transform.forward;
             GrabSocket best = null; float bestScore = float.MaxValue;
+            float previousScore = float.MaxValue;
             GrabSocket far = null; float farScore = float.MaxValue;
             string h0 = HeldSocketId(0), h1 = HeldSocketId(1);
             foreach (var s in GrabSocket.All)
@@ -240,9 +243,14 @@ namespace UncleExtraction
                 if (Blocked(o, s)) continue;
                 float score = ang + d * 4f;
                 if (d > LabBalance.GrabReach) { if (score < farScore) { farScore = score; far = s; } continue; }
+                if (s == Candidate) previousScore = score;
                 if (score < bestScore) { bestScore = score; best = s; }
             }
             AimedOutOfReach = best ? null : far;
+            // Un punto anterior sigue compitiendo solo si todavía pasa alcance, visibilidad y capacidad.
+            if (best && Candidate && Candidate != best && previousScore <= bestScore + AimSwitchMargin
+                && OccupancyOf(Candidate) < Candidate.capacity && OccupancyOf(best) < best.capacity)
+                return Candidate;
             return best;
         }
 
