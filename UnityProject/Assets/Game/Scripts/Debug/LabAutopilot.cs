@@ -466,8 +466,18 @@ namespace UncleExtraction
             raceMode = true;
             long now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             while (now() < raceAtUnixMs)
-            {   // hasta la señal: pararse frente al cinturon (recalculado si el cuerpo se mueve) y apuntarle
+            {   // hasta la señal: pararse frente al cinturon (recalculado si el cuerpo se mueve) y apuntarle. El ANFITRION, que tiene
+                // la autoridad, ubica a los dos jugadores en sus lugares (si no, uno le tapaba el camino al otro y apuntaba a otra parte)
                 stand = StandNow();
+                if (NetAuth.IsServer)
+                    foreach (var pm in PlayerMotor.All)
+                    {
+                        if (!pm || !pm.Controls) continue;
+                        bool sec = pm.Controls.OwnerClientId % 2 == 1;
+                        Vector3 tw = Flat(belt.Position - body.Body.position); if (tw.sqrMagnitude < 1e-3f) tw = body.Forward; tw.Normalize();
+                        Vector3 p = Flat(belt.Position) + tw * 0.7f + Vector3.Cross(Vector3.up, tw) * (sec ? 0.36f : -0.36f);
+                        pm.Body.position = p; pm.transform.position = p; pm.Body.linearVelocity = Vector3.zero;
+                    }
                 if (Vector3.Distance(Me, stand) > 0.15f) MoveWorld(stand - Me); else LabInput.SimulatedMove = Vector2.zero;
                 LookAt(belt.Position);
                 Status = hands.Candidate == belt ? "esperando la senal (apunta al cinturon)" : "yendo al cinturon";

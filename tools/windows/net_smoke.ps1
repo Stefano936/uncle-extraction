@@ -233,7 +233,9 @@ for ($run = 1; $run -le $Runs; $run++) {
           $winners = @((Last $r.h 'resultado carrera'), (Last $r.c 'resultado carrera')) | Where-Object { $_ -match "mano izq = 'belt'" }
           # sesion 16: los dos tienen que haber apuntado al cinturon al apretar (si no, no hubo disputa que medir)
           $aimed = @((Last $r.h 'aprieta en'), (Last $r.c 'aprieta en')) | Where-Object { $_ -match 'candidato=belt' }
-          Record $label $(if ($maxLive -eq 1 -and $busy -ge 1 -and $winners.Count -eq 1 -and $aimed.Count -eq 2) { 'PASS' } else { 'FAIL' }) "apuntaron_al_cinturon=$($aimed.Count)/2 max_simultaneos=$maxLive rechazos=$busy ganadores=$($winners.Count)" }
+          # criterio (autoridad del anfitrion): hubo disputa real (rechazo SocketBusy en el cinturon), nunca dos a la vez y un solo ganador.
+          # «apuntaron» es la vista local de cada proceso (informativo: el candidato del invitado lo decide el anfitrion).
+          Record $label $(if ($maxLive -eq 1 -and $busy -ge 1 -and $winners.Count -eq 1) { 'PASS' } else { 'FAIL' }) "max_simultaneos=$maxLive rechazos=$busy ganadores=$($winners.Count) (apuntaban_localmente=$($aimed.Count)/2)" }
       }
       'hostleave' {
         $hostG = Start-Game "${tag}_host" (HostArgs @()); Start-Sleep 4
