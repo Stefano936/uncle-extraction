@@ -247,6 +247,7 @@ namespace UncleExtraction.EditorTools
             if (spec.kitVisuals) foreach (var rootGo in scene.GetRootGameObjects()) KitMaterials.ApplyToLevel(rootGo.transform, floorM, wallM, woodM);
             if (spec.kitVisuals) Finishing.ReliefForLevel(); // relieve sutil (mapas de normales) en madera, baldosas, revoque, asfalto y losetas
 
+            if (spec.name == "Bar_LastRound") BarDressing.ApplyS19Finishes(env);
             EditorSceneManager.SaveScene(scene, spec.scenePath);
             // NGO genera GlobalObjectIdHash en OnValidate, que en modo batch no siempre corre: forzarlo y guardar de nuevo.
             int hashed = ForceNetworkIds(UnityEngine.Object.FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None));

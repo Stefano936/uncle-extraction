@@ -36,6 +36,38 @@ namespace UncleExtraction.EditorTools
             Debug.Log("[BarDressing] noche, techo, terminaciones, luces, cartel, calle, camioneta y posproceso aplicados");
         }
 
+        /// Separado de luces y geometría para actualizar la escena versionada y reutilizarlo al regenerarla.
+        public static void ApplyS19Finishes(Transform env)
+        {
+            var floor = env.Find("Floor_Interior").GetComponent<MeshRenderer>();
+            Finishing.ProjectS19(floor, "InteriorFloor", floor.transform, Finishing.S19Surface("interior_tiles", false, 1.12f),
+                p => new Vector2(p.x + 0.5f, p.z + 0.5f));
+
+            var plaster = Finishing.S19Surface("matte_plaster", true, 1.35f, Vector2.one * 0.75f);
+            foreach (Transform child in env)
+                if (child.name.StartsWith("Wall_", System.StringComparison.Ordinal) || child.name == "Door_Lintel")
+                    child.GetComponent<MeshRenderer>().sharedMaterial = plaster;
+
+            var trim = Finishing.S19Surface("contact_trim", true, 1.15f);
+            Finishing.ApplyS19Furniture(env, trim);
+            Finishing.ApplyS19Casing(env.Find("Door_Trims"), "DoorInner", trim);
+            Finishing.ApplyS19Casing(env.Find("Dressing/Architecture"), "DoorOuter", trim);
+        }
+
+        [MenuItem("Uncle Extraction/Actualizar materiales del bar")]
+        public static void UpdateS19Scene()
+        {
+            if (!Application.isBatchMode && !UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(PhysicsLabBuilder.BarScenePath);
+            var env = System.Array.Find(scene.GetRootGameObjects(), g => g.name == "Environment");
+            ApplyS19Finishes(env.transform);
+            AssetDatabase.SaveAssets();
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            if (!UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene))
+                throw new System.InvalidOperationException("No se pudo guardar Bar_LastRound.");
+            Debug.Log("[BarDressing] materiales de la barra, el piso, el revoque y la salida aplicados");
+        }
+
         // ---------- materiales
         static Material Lit(string name, Color c, float smooth = 0.25f, float metal = 0f)
         {

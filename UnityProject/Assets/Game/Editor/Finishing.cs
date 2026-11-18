@@ -83,6 +83,114 @@ namespace UncleExtraction.EditorTools
             AssetDatabase.SaveAssets();
         }
 
+        /// URP conserva el color en RGB y la suavidad en el alfa del albedo opaco.
+        internal static Material S19Surface(string id, bool repeat, float bump, Vector2? tiling = null)
+        {
+            var color = S19Texture(id + "_color_gloss", false, repeat);
+            var normal = S19Texture(id + "_normal", true, repeat);
+            var material = Lit("S19_" + id, Color.white, 1f, 0f, color, normal, bump, tiling ?? Vector2.one);
+            material.SetFloat("_SmoothnessTextureChannel", 1f);
+            material.EnableKeyword("_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A");
+            return material;
+        }
+
+        static Texture2D S19Texture(string id, bool normal, bool repeat)
+        {
+            string path = $"{TexDir}/S19/{id}.png";
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (!importer) throw new System.InvalidOperationException($"Falta la textura de la sesión 19: {path}");
+            var wrap = repeat ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
+            var kind = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+            var alpha = normal ? TextureImporterAlphaSource.None : TextureImporterAlphaSource.FromInput;
+            if (importer.textureType != kind || importer.wrapMode != wrap || importer.sRGBTexture == normal
+                || importer.alphaSource != alpha || importer.alphaIsTransparency || !importer.mipmapEnabled
+                || importer.filterMode != FilterMode.Trilinear || importer.anisoLevel != 8
+                || importer.npotScale != TextureImporterNPOTScale.None || importer.maxTextureSize != 2048
+                || importer.textureCompression != TextureImporterCompression.CompressedHQ)
+            {
+                importer.textureType = kind;
+                importer.sRGBTexture = !normal;
+                importer.alphaSource = alpha;
+                importer.alphaIsTransparency = false;
+                importer.wrapMode = wrap;
+                importer.mipmapEnabled = true;
+                importer.filterMode = FilterMode.Trilinear;
+                importer.anisoLevel = 8;
+                importer.npotScale = TextureImporterNPOTScale.None;
+                importer.maxTextureSize = 2048;
+                importer.textureCompression = TextureImporterCompression.CompressedHQ;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// Conserva posiciones, normales e índices del modelo y guarda las UV y tangentes en una malla visual.
+        internal static void ProjectS19(MeshRenderer renderer, string id, Transform space, Material material, System.Func<Vector3, Vector2> uv)
+        {
+            const string dir = "Assets/Game/Art/GeneratedMeshes";
+            var filter = renderer.GetComponent<MeshFilter>();
+            var source = filter.sharedMesh;
+            var matrix = space.worldToLocalMatrix * filter.transform.localToWorldMatrix;
+            var coords = source.vertices.Select(v => uv(matrix.MultiplyPoint3x4(v))).ToArray();
+            string path = $"{dir}/S19_{id}.asset";
+            var projection = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (!projection)
+            {
+                Directory.CreateDirectory(dir);
+                projection = Object.Instantiate(source);
+                projection.name = "S19_" + id;
+                projection.uv = coords;
+                projection.RecalculateTangents();
+                AssetDatabase.CreateAsset(projection, path);
+            }
+            else if (!projection.uv.SequenceEqual(coords))
+            {
+                projection.uv = coords;
+                projection.RecalculateTangents();
+                EditorUtility.SetDirty(projection);
+            }
+
+            filter.sharedMesh = projection;
+            renderer.sharedMaterial = material;
+            PrefabUtility.RecordPrefabInstancePropertyModifications(filter);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+        }
+
+        internal static void ApplyS19Furniture(Transform env, Material trim)
+        {
+            Transform counter = env.Find("Kit_bar_counter");
+            MeshRenderer Part(Transform root, string name) => root.GetComponentsInChildren<MeshRenderer>()
+                .Single(r => r.name == name);
+
+            ProjectS19(Part(counter, "CounterTop"), "CounterTop", env, S19Surface("bar_top", false, 1.3f),
+                p => new Vector2((p.x - 2.44f) / 4.12f + (p.z - 8.85f) * 0.018f, (p.z - 8.40f) / 0.9f + (p.y - 1.08f) * 0.5f));
+            ProjectS19(Part(counter, "CounterBody"), "CounterFront", env, S19Surface("bar_front", false, 1.0f),
+                p => new Vector2((p.x - 2.5f) / 4f + (p.z - 8.85f) * 0.024f, p.y / 0.96f + (p.z - 8.85f) * 0.035f));
+            var molding = env.Find("Bar_Trims/Molding").GetComponent<MeshRenderer>();
+            ProjectS19(molding, "CounterMolding", molding.transform, trim,
+                p => new Vector2(p.x * 2f + 0.5f, p.y + 0.5f + p.z * 0.1f));
+
+            // En la escena ya guardada, el desgaste antiguo era una tira superpuesta de color uniforme.
+            var legacyWear = env.Find("Bar_Trims/Elbow_Wear");
+            if (legacyWear) Object.DestroyImmediate(legacyWear.gameObject);
+
+            Transform hinge = env.Find("Exit_Door");
+            ProjectS19(Part(hinge.Find("Kit_exit_door"), "DoorPanel"), "DoorLeaf", hinge, S19Surface("exit_leaf", false, 1.2f),
+                p => new Vector2(p.x / 1.5f + p.z * 0.06f, p.y / 2.2f));
+        }
+
+        internal static void ApplyS19Casing(Transform root, string name, Material trim)
+        {
+            foreach (var renderer in root.GetComponentsInChildren<MeshRenderer>())
+            {
+                bool upright = renderer.name == "Jamb" || renderer.name == "Door_Jamb";
+                if (!upright && renderer.name != "Header" && renderer.name != "Door_Head") continue;
+                ProjectS19(renderer, name + (upright ? "Jamb" : "Header"), renderer.transform, trim,
+                    p => upright ? new Vector2(p.y + 0.5f, p.x * 0.80f + p.z * 0.12f + 0.5f)
+                                 : new Vector2(p.x * 0.8f + 0.5f, p.y * 0.80f + p.z * 0.12f + 0.5f));
+            }
+        }
+
         // ---------- tio
         public static void Uncle(GameObject kit, Transform head)
         {
@@ -189,17 +297,15 @@ namespace UncleExtraction.EditorTools
             return Lit(name, c, smooth, metal, tex, nrm, bump, tiling);
         }
 
-        /// Barra: moldura barnizada en el canto, franja gastada donde se apoyan los codos y apoyapies de bronce con soportes.
+        /// Barra: moldura en el canto y apoyapies de bronce con soportes. El desgaste del tablero va en el material.
         /// Sin colision (no compite con la baranda de anclaje, que es la que se agarra).
         public static void BarTrims(Transform env, Vector3 counterCenter, Vector3 counterSize)
         {
             var g = new GameObject("Bar_Trims").transform; g.SetParent(env, false);
             var molding = TexMat("Bar_Molding", new Color(0.24f, 0.12f, 0.06f), 0.62f, 0f, DarkGrain(), 0.35f, new Vector2(6, 1));
-            var worn = TexMat("Bar_Worn", new Color(0.55f, 0.36f, 0.2f), 0.2f, 0f, DarkGrain(), 0.25f, new Vector2(6, 1));
             var brass = TexMat("Bar_Brass", new Color(0.78f, 0.58f, 0.26f), 0.72f, 0.9f, BrushedMetal(), 0.15f, new Vector2(1, 8));
             float front = counterCenter.z - counterSize.z * 0.5f, top = counterCenter.y + counterSize.y * 0.5f;
             NoCol(PrimitiveType.Cube, "Molding", g, new Vector3(counterCenter.x, top - 0.02f, front - 0.025f), new Vector3(counterSize.x + 0.04f, 0.05f, 0.06f), Quaternion.identity, molding);
-            NoCol(PrimitiveType.Cube, "Elbow_Wear", g, new Vector3(counterCenter.x, top + 0.002f, front + 0.12f), new Vector3(counterSize.x - 0.3f, 0.004f, 0.14f), Quaternion.identity, worn);
             NoCol(PrimitiveType.Cylinder, "Foot_Rail", g, new Vector3(counterCenter.x, 0.2f, front - 0.17f), new Vector3(0.05f, (counterSize.x - 0.2f) * 0.5f, 0.05f), Quaternion.Euler(0, 0, 90), brass);
             for (int i = 0; i < 5; i++)
             {
