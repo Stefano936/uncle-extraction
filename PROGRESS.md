@@ -21,17 +21,21 @@
 - **Puerta de salida:** marco de madera con cabezal; en la hoja, placa de empuje, placa de patada y bisagras de metal (se mueven con la hoja).
 - Comparación: `docs/capturas/sesion16/antes_despues_y_primeros_planos.jpg` (vistas fijas de la sesión 15 contra la 16 y primeros planos con `tools/windows/closeup_shots.sh`).
 
-**Prueba de red `race` (disputa por el mismo punto):** fallaba porque el tío se movía antes de la señal y uno de los dos terminaba apuntando a otro punto (no había disputa que medir). Ahora el tío queda quieto en el anfitrión durante la prueba, el anfitrión ubica a los dos jugadores frente al cinturón hasta la señal y el criterio es la evidencia del anfitrión: rechazo «SocketBusy» en el cinturón, nunca dos a la vez y un solo ganador. **5/5 PASS** en `0fbc66a`, los dos apuntando al cinturón.
+**Prueba de red `race` (disputa por el mismo punto):** fallaba porque el tío se movía antes de la señal y uno de los dos terminaba apuntando a otro punto (no había disputa que medir). Ahora el tío queda quieto en el anfitrión durante la prueba, el anfitrión ubica a los dos jugadores frente al cinturón hasta la señal y el criterio es la evidencia del anfitrión: rechazo «SocketBusy» en el cinturón, nunca dos a la vez y un solo ganador. **5/5 PASS**, los dos apuntando al cinturón, y PASS en la regresión completa de `1ca19d7`.
 
 #### Verificación (sesión 16)
 
 | Prueba | Código / build | Resultado |
 | --- | --- | --- |
 | `race` ×5 | build de `race: host places both players…` | **5/5 PASS** (rechazos=1, ganadores=1, apuntaban 2/2) |
-| EditMode | {EMB} | {EM} |
-| PlayMode completa | {PMB} | {PM} |
-| Red en localhost (17 escenarios) | {NETB} | {NET} |
+| EditMode | `1a5dd5a` (código) | **64/64**, 1 ignorada |
+| PlayMode completa | `1a5dd5a` (código) | 162/165: 1 omitida; FAIL `lab_fail_m28` (conocido, solo sin límite de FPS) y FAIL `Hold_HandsIndependent…` → defecto de la prueba (los dos hombros a la misma altura cambiaban de orden y a veces elegía el que ya sostenía la otra mano); corregido en `1ca19d7`: RealInputTests **29/29** |
+| Red en localhost (17 escenarios) | build `1ca19d7` | **16 PASS + `loaddrop` NOT_RUN** (el bot de carrito del invitado no llegó a cargar en 240 s); repetido ×2: **2/2 PASS**. `race` PASS |
 | Primeros planos y vistas fijas | build `S16` | `docs/capturas/sesion16/` |
+
+**Candidata: `1ca19d7`**, demo `Builds/UncleExtraction_Demo_s16.zip` (incluye `VOLVER_A_PROBAR.txt`). Referencia anterior: demo de la sesión 15 (`fd0bce5`).
+
+**Observación de pruebas:** al ejecutar PlayMode, una prueba le quita a `Uncle_Shirt.mat` la palabra clave de emisión (el brillo de aviso); se restauró el archivo, la causa queda por revisar (solo editor).
 
 **Para volver a probar (vos):** ver `docs/VOLVER_A_PROBAR_S16.md`.
 

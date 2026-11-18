@@ -1,6 +1,6 @@
 # Matriz de requisitos — alcance inicial (alcohol, un bar, camioneta fija, 1 a 4 jugadores)
 
-Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 14) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 15 (2026-11-18, rama `s15-produccion`). Cada evidencia nombra su build o commit cuando no es la candidata vigente.
+Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 14) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 16 (2026-11-18, rama `s15-produccion`). Cada evidencia nombra su build o commit cuando no es la candidata vigente.
 
 **Niveles de evidencia:** **C** = existe en código y compila · **E** = probado en el editor (PlayMode/EditMode) · **B** = probado en la build · **L** = procesos en localhost · **R1** = Relay desde una PC · **R2** = dos equipos y redes distintas · **H** = revisado por una persona.
 **Estados:** completo · parcial · faltante · pospuesto (justificado) · bloqueado.
@@ -81,9 +81,9 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Bar que reacciona: torre de vasos que distrae al tío | Media | `BarProps` (anfitrión decide, RPC a todos, una vez por ronda, se rearma) | completo | E (`ReplayFeatureTests`) | L con 2+ procesos; H |
 | Desafíos opcionales: Sin carrito, Ruta estrecha | Media | `Challenges` (modo replicado; barricada estática igual en todos los pares; ruta alternativa) | completo | E (ganan solo: 21,7 s y 40,4 s) | Viabilidad con 4 personas (H) |
 | Parte de extracción con datos reales y vista para captura | Media | `RoundStats` (anfitrión registra, RPC a invitados), `GameFlowUI.CleanView` | completo | E, B (clip `cierre`: «Cerraron con 9 s de margen») | H: ¿lo comparten? |
-| Ropa del tío con volumen y costuras; luces que no laven | Alta | `UncleOutfit`, `BarDressing` (exposición, focos), `Finishing` (tonos) | parcial | B (antes/después) | Malla nueva del tío (modelado) |
+| Ropa del tío con volumen y costuras; luces que no laven; malla sin facetas | Alta | `UncleOutfit`, `BarDressing`, `Finishing`; sesión 16: normales calculadas (60°) en la malla del kit | parcial | B (antes/después sesión 15 y 16) | Modelado nuevo (silueta, manos con dedos) |
 | Camioneta con detalle y luz que orienta | Alta | `VanDetails` | completo (implementación) | B (capturas con 4 procesos) | H |
-| Barra, puerta y carrito: vetas, desgaste, herrajes | Alta | — | faltante | — | Pasada de materiales |
+| Barra, puerta y carrito: vetas, desgaste, herrajes | Alta | `Finishing` (sesión 16): acero cepillado, pintura gastada, goma, madera oscura con normales; moldura, desgaste y apoyapiés en la barra; marco, placas y bisagras en la puerta | completo (implementación) / verificación parcial | B (primeros planos `docs/capturas/sesion16/`) | **H** de cerca |
 | Demo distribuible + material de tienda | Alta | `Builds/UncleExtraction_Demo_s15.zip`, `docs/lanzamiento/` | completo (borradores) | — | Revisión del dueño; video con OBS/ffmpeg |
 | Destrabe del autopiloto (carrito en la puerta) | Media | `LabAutopilot.MoveWorld` | completo | E (12/12 intentos completos) | — |
 
