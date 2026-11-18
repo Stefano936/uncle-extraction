@@ -33,9 +33,23 @@ namespace UncleExtraction.Tests
             InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
             kb = InputSystem.AddDevice<Keyboard>(); mouse = InputSystem.AddDevice<Mouse>(); kb.MakeCurrent(); mouse.MakeCurrent();
+            bool probe = TestContext.CurrentContext.Test.Name.StartsWith("S18Probe_");
+            if (probe)
+            {
+                NetSession.Mode = NetMode.Host;
+                NetSession.Port = 7890;
+                NetSession.ListenAddress = "127.0.0.1";
+            }
             SceneManager.LoadScene("Bar_LastRound");
             yield return null; yield return new WaitForFixedUpdate();
             for (float t = 0; t < 5f && PlayerControls.Local == null; t += Time.unscaledDeltaTime) yield return null;
+            if (probe)
+            {
+                PlayerControls.Local.SetReady(true);
+                yield return null;
+                Assert.IsTrue(RoundDirector.Instance.StartFromLobby());
+                yield return null;
+            }
             hud0 = GameSettings.Hud;
             savedHud = PlayerPrefs.GetInt("ue.hudProfile", -1);
             lang0 = Loc.Language;
@@ -53,6 +67,12 @@ namespace UncleExtraction.Tests
             if (savedHud < 0) PlayerPrefs.DeleteKey("ue.hudProfile");
             else PlayerPrefs.SetInt("ue.hudProfile", savedHud);
             if (lang0 != null && Loc.Language != lang0) Loc.SetLanguage(lang0);
+            if (TestContext.CurrentContext.Test.Name.StartsWith("S18Probe_"))
+            {
+                NetSession.Mode = NetMode.Solo;
+                NetSession.Port = 7777;
+                NetSession.ListenAddress = "0.0.0.0";
+            }
             if (kb != null) InputSystem.RemoveDevice(kb); if (mouse != null) InputSystem.RemoveDevice(mouse);
             InputSystem.settings.backgroundBehavior = bg0; InputSystem.settings.editorInputBehaviorInPlayMode = ed0;
             InputBindings.ResetAll(); InputBindings.SaveAll();
@@ -259,6 +279,143 @@ namespace UncleExtraction.Tests
             Assert.IsFalse(GrabIntent.Armed(0));
             Assert.IsFalse(hands.IsGrabPending(0));
             Assert.IsEmpty(hands.HeldSocketId(0));
+        }
+
+        void PlaceProbePlayer(Vector3 position)
+        {
+            player.Body.detectCollisions = false;
+            player.Body.useGravity = false;
+            player.Body.linearVelocity = Vector3.zero;
+            player.Body.position = player.transform.position = position;
+            player.SetYawPitch(0f, 0f);
+        }
+
+        static GrabSocket ProbeSocket(string id, Vector3 position)
+        {
+            var probe = new GameObject(id);
+            probe.transform.position = position;
+            probe.AddComponent<Rigidbody>().isKinematic = true;
+            var socket = probe.AddComponent<GrabSocket>();
+            socket.socketId = id;
+            return socket;
+        }
+
+        [UnityTest]
+        public IEnumerator S18Probe_LoadedSpeedOnStraightLine()
+        {
+            PlaceProbePlayer(Vector3.zero);
+            GameSettings.Hud = HudProfile.Detailed;
+            float oldReaction = GrabSpring.ReactionFactor;
+            GrabSpring.ReactionFactor = 0f; // mide el limite del motor sin la reaccion del resorte
+            GrabSocket socket = null;
+            try
+            {
+                player.DebugMove = Vector2.up;
+                for (int i = 0; i < 35; i++) yield return new WaitForFixedUpdate();
+                float before = player.Body.linearVelocity.z;
+                socket = ProbeSocket("s18_speed", hands.HandTarget(0));
+                hands.DebugHoldLeft = true;
+                Assert.AreEqual(GrabResult.Ok, hands.ForceGrab(0, socket));
+                var samples = new System.Collections.Generic.List<float>();
+                for (int i = 0; i < 16; i++)
+                {
+                    socket.transform.position = hands.HandTarget(0);
+                    yield return new WaitForFixedUpdate();
+                    Assert.AreEqual(socket.socketId, hands.HeldSocketId(0));
+                    samples.Add(player.Body.linearVelocity.z);
+                }
+                int firstNearLimit = samples.FindIndex(v => v <= LabBalance.LoadedSpeed + 0.05f);
+                Debug.Log(System.FormattableString.Invariant($"[S18Probe] SPEED free={before:F3} first={samples[0]:F3} loaded={samples.Last():F3} ticks={firstNearLimit + 1} dt={Time.fixedDeltaTime:F4}"));
+                Assert.That(before, Is.EqualTo(LabBalance.WalkSpeed).Within(0.05f));
+                Assert.That(samples.Last(), Is.EqualTo(LabBalance.LoadedSpeed).Within(0.05f));
+                Assert.GreaterOrEqual(firstNearLimit, 0);
+            }
+            finally
+            {
+                hands.DebugHoldLeft = null;
+                player.DebugMove = null;
+                GrabSpring.ReactionFactor = oldReaction;
+                if (socket) Object.Destroy(socket.gameObject);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator S18Probe_AimSweepAndBoundary()
+        {
+            PlaceProbePlayer(new Vector3(0f, 5f, 0f));
+            GameSettings.Hud = HudProfile.Detailed;
+            yield return Frames(3);
+            Vector3 origin = hands.cam.transform.position;
+            var left = ProbeSocket("s18_left", origin + Quaternion.Euler(0f, -4f, 0f) * (Vector3.forward * 1.2f));
+            var right = ProbeSocket("s18_right", origin + Quaternion.Euler(0f, 4f, 0f) * (Vector3.forward * 1.2f));
+            try
+            {
+                string Pick() => hands.Candidate == left ? "L" : hands.Candidate == right ? "R" : "-";
+                var sweep = new System.Collections.Generic.List<string>();
+                for (int angle = -6; angle <= 6; angle++)
+                {
+                    player.SetYawPitch(angle, 0f);
+                    yield return Frames(2);
+                    sweep.Add(Pick());
+                }
+                var jitter = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < 12; i++)
+                {
+                    player.SetYawPitch(i % 2 == 0 ? -0.35f : 0.35f, 0f);
+                    yield return Frames(2);
+                    jitter.Add(Pick());
+                }
+
+                int switches = jitter.Skip(1).Where((s, i) => s != jitter[i]).Count();
+                Assert.That(sweep.First(), Is.EqualTo("L"));
+                Assert.That(sweep.Last(), Is.EqualTo("R"));
+                yield return Buttons(true, false);
+                Assert.That(hands.HeldSocketId(0), Is.EqualTo(right.socketId));
+                Debug.Log($"[S18Probe] AIM sweep={string.Concat(sweep)} jitter={string.Concat(jitter)} switches={switches} confirmed={hands.HeldSocketId(0)}");
+                yield return Buttons(false, false);
+            }
+            finally
+            {
+                Object.Destroy(left.gameObject);
+                Object.Destroy(right.gameObject);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator S18Probe_FallCamera([Values(false, true)] bool crouch, [Values(false, true)] bool reduced)
+        {
+            bool oldMotion = GameSettings.ReduceMotion;
+            GameSettings.ReduceMotion = reduced;
+            LabInput.Simulated[(int)Act.Crouch] = crouch;
+            player.SetYawPitch(player.Yaw, 0f);
+            try
+            {
+                yield return new WaitForSeconds(0.4f);
+                Assert.AreEqual(crouch, player.Crouching);
+                var pivot = player.cameraPivot;
+                float startHeight = pivot.localPosition.y;
+                Assert.IsTrue(player.ApplyImpact(Vector3.zero, LabBalance.ComposureMax, "s18-probe"));
+                float start = Time.time;
+                float maxRoll = 0f;
+                float rollAt100 = -1;
+                while (Time.time - start <= 0.55f)
+                {
+                    yield return null;
+                    float roll = Mathf.Abs(Mathf.DeltaAngle(0f, pivot.localEulerAngles.z));
+                    maxRoll = Mathf.Max(maxRoll, roll);
+                    if (Time.time - start >= 0.1f && rollAt100 < 0f) rollAt100 = roll;
+                }
+
+                Debug.Log(System.FormattableString.Invariant($"[S18Probe] CAMERA crouch={crouch} reduced={reduced} before={startHeight:F2} fallen={pivot.localPosition.y:F2} roll100={rollAt100:F1} peak={maxRoll:F1}"));
+                Assert.AreEqual(PlayerState.Fallen, player.State);
+                Assert.That(pivot.localPosition.y, Is.EqualTo(0.45f).Within(0.01f));
+                Assert.That(maxRoll, Is.GreaterThan(0f));
+            }
+            finally
+            {
+                LabInput.Simulated[(int)Act.Crouch] = false;
+                GameSettings.ReduceMotion = oldMotion;
+            }
         }
 
         public enum Blocker { PauseClosedWithEscape, OptionsFromPause, Rebinding, FocusLost, RoundRestart }
