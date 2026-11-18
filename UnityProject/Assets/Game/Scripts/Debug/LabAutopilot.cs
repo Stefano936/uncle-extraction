@@ -455,14 +455,25 @@ namespace UncleExtraction
             bool second = player.Controls && player.Controls.IsSpawned && player.Controls.OwnerClientId % 2 == 1;
             // sesion 16: los dos se paran FRENTE AL CINTURON segun hacia donde mira el tio ahora (no en puntos fijos del mapa)
             // y no aprietan hasta tener el cinturon como candidato: asi la prueba mide de verdad la disputa por el mismo punto
-            Vector3 bf = Flat(belt.Position), toward = Flat(belt.Position - body.Body.position); if (toward.sqrMagnitude < 1e-3f) toward = body.Forward; toward.Normalize();
-            Vector3 lat = Vector3.Cross(Vector3.up, toward);
-            Vector3 stand = bf + toward * 0.7f + lat * (second ? 0.36f : -0.36f);
+            // la prueba mide la disputa por un punto, no la IA: en el anfitrion el tio queda quieto durante la carrera
+            if (NetAuth.IsServer && npc) npc.brainEnabled = false;
+            Vector3 StandNow()
+            {
+                Vector3 toward = Flat(belt.Position - body.Body.position); if (toward.sqrMagnitude < 1e-3f) toward = body.Forward; toward.Normalize();
+                return Flat(belt.Position) + toward * 0.7f + Vector3.Cross(Vector3.up, toward) * (second ? 0.36f : -0.36f);
+            }
+            Vector3 stand = StandNow();
             raceMode = true;
-            for (float t = 0; t < 12f && Vector3.Distance(Me, stand) > 0.15f; t += Time.deltaTime) { Status = "yendo al punto de carrera"; MoveWorld(stand - Me); LookAt(belt.Position); yield return null; }
-            LabInput.SimulatedMove = Vector2.zero;
             long now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            while (now() < raceAtUnixMs) { LookAt(belt.Position); Status = hands.Candidate == belt ? "esperando la senal (apunta al cinturon)" : "esperando la senal (buscando el cinturon)"; yield return null; }
+            while (now() < raceAtUnixMs)
+            {   // hasta la señal: pararse frente al cinturon (recalculado si el cuerpo se mueve) y apuntarle
+                stand = StandNow();
+                if (Vector3.Distance(Me, stand) > 0.15f) MoveWorld(stand - Me); else LabInput.SimulatedMove = Vector2.zero;
+                LookAt(belt.Position);
+                Status = hands.Candidate == belt ? "esperando la senal (apunta al cinturon)" : "yendo al cinturon";
+                yield return null;
+            }
+            LabInput.SimulatedMove = Vector2.zero;
             raceMode = false;
             Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")} yo={Me} destino={stand} cinturon={belt.Position} dist={Vector3.Distance(Eye, belt.Position):0.00}");
             for (float t = 0; t < 2f; t += Time.deltaTime) { LookAt(belt.Position); SetHold(0, true); yield return null; }
