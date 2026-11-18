@@ -87,8 +87,8 @@ namespace UncleExtraction
                         if (lvl == 2) for (int b = 0; b < 3; b++)
                         {
                             var bt = GameObject.CreatePrimitive(PrimitiveType.Cylinder); Destroy(bt.GetComponent<Collider>());
-                            bt.transform.SetParent(root.transform, false); bt.transform.position = new Vector3(x - 0.13f + b * 0.13f, 1.0f + 0.12f, BarricadeZ);
-                            bt.transform.localScale = new Vector3(0.07f, 0.12f, 0.07f); bt.GetComponent<Renderer>().sharedMaterial = bottle;
+                            bt.transform.SetParent(root.transform, false); bt.transform.position = new Vector3(x - 0.13f + b * 0.13f, 1.0f + 0.09f, BarricadeZ);
+                            bt.transform.localScale = new Vector3(0.055f, 0.09f, 0.055f); bt.GetComponent<Renderer>().sharedMaterial = bottle;
                         }
                     }
             }

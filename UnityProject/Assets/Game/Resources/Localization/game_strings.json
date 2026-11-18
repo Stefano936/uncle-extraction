@@ -749,13 +749,13 @@
   },
   {
    "key": "challenge.hint_nocart",
-   "en": "No cart tonight: drag him. Two hands pull harder; take turns.",
-   "es_UY": "Hoy no hay carrito: arrastralo. Con las dos manos se tira más; túrnense."
+   "en": "Challenge: no cart. Drag him.",
+   "es_UY": "Desafío: sin carrito. Arrastralo."
   },
   {
    "key": "challenge.hint_narrow",
-   "en": "Beer crates block the room: one 1.2 m gap on the left (yellow mark).",
-   "es_UY": "Cajones de cerveza cortan el salón: un solo paso de 1,2 m a la izquierda (marca amarilla)."
+   "en": "Challenge: one gap, on the left.",
+   "es_UY": "Desafío: un solo paso, a la izquierda."
   },
   {
    "key": "challenge.played_nocart",
