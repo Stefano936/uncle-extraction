@@ -231,10 +231,26 @@ namespace UncleExtraction
             return new Vector3(gx, 0f, z + (south ? -0.9f : 0.9f)) - me;                     // ir a la boca del paso
         }
 
+        float moveSince, unstickUntil; Vector3 moveFrom, unstickDir;
+        /// Veces que el autopiloto se destrabo en esta corrida (registro de pruebas).
+        public int Unsticks { get; private set; }
         void MoveWorld(Vector3 dir)
         {
-            dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; return; }
+            dir = Flat(dir); if (dir.sqrMagnitude < 1e-4f) { LabInput.SimulatedMove = Vector2.zero; moveSince = Time.time; moveFrom = Me; return; }
             dir = ViaNarrowGap(dir);
+            // sesion 15: destrabarse. Si quiere caminar y en 2,5 s no avanzo 0,15 m (p. ej. contra la hoja entreabierta de la
+            // puerta: el fallo intermitente del carrito en el laboratorio articulado), se corre 1 s de costado y reintenta,
+            // como haria una persona. Antes se quedaba empujando hasta que se acababa el tiempo.
+            if (Time.time < unstickUntil) dir = unstickDir;
+            else if (Time.time - moveSince > 2.5f)
+            {
+                if (Vector3.Distance(Me, moveFrom) < 0.15f)
+                {
+                    unstickDir = Vector3.Cross(Vector3.up, dir).normalized * (UnityEngine.Random.value < 0.5f ? 1f : -1f) - dir.normalized * 0.4f;
+                    unstickUntil = Time.time + 1.0f; Unsticks++; Log($"trabado en {Me} (no avanza): se corre de costado y reintenta");
+                }
+                moveSince = Time.time; moveFrom = Me;
+            }
             Vector3 local = Quaternion.Euler(0, -player.Yaw, 0) * dir.normalized; // relativo a la mirada ordenada (como WASD), no al giro interpolado del cuerpo
             LabInput.SimulatedMove = new Vector2(local.x, local.z);
         }
