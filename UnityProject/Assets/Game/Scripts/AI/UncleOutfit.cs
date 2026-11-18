@@ -62,7 +62,14 @@ namespace UncleExtraction
         static Material Tint(Material src, float k, string n)
         {
             if (!src) return Solid(n, new Color(0.5f * k, 0.1f, 0.1f), 0.2f, 0f);
-            var m = new Material(src) { name = n }; var c = src.color; m.color = new Color(Mathf.Clamp01(c.r * k), Mathf.Clamp01(c.g * k), Mathf.Clamp01(c.b * k), c.a); return m;
+            // sesion 17: NO se copia el material del proyecto con new Material(src): en el editor esa copia terminaba
+            // reescribiendo Uncle_Shirt.mat al correr PlayMode (perdia _EMISSION). Se arma desde el shader y se copian solo
+            // las propiedades que importan; el asset no se toca.
+            var m = new Material(src.shader) { name = n }; var c = src.color;
+            foreach (var p in new[] { "_BaseMap", "_BumpMap" }) if (src.HasProperty(p) && m.HasProperty(p)) { m.SetTexture(p, src.GetTexture(p)); m.SetTextureScale(p, src.GetTextureScale(p)); }
+            foreach (var p in new[] { "_Smoothness", "_Metallic", "_BumpScale" }) if (src.HasProperty(p) && m.HasProperty(p)) m.SetFloat(p, src.GetFloat(p));
+            if (src.IsKeywordEnabled("_NORMALMAP")) m.EnableKeyword("_NORMALMAP");
+            m.color = new Color(Mathf.Clamp01(c.r * k), Mathf.Clamp01(c.g * k), Mathf.Clamp01(c.b * k), c.a); return m;
         }
         static Material Solid(string n, Color c, float smooth, float metal)
         {

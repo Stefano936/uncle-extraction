@@ -96,12 +96,11 @@ namespace UncleExtraction
             Act.Crouch => "R3", Act.Dodge => "X", Act.Pause => "Start", Act.Mark => "D-pad ↑", _ => null
         };
         /// Ultimo dispositivo con actividad: mando (sticks, gatillos, botones) o teclado/raton. Se evalua una vez por cuadro.
-        public static bool PadActive { get { Tick(); return padActive; } }
+        public static bool PadActive { get { if (ForcePad) return true; Tick(); return padActive; } }
         public static bool ForcePad; // pruebas y capturas
         static bool padActive; static int tickFrame = -1;
         static void Tick()
         {
-            if (ForcePad) { padActive = true; return; }
 #if UE_INPUT_SYSTEM
             if (tickFrame == Time.frameCount) return; tickFrame = Time.frameCount;
             var g = Gamepad.current;
