@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace UncleExtraction
 {
+    public enum HudProfile { Contextual, Detailed }
+
     /// Opciones locales del jugador (especificacion 02: ProfileStore, instancia local). Se guardan en PlayerPrefs.
     public static class GameSettings
     {
@@ -24,6 +26,7 @@ namespace UncleExtraction
         public static bool GrabToggle;
         /// Reduce la inclinacion de camara al caer (comodidad).
         public static bool ReduceMotion;
+        public static HudProfile Hud = HudProfile.Contextual;
         public static float TextScale = 1f;
         static bool loaded;
 
@@ -43,6 +46,7 @@ namespace UncleExtraction
                 ProfanityFilter = PlayerPrefs.GetInt("ue.profanity", 0) == 1;
                 PlayerName = PlayerPrefs.GetString("ue.name", "");
                 GrabToggle = PlayerPrefs.GetInt("ue.grabToggle", 0) == 1;
+                Hud = (HudProfile)PlayerPrefs.GetInt("ue.hudProfile", (int)HudProfile.Contextual);
                 ReduceMotion = PlayerPrefs.GetInt("ue.reduceMotion", 0) == 1;
                 LowQuality = PlayerPrefs.HasKey("ue.quality") ? PlayerPrefs.GetInt("ue.quality") == 0 : GraphicsQuality.DetectLow();
                 TextScale = Mathf.Clamp(PlayerPrefs.GetFloat("ue.textScale", 1f), 1f, 1.5f);
@@ -74,6 +78,7 @@ namespace UncleExtraction
             float ts = Safe(TextScale, 1f, 1.5f, 1f);                    // solo los tamanos ofrecidos: 100, 125 y 150 %
             TextScale = ts >= 1.4f ? 1.5f : ts >= 1.2f ? 1.25f : 1f;
             if (!System.Enum.IsDefined(typeof(Difficulty), SoloDifficulty)) SoloDifficulty = Difficulty.Normal;
+            if (!System.Enum.IsDefined(typeof(HudProfile), Hud)) Hud = HudProfile.Contextual;
             PlayerName = PlayerMotor.Sanitize(PlayerName ?? "");
         }
         static float Safe(float v, float lo, float hi, float def) => float.IsNaN(v) || float.IsInfinity(v) ? def : Mathf.Clamp(v, lo, hi);
@@ -90,6 +95,7 @@ namespace UncleExtraction
             PlayerPrefs.SetInt("ue.profanity", ProfanityFilter ? 1 : 0);
             PlayerPrefs.SetString("ue.name", PlayerName ?? "");
             PlayerPrefs.SetInt("ue.grabToggle", GrabToggle ? 1 : 0);
+            PlayerPrefs.SetInt("ue.hudProfile", (int)Hud);
             PlayerPrefs.SetInt("ue.reduceMotion", ReduceMotion ? 1 : 0);
             PlayerPrefs.SetInt("ue.quality", LowQuality ? 0 : 1);
             PlayerPrefs.SetFloat("ue.textScale", TextScale);

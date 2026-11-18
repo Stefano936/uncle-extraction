@@ -11,7 +11,7 @@ namespace UncleExtraction
     {
         public const int Rate = 44100;
         static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
-        public static readonly string[] Ids = { "grab", "release", "impact", "whoosh", "cue_slap", "cue_push", "cue_kick", "cue_shake", "van_close", "door_creak", "success", "timeout", "ui", "ping", "grab_try", "slip", "strain", "cart_roll", "cart_bump", "latch", "ambience", "win_sting", "clink", "glass_crash", "bell" };
+        public static readonly string[] Ids = { "grab", "release", "release_neutral", "impact", "whoosh", "cue_slap", "cue_push", "cue_kick", "cue_shake", "van_close", "door_creak", "success", "timeout", "ui", "ping", "grab_try", "slip", "strain", "cart_roll", "cart_bump", "latch", "ambience", "win_sting", "clink", "glass_crash", "bell" };
 
         public static AudioClip Get(string id)
         {
@@ -37,6 +37,8 @@ namespace UncleExtraction
                     b = Buf(0.12f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; lp += 0.25f * (N() - lp); b[i] = lp * Env(t, 0.01f, 0.12f) * 0.8f; } break;
                 case "release": // soltar: chasquido mas agudo
                     b = Buf(0.08f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; lp += 0.6f * (N() - lp); b[i] = lp * Env(t, 0.003f, 0.08f) * 0.5f; } break;
+                case "release_neutral": // roce breve sin el chasquido ni el barrido del resbalon
+                    b = Buf(0.105f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; lp += 0.18f * (N() - lp); b[i] = lp * Env(t, 0.012f, 0.105f) * 0.65f; } break;
                 case "impact": // golpe seco exagerado (sin sonido de lesion): seno grave + ruido
                     b = Buf(0.35f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; float f = Mathf.Lerp(120f, 55f, t / 0.35f); b[i] = (Mathf.Sin(2 * Mathf.PI * f * t) * 0.9f + N() * 0.35f * Mathf.Exp(-30f * t)) * Env(t, 0.004f, 0.35f); } break;
                 case "whoosh": // golpe lanzado: barrido de ruido

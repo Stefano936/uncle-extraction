@@ -72,7 +72,7 @@ namespace UncleExtraction
 
         static string GrabKeys(int hand) => InputBindings.Display(hand == 0 ? Act.GrabLeft : Act.GrabRight);
 
-        void Update()
+        void LateUpdate()
         {
             var round = RoundDirector.Instance; var pc = PlayerControls.Local; var npc = NpcBrain.Instance;
             if (builtScale != Ui.TextScale) Build(); // tamaño de texto cambiado en plena partida
@@ -85,8 +85,12 @@ namespace UncleExtraction
             }
             bool live = step != Step.Done && pc && round && !round.InLobby && round.State == RoundState.Running;
             bool show = live && !GameFlowUI.BlockingInput;
-            if (box && box.gameObject.activeSelf != show) box.gameObject.SetActive(show);
-            if (!show) { if (pc) lastPos = pc.transform.position; return; } // oculta: ni avanza ni corre el tiempo
+            if (!show)
+            {
+                if (box) box.gameObject.SetActive(false);
+                if (pc) lastPos = pc.transform.position;
+                return;
+            } // oculta: ni avanza ni corre el tiempo
             visibleAge += Time.deltaTime;
             Vector3 now = pc.transform.position; float step1 = Vector3.Distance(new Vector3(now.x, 0, now.z), new Vector3(lastPos.x, 0, lastPos.z)); lastPos = now;
             if (step1 < 0.6f) walked += step1; // un salto de un cuadro (teletransporte, rescate, fisica que se pone al dia al salir de la pausa) no es caminar
@@ -133,6 +137,21 @@ namespace UncleExtraction
 
         void Render()
         {
+            var hud = GameHud.Instance;
+            if (GameSettings.Hud == HudProfile.Contextual && hud && hud.Visible)
+            {
+                string action = hud.ShownInteraction;
+                bool duplicate = hud.AimPromptVisible && (step == Step.Aim || step == Step.Grab)
+                    || step == Step.Extract && action.StartsWith("van.")
+                    || step == Step.Recover && action.StartsWith("interact.help_up");
+                if (hud.AttentionRequired || duplicate)
+                {
+                    box.gameObject.SetActive(false);
+                    return;
+                }
+            }
+
+            box.gameObject.SetActive(true);
             int n = (int)step + 1, total = (int)Step.Done;
             title.text = Loc.T("tut.title", ("n", n.ToString()), ("total", total.ToString()));
             string how = GrabIntent.Toggle ? Loc.T("tut.tap") : Loc.T("tut.hold");

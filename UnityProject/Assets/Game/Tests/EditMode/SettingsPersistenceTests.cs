@@ -7,7 +7,7 @@ namespace UncleExtraction.Tests
     /// y se vuelve a leer. Restaura las preferencias del editor al terminar.
     public class SettingsPersistenceTests
     {
-        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.quality", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge", "ue.bind.MoveForward", "ue.bind.MoveLeft", "ue.bind.ReleaseAll", "ue.grabToggle", "ue.reduceMotion", "ue.vol.sfx", "ue.vol.alerts", "ue.bind.Mark" };
+        static readonly string[] Keys = { "ue.mouse", "ue.invertY", "ue.fov", "ue.volume", "ue.difficulty", "ue.attackSubs", "ue.profanity", "ue.name", "ue.textScale", "ue.hudProfile", "ue.quality", "ue.lang", "ue.bind.Interact", "ue.bind.GrabLeft", "ue.bind.Dodge", "ue.bind.MoveForward", "ue.bind.MoveLeft", "ue.bind.ReleaseAll", "ue.grabToggle", "ue.reduceMotion", "ue.vol.sfx", "ue.vol.alerts", "ue.bind.Mark" };
         readonly System.Collections.Generic.List<System.Action> restore = new System.Collections.Generic.List<System.Action>();
 
         [SetUp]
@@ -33,6 +33,27 @@ namespace UncleExtraction.Tests
             foreach (var r in restore) r();
             PlayerPrefs.Save();
             GameSettings.ReloadFromDisk(); InputBindings.ReloadFromDisk(); Loc.Reload();
+        }
+
+        [Test]
+        public void HudProfile_DefaultsToContextual_AndEitherChoiceSurvivesRestart()
+        {
+            PlayerPrefs.DeleteKey("ue.hudProfile");
+            GameSettings.Hud = HudProfile.Detailed;
+            GameSettings.ReloadFromDisk();
+            Assert.AreEqual(HudProfile.Contextual, GameSettings.Hud);
+
+            foreach (HudProfile profile in new[] { HudProfile.Detailed, HudProfile.Contextual })
+            {
+                GameSettings.Hud = profile;
+                GameSettings.Save();
+                GameSettings.Hud = profile == HudProfile.Detailed ? HudProfile.Contextual : HudProfile.Detailed;
+                GameSettings.ReloadFromDisk();
+                Assert.AreEqual(profile, GameSettings.Hud);
+            }
+            PlayerPrefs.SetInt("ue.hudProfile", 77);
+            GameSettings.ReloadFromDisk();
+            Assert.AreEqual(HudProfile.Contextual, GameSettings.Hud);
         }
 
         [Test]

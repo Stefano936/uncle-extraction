@@ -10,10 +10,11 @@ namespace UncleExtraction
     public class HandRig : MonoBehaviour
     {
         public static readonly Color Skin = new Color(0.86f, 0.66f, 0.52f);
-        Transform[] fingers; Transform thumb; Renderer cuff; Transform root;
-        float curl, curlTarget, pulseAt = -9f;
+        Transform[] fingers; Transform thumb; Renderer cuff; Transform root, pose;
+        float curl, wristStrain, pulseAt = -9f;
         /// Respuesta inmediata al clic (sesion 15): apreton y empujon cortos, locales, antes de la confirmacion del anfitrion.
         public void Pulse() { pulseAt = Time.time; }
+        public void CancelPulse() { pulseAt = -9f; }
         public const float PulseTime = 0.14f;
         public Renderer Cuff => cuff;
         public float Curl => curl;
@@ -37,29 +38,32 @@ namespace UncleExtraction
             float inner = side == 0 ? 1f : -1f; // el pulgar va hacia el centro de la pantalla
 
             rig.root = go.transform;
+            var pose = new GameObject("GripPose").transform;
+            pose.SetParent(go.transform, false);
+            rig.pose = pose;
             // manga: capsula larga que sale por abajo del cuadro (sin tapas planas a la vista) y puño fino con el color de estado
             // el antebrazo sale hacia la esquina inferior de su lado (como un brazo real), corto: no cruza el cuadro al mirar abajo
-            var arm = new GameObject("ArmPivot").transform; arm.SetParent(go.transform, false); arm.localPosition = new Vector3(0, -0.004f, -0.085f);
+            var arm = new GameObject("ArmPivot").transform; arm.SetParent(pose, false); arm.localPosition = new Vector3(0, -0.004f, -0.085f);
             arm.localRotation = Quaternion.Euler(-28f, 18f * inner, 0f);
             Part(PrimitiveType.Capsule, "Sleeve", arm, new Vector3(0, 0, -0.15f), Quaternion.Euler(90, 0, 0), new Vector3(0.095f, 0.14f, 0.088f), fabric);
-            rig.cuff = Part(PrimitiveType.Capsule, "Cuff", go.transform, new Vector3(0, -0.002f, -0.088f), Quaternion.Euler(90, 0, 0), new Vector3(0.104f, 0.03f, 0.096f), sleeve);
-            Part(PrimitiveType.Capsule, "Forearm", go.transform, new Vector3(0, 0f, -0.06f), Quaternion.Euler(90, 0, 0), new Vector3(0.066f, 0.03f, 0.056f), skin);
-            Part(PrimitiveType.Sphere, "Palm", go.transform, new Vector3(0, 0, -0.005f), Quaternion.identity, new Vector3(0.088f, 0.034f, 0.1f), skin);
-            Part(PrimitiveType.Sphere, "Wrist", go.transform, new Vector3(0, 0.002f, -0.045f), Quaternion.identity, new Vector3(0.07f, 0.04f, 0.05f), skin);
+            rig.cuff = Part(PrimitiveType.Capsule, "Cuff", pose, new Vector3(0, -0.002f, -0.088f), Quaternion.Euler(90, 0, 0), new Vector3(0.104f, 0.03f, 0.096f), sleeve);
+            Part(PrimitiveType.Capsule, "Forearm", pose, new Vector3(0, 0f, -0.06f), Quaternion.Euler(90, 0, 0), new Vector3(0.066f, 0.03f, 0.056f), skin);
+            Part(PrimitiveType.Sphere, "Palm", pose, new Vector3(0, 0, -0.005f), Quaternion.identity, new Vector3(0.088f, 0.034f, 0.1f), skin);
+            Part(PrimitiveType.Sphere, "Wrist", pose, new Vector3(0, 0.002f, -0.045f), Quaternion.identity, new Vector3(0.07f, 0.04f, 0.05f), skin);
             rig.fingers = new Transform[4];
             for (int i = 0; i < 4; i++)
             {
                 float x = (-0.03f + i * 0.02f) * inner;
                 float len = i == 1 || i == 2 ? 0.068f : 0.056f; // medio y anular mas largos
-                var pivot = new GameObject("Finger" + i).transform; pivot.SetParent(go.transform, false); pivot.localPosition = new Vector3(x, 0.004f, 0.04f);
+                var pivot = new GameObject("Finger" + i).transform; pivot.SetParent(pose, false); pivot.localPosition = new Vector3(x, 0.004f, 0.04f);
                 Part(PrimitiveType.Capsule, "Bone", pivot, new Vector3(0, 0, len * 0.5f), Quaternion.Euler(90, 0, 0), new Vector3(0.019f, len * 0.5f, 0.019f), skin);
                 rig.fingers[i] = pivot;
             }
-            var tp = new GameObject("Thumb").transform; tp.SetParent(go.transform, false); tp.localPosition = new Vector3(0.042f * inner, -0.004f, -0.012f);
+            var tp = new GameObject("Thumb").transform; tp.SetParent(pose, false); tp.localPosition = new Vector3(0.042f * inner, -0.004f, -0.012f);
             tp.localRotation = Quaternion.Euler(0, 38f * inner, 0);
             Part(PrimitiveType.Capsule, "Bone", tp, new Vector3(0, 0, 0.026f), Quaternion.Euler(90, 0, 0), new Vector3(0.021f, 0.026f, 0.021f), skin);
             rig.thumb = tp;
-            rig.curl = rig.curlTarget = 0.15f; rig.ApplyCurl();
+            rig.curl = 0.15f; rig.ApplyCurl();
             return rig;
         }
 
@@ -73,12 +77,18 @@ namespace UncleExtraction
         }
 
         /// 0 = abierta, 1 = cerrada. Se llama cada cuadro desde PlayerHands.
-        public void Set(float targetCurl, Color cuffColor)
+        public void Set(float targetCurl, Color cuffColor, float strain, int hand)
         {
-            curlTarget = Mathf.Clamp01(targetCurl);
             float pulse = Mathf.Clamp01(1f - (Time.time - pulseAt) / PulseTime);
-            curl = Mathf.Lerp(curl, Mathf.Max(curlTarget, 0.75f * pulse), Smooth.Factor(pulse > 0f ? 0.6f : 0.3f));
-            if (root && root.parent) root.localPosition = new Vector3(0f, 0f, 0.025f * Mathf.Sin(pulse * Mathf.PI) / Mathf.Max(1e-4f, root.parent.localScale.z)); // empujon hacia adelante
+            curl = Mathf.Lerp(curl, Mathf.Max(targetCurl, 0.48f * pulse), Smooth.Factor(pulse > 0f ? 0.6f : 0.35f));
+            wristStrain = Mathf.Lerp(wristStrain, strain, Smooth.Factor(0.2f));
+            if (root && root.parent)
+            {
+                bool reduced = GameSettings.ReduceMotion;
+                root.localPosition = reduced ? Vector3.zero : new Vector3(0f, 0f, 0.025f * Mathf.Sin(pulse * Mathf.PI) / Mathf.Max(1e-4f, root.parent.localScale.z));
+                float bend = wristStrain * (reduced ? 7f : 20f);
+                if (pose) pose.localRotation = Quaternion.Euler(-bend, 0f, (hand == 0 ? -0.5f : 0.5f) * bend);
+            }
             if (cuff) cuff.material.color = cuffColor;
             ApplyCurl();
         }

@@ -15,7 +15,9 @@ namespace UncleExtraction
         RoundDirector round; NpcBrain npc; NpcBody body; AudioSource ui; readonly List<AudioSource> pool = new List<AudioSource>();
         NpcState lastNpc; RoundState lastRound; VanDoors.Phase lastVan; int lastAttacks;
         readonly Dictionary<PlayerMotor, int> falls = new Dictionary<PlayerMotor, int>();
-        string held0 = "", held1 = "";
+        readonly string[] previousGuestGrab = { "", "" };
+        PlayerHands previousGuest;
+        int previousGrabRound = -1;
         float nextStrain; AudioSource amb, roll; Vector3 lastCartVel; float lastBump;
 
         /// Ambiente del bar (bucle, efectos) y ruedas del carrito (bucle 3D que sigue al carrito; volumen y tono por velocidad;
@@ -42,7 +44,80 @@ namespace UncleExtraction
         Vector3 lastCartPos;
 
         void Awake() { Instance = this; }
+        void OnEnable()
+        {
+            GrabRegistry.OnCreated += OnGrabCreated;
+            GrabRegistry.OnReleased += OnGrabReleased;
+        }
+
+        void OnDisable()
+        {
+            GrabRegistry.OnCreated -= OnGrabCreated;
+            GrabRegistry.OnReleased -= OnGrabReleased;
+        }
+
         void OnDestroy() { if (Instance == this) Instance = null; }
+
+        static PlayerHands LocalHands => PlayerControls.Local && PlayerControls.Local.IsLocal
+            ? PlayerControls.Local.GetComponent<PlayerHands>() : null;
+        static bool GrabAudioEnabled => LabInput.Focused && !GameFlowUI.BlockingInput;
+
+        void OnGrabCreated(GrabLink link)
+        {
+            if (link.owner is PlayerHands hands && hands == LocalHands && GrabAudioEnabled) Play2D("grab", 0.7f);
+        }
+
+        void OnGrabReleased(GrabLink link, ReleaseReason reason)
+        {
+            if (!(link.owner is PlayerHands hands) || hands != LocalHands || !GrabAudioEnabled) return;
+            switch (reason)
+            {
+                case ReleaseReason.Released:
+                case ReleaseReason.ReleaseAll:
+                    Play2D("release", 0.6f);
+                    break;
+                case ReleaseReason.Fell:
+                case ReleaseReason.Distance:
+                case ReleaseReason.TargetGone:
+                case ReleaseReason.Attack:
+                    Play2D("slip", 0.75f);
+                    break;
+            }
+        }
+
+        void LateUpdate()
+        {
+            var local = LocalHands;
+            if (!local || !local.IsSpawned || local.IsServer)
+            {
+                previousGuest = null;
+                return;
+            }
+
+            int restarts = round ? round.Restarts : -1;
+            bool reset = local != previousGuest || restarts != previousGrabRound;
+            previousGuest = local;
+            previousGrabRound = restarts;
+            bool audible = !reset && GrabAudioEnabled;
+            var state = local.GetComponent<PlayerMotor>().State;
+            bool fell = state == PlayerState.Fallen || state == PlayerState.GettingUp;
+            for (int h = 0; h < 2; h++)
+            {
+                string current = local.HeldSocketId(h);
+                string previous = previousGuestGrab[h];
+                previousGuestGrab[h] = current;
+                if (current == previous && !reset) continue;
+                bool askedToRelease = GrabIntent.ConsumeReleaseRequest(h);
+                if (!audible) continue;
+                if (previous != "")
+                {
+                    if (fell) Play2D("slip", 0.75f);
+                    else if (askedToRelease) Play2D("release", 0.6f);
+                    else Play2D("release_neutral", 0.5f);
+                }
+                if (current != "") Play2D("grab", 0.7f);
+            }
+        }
 
         void Start()
         {
@@ -99,19 +174,11 @@ namespace UncleExtraction
                 if (falls.TryGetValue(pm, out int prev) && f > prev) Play3D("impact", pm.transform.position + Vector3.up, 1f);
                 falls[pm] = f;
             }
-            var local = PlayerControls.Local ? PlayerControls.Local.GetComponent<PlayerHands>() : null;
-            if (local)
+            var local = LocalHands;
+            if (local && GrabAudioEnabled && local.CanGrab)
             {
-                string a = local.HeldSocketId(0), b = local.HeldSocketId(1);
-                if ((a != "" && held0 == "") || (b != "" && held1 == "")) Play2D("grab", 0.7f);
-                // soltar a proposito (sin el boton) vs resbalarse (el boton sigue apretado: lo arrancaron, distancia, golpe)
-                bool lostA = a == "" && held0 != "", lostB = b == "" && held1 != "";
-                if (lostA || lostB)
-                {
-                    bool slipped = (lostA && LabInput.RawHeld(Act.GrabLeft)) || (lostB && LabInput.RawHeld(Act.GrabRight));
-                    Play2D(slipped ? "slip" : "release", slipped ? 0.75f : 0.6f);
-                }
-                held0 = a; held1 = b;
+                var a = local.HeldSocketId(0);
+                var b = local.HeldSocketId(1);
                 // tension alta: la tela cruje cada tanto (cuanto mas tension, mas seguido)
                 float tn = Mathf.Max(a != "" ? local.Tension01(0) : 0f, b != "" ? local.Tension01(1) : 0f);
                 if (tn > 0.65f && Time.time >= nextStrain) { Play2D("strain", 0.25f + 0.35f * tn); nextStrain = Time.time + Mathf.Lerp(1.1f, 0.45f, tn); }

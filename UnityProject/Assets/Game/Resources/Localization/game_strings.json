@@ -203,6 +203,61 @@
    "es_UY": "vaso señuelo"
   },
   {
+   "key": "settings.hud",
+   "en": "HUD",
+   "es_UY": "HUD"
+  },
+  {
+   "key": "settings.hud_contextual",
+   "en": "Contextual",
+   "es_UY": "Contextual"
+  },
+  {
+   "key": "settings.hud_detailed",
+   "en": "Detailed",
+   "es_UY": "Detallado"
+  },
+  {
+   "key": "grab.context_hold",
+   "en": "Hold {keys} to grab",
+   "es_UY": "Mantené {keys} para agarrar"
+  },
+  {
+   "key": "grab.context_toggle",
+   "en": "Tap {keys} to grab",
+   "es_UY": "Pulsá {keys} para agarrar"
+  },
+  {
+   "key": "grab.context_busy_by",
+   "en": "{player} is holding it",
+   "es_UY": "Lo tiene {player}"
+  },
+  {
+   "key": "grab.context_busy",
+   "en": "Already held",
+   "es_UY": "Ocupado"
+  },
+  {
+   "key": "grab.context_far",
+   "en": "Move closer",
+   "es_UY": "Acercate"
+  },
+  {
+   "key": "hud.goal_close",
+   "en": "The uncle is inside. Close the van from outside.",
+   "es_UY": "El tío está adentro. Cerrá la camioneta desde afuera."
+  },
+  {
+   "key": "hud.effort_low",
+   "en": "Low energy",
+   "es_UY": "Poca energía"
+  },
+  {
+   "key": "hud.effort_spent",
+   "en": "Out of energy",
+   "es_UY": "Sin energía"
+  },
+  {
    "key": "grab.aim_valid",
    "en": "{key}: grab the {socket}",
    "es_UY": "{key}: agarrar {socket}"

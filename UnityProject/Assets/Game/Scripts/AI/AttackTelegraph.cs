@@ -108,11 +108,17 @@ namespace UncleExtraction
             if (outlineMat) outlineMat.color = new Color(c.r, c.g, c.b, 0.85f);
             if (fillMat) fillMat.color = new Color(c.r, c.g, c.b, attack ? 0.75f : Mathf.Lerp(0.15f, 0.5f, Fill01));
 
+            // El HUD contextual comunica el nombre. El arco sigue indicando donde pega.
+            if (GameSettings.Hud == HudProfile.Contextual && GameHud.Instance && GameHud.Instance.Visible)
+            {
+                label.gameObject.SetActive(false);
+                return;
+            }
             label.text = Name(def.id); label.color = Color.white;
             var cam = Camera.main;
             label.transform.position = body.ChestPosition + Vector3.up * 0.95f;
             if (cam) label.transform.rotation = Quaternion.LookRotation(label.transform.position - cam.transform.position, Vector3.up);
-            float pulse = attack ? 1.25f : 1f + 0.08f * Mathf.Sin(Time.time * 14f);
+            float pulse = GameSettings.ReduceMotion ? 1f : attack ? 1.25f : 1f + 0.08f * Mathf.Sin(Time.time * 14f);
             // de cerca (menos de 2,4 m) el aviso del HUD ya lo dice: el rotulo se achica y se oculta en vez de tapar la pantalla
             float d = cam ? Vector3.Distance(cam.transform.position, label.transform.position) : 10f;
             // tamano angular constante (no crece al acercarse) y oculto a menos de 2,8 m, donde el aviso del HUD ya lo dice

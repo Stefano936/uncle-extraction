@@ -166,20 +166,27 @@ namespace UncleExtraction
             yield return AimAtUncle();
             Check("candidato", Hands.Candidate != null, $"mira={(Hands.Candidate ? Hands.Candidate.socketId : "-")}");
             // 1) una pulsacion agarra; medir el tiempo pendiente (sin confirmacion del anfitrion)
+            int AudioCount(string id) => GameAudio.Instance && GameAudio.Instance.Played.TryGetValue(id, out int n) ? n : 0;
+            int contacts = AudioCount("grab"), releases = AudioCount("release"), slips = AudioCount("slip");
             float t0 = Time.realtimeSinceStartup, pending = -1f;
             yield return Mouse_(true); yield return Mouse_(false);
             for (float t = 0; t < 2f && Held0 == ""; t += Time.unscaledDeltaTime) yield return null;
             pending = (Time.realtimeSinceStartup - t0) * 1000f;
             yield return Wait(0.6f);
             Check("alternar_un_clic_agarra", Held0 != "", $"punto={Held0} pendiente_ms={pending:0} armada={GrabIntent.Armed(0)}");
+            Check("audio_contacto_unico", AudioCount("grab") == contacts + 1, $"contactos={AudioCount("grab") - contacts}");
             // 2) otra pulsacion suelta
             yield return Mouse_(true); yield return Mouse_(false); yield return Wait(0.8f);
             Check("alternar_otro_clic_suelta", Held0 == "", $"punto='{Held0}'");
+            Check("audio_soltar_voluntario", AudioCount("release") == releases + 1 && AudioCount("slip") == slips,
+                $"sueltas={AudioCount("release") - releases} resbalones={AudioCount("slip") - slips}");
             // 3) Q con el boton sostenido: suelta y no reagarra
             yield return AimAtUncle(); yield return Mouse_(true); yield return Wait(0.8f);
             bool grabbed = Held0 != "";
             yield return Key_(Key.Q); yield return Key_(); yield return Wait(1.2f);
             Check("q_con_boton_sostenido", grabbed && Held0 == "" && !GrabIntent.Armed(0), $"agarro={grabbed} despues='{Held0}'");
+            Check("audio_soltar_con_q", AudioCount("release") == releases + 2 && AudioCount("slip") == slips,
+                $"sueltas={AudioCount("release") - releases} resbalones={AudioCount("slip") - slips}");
             yield return Mouse_(false); yield return Wait(0.3f);
             // 4) pausa: suelta; al cerrar con el boton sostenido no vuelve a agarrar
             yield return AimAtUncle(); yield return Mouse_(true); yield return Mouse_(false); yield return Wait(0.8f);

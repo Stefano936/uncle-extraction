@@ -27,6 +27,17 @@ namespace UncleExtraction
         readonly List<GrabLink> broken = new List<GrabLink>();
         float effortTime;
         Renderer leftR, rightR; readonly HandRig[] rigs = new HandRig[2];
+        readonly float[] pendingFrom = { float.NegativeInfinity, float.NegativeInfinity };
+        readonly bool[] lastGrabIntent = new bool[2];
+        float lastRejectedAt = float.NegativeInfinity;
+        int presentationRound = -1;
+        int handFeedbackRound = -1;
+
+        public bool IsGrabPending(int hand) => CanPresentInput && Candidate && HeldSocketId(hand) == ""
+            && lastGrabIntent[hand] && Time.unscaledTime - pendingFrom[hand] < GrabIntent.ArmWindowAiming
+            && pendingFrom[hand] > lastRejectedAt && OccupancyOf(Candidate) < Candidate.capacity;
+
+        bool CanPresentInput => controls && controls.IsLocal && CanGrab && LabInput.Focused && !GameFlowUI.BlockingInput;
         public HandRig Rig(int hand) => rigs[hand];
         public PlayerControls Controls => controls;
         bool effortActive; string interactLabel = ""; float interactProgress;
@@ -111,6 +122,7 @@ namespace UncleExtraction
         void Update()
         {
             Candidate = FindCandidate();
+            UpdateGrabPresentation();
             if (Auth)
             {
                 if (motor.ControlsEnabled)
@@ -157,12 +169,57 @@ namespace UncleExtraction
 
         void Feedback(string msg)
         {
-            LastFeedback = msg; FeedbackUntil = Time.time + 1.2f;
+            RecordFeedback(msg);
             if (IsSpawned && IsServer && !IsOwner) FeedbackRpc(msg);
         }
 
         [Rpc(SendTo.Owner)]
-        void FeedbackRpc(FixedString64Bytes msg) { LastFeedback = msg.ToString(); FeedbackUntil = Time.time + 1.2f; }
+        void FeedbackRpc(FixedString64Bytes msg) => RecordFeedback(msg.ToString());
+
+        void RecordFeedback(string msg)
+        {
+            LastFeedback = msg;
+            FeedbackUntil = Time.time + 1.2f;
+            handFeedbackRound = RoundDirector.Instance ? RoundDirector.Instance.Restarts : -1;
+            if (msg == "hud.grip_busy" || msg == "hud.too_far" || msg == nameof(GrabResult.GlobalLimit) || msg == nameof(GrabResult.OwnerInactive))
+                lastRejectedAt = Time.unscaledTime;
+        }
+
+        void UpdateGrabPresentation()
+        {
+            if (!controls || !controls.IsLocal) return;
+            // Process blocked frames too, even when controls short-circuit before sampling a grip.
+            GrabIntent.Refresh();
+            int round = RoundDirector.Instance ? RoundDirector.Instance.Restarts : -1;
+            bool reset = presentationRound != round;
+            presentationRound = round;
+            bool canAct = CanPresentInput;
+            if (!canAct || handFeedbackRound != round)
+            {
+                FeedbackUntil = 0f;
+                LastFeedback = "";
+            }
+            if (!canAct) GrabIntent.ClearFeedback();
+
+            for (int hand = 0; hand < 2; hand++)
+            {
+                var rig = rigs[hand];
+                var action = hand == 0 ? Act.GrabLeft : Act.GrabRight;
+                bool requested = canAct && Ctrl(action);
+                if (reset || !requested)
+                {
+                    pendingFrom[hand] = float.NegativeInfinity;
+                    if (rig) rig.CancelPulse();
+                }
+                if (requested && !lastGrabIntent[hand] && HeldSocketId(hand) == "")
+                {
+                    pendingFrom[hand] = Time.unscaledTime;
+                    if (rig) rig.Pulse();
+                    if (GameAudio.Instance) GameAudio.Instance.Play2D("grab_try", 0.45f);
+                }
+                lastGrabIntent[hand] = requested;
+            }
+        }
 
         GrabSocket FindCandidate()
         {
@@ -345,24 +402,24 @@ namespace UncleExtraction
         void SetHand(Transform t, Renderer r, int hand)
         {
             if (!t) return;
-            var s = HeldSocket(hand);
+            bool local = controls && controls.IsLocal;
+            var s = !local || CanPresentInput ? HeldSocket(hand) : null;
+            bool pending = IsGrabPending(hand);
             Vector3 p = s ? Vector3.Lerp(HandTarget(hand), s.Position, 0.85f) : HandTarget(hand);
             // sesion 14: caido o levantandose, las manos bajan abiertas (sin control); con esfuerzo, el puño que sostiene tiembla
             bool down = motor && motor.State != PlayerState.Active;
             if (down && cam) p = cam.transform.TransformPoint(new Vector3(hand == 0 ? -0.3f : 0.3f, -0.55f, 0.55f));
             bool straining = s && EffortActive;
-            if (straining) p += (cam ? cam.transform.right : Vector3.right) * (Mathf.Sin(Time.time * 47f + hand * 1.7f) * 0.006f) + Vector3.up * (Mathf.Sin(Time.time * 39f + hand) * 0.004f);
+            if (pending && !GameSettings.ReduceMotion) p = Vector3.MoveTowards(p, Candidate.Position, 0.10f);
+            if (straining && GameSettings.Hud == HudProfile.Detailed && !GameSettings.ReduceMotion) p += (cam ? cam.transform.right : Vector3.right) * (Mathf.Sin(Time.time * 47f + hand * 1.7f) * 0.006f) + Vector3.up * (Mathf.Sin(Time.time * 39f + hand) * 0.004f);
             t.position = Vector3.Lerp(t.position, p, Smooth.Factor(down ? 0.15f : 0.5f));
             Color c = s == null ? free : Color.Lerp(holding, strained, Mathf.Max(Tension01(hand), straining ? 0.6f : 0f));
             var rig = rigs[hand];
-            if (rig && controls && controls.IsLocal && !down && controls.Pressed(hand == 0 ? Act.GrabLeft : Act.GrabRight))
-            {   // cada clic se ve y se oye en el acto (la confirmacion del agarre llega despues, con su propio sonido)
-                rig.Pulse(); if (GameAudio.Instance) GameAudio.Instance.Play2D("grab_try", 0.45f);
-            }
             if (rig)
             {
-                bool pending = s == null && Candidate && Ctrl(hand == 0 ? Act.GrabLeft : Act.GrabRight) && !down;
-                rig.Set(down ? 0.05f : s ? 1f : pending ? 0.55f : 0.15f, s == null ? sleeveFree : c);
+                if (s || down || lastRejectedAt >= pendingFrom[hand]) rig.CancelPulse();
+                float strain = s && !down ? Mathf.InverseLerp(0.6f, 1f, Tension01(hand)) : 0f;
+                rig.Set(down ? 0.05f : s ? 1f : pending ? 0.48f : 0.15f, s == null ? sleeveFree : c, strain, hand);
             }
             else if (r) r.material.color = c;
         }
