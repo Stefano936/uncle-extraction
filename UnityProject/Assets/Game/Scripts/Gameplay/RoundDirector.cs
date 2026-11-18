@@ -35,14 +35,19 @@ namespace UncleExtraction
         public float Elapsed { get => Mirror ? nElapsed.Value : elapsed; private set => elapsed = value; }
         public Difficulty CurrentDifficulty => Mirror ? nDifficulty.Value : difficulty;
         public int PartySize => Mirror ? nParty.Value : partySize;
-        public float TimeLimit => TimeLimitOverride > 0f ? TimeLimitOverride : AddTime(LabBalance.RoundTime(PartySize, CurrentDifficulty), Mirror ? nTimeBonus.Value : timeBonus);
+        public float TimeLimit => AddTime(TimeLimitOverride > 0f ? TimeLimitOverride : LabBalance.RoundTime(PartySize, CurrentDifficulty), Mirror ? nTimeBonus.Value : timeBonus);
         static float AddTime(float limit, float bonus) => limit < 0f ? limit : limit + bonus;
-        /// Transicion tras una desconexion (sesion 13): durante la ronda, una baja en el grupo se aplica recien tras
-        /// DisconnectGrace segundos (no se recalcula al instante por un corte breve) y, al aplicarse, el tiempo transcurrido se
-        /// conserva y quedan al menos MinRemainingAfterDrop segundos (el limite puede bajar con menos jugadores).
+        /// Transicion tras una desconexion (sesiones 13 y 14). Politica:
+        /// - El TIEMPO extra que corresponde a un grupo mas chico (LabBalance: menos jugadores = mas tiempo) se da en el
+        ///   momento: una desconexion en los ultimos segundos no hace perder por reloj antes de que llegue la ayuda.
+        /// - Resistencia e intervalo de ataques del grupo nuevo se aplican tras DisconnectGrace s (sin cambios bruscos del tio
+        ///   en medio de un forcejeo); el transcurrido se conserva y quedan al menos MinRemainingAfterDrop s.
+        /// - Todos ven un aviso localizado. La gracia NO es una reconexion: la admision rechaza entrar con la ronda empezada
+        ///   (limitacion conocida del alcance inicial); un regreso dentro de los 10 s solo ocurre si el transporte no llego a
+        ///   desconectar al jugador.
         public const float DisconnectGrace = 10f, MinRemainingAfterDrop = 60f;
         readonly NetworkVariable<float> nTimeBonus = new NetworkVariable<float>();
-        float timeBonus, dropSince = -1f;
+        float timeBonus, dropSince = -1f, dropTimeCredit;
         /// Segundos que faltan para aplicar una baja pendiente (-1 = ninguna).
         /// Solo pruebas: fijar el tiempo transcurrido.
         public void SetElapsedForTest(float t) => elapsed = t;
@@ -131,14 +136,30 @@ namespace UncleExtraction
         /// por debajo de MinRemainingAfterDrop. Publica para las pruebas (reloj inyectado).
         public void UpdatePartySize(int connected, float now)
         {
-            if (connected >= partySize || inLobby || State != RoundState.Running) { partySize = connected; dropSince = -1f; return; }
-            if (dropSince < 0f) { dropSince = now; Debug.Log($"[Round] baja de jugador ({partySize} -> {connected}); se aplica en {DisconnectGrace:0}s si no vuelve"); return; }
+            if (connected >= partySize || inLobby || State != RoundState.Running)
+            {
+                if (dropSince >= 0f) { timeBonus -= dropTimeCredit; dropTimeCredit = 0f; Debug.Log("[Round] baja cancelada: el grupo volvio a estar completo"); }
+                partySize = connected; dropSince = -1f; return;
+            }
+            if (dropSince < 0f)
+            {
+                dropSince = now;
+                float a = LabBalance.RoundTime(connected, difficulty), b = LabBalance.RoundTime(partySize, difficulty);
+                dropTimeCredit = a > 0f && b > 0f ? Mathf.Max(0f, a - b) : 0f; timeBonus += dropTimeCredit; // tiempo: ya
+                Debug.Log($"[Round] baja de jugador ({partySize} -> {connected}) a los {Elapsed:0.0}s, quedaban {(TimeLimit > 0f ? TimeLimit - dropTimeCredit - Elapsed : -1f):0.0}s; tiempo +{dropTimeCredit:0}s ya; resistencia y ataques en {DisconnectGrace:0}s");
+                Notice($"round.player_left|secs={DisconnectGrace:0}|time={dropTimeCredit:0}");
+                return;
+            }
             if (now - dropSince < DisconnectGrace) return;
+            timeBonus -= dropTimeCredit; dropTimeCredit = 0f; // el credito pasa a estar en el limite del grupo nuevo
             float before = TimeLimit; int was = partySize; partySize = connected; dropSince = -1f;
             float after = TimeLimit;
             if (after > 0f && after - Elapsed < MinRemainingAfterDrop) timeBonus += MinRemainingAfterDrop - (after - Elapsed);
             Debug.Log($"[Round] grupo {was} -> {partySize} tras la gracia; transcurrido {Elapsed:0.0}s conservado; limite {before:0} -> {TimeLimit:0}s");
+            Notice($"round.party_adjusted|n={partySize}");
         }
+        void Notice(string code) { if (IsSpawned && IsServer) NoticeRpc(new Unity.Collections.FixedString128Bytes(code)); else NetSession.Say(code, 6f); }
+        [Rpc(SendTo.Everyone)] void NoticeRpc(Unity.Collections.FixedString128Bytes code) => NetSession.Say(code.ToString(), 6f);
 
         public void OnExtracted() { if (State == RoundState.Running) { State = RoundState.Success; Debug.Log($"[Round] SUCCESS in {Elapsed:0.0}s rescates={PhysicsWatchdog.RoundRescues}"); } }
 
@@ -160,7 +181,7 @@ namespace UncleExtraction
             GrabRegistry.ReleaseEverything(ReleaseReason.Reset);
             foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
                 if (mb is IResettable r) r.ResetState();
-            State = RoundState.Running; Elapsed = 0f; Restarts++; timeBonus = 0f; dropSince = -1f;
+            State = RoundState.Running; Elapsed = 0f; Restarts++; timeBonus = 0f; dropSince = -1f; dropTimeCredit = 0f;
             Debug.Log($"[Round] restart #{Restarts} grabs={GrabRegistry.Count} joints={CountGameplayJoints()}");
         }
 

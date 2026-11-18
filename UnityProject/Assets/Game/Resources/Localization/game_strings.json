@@ -616,6 +616,16 @@
    "key": "tut.transport",
    "en": "Take him to the van: drag him (both hands pull harder) or bring the cart, put him next to it and press {key} to load and strap him.",
    "es_UY": "Llevalo a la camioneta: arrastralo (con las dos manos tirás más) o traé el carrito, ponelo al lado y tocá {key} para cargarlo y atarlo."
+  },
+  {
+   "key": "round.player_left",
+   "en": "A player disconnected: their grabs were released. +{time} s on the clock now; the uncle adjusts to the group in {secs} s.",
+   "es_UY": "Se desconectó un jugador: sus agarres se soltaron. +{time} s de reloj ya; el tío se ajusta al grupo en {secs} s."
+  },
+  {
+   "key": "round.party_adjusted",
+   "en": "The uncle now resists like against {n} player(s).",
+   "es_UY": "El tío ahora resiste como contra {n} jugador(es)."
   }
  ]
 }

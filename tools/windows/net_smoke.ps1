@@ -1,7 +1,8 @@
-# UNCLE EXTRACTION - pruebas de humo de red con DOS PROCESOS en la misma PC (localhost, 127.0.0.1).
+﻿# UNCLE EXTRACTION - pruebas de humo de red con DOS PROCESOS en la misma PC (localhost, 127.0.0.1).
 # No es una prueba LAN ni de internet: registrar esos resultados por separado.
 # Uso: powershell -ExecutionPolicy Bypass -File tools\windows\net_smoke.ps1 [-Scenario <lista separada por comas>|all] [-Scene Bar_LastRound|PhysicsLab] [-Runs 1]
-#   Escenarios: coop, repeat, lose, netsim, race, hostleave, clientdrop, loaddrop, closedrop, party3, party4, latejoin
+#   Escenarios: coop, repeat, lose, netsim, race, hostleave, clientdrop, loaddrop, closedrop, party3, party4, latejoin,
+#   guesttoggle(_sim), marks, grace, graceend (sesion 14: sondas con mouse/teclado virtuales y desconexion con gracia)
 #   party3/party4: un anfitrion y 2/3 clientes en procesos separados (sala, inicio con todos listos, ronda completa).
 #   latejoin: un cliente que llega con la ronda iniciada es rechazado con motivo (sin incorporacion en curso).
 #   netsim usa la build de desarrollo: el simulador de red de NGO solo existe en editor y builds de desarrollo.
@@ -16,7 +17,7 @@ $Log    = Join-Path $Repo '.local-setup\logs\net'
 New-Item -ItemType Directory -Force -Path $Log | Out-Null
 if (-not (Test-Path $Exe)) { Write-Host "Falta la build: $Exe" -ForegroundColor Red; exit 2 }
 $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
-$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin')
+$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin','guesttoggle','guesttoggle_sim','marks','grace','graceend')
 # QA ampliada (mas larga; -Scenario qa): dificultades y grupos, sesion larga, perdida brusca del anfitrion, rendimiento.
 # 'relay' va aparte: necesita el proyecto vinculado a Unity Cloud y prueba Relay en UNA PC.
 $Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080','perf1080low')
@@ -239,6 +240,56 @@ for ($run = 1; $run -le $Runs; $run++) {
         if ((Crashed $hostG) -or (Crashed $cliG)) { Record $label 'BLOCKED' "crash al arrancar; ver $Log\${tag}_*.log"; break }
         $disc = (Grep $cliG 'Disconnect Event').Count -gt 0; $menu = (Grep $cliG '\[Menu\] en el menu').Count -ge 2; $fake = (Grep $cliG '\[Round\] SUCCESS').Count -gt 0
         Record $label $(if ($disc -and $menu -and -not $fake) { 'PASS' } else { 'FAIL' }) "desconexion=$disc vuelve_al_menu=$menu victoria_falsa=$fake"
+      }
+      { $_ -in 'guesttoggle','guesttoggle_sim' } {
+        # Invitado con agarre ALTERNADO y mouse/teclado virtuales (mismo camino que la entrada real): un clic agarra, otro
+        # suelta, Q con el boton sostenido, pausa con el boton sostenido, pedido sin objetivo que se desarma. El anfitrion
+        # acomoda al invitado frente al tio (-ueProbeStage). _sim: build de desarrollo con 150 ms +-30 de latencia.
+        $sim = $sc -eq 'guesttoggle_sim'; $exe = if ($sim) { $ExeDev } else { $Exe }
+        if ($sim -and -not (Test-Path $ExeDev)) { Record $label 'NOT_RUN' "falta la build de desarrollo $ExeDev"; break }
+        $simArgs = if ($sim) { @('-ueNetSim','150','30','0') } else { @() }
+        $r = PairRetry $label $tag (@('-ueProbeStage') + $simArgs) (@('-ueProbe','toggle') + $simArgs) 90 $exe
+        if ($r) { $fin = Last $r.c '\[Probe\] fin toggle'; $steps = @(Grep $r.c '\[Probe\] paso=')
+          $okN = ([regex]::Match("$fin", 'ok=(\d+)/(\d+)')); $pend = [regex]::Match("$((Grep $r.c 'paso=alternar_un_clic_agarra') | Select-Object -First 1)", 'pendiente_ms=(\d+)').Groups[1].Value
+          $pass = $okN.Success -and $okN.Groups[1].Value -eq $okN.Groups[2].Value -and [int]$okN.Groups[2].Value -ge 5
+          $bad = ($steps | Where-Object { $_ -match 'ok=False' } | ForEach-Object { [regex]::Match($_, 'paso=(\S+)').Groups[1].Value }) -join ','
+          Record $label $(if ($pass) { 'PASS' } elseif (-not $fin) { 'FAIL' } else { 'FAIL' }) "sonda $($okN.Value) pendiente_hasta_confirmar=${pend}ms$(if ($bad) { " fallaron=$bad" })$(if (-not $fin) { ' (la sonda no termino)' })" }
+      }
+      'marks' {
+        # Marcador desde el invitado: lo reciben todos con nombre/color/objetivo del emisor; frecuencia y alcance los
+        # valida el anfitrion; caduca; el reinicio de la ronda los limpia.
+        $r = PairRetry $label $tag @('-ueProbeStage','-ueProbeRestartAt','18') @('-ueProbe','mark') 90
+        if ($r) { $fin = Last $r.c '\[Probe\] fin mark'; $okN = [regex]::Match("$fin", 'ok=(\d+)/(\d+)')
+          $hostSaw = @(Grep $r.h '\[Mark\] .* marca Uncle .* dueño=1'); $cliSaw = @(Grep $r.c '\[Mark\] .* marca Uncle .* dueño=1')
+          $sameColor = $hostSaw.Count -gt 0 -and $cliSaw.Count -gt 0 -and ([regex]::Match($hostSaw[0], 'color=#\w+').Value -eq [regex]::Match($cliSaw[0], 'color=#\w+').Value)
+          $rejFreq = (Grep $r.h '\[Mark\] rechazado .*demasiado seguido').Count; $rejRange = (Grep $r.h '\[Mark\] rechazado .*fuera de alcance').Count
+          $pass = $okN.Success -and $okN.Groups[1].Value -eq $okN.Groups[2].Value -and $sameColor -and $rejFreq -ge 1 -and $rejRange -ge 1
+          Record $label $(if ($pass) { 'PASS' } else { 'FAIL' }) "sonda $($okN.Value) anfitrion_recibe=$($hostSaw.Count) mismo_color=$sameColor rechazos frecuencia=$rejFreq alcance=$rejRange" }
+      }
+      { $_ -in 'grace','graceend' } {
+        # Desconexion en plena ronda: el anfitrion sigue jugando (autopiloto), los agarres del que se fue se sueltan, el
+        # tiempo extra llega en el momento y el ajuste del tio una sola vez a los 10 s, con el transcurrido conservado.
+        # graceend: ronda de 40 s y la desconexion cuando quedan menos de 10 s: no se pierde por reloj antes de la ayuda.
+        $end = $sc -eq 'graceend'
+        $hx = @('-ueAutopilot','drag','-ueAutopilotDelay','2','-ueQuitOnEnd') + $(if ($end) { @('-ueRoundTime','40','-ueNoClose') } else { @() })
+        $hostG = Start-Game "${tag}_host" (HostArgs $hx); Start-Sleep 4
+        $cliG = Start-Game "${tag}_client" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3'))
+        $deadline = (Get-Date).AddSeconds(60); while ((Get-Date) -lt $deadline -and (Grep $hostG 'ronda iniciada con 2').Count -eq 0) { Start-Sleep -Milliseconds 300 }
+        Start-Sleep $(if ($end) { 33 } else { 14 }); $cliG.p.Kill()
+        $null = $hostG.p.WaitForExit($(if ($end) { 140000 } else { 300000 })); Stop-Game $hostG
+        if ((Crashed $hostG) -or (Crashed $cliG)) { Record $label 'BLOCKED' "crash; ver $Log\${tag}_*.log"; break }
+        $drop = @(Grep $hostG '\[Round\] baja de jugador'); $adj = @(Grep $hostG '\[Round\] grupo 2 -> 1 tras la gracia')
+        $left = (Grep $hostG 'Se fue el jugador').Count -gt 0
+        $tDrop = [double]::Parse(([regex]::Match("$($drop | Select-Object -First 1)", 'a los ([\d,\.]+)s').Groups[1].Value -replace ',', '.'), [Globalization.CultureInfo]::InvariantCulture)
+        $tAdj = [double]::Parse(([regex]::Match("$($adj | Select-Object -First 1)", 'transcurrido ([\d,\.]+)s').Groups[1].Value -replace ',', '.'), [Globalization.CultureInfo]::InvariantCulture)
+        $gap = [math]::Round($tAdj - $tDrop, 1)
+        $tout = (Get-Content $hostG.log | Select-String '\[Round\] (TIMEOUT|SUCCESS)' | Select-Object -First 1).LineNumber
+        $adjLine = (Get-Content $hostG.log | Select-String '\[Round\] grupo 2 -> 1' | Select-Object -First 1).LineNumber
+        $diagAfter = (Grep $hostG 'NetDiag\] anfitrion: jugadores=1').Count -gt 0
+        $final = (Grep $hostG '\[Round\] (SUCCESS|TIMEOUT)') | Select-Object -First 1
+        $orderOk = $adjLine -and (-not $tout -or $tout -gt $adjLine)
+        $pass = $drop.Count -eq 1 -and $adj.Count -eq 1 -and $left -and $gap -ge 9 -and $gap -le 11.5 -and $diagAfter -and $orderOk
+        Record $label $(if ($pass) { 'PASS' } elseif ($drop.Count -eq 0) { 'NOT_RUN' } else { 'FAIL' }) "baja=$($drop.Count) ajuste=$($adj.Count) gracia=${gap}s agarres_liberados=$left sigue_jugando=$diagAfter fin_despues_del_ajuste=$orderOk [$([regex]::Match("$($drop | Select-Object -First 1)", 'quedaban.*').Value)] final=$([regex]::Match("$final", '(SUCCESS|TIMEOUT).*').Value)"
       }
       'clientdrop' {
         $hostG = Start-Game "${tag}_host" (HostArgs @()); Start-Sleep 4

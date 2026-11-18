@@ -112,6 +112,29 @@ namespace UncleExtraction.Tests
             }
             finally { Object.DestroyImmediate(r.gameObject); }
         }
+        [Test] public void Drop_InTheLastSeconds_TimeHelpArrivesAtOnce_BalanceAfterGrace()
+        {
+            var r = NewRound(Difficulty.Normal, 2);
+            try
+            {
+                float limit2 = r.TimeLimit; r.SetElapsedForTest(limit2 - 5f);
+                r.UpdatePartySize(1, 0f);
+                Assert.AreEqual(2, r.PartySize, "resistencia y ataques todavia del grupo de 2");
+                float expected = LabBalance.RoundTime(1, Difficulty.Normal) - LabBalance.RoundTime(2, Difficulty.Normal);
+                Assert.AreEqual(limit2 + expected, r.TimeLimit, 1e-3, "el tiempo del grupo mas chico llega en el momento");
+                Assert.Greater(r.TimeLimit - r.Elapsed, RoundDirector.DisconnectGrace, "la ronda no termina por reloj durante la gracia");
+                r.UpdatePartySize(1, RoundDirector.DisconnectGrace + 0.1f);
+                Assert.AreEqual(1, r.PartySize);
+                Assert.GreaterOrEqual(r.TimeLimit - r.Elapsed, RoundDirector.MinRemainingAfterDrop - 1e-3);
+            }
+            finally { Object.DestroyImmediate(r.gameObject); }
+        }
+        [Test] public void Reconnect_WithinGrace_ReturnsTheTimeCredit()
+        {
+            var r = NewRound(Difficulty.Normal, 2);
+            try { float l0 = r.TimeLimit; r.UpdatePartySize(1, 0f); Assert.Greater(r.TimeLimit, l0); r.UpdatePartySize(2, 3f); Assert.AreEqual(l0, r.TimeLimit, 1e-3); }
+            finally { Object.DestroyImmediate(r.gameObject); }
+        }
         [Test] public void Drop_NeverLeavesLessThanTheMinimumRemaining()
         {
             var r = NewRound(Difficulty.Hard, 4);

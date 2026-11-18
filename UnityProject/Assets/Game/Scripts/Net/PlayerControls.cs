@@ -149,10 +149,14 @@ namespace UncleExtraction
         {
             var round = RoundDirector.Instance;
             if (!round || round.InLobby || round.State != RoundState.Running) return;
-            if (!CoopMarkers.Accept(motor ? motor.EyePosition : transform.position, pos, lastMarkAt, Time.time)) return;
+            if (!CoopMarkers.Accept(motor ? motor.EyePosition : transform.position, pos, lastMarkAt, Time.time))
+            { Debug.Log($"[Mark] rechazado de {(motor ? motor.playerName : "?")}: {(Time.time - lastMarkAt < CoopMarkers.MinInterval ? "demasiado seguido" : "fuera de alcance o invalido")}"); return; }
             lastMarkAt = Time.time;
             ShowMarkRpc((byte)kind, pos);
         }
+        /// Pruebas de red: manda un pedido de marca tal cual (sin las comprobaciones del dueño) para probar la validacion del anfitrion.
+        public void DebugMarkRaw(Vector3 pos) { if (IsSpawned && !IsServer) MarkRpc((byte)MarkKind.Point, pos); else ServerMark(MarkKind.Point, pos); }
+        public void DebugMark() => TryMark();
         [Rpc(SendTo.Everyone)]
         void ShowMarkRpc(byte kind, Vector3 pos) => ShowMark(OwnerClientId, (MarkKind)kind, pos);
         void ShowMark(ulong owner, MarkKind kind, Vector3 pos) { if (CoopMarkers.Instance) CoopMarkers.Instance.Show(owner, motor ? motor.playerName : "?", kind, pos); }

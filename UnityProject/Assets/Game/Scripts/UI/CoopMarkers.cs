@@ -81,7 +81,7 @@ namespace UncleExtraction
             }
             m.name = name; m.kind = kind; m.pos = pos; m.until = Time.time + Lifetime; m.ui.gameObject.SetActive(true);
             if (GameAudio.Instance) GameAudio.Instance.Play2D("ping", 0.6f);
-            Debug.Log($"[Mark] {name} marca {kind} en {pos}");
+            Debug.Log($"[Mark] {name} marca {kind} en {pos} color=#{ColorUtility.ToHtmlStringRGB(ColorOf(owner))} dueño={owner}");
         }
 
         static Vector3 WorldPos(Mark m)
@@ -94,10 +94,16 @@ namespace UncleExtraction
             return m.pos + Vector3.up * 0.3f;
         }
 
+        int seenRestarts = -1;
         void LateUpdate()
         {
             var cam = Camera.main; if (!root) return;
             var round = RoundDirector.Instance;
+            if (round && round.Restarts != seenRestarts)
+            {   // reinicio (o vuelta a la sala): los marcadores de la ronda anterior no siguen
+                if (seenRestarts >= 0 && ActiveCount > 0) Debug.Log($"[Mark] limpiados por reinicio ({ActiveCount})");
+                seenRestarts = round.Restarts; foreach (var m in marks.Values) m.until = 0f;
+            }
             bool live = cam && round && !round.InLobby && round.State == RoundState.Running;
             var me = PlayerControls.Local ? PlayerControls.Local.GetComponent<PlayerMotor>() : null;
             foreach (var m in marks.Values)
