@@ -56,7 +56,7 @@ namespace UncleExtraction
             if (Instance.firstUnanchorAt < 0f) Instance.firstUnanchorAt = Instance.T;
             // liberar la mano mientras el tio esta distraido (timbre, torre, vaso): jugada coordinada
             var npc = NpcBrain.Instance;
-            if (npc && npc.State == NpcState.Distracted && Instance.coordinatedAt < 0f) { Instance.coordinatedAt = Instance.T; Instance.coordinatedName = NameOf(h); Instance.AddMoment("coordinated", h); }
+            if (npc && (npc.State == NpcState.Distracted || npc.BellWindow) && Instance.coordinatedAt < 0f) { Instance.coordinatedAt = Instance.T; Instance.coordinatedName = NameOf(h); Instance.AddMoment("coordinated", h); }
         }
         public static void Strapped(PlayerHands h) { if (!Instance || !NetAuth.IsServer) return; if (h) Instance.Of(h).straps++; Instance.AddMoment("strap", h); }
         public static void Closing(PlayerHands h) { if (!Instance || !NetAuth.IsServer) return; Instance.lastCloser = h; }

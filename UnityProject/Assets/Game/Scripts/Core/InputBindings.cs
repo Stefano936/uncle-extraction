@@ -87,7 +87,30 @@ namespace UncleExtraction
 #endif
 
         /// Nombre legible del control asignado ("E", "Clic izquierdo"...), para prompts que no dicen una tecla fija.
-        public static string Display(Act a) => Display(Id(a));
+        /// Sesion 17: con el MANDO como ultimo dispositivo usado, las ayudas muestran el boton del mando (cambia en vivo al
+        /// alternar). Opciones sigue mostrando la asignacion de teclado (usa Display(string)).
+        public static string Display(Act a) => PadActive && PadName(a) != null ? PadName(a) : Display(Id(a));
+        public static string PadName(Act a) => a switch
+        {
+            Act.GrabLeft => "LT", Act.GrabRight => "RT", Act.Interact => "A", Act.ReleaseAll => "B", Act.Effort => "L3",
+            Act.Crouch => "R3", Act.Dodge => "X", Act.Pause => "Start", Act.Mark => "D-pad ↑", _ => null
+        };
+        /// Ultimo dispositivo con actividad: mando (sticks, gatillos, botones) o teclado/raton. Se evalua una vez por cuadro.
+        public static bool PadActive { get { Tick(); return padActive; } }
+        public static bool ForcePad; // pruebas y capturas
+        static bool padActive; static int tickFrame = -1;
+        static void Tick()
+        {
+            if (ForcePad) { padActive = true; return; }
+#if UE_INPUT_SYSTEM
+            if (tickFrame == Time.frameCount) return; tickFrame = Time.frameCount;
+            var g = Gamepad.current;
+            if (g != null && (g.leftStick.ReadValue().sqrMagnitude > 0.09f || g.rightStick.ReadValue().sqrMagnitude > 0.09f || g.leftTrigger.isPressed || g.rightTrigger.isPressed
+                || g.buttonSouth.isPressed || g.buttonEast.isPressed || g.buttonWest.isPressed || g.buttonNorth.isPressed || g.startButton.isPressed || g.dpad.ReadValue().sqrMagnitude > 0.1f)) padActive = true;
+            var k = Keyboard.current; var m = Mouse.current;
+            if ((k != null && k.anyKey.isPressed) || (m != null && (m.delta.ReadValue().sqrMagnitude > 9f || m.leftButton.isPressed || m.rightButton.isPressed))) padActive = false;
+#endif
+        }
         public static string Display(MoveKey m) => Display(Id(m));
         public static string Display(string id)
         {
@@ -101,6 +124,7 @@ namespace UncleExtraction
         /// Teclas de movimiento para textos de ayuda: «WASD» si son las de fabrica, si no las cuatro asignadas.
         public static string MoveDisplay()
         {
+            if (PadActive) return Loc.T("input.pad_move");
             bool def = true; foreach (var m in MoveKeys) if (Path(m) != defaults[Id(m)]) def = false;
             return def ? "WASD" : $"{Display(MoveKey.Forward)}{Display(MoveKey.Left)}{Display(MoveKey.Back)}{Display(MoveKey.Right)}";
         }

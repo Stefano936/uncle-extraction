@@ -39,7 +39,7 @@ namespace UncleExtraction
             difficulty = Ui.Label(Root, "Difficulty", "", Ui.FontBody, Ui.Text, TextAnchor.UpperLeft, true);
             var drt = difficulty.rectTransform; drt.anchorMin = drt.anchorMax = new Vector2(1, 1); drt.pivot = new Vector2(1, 1); drt.anchoredPosition = new Vector2(-48, -170 - d); drt.sizeDelta = new Vector2(400, 40);
             diffBtn = Ui.Button(Root, "DiffBtn", "", new Vector2(1, 1), new Vector2(-48, -220 - d), new Vector2(400, 64), () => { var d = round.CurrentDifficulty; round.SetDifficulty((Difficulty)(((int)d + 1) % 3)); });
-            chBtn = Ui.Button(Root, "ChallengeBtn", "", new Vector2(1, 1), new Vector2(-48, -294 - d), new Vector2(400, 64), () => round.SetChallenge((ChallengeMode)(((int)round.CurrentChallenge + 1) % 3)));
+            chBtn = Ui.Button(Root, "ChallengeBtn", "", new Vector2(1, 1), new Vector2(-48, -294 - d), new Vector2(400, 64), () => round.SetChallenge((ChallengeMode)(((int)round.CurrentChallenge + 1) % Challenges.ModeCount)));
             diffBtn.GetComponent<RectTransform>().pivot = new Vector2(1, 1);
             // codigo de sala (internet): visible para todos, con copiar (UI_SPEC 3: lobby.code, button.copy_code)
             codeLabel = Ui.Label(Root, "CodeLabel", "", Ui.FontHud + 2, Ui.Muted, TextAnchor.UpperLeft);

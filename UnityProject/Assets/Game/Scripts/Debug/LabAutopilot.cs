@@ -73,6 +73,7 @@ namespace UncleExtraction
                     pendingMode = args[i + 1].Equals("cart", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Cart
                                 : args[i + 1].Equals("race", StringComparison.OrdinalIgnoreCase) ? AutopilotMode.Race : AutopilotMode.Drag;
                 if (args[i] == "-ueRaceAt" && i + 1 < args.Length) long.TryParse(args[i + 1], out raceAtUnixMs);
+                if (args[i] == "-ueRaceNatural") raceNatural = true;
                 if (args[i] == "-ueRepeat" && i + 1 < args.Length) int.TryParse(args[i + 1], out repeatLeft);
                 if (args[i] == "-ueDropAt" && i + 1 < args.Length) dropAt = args[i + 1];   // prueba: salir del juego en "strap" o "closing"
                 if (args[i] == "-ueNoClose") noClose = true;
@@ -177,7 +178,11 @@ namespace UncleExtraction
             if (routine != null) StopCoroutine(routine);
             routine = null; Running = false; Status = "";
             LabInput.ClearSimulated();
+            raceMode = false;
+            // sesion 17: la carrera apaga la IA del tio en el anfitrion; al terminar, cancelar o reiniciar se restaura lo que habia
+            if (brainSaved) { brainSaved = false; if (npc) npc.brainEnabled = brainBefore; Log($"carrera: IA del tio restaurada ({brainBefore})"); }
         }
+        bool brainSaved, brainBefore, raceNatural;
 
         public void ResetState() => StopRun();
         void OnDisable() => StopRun();
@@ -459,7 +464,10 @@ namespace UncleExtraction
             // sesion 16: los dos se paran FRENTE AL CINTURON segun hacia donde mira el tio ahora (no en puntos fijos del mapa)
             // y no aprietan hasta tener el cinturon como candidato: asi la prueba mide de verdad la disputa por el mismo punto
             // la prueba mide la disputa por un punto, no la IA: en el anfitrion el tio queda quieto durante la carrera
-            if (NetAuth.IsServer && npc) npc.brainEnabled = false;
+            // sesion 17 (-ueRaceNatural): caso de JUEGO NORMAL, sin reubicar jugadores y con la IA del tio activa (se corre con
+            // latencia simulada). Cada uno se acerca desde donde esta; se registran las aproximaciones fallidas aparte.
+            if (NetAuth.IsServer && npc && !raceNatural) { brainBefore = npc.brainEnabled; brainSaved = true; npc.brainEnabled = false; }
+            Log($"carrera: modo={(raceNatural ? "natural" : "escenificada")} ia_tio={(npc ? npc.brainEnabled : false)}");
             Vector3 StandNow()
             {
                 Vector3 toward = Flat(belt.Position - body.Body.position); if (toward.sqrMagnitude < 1e-3f) toward = body.Forward; toward.Normalize();
@@ -472,7 +480,7 @@ namespace UncleExtraction
             {   // hasta la señal: pararse frente al cinturon (recalculado si el cuerpo se mueve) y apuntarle. El ANFITRION, que tiene
                 // la autoridad, ubica a los dos jugadores en sus lugares (si no, uno le tapaba el camino al otro y apuntaba a otra parte)
                 stand = StandNow();
-                if (NetAuth.IsServer)
+                if (NetAuth.IsServer && !raceNatural)
                     foreach (var pm in PlayerMotor.All)
                     {
                         if (!pm || !pm.Controls) continue;
@@ -488,6 +496,7 @@ namespace UncleExtraction
             }
             LabInput.SimulatedMove = Vector2.zero;
             raceMode = false;
+            if (hands.Candidate != belt) Log($"aproximacion fallida: al llegar la senal el candidato era {(hands.Candidate ? hands.Candidate.socketId : "-")} (dist {Vector3.Distance(Eye, belt.Position):0.00})");
             Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")} yo={Me} destino={stand} cinturon={belt.Position} dist={Vector3.Distance(Eye, belt.Position):0.00}");
             for (float t = 0; t < 2f; t += Time.deltaTime) { LookAt(belt.Position); SetHold(0, true); yield return null; }
             Log($"resultado carrera: mano izq = '{hands.HeldSocketId(0)}' aviso='{hands.LastFeedback}'");

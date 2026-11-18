@@ -11,7 +11,7 @@ namespace UncleExtraction
     {
         public const int Rate = 44100;
         static readonly Dictionary<string, AudioClip> cache = new Dictionary<string, AudioClip>();
-        public static readonly string[] Ids = { "grab", "release", "impact", "whoosh", "cue_slap", "cue_push", "cue_kick", "cue_shake", "van_close", "door_creak", "success", "timeout", "ui", "ping", "grab_try", "slip", "strain", "cart_roll", "cart_bump", "latch", "ambience", "win_sting", "clink", "glass_crash" };
+        public static readonly string[] Ids = { "grab", "release", "impact", "whoosh", "cue_slap", "cue_push", "cue_kick", "cue_shake", "van_close", "door_creak", "success", "timeout", "ui", "ping", "grab_try", "slip", "strain", "cart_roll", "cart_bump", "latch", "ambience", "win_sting", "clink", "glass_crash", "bell" };
 
         public static AudioClip Get(string id)
         {
@@ -61,6 +61,7 @@ namespace UncleExtraction
                 case "win_sting": { b = Buf(1.1f); float[] f = { 392f, 494f, 587f, 784f }; for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; float v = 0f; for (int k = 0; k < f.Length; k++) { float on = t - k * 0.06f; if (on > 0f) { float ph = 2 * Mathf.PI * f[k] * on; v += (Mathf.Sin(ph) + 0.35f * Mathf.Sin(2 * ph) + 0.15f * Mathf.Sin(3 * ph)) * Env(on, 0.01f, 1.0f) * 0.22f; } } b[i] = v; } break; } // remate breve
                 case "clink": b = Buf(0.3f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; b[i] = (Mathf.Sin(2 * Mathf.PI * 3100f * t) * 0.4f + Mathf.Sin(2 * Mathf.PI * 4650f * t) * 0.2f) * Mathf.Exp(-22f * t); } break;
                 case "glass_crash": b = Buf(0.9f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; float grit = N() * Mathf.Exp(-6f * t) * 0.5f; float ping = Mathf.Sin(2 * Mathf.PI * (2800f + 900f * Mathf.Sin(t * 40f)) * t) * 0.2f * Mathf.Exp(-9f * t); b[i] = grit + ping; } break;
+                case "bell": b = Buf(1.6f); for (int i = 0; i < b.Length; i++) { float t = i / (float)Rate; float e = Mathf.Exp(-2.6f * t); b[i] = (Mathf.Sin(2 * Mathf.PI * 1760f * t) * 0.32f + Mathf.Sin(2 * Mathf.PI * 2640f * t) * 0.18f * Mathf.Exp(-4f * t) + Mathf.Sin(2 * Mathf.PI * 4230f * t) * 0.1f * Mathf.Exp(-7f * t)) * e + N() * 0.2f * Mathf.Exp(-160f * t); } break; // campana de mostrador (sesion 17)
                 case "success": b = Tones(new[] { 523f, 659f, 784f, 1046f }, 0.14f, 0.02f); break;
                 case "timeout": b = Tones(new[] { 392f, 311f, 233f }, 0.22f, 0.04f); break;
                 default: b = Tones(new[] { 1000f }, 0.03f, 0f); break;                               // ui

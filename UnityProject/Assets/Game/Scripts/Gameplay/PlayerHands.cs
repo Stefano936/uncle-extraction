@@ -52,6 +52,14 @@ namespace UncleExtraction
             foreach (var pm in PlayerMotor.All) { if (!pm) continue; var h = pm.GetComponent<PlayerHands>(); if (!h) continue; for (int k = 0; k < 2; k++) if (h.HeldSocketId(k) == s.socketId) n++; }
             return n;
         }
+        /// Nombre de OTRO jugador que tiene ese punto (para «lo tiene Ana»); "" si no hay o es uno mismo. Vale en anfitrion y
+        /// clientes (manos replicadas). Sesion 17.
+        public static string HolderName(GrabSocket s, PlayerHands except)
+        {
+            if (!s) return "";
+            foreach (var pm in PlayerMotor.All) { if (!pm) continue; var h = pm.GetComponent<PlayerHands>(); if (!h || h == except) continue; for (int k = 0; k < 2; k++) if (h.HeldSocketId(k) == s.socketId) return h.OwnerName; }
+            return "";
+        }
         public string LastFeedback { get; private set; } = "";
         public float FeedbackUntil { get; private set; }
         public float InteractProgress01 => Mirror ? nInteractProgress.Value : interactProgress;
@@ -208,7 +216,7 @@ namespace UncleExtraction
             foreach (var l in broken) { GrabRegistry.Release(l.id, ReleaseReason.Distance); Feedback("grab.lost_distance"); }
         }
 
-        public enum InteractKind { None, HelpUp, Unanchor, Van, Cart }
+        public enum InteractKind { None, HelpUp, Unanchor, Van, Cart, Bell }
         /// Objetivo de E de este cuadro (pruebas y aviso).
         public InteractKind InteractTarget { get; private set; }
         InteractKind sticky; PlayerMotor stickyMate;
@@ -224,6 +232,11 @@ namespace UncleExtraction
                 if (still) return held;
             }
             return helpUp ? InteractKind.HelpUp : unanchor ? InteractKind.Unanchor : van ? InteractKind.Van : cart ? InteractKind.Cart : InteractKind.None;
+        }
+        public static InteractKind ChooseInteract(bool helpUp, bool unanchor, bool van, bool cart, bool bell, InteractKind held, bool holdingE)
+        {   // la campana va ultima: nunca le gana a ayudar, soltar, cerrar ni atar
+            var k = ChooseInteract(helpUp, unanchor, van, cart, held, holdingE);
+            return k == InteractKind.None && bell ? InteractKind.Bell : k;
         }
 
         /// Linea de vision desde la camara: no se interactua a traves de paredes, barra o puertas.
@@ -268,7 +281,9 @@ namespace UncleExtraction
             }
             bool vanOk = van && zone && !zone.Secured && zone.AllPointsInside && van.InRange(transform.position);
             bool cartOk = cart && Vector3.Distance(transform.position, cart.transform.position) < 2.2f && (cart.IsStrapped || cart.CanStrap);
-            var kind = ChooseInteract(mate != null, unanchor, vanOk, cartOk, sticky, holdingE);
+            var props = BarProps.Instance;
+            bool bellOk = props && props.HasBell && Vector3.Distance(cam.transform.position, BarProps.BellPos) < 1.9f && Vector3.Angle(cam.transform.forward, BarProps.BellPos - cam.transform.position) < 28f;
+            var kind = ChooseInteract(mate != null, unanchor, vanOk, cartOk, bellOk, sticky, holdingE);
             if (kind != InteractTarget && InteractTarget != InteractKind.None) interactProgress = 0f; // otro objetivo: el progreso empieza de cero
             InteractTarget = kind; sticky = holdingE ? kind : InteractKind.None; stickyMate = kind == InteractKind.HelpUp ? mate : null;
             switch (kind)
@@ -283,7 +298,7 @@ namespace UncleExtraction
                     interactLabel = "interact.unanchor";
                     if (holdingE)
                     {
-                        interactProgress += Time.deltaTime / LabBalance.AnchorReleaseHold;
+                        interactProgress += Time.deltaTime / (LabBalance.AnchorReleaseHold * (npc.BellWindow ? BarProps.BellReleaseFactor : 1f));
                         if (interactProgress >= 1f) { npc.ReleaseAnchor("jugador"); RoundStats.Unanchored(this); interactProgress = 0f; }
                     }
                     else interactProgress = 0f;
@@ -299,6 +314,14 @@ namespace UncleExtraction
                     interactProgress = 0f;
                     if (cart.IsStrapped) { interactLabel = "cart.unstrap"; if (CtrlPressed(Act.Interact)) cart.Unstrap("jugador"); }
                     else { interactLabel = "cart.strap"; if (CtrlPressed(Act.Interact)) { if (cart.Strap()) RoundStats.Strapped(this); else Feedback(cart.LastFailure); } }
+                    break;
+                case InteractKind.Bell:
+                    interactProgress = 0f;
+                    {
+                        string wait = props.BellBlock();
+                        interactLabel = wait != "" ? wait : "interact.bell";
+                        if (wait == "" && CtrlPressed(Act.Interact)) props.RingBell(this);
+                    }
                     break;
                 default: interactProgress = 0f; break;
             }

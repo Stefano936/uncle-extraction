@@ -27,7 +27,8 @@ namespace UncleExtraction.EditorTools
             if (normal) { m.SetTexture("_BumpMap", normal); m.SetFloat("_BumpScale", bump); m.EnableKeyword("_NORMALMAP"); if (tiling.HasValue) m.SetTextureScale("_BumpMap", tiling.Value); }
             else { m.SetTexture("_BumpMap", null); m.DisableKeyword("_NORMALMAP"); }
             // el tio senaliza preparacion con un brillo (bloque de propiedades); el material lo admite con emision negra por defecto
-            if (emissionReady) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", EmissionFloor); // casi negro, NO negro: URP apaga _EMISSION al validar un material con emision negra (pasaba al correr PlayMode, sesion 17) m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
+            if (emissionReady) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", EmissionFloor); m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
+            // casi negro, NO negro: URP apaga _EMISSION al validar un material con emision negra (pasaba al correr PlayMode, sesion 17)
             else { m.DisableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.black); }
             EditorUtility.SetDirty(m); return m;
         }

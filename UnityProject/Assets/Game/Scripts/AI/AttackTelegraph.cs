@@ -48,9 +48,21 @@ namespace UncleExtraction
         }
 
         /// Sector plano (o anillo si arc >= 360) entre los radios r0 y r1, centrado en +z local.
+        // sesion 17 (perfil): antes se reconstruian las dos mallas con arreglos nuevos en CADA cuadro del aviso. Ahora solo se
+        // rehacen cuando cambia la forma (radio/arco, con tolerancia de 1 cm / 0,5 grados) y reutilizan sus arreglos.
+        readonly System.Collections.Generic.Dictionary<Mesh, Vector4> shapeOf = new();
+        void SectorIfChanged(Mesh m, float r0, float r1, float arcDeg)
+        {
+            var k = new Vector4(r0, r1, arcDeg, 0f);
+            if (shapeOf.TryGetValue(m, out var prev) && Mathf.Abs(prev.x - k.x) < 0.01f && Mathf.Abs(prev.y - k.y) < 0.01f && Mathf.Abs(prev.z - k.z) < 0.5f) return;
+            shapeOf[m] = k; Sector(m, r0, r1, arcDeg); Rebuilds++;
+        }
+        /// Reconstrucciones de malla del aviso (diagnostico y prueba de rendimiento).
+        public static int Rebuilds;
+        static Vector3[] vbuf; static int[] tbuf;
         static void Sector(Mesh m, float r0, float r1, float arcDeg)
         {
-            int n = Segs + 1; var v = new Vector3[n * 2]; var tri = new int[Segs * 6];
+            int n = Segs + 1; var v = vbuf ??= new Vector3[n * 2]; bool firstTri = tbuf == null; var tri = tbuf ??= new int[Segs * 6];
             float half = Mathf.Min(arcDeg, 360f) * 0.5f;
             for (int i = 0; i < n; i++)
             {
@@ -58,12 +70,14 @@ namespace UncleExtraction
                 Vector3 d = new Vector3(Mathf.Sin(a), 0f, Mathf.Cos(a));
                 v[i * 2] = d * r0; v[i * 2 + 1] = d * r1;
             }
-            for (int i = 0; i < Segs; i++)
-            {
-                int b = i * 2, t = i * 6;
-                tri[t] = b; tri[t + 1] = b + 1; tri[t + 2] = b + 3; tri[t + 3] = b; tri[t + 4] = b + 3; tri[t + 5] = b + 2;
-            }
-            m.Clear(); m.vertices = v; m.triangles = tri; m.RecalculateBounds();
+            if (firstTri)
+                for (int i = 0; i < Segs; i++)
+                {
+                    int b = i * 2, t = i * 6;
+                    tri[t] = b; tri[t + 1] = b + 1; tri[t + 2] = b + 3; tri[t + 3] = b; tri[t + 4] = b + 3; tri[t + 5] = b + 2;
+                }
+            bool fresh = m.vertexCount != v.Length;
+            m.SetVertices(v); if (fresh) m.SetTriangles(tri, 0); m.RecalculateBounds();
         }
 
         /// Claves del catalogo del kit de UI (hud.slap = «VA A DAR UN MANOTAZO» / «SLAP INCOMING», etc.).
@@ -87,8 +101,8 @@ namespace UncleExtraction
             // el arco apunta a donde va el golpe (la misma direccion que decide el impacto), no a donde gira el cuerpo
             Vector3 aim = ring ? body.Forward : brain.AttackDirectionShared; aim.y = 0f; if (aim.sqrMagnitude < 1e-4f) aim = body.Forward;
             root.SetPositionAndRotation(basePos, Quaternion.LookRotation(aim, Vector3.up));
-            Sector(outline, ring ? range - 0.06f : range - 0.05f, range, arc);
-            Sector(fill, ring ? 0.3f : 0.25f, Mathf.Lerp(ring ? 0.3f : 0.25f, range, Fill01), arc);
+            SectorIfChanged(outline, ring ? range - 0.06f : range - 0.05f, range, arc);
+            SectorIfChanged(fill, ring ? 0.3f : 0.25f, Mathf.Lerp(ring ? 0.3f : 0.25f, range, Fill01), arc);
             // Color de apoyo (no es la unica senal): el contorno queda tenue y el relleno se intensifica al acercarse el golpe
             Color c = def.id == AttackId.Slap ? new Color(1f, 0.6f, 0.1f) : def.id == AttackId.Push ? new Color(1f, 0.25f, 0.2f) : def.id == AttackId.Kick ? new Color(0.95f, 0.85f, 0.1f) : new Color(0.2f, 0.9f, 1f);
             if (outlineMat) outlineMat.color = new Color(c.r, c.g, c.b, 0.85f);

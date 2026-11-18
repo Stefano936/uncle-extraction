@@ -821,6 +821,46 @@
    "key": "report.m_bell",
    "en": "{name} rang the last-call bell",
    "es_UY": "{name} tocó la campana de última ronda"
+  },
+  {
+   "key": "grab.aim_busy_by",
+   "en": "{socket}: {player} has it",
+   "es_UY": "{socket}: lo tiene {player}"
+  },
+  {
+   "key": "input.pad_move",
+   "en": "Left stick",
+   "es_UY": "Stick izquierdo"
+  },
+  {
+   "key": "interact.bell",
+   "en": "{key}: ring the last-call bell",
+   "es_UY": "{key}: tocar la campana de última ronda"
+  },
+  {
+   "key": "interact.bell_wait",
+   "en": "Bell: wait {s} s",
+   "es_UY": "Campana: esperá {s} s"
+  },
+  {
+   "key": "interact.bell_spent",
+   "en": "No more bells this round",
+   "es_UY": "No quedan campanas en esta ronda"
+  },
+  {
+   "key": "challenge.karaoke",
+   "en": "Karaoke start",
+   "es_UY": "Arranca en el karaoke"
+  },
+  {
+   "key": "challenge.hint_karaoke",
+   "en": "Challenge: he's on the karaoke stage, across the room.",
+   "es_UY": "Desafío: está en el karaoke, al otro lado del salón."
+  },
+  {
+   "key": "challenge.played_karaoke",
+   "en": "Challenge: karaoke start",
+   "es_UY": "Desafío: arrancó en el karaoke"
   }
  ]
 }

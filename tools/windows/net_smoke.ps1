@@ -18,7 +18,7 @@ $Log    = Join-Path $Repo '.local-setup\logs\net'
 New-Item -ItemType Directory -Force -Path $Log | Out-Null
 if (-not (Test-Path $Exe)) { Write-Host "Falta la build: $Exe" -ForegroundColor Red; exit 2 }
 $Win = @('-screen-fullscreen','0','-screen-width','800','-screen-height','450')
-$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin','guesttoggle','guesttoggle_sim','marks','grace','graceend','cycle','compat')
+$All = @('coop','repeat','lose','netsim','race','hostleave','clientdrop','loaddrop','closedrop','party3','party4','latejoin','guesttoggle','guesttoggle_sim','marks','grace','graceend','cycle','compat','race_natural')
 # QA ampliada (mas larga; -Scenario qa): dificultades y grupos, sesion larga, perdida brusca del anfitrion, rendimiento.
 # 'relay' va aparte: necesita el proyecto vinculado a Unity Cloud y prueba Relay en UNA PC.
 $Qa = @('hostkill','solo3','matrix','long','perf1','perf4','perf1080','perf1080low')
@@ -73,6 +73,26 @@ function Pair($tag, [string[]]$h, [string[]]$c, [int]$timeout, [string]$exe = $E
   if ((Crashed $hostG) -or (Crashed $cliG)) { return $null }
   if ((Grep $hostG 'begin Host ok=False').Count -gt 0) { Record "$tag" 'BLOCKED' "el anfitrion no pudo escuchar en $Port (puerto ocupado)"; return 'blocked' }
   return @{ h = $hostG; c = $cliG }
+}
+# Sesion 17: evidencia de disputa por el cinturon en el registro del anfitrion, atada a un intento concreto.
+function RaceEvidence($g) {
+  $seq = @(Grep $g '\[Grab\] (create #\d+ .+ -> belt$|release #\d+ .+ -> belt reason|reject .+ socket=\S+: SocketBusy)')
+  $live = 0; $maxLive = 0; $holder = $null; $tied = $false; $busy = 0; $other = 0; $players = @{}
+  foreach ($l in $seq) {
+    if ($l -match 'create #(\d+) (.+)/[LR] -> belt$') { $live++; $holder = $Matches[2]; $players[$holder] = 1 }
+    elseif ($l -match 'release #\d+ (.+)/[LR] -> belt reason') { $live--; $holder = $null }
+    elseif ($l -match 'reject (.+) hand=\d socket=(\S+): SocketBusy') {
+      $who = $Matches[1]; $players[$who] = 1
+      if ($Matches[2] -ne 'belt') { $other++ } else { $busy++; if ($holder -and $who -ne $holder) { $tied = $true } }
+    }
+    if ($live -gt $maxLive) { $maxLive = $live }
+  }
+  $why = @(); if ($players.Count -lt 2) { $why += "falta un participante en el anfitrion ($($players.Keys -join ','))" }
+  if (-not $tied) { $why += 'no hubo SocketBusy de otro jugador mientras el primero tenia el cinturon' }
+  if ($maxLive -gt 1) { $why += "dos agarres a la vez ($maxLive)" }
+  if ($other -gt 0 -and $busy -eq 0) { $why += 'el rechazo fue en otro punto' }
+  [pscustomobject]@{ ok = ($why.Count -eq 0); why = ($why -join '; '); maxLive = $maxLive; busy = $busy
+    text = "max_simultaneos=$maxLive rechazos_cinturon=$busy rechazos_otro_punto=$other participantes=$($players.Count) disputa_atada=$tied" }
 }
 function PairRetry($label, $tag, [string[]]$h, [string[]]$c, [int]$timeout, [string]$exe = $Exe, [switch]$waitHost) {
   $r = Pair $tag $h $c $timeout $exe -waitHost:$waitHost
@@ -232,17 +252,28 @@ for ($run = 1; $run -le $Runs; $run++) {
           Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ("anfitrion[" + (Brief $fh) + "] cliente[" + (Brief $fc) + "] rtt cliente " + (RttRange $r.c 'rtt=(\d+)ms') + " (simulado 120 ms +-20, 3% perdida)") }
       }
       'race' {
+        # sesion 17: evidencia del ANFITRION atada a UN intento: un jugador crea el agarre del cinturon y, mientras lo
+        # tiene (entre su create y su release), OTRO jugador distinto recibe SocketBusy en el mismo cinturon. Falla si falta
+        # un participante, si el rechazo fue en otro punto, si hubo dos a la vez o si el candidato local no era el cinturon.
         $at = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + 17000
         $r = PairRetry $label $tag @('-ueAutopilot','race','-ueRaceAt',"$at") @('-ueAutopilot','race','-ueRaceAt',"$at",'-ueAutopilotDelay','2') 24 -waitHost
-        if ($r) { $seq = @(Grep $r.h '\[Grab\] (create .*-> belt$|release .*-> belt reason)')
-          $live = 0; $maxLive = 0; foreach ($l in $seq) { if ($l -match 'create') { $live++ } else { $live-- }; if ($live -gt $maxLive) { $maxLive = $live } }
-          $busy = (Grep $r.h '\[Grab\] reject .*socket=belt: SocketBusy').Count
-          $winners = @((Last $r.h 'resultado carrera'), (Last $r.c 'resultado carrera')) | Where-Object { $_ -match "mano izq = 'belt'" }
-          # sesion 16: los dos tienen que haber apuntado al cinturon al apretar (si no, no hubo disputa que medir)
+        if ($r) { $e = RaceEvidence $r.h
           $aimed = @((Last $r.h 'aprieta en'), (Last $r.c 'aprieta en')) | Where-Object { $_ -match 'candidato=belt' }
-          # criterio (autoridad del anfitrion): hubo disputa real (rechazo SocketBusy en el cinturon), nunca dos a la vez y un solo ganador.
-          # «apuntaron» es la vista local de cada proceso (informativo: el candidato del invitado lo decide el anfitrion).
-          Record $label $(if ($maxLive -eq 1 -and $busy -ge 1 -and $winners.Count -eq 1) { 'PASS' } else { 'FAIL' }) "max_simultaneos=$maxLive rechazos=$busy ganadores=$($winners.Count) (apuntaban_localmente=$($aimed.Count)/2)" }
+          $restored = (Grep $r.h 'carrera: IA del tio restaurada \(True\)').Count -gt 0
+          $why = @(); if (-not $e.ok) { $why += $e.why }; if ($aimed.Count -ne 2) { $why += "candidato local distinto del cinturon en $(2 - $aimed.Count) proceso(s)" }; if (-not $restored) { $why += 'la IA del tio no se restauro' }
+          Record $label $(if ($why.Count -eq 0) { 'PASS' } else { 'FAIL' }) "$($e.text) apuntaban=$($aimed.Count)/2 ia_restaurada=$restored$(if ($why) { ' :: ' + ($why -join '; ') })" }
+      }
+      'race_natural' {
+        # sesion 17: juego normal (sin reubicar, IA del tio activa, latencia simulada en el invitado). Criterio duro: nunca dos
+        # agarres a la vez en el cinturon. Metricas aparte: hubo disputa (SocketBusy), aproximaciones fallidas, ganador.
+        if (-not (Test-Path $ExeDev)) { Record $label 'NOT_RUN' "falta la build de desarrollo $ExeDev"; break }
+        $at = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + 19000
+        $r = PairRetry $label $tag @('-ueAutopilot','race','-ueRaceNatural','-ueRaceAt',"$at") @('-ueAutopilot','race','-ueRaceNatural','-ueRaceAt',"$at",'-ueAutopilotDelay','2','-ueNetSim','80','15','1') 26 $ExeDev -waitHost
+        if ($r) { $e = RaceEvidence $r.h
+          $fails = (Grep $r.h 'aproximacion fallida').Count + (Grep $r.c 'aproximacion fallida').Count
+          $ai = (Grep $r.h 'carrera: modo=natural ia_tio=True').Count -gt 0
+          $win = @((Last $r.h 'resultado carrera'), (Last $r.c 'resultado carrera')) | Where-Object { $_ -match "mano izq = 'belt'" }
+          Record $label $(if ($e.maxLive -le 1 -and $ai) { 'PASS' } else { 'FAIL' }) "max_simultaneos=$($e.maxLive) disputa_atada=$($e.ok) rechazos=$($e.busy) ganadores=$($win.Count) aproximaciones_fallidas=$fails ia_activa=$ai rtt=$(RttRange $r.c 'rtt=(\d+)ms')" }
       }
       'hostleave' {
         $hostG = Start-Game "${tag}_host" (HostArgs @()); Start-Sleep 4

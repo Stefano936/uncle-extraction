@@ -66,5 +66,51 @@ namespace UncleExtraction.Tests
                 Assert.IsTrue(props.Fallen); Assert.AreEqual(falls0 + 1, props.Falls, "una sola caida por ronda");
             }
         }
+
+        /// 4.1: la campana distrae al tio (o abre la ventana si esta aferrado), suena una vez por toque, tiene espera y tope por
+        /// ronda, y el reinicio la rearma.
+        [UnityTest]
+        public IEnumerator LastCallBell_DistractsWithCooldown_AndRearmsEachRound()
+        {
+            yield return Restart(ChallengeMode.Standard);
+            var npc = NpcBrain.Instance; var props = BarProps.Instance; var hands = PlayerControls.Local.GetComponent<PlayerHands>();
+            Assert.IsTrue(props.HasBell, "la campana esta en la barra");
+            for (float t = 0; t < 1f; t += Time.deltaTime) yield return null;
+            int rings0 = props.BellRings; Assert.AreEqual("", props.BellBlock());
+            props.RingBell(hands); yield return null;
+            Assert.AreEqual(rings0 + 1, props.BellRings, "suena una vez");
+            Assert.IsTrue(npc.State == NpcState.Distracted || npc.BellWindow, $"el tio reacciona (estado {npc.State})");
+            Assert.AreNotEqual("", props.BellBlock(), "espera antes de volver a tocarla");
+            props.RingBell(hands); yield return null;
+            Assert.AreEqual(rings0 + 1, props.BellRings, "en espera no suena");
+            Assert.IsTrue(RoundStats.Instance != null);
+            yield return Restart(ChallengeMode.Standard);
+            Assert.AreEqual(0, BarProps.Instance.BellUses, "el reinicio la rearma"); Assert.AreEqual("", BarProps.Instance.BellBlock());
+        }
+
+        /// 4.2: condicion inicial distinta (karaoke): el tio arranca en la tarima, se mantiene en rondas seguidas, la ronda
+        /// estandar lo devuelve a la barra y se puede ganar arrastrandolo desde el karaoke.
+        [UnityTest]
+        public IEnumerator Karaoke_StartsAcrossTheRoom_PersistsAndRestores_AndIsWinnable()
+        {
+            var nb = NpcBrain.Instance.GetComponent<NpcBody>();
+            Vector3 barStart = nb.SpawnPosition;
+            for (int k = 0; k < 2; k++)
+            {
+                yield return Restart(ChallengeMode.Karaoke); yield return new WaitForSeconds(0.3f);
+                Vector3 c = nb.ChestPosition; c.y = 0f;
+                Assert.Less(Vector3.Distance(c, Challenges.KaraokeHome), 1.2f, $"ronda {k + 1}: arranca en el karaoke ({c})");
+                Assert.AreEqual("Karaoke_Rail", NpcBrain.Instance.anchorRail.name, "se aferra a la baranda de la tarima");
+            }
+            yield return Restart(ChallengeMode.Standard); yield return new WaitForSeconds(0.3f);
+            Vector3 b = nb.ChestPosition; b.y = 0f; Vector3 bs = barStart; bs.y = 0f;
+            Assert.Less(Vector3.Distance(b, bs), 1.2f, $"Estandar: vuelve a la barra ({b})");
+            Assert.AreNotEqual("Karaoke_Rail", NpcBrain.Instance.anchorRail.name);
+            yield return Restart(ChallengeMode.Karaoke);
+            auto.StartRun(AutopilotMode.Drag);
+            float t0 = Time.time; while (round.State == RoundState.Running && Time.time - t0 < 280f) yield return null;
+            Debug.Log($"[Test] karaoke arrastrando: {round.State} en {round.Elapsed:0.0}s");
+            Assert.AreEqual(RoundState.Success, round.State);
+        }
     }
 }

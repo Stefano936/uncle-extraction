@@ -117,6 +117,9 @@ namespace UncleExtraction
         /// Anfitrion: la torre de vasos se cae para todos (sesion 15).
         public void TowerFall(Vector3 dir) { if (IsSpawned && IsServer) TowerFallRpc(dir, Restarts); else if (BarProps.Instance) BarProps.Instance.Fall(dir, Restarts); }
         [Rpc(SendTo.Everyone)] void TowerFallRpc(Vector3 dir, int round) { if (BarProps.Instance) BarProps.Instance.Fall(dir, round); }
+        /// Campana de ultima ronda (sesion 17): la decide el anfitrion; suena en todos con el numero de ronda.
+        public void BellRang() { if (IsSpawned && IsServer) BellRpc(Restarts); else if (BarProps.Instance) BarProps.Instance.BellFx(Restarts); }
+        [Rpc(SendTo.Everyone)] void BellRpc(int round) { if (BarProps.Instance) BarProps.Instance.BellFx(round); }
         /// Parte de extraccion: lo arma el anfitrion y llega igual a todos (sesion 15).
         public const int MaxReportBytes = 12000;
         public void PublishReport(string json)

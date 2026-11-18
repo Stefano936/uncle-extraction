@@ -2,7 +2,9 @@ using UnityEngine;
 
 namespace UncleExtraction
 {
-    public enum ChallengeMode : byte { Standard = 0, NoCart = 1, Narrow = 2 }
+    /// Karaoke (sesion 17, 4.2): condicion inicial distinta. El tio arranca en la tarima del karaoke, aferrado a su baranda,
+    /// al otro lado del salon; su «casa» (adonde vuelve si se escapa) pasa a ser la tarima. Mismo tio, misma masa.
+    public enum ChallengeMode : byte { Standard = 0, NoCart = 1, Narrow = 2, Karaoke = 3 }
 
     /// Desafios opcionales en el mismo bar (sesion 15). La ronda estandar sigue siendo la principal.
     /// - Sin carrito: el carrito queda guardado fuera de juego (cinemático, lejos); hay que arrastrarlo.
@@ -61,14 +63,51 @@ namespace UncleExtraction
             cart.transform.position = CartStorage; TransportCart.Teleport(cart, CartStorage, cart.transform.rotation);
         }
 
+        public const int ModeCount = 4;
+        public static readonly Vector3 KaraokeHome = new Vector3(-7.3f, 0f, 6.25f), KaraokeRailCenter = new Vector3(-7.3f, 0.95f, 7.38f);
+        public static readonly Vector3[] KaraokeDragPath = { new Vector3(-6.6f, 0, 6.0f), new Vector3(-5.4f, 0, 5.2f), new Vector3(-2.9f, 0, 4.0f), new Vector3(-2.6f, 0, 2.6f), new Vector3(-1.2f, 0, 1.4f), new Vector3(0, 0, -1.0f), new Vector3(0, 0, -3.5f), new Vector3(0, 0, -6.5f), new Vector3(0, 0, -8.3f), new Vector3(0, 0, -10.6f) };
+        GameObject karaoke; Transform karaokeHome; Collider stdRail; Transform stdHome; bool stdSaved;
+        void ApplyStart(ChallengeMode mode, bool bar)
+        {
+            var npc = NpcBrain.Instance; var nb = npc ? npc.GetComponent<NpcBody>() : null; if (!npc || !nb) return;
+            if (!stdSaved) { stdRail = npc.anchorRail; stdHome = npc.home; stdSaved = true; }
+            bool kar = mode == ChallengeMode.Karaoke && bar;
+            if (kar && !karaoke) BuildKaraoke();
+            if (karaoke) karaoke.SetActive(kar);
+            npc.anchorRail = kar ? karaoke.GetComponentInChildren<Collider>() : stdRail;
+            npc.home = kar ? karaokeHome : stdHome;
+            bool changed = nb.SetSpawnOverride(kar ? KaraokeHome : (Vector3?)null);
+            if (changed && NetAuth.IsServer)
+            {   // solo al cambiar de condicion: el reinicio ya lo deja en el inicio vigente
+                npc.ReleaseAnchor("cambio de condicion inicial"); nb.ReleaseAllGrabs(ReleaseReason.Reset); nb.TeleportTo(nb.SpawnPosition, nb.SpawnRotation);
+                Debug.Log($"[Challenge] tio al inicio {(kar ? "del karaoke" : "de la barra")} {nb.SpawnPosition}");
+            }
+        }
+        void BuildKaraoke()
+        {
+            karaoke = new GameObject("Challenge_Karaoke");
+            var brass = MatColor("Karaoke_Rail", new Color(0.8f, 0.62f, 0.3f), 0.8f);
+            var rail = GameObject.CreatePrimitive(PrimitiveType.Cylinder); rail.name = "Karaoke_Rail"; rail.transform.SetParent(karaoke.transform, false);
+            rail.transform.position = KaraokeRailCenter; rail.transform.rotation = Quaternion.Euler(0, 0, 90); rail.transform.localScale = new Vector3(0.06f, 1.1f, 0.06f);
+            rail.GetComponent<Renderer>().sharedMaterial = brass;
+            foreach (float dx in new[] { -1.0f, 1.0f })
+            {
+                var post = GameObject.CreatePrimitive(PrimitiveType.Cylinder); post.name = "Karaoke_Post"; post.transform.SetParent(karaoke.transform, false);
+                post.transform.position = KaraokeRailCenter + new Vector3(dx, -0.475f, 0f); post.transform.localScale = new Vector3(0.05f, 0.475f, 0.05f);
+                Destroy(post.GetComponent<Collider>()); post.GetComponent<Renderer>().sharedMaterial = brass;
+            }
+            var h = new GameObject("Karaoke_Home"); h.transform.SetParent(karaoke.transform, false); h.transform.position = KaraokeHome; karaokeHome = h.transform;
+        }
+
         void Apply(ChallengeMode mode)
         {
             var L = LevelLayout.Current; bool bar = L && L.displayName == "The Last Round";
             if (L && stdDragPath == null) { stdDragPath = L.uncleDragPath; stdCartPath = L.cartPullPath; }
+            ApplyStart(mode, bar);
             // barricada
             if (barricade) { Destroy(barricade); barricade = null; }
             if (mode == ChallengeMode.Narrow && bar) barricade = BuildBarricade();
-            if (L) L.uncleDragPath = mode == ChallengeMode.Narrow && bar ? NarrowDragPath : stdDragPath;
+            if (L) L.uncleDragPath = mode == ChallengeMode.Narrow && bar ? NarrowDragPath : mode == ChallengeMode.Karaoke && bar ? KaraokeDragPath : stdDragPath;
             // carrito: presente o guardado segun el modo de ESTA ronda
             var cart = TransportCart.Instance;
             if (cart)
@@ -86,7 +125,7 @@ namespace UncleExtraction
                     }
                 }
             }
-            Debug.Log($"[Challenge] modo {mode}{(mode == ChallengeMode.Narrow && !bar ? " (solo existe en The Last Round)" : "")}");
+            Debug.Log($"[Challenge] modo {mode}{((mode == ChallengeMode.Narrow || mode == ChallengeMode.Karaoke) && !bar ? " (solo existe en The Last Round)" : "")}");
         }
 
         static GameObject BuildBarricade()
@@ -127,7 +166,16 @@ namespace UncleExtraction
             return root;
         }
 
+        // sesion 17 (perfil): un material por nombre para toda la sesion (antes se creaba uno nuevo en cada reconstruccion
+        // por ronda y los viejos quedaban vivos).
+        static readonly System.Collections.Generic.Dictionary<string, Material> matCache = new();
+        public static int MaterialsCreated => matCache.Count;
         static Material MatColor(string n, Color c, float smooth)
+        {
+            if (matCache.TryGetValue(n, out var cached) && cached) return cached;
+            var made = MatColorNew(n, c, smooth); matCache[n] = made; return made;
+        }
+        static Material MatColorNew(string n, Color c, float smooth)
         {
             var sh = Shader.Find("Universal Render Pipeline/Lit"); var m = new Material(sh ? sh : Shader.Find("Standard")) { name = n, color = c };
             if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth); return m;

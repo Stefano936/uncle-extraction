@@ -54,7 +54,55 @@ namespace UncleExtraction
             var trig = new GameObject("Tower_Trigger"); trig.transform.SetParent(root.transform, false); trig.transform.position = TowerPos + Vector3.up * 0.8f;
             var bc = trig.AddComponent<BoxCollider>(); bc.isTrigger = true; bc.size = new Vector3(1.1f, 1.6f, 1.1f);
             trig.AddComponent<TowerTrigger>().owner = this;
+            BuildBell();
             IgnoreActors();
+        }
+
+        // ---------- Campana de ultima ronda (sesion 17, 4.1) ----------
+        public static readonly Vector3 BellPos = new Vector3(6.2f, 1.13f, 8.62f), BarmanPos = new Vector3(4.5f, 1.55f, 9.75f);
+        public const float BellSeconds = 2.0f, BellCooldown = 20f, BellReleaseFactor = 0.4f; public const int BellMaxPerRound = 2;
+        float bellReadyAt; int bellUses; GameObject bellDome; float bellShake;
+        public bool HasBell => bellDome;
+        public int BellUses => bellUses;
+        /// "" = se puede tocar; si no, la clave del motivo (espera o agotada).
+        public string BellBlock()
+        {
+            if (bellUses >= BellMaxPerRound) return "interact.bell_spent";
+            float left = bellReadyAt - Time.time; return left > 0f ? Loc.Code("interact.bell_wait", ("s", Mathf.CeilToInt(left).ToString())) : "";
+        }
+        /// Anfitrion: un jugador la toca. Costo: espera de 20 s, dos por ronda y la segunda rinde la mitad.
+        public void RingBell(PlayerHands who)
+        {
+            if (!NetAuth.IsServer || BellBlock() != "" || RoundDirector.Instance == null || RoundDirector.Instance.State != RoundState.Running) return;
+            bellUses++; bellReadyAt = Time.time + BellCooldown;
+            float dur = BellSeconds * (bellUses >= 2 ? 0.5f : 1f);
+            bool heard = NpcBrain.Instance && NpcBrain.Instance.HearBell(BarmanPos, dur);
+            Debug.Log($"[Props] campana por {(who ? who.OwnerName : "?")} (uso {bellUses}/{BellMaxPerRound}, {dur:0.0}s, el tio {(heard ? "se da vuelta" : "no reacciona: ocupado")})");
+            RoundStats.Bell(who); RoundDirector.Instance.BellRang();
+        }
+        /// En todos los pares: suena, la campana se sacude y el tio dice su linea (una por toque).
+        public void BellFx(int round)
+        {
+            var rd = RoundDirector.Instance; if (round >= 0 && rd && round != rd.Restarts) return;
+            BellRings++;
+            if (GameAudio.Instance) GameAudio.Instance.Play3D("bell", BellPos, 1f);
+            if (UncleDialogue.Instance) UncleDialogue.Instance.Say("last_call");
+            bellShake = 0.6f;
+        }
+        public int BellRings { get; private set; }
+        void LateUpdate()
+        {
+            if (!bellDome || bellShake <= 0f) return;
+            bellShake -= Time.deltaTime; float k = Mathf.Max(0f, bellShake) / 0.6f;
+            bellDome.transform.localRotation = Quaternion.Euler(Mathf.Sin(Time.time * 55f) * 9f * k, 0f, Mathf.Cos(Time.time * 47f) * 9f * k);
+        }
+        void BuildBell()
+        {
+            bellUses = 0; bellReadyAt = 0f; bellShake = 0f;
+            var brass = Mat("Bell_Brass", new Color(0.86f, 0.66f, 0.28f), 0.82f); var dark = Mat("Bell_Base", new Color(0.12f, 0.08f, 0.06f), 0.4f);
+            Prim(PrimitiveType.Cylinder, "Bell_Base", BellPos + Vector3.up * 0.012f, new Vector3(0.13f, 0.012f, 0.13f), dark, false);
+            bellDome = Prim(PrimitiveType.Sphere, "Bell_Dome", BellPos + Vector3.up * 0.055f, new Vector3(0.1f, 0.075f, 0.1f), brass, false);
+            Prim(PrimitiveType.Cylinder, "Bell_Knob", BellPos + Vector3.up * 0.1f, new Vector3(0.018f, 0.012f, 0.018f), brass, false);
         }
 
         void IgnoreActors()
@@ -100,7 +148,16 @@ namespace UncleExtraction
             var g = GameObject.CreatePrimitive(t); g.name = n; g.transform.SetParent(root.transform, false); g.transform.position = pos; g.transform.localScale = scale;
             if (!collider) Destroy(g.GetComponent<Collider>()); g.GetComponent<Renderer>().sharedMaterial = m; return g;
         }
+        // sesion 17 (perfil): un material por nombre para toda la sesion (antes se creaba uno nuevo en cada reconstruccion
+        // por ronda y los viejos quedaban vivos).
+        static readonly System.Collections.Generic.Dictionary<string, Material> matCache = new();
+        public static int MaterialsCreated => matCache.Count;
         static Material Mat(string n, Color c, float smooth)
+        {
+            if (matCache.TryGetValue(n, out var cached) && cached) return cached;
+            var made = MatNew(n, c, smooth); matCache[n] = made; return made;
+        }
+        static Material MatNew(string n, Color c, float smooth)
         {
             var sh = Shader.Find("Universal Render Pipeline/Lit"); var m = new Material(sh ? sh : Shader.Find("Standard")) { name = n, color = c };
             if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth); return m;

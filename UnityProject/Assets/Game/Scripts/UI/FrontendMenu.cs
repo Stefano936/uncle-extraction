@@ -135,7 +135,7 @@ namespace UncleExtraction
                     diff.onClick.AddListener(() => { GameSettings.SoloDifficulty = (Difficulty)(((int)GameSettings.SoloDifficulty + 1) % 3); GameSettings.Save(); Relabel(diff); });
                     Relabel(diff);
                     var ch = B("challenge.title", null, 60); // desafio opcional: la ronda estandar es la entrada principal
-                    ch.onClick.AddListener(() => { GameSettings.Challenge = (ChallengeMode)(((int)GameSettings.Challenge + 1) % 3); RelabelChallenge(ch); });
+                    ch.onClick.AddListener(() => { GameSettings.Challenge = (ChallengeMode)(((int)GameSettings.Challenge + 1) % Challenges.ModeCount); RelabelChallenge(ch); });
                     RelabelChallenge(ch);
                     if (p == Page.Solo)
                     {

@@ -47,6 +47,24 @@ namespace UncleExtraction.Tests
             StringAssert.Contains("9", RoundStats.Featured(back));
         }
 
+        [Test] public void Bell_IsTheLowestPriorityInteraction()
+        {
+            var K = PlayerHands.InteractKind.None;
+            Assert.AreEqual(PlayerHands.InteractKind.Bell, PlayerHands.ChooseInteract(false, false, false, false, true, K, false));
+            Assert.AreEqual(PlayerHands.InteractKind.Unanchor, PlayerHands.ChooseInteract(false, true, false, false, true, K, false));
+            Assert.AreEqual(PlayerHands.InteractKind.HelpUp, PlayerHands.ChooseInteract(true, false, false, false, true, K, false));
+            Assert.AreEqual(PlayerHands.InteractKind.Cart, PlayerHands.ChooseInteract(false, false, false, true, true, K, false));
+        }
+
+        [Test] public void Hints_FollowTheDeviceInUse()
+        {
+            Loc.SetLanguage(Loc.EsUY);
+            InputBindings.ForcePad = true;
+            try { Assert.AreEqual("LT", InputBindings.Display(Act.GrabLeft)); Assert.AreEqual("A", InputBindings.Display(Act.Interact)); Assert.AreEqual("Stick izquierdo", InputBindings.MoveDisplay()); }
+            finally { InputBindings.ForcePad = false; }
+            Assert.AreNotEqual("LT", InputBindings.Display(Act.GrabLeft), "con teclado y raton vuelve a la asignacion");
+        }
+
         [Test] public void Version_HasASingleSource()
         {
             Assert.AreEqual(GameVersion.Tag, NetSession.VersionTag);
