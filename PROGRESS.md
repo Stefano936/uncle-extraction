@@ -44,7 +44,8 @@
 | Auditoría de interfaz ES/EN | build `9a2d7cb` | 4/15 por idioma: rótulo de la sala «DIFICULTAD · Desafío: …» y botón «Vista para captura» recortados con texto 125–150 % → corregido |
 | Auditoría de interfaz ES/EN (reauditoría) | build `fd0bce5` | **15/15 por idioma** |
 | Partida completa de humo con la build final | build `fd0bce5` | Gana sola con el autopiloto, sin excepciones |
-| Relay desde una PC / dos equipos / personas | — | **NOT_RUN** en esta sesión |
+| Prueba humana del dueño | demo `fd0bce5` | **Hecha** (Stefano, 2026-11-18); detalles por tarea pendientes de que los pase (`docs/OBSERVACIONES_PRUEBAS.md`) |
+| Relay desde una PC / dos equipos / grupos nuevos | — | **NOT_RUN** |
 
 **Material de lanzamiento (borradores, sin publicar):** `docs/lanzamiento/` — referencia de mercado, textos de tienda ES/EN, cápsulas desde capturas reales, lista de tomas del tráiler, clips verticales, plan de pruebas sin instrucciones y de difusión.
 

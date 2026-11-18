@@ -18,7 +18,7 @@ namespace UncleExtraction
         static void Init()
         {
             foreach (var a in Environment.GetCommandLineArgs())
-                if (a == "-ueShot" || a == "-ueShotMenu" || a == "-ueForceAttack" || a == "-ueFaceUncle" || a == "-ueFrames")
+                if (a == "-ueShot" || a == "-ueShotMenu" || a == "-ueForceAttack" || a == "-ueFaceUncle" || a == "-ueFrames" || a == "-uePose")
                 {
                     var go = new GameObject("ShotOnArgs"); DontDestroyOnLoad(go); go.AddComponent<ShotOnArgs>();
                     return;
@@ -41,6 +41,7 @@ namespace UncleExtraction
                 if (a[i] == "-ueShot") StartCoroutine(Capture(Parse(a[i + 1], 3f), true));
                 if (a[i] == "-ueForceAttack") StartCoroutine(Force(Parse(a[i + 1], 5f)));
                 if (a[i] == "-ueFrames") StartCoroutine(Frames(a[i + 1]));
+                if (a[i] == "-uePose") StartCoroutine(Pose(a[i + 1]));
                 if (a[i] == "-ueFaceUncle") StartCoroutine(FaceUncle(Parse("x@" + a[i + 1], 3f).at));
             }
             yield break;
@@ -105,6 +106,25 @@ namespace UncleExtraction
             Time.captureFramerate = fps; int n = Mathf.CeilToInt(dur * fps);
             for (int i = 0; i < n; i++) { yield return new WaitForEndOfFrame(); ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"f{i:0000}.png")); }
             Time.captureFramerate = 0; Debug.Log($"[Shot] {n} cuadros en {dir}");
+        }
+
+        /// -uePose x,y,z,yaw,pitch@s (sesion 16): a los s segundos pone al jugador local en (x, z) del piso mirando con yaw/pitch
+        /// (primeros planos comparables de barra, puerta, carrito). Solo pruebas.
+        IEnumerator Pose(string spec)
+        {
+            var parts = spec.Split('@'); var v = parts[0].Split(',');
+            float at = parts.Length > 1 ? float.Parse(parts[1], CultureInfo.InvariantCulture) : 2f;
+            float F(int i) => float.Parse(v[i], CultureInfo.InvariantCulture);
+            yield return WaitGame(at);
+            var pc = PlayerControls.Local; if (!pc) yield break;
+            var rb = pc.GetComponent<Rigidbody>(); var motor = pc.GetComponent<PlayerMotor>();
+            for (int k = 0; k < 30; k++)
+            {
+                var p = new Vector3(F(0), F(1), F(2));
+                if (rb) { rb.position = p; rb.linearVelocity = Vector3.zero; } pc.transform.position = p;
+                motor.SetYawPitch(F(3), F(4)); yield return new WaitForFixedUpdate();
+            }
+            Debug.Log($"[Shot] pose {spec}");
         }
 
         IEnumerator Force((string id, float at) p)

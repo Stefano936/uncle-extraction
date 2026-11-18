@@ -231,7 +231,7 @@ namespace UncleExtraction
             return new Vector3(gx, 0f, z + (south ? -0.9f : 0.9f)) - me;                     // ir a la boca del paso
         }
 
-        float moveSince, unstickUntil; Vector3 moveFrom, unstickDir;
+        float moveSince, unstickUntil; Vector3 moveFrom, unstickDir; bool raceMode;
         /// Veces que el autopiloto se destrabo en esta corrida (registro de pruebas).
         public int Unsticks { get; private set; }
         void MoveWorld(Vector3 dir)
@@ -241,7 +241,8 @@ namespace UncleExtraction
             // sesion 15: destrabarse. Si quiere caminar y en 2,5 s no avanzo 0,15 m (p. ej. contra la hoja entreabierta de la
             // puerta: el fallo intermitente del carrito en el laboratorio articulado), se corre 1 s de costado y reintenta,
             // como haria una persona. Antes se quedaba empujando hasta que se acababa el tiempo.
-            if (Time.time < unstickUntil) dir = unstickDir;
+            if (raceMode) { moveSince = Time.time; moveFrom = Me; } // en la carrera se quedan pegados a proposito
+            else if (Time.time < unstickUntil) dir = unstickDir;
             else if (Time.time - moveSince > 2.5f)
             {
                 if (Vector3.Distance(Me, moveFrom) < 0.15f)
@@ -452,11 +453,17 @@ namespace UncleExtraction
         {
             var belt = GrabSocket.ById("belt");
             bool second = player.Controls && player.Controls.IsSpawned && player.Controls.OwnerClientId % 2 == 1;
-            Vector3 stand = second ? L.raceStandR : L.raceStandL;
-            while (Vector3.Distance(Me, stand) > 0.15f) { Status = "yendo al punto de carrera"; MoveWorld(stand - Me); LookAt(belt.Position); yield return null; }
+            // sesion 16: los dos se paran FRENTE AL CINTURON segun hacia donde mira el tio ahora (no en puntos fijos del mapa)
+            // y no aprietan hasta tener el cinturon como candidato: asi la prueba mide de verdad la disputa por el mismo punto
+            Vector3 bf = Flat(belt.Position), toward = Flat(belt.Position - body.Body.position); if (toward.sqrMagnitude < 1e-3f) toward = body.Forward; toward.Normalize();
+            Vector3 lat = Vector3.Cross(Vector3.up, toward);
+            Vector3 stand = bf + toward * 0.7f + lat * (second ? 0.36f : -0.36f);
+            raceMode = true;
+            for (float t = 0; t < 12f && Vector3.Distance(Me, stand) > 0.15f; t += Time.deltaTime) { Status = "yendo al punto de carrera"; MoveWorld(stand - Me); LookAt(belt.Position); yield return null; }
             LabInput.SimulatedMove = Vector2.zero;
             long now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            while (now() < raceAtUnixMs) { LookAt(belt.Position); Status = "esperando la senal"; yield return null; }
+            while (now() < raceAtUnixMs) { LookAt(belt.Position); Status = hands.Candidate == belt ? "esperando la senal (apunta al cinturon)" : "esperando la senal (buscando el cinturon)"; yield return null; }
+            raceMode = false;
             Log($"aprieta en {now()} (senal {raceAtUnixMs}); candidato={(hands.Candidate ? hands.Candidate.socketId : "-")}");
             for (float t = 0; t < 2f; t += Time.deltaTime) { LookAt(belt.Position); SetHold(0, true); yield return null; }
             Log($"resultado carrera: mano izq = '{hands.HeldSocketId(0)}' aviso='{hands.LastFeedback}'");
