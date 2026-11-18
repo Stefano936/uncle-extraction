@@ -24,6 +24,8 @@
 - **Desafíos opcionales** (menú solo o sala, anunciados en el objetivo y en el parte): *Sin carrito* y *Ruta estrecha* (barricada de cajones con un solo paso de 1,2 m y marca amarilla en el piso). La ronda estándar sigue siendo la principal.
 - **Parte de extracción:** tiempo, caídas, ataques del tío (y cuántos frenaron), momentos reales con su minuto (primer agarre, mano soltada, carrito, camioneta, cierre, torre) y destacados solo positivos; «Vista para captura» sin HUD.
 
+**Error encontrado antes de entregar:** al agregar `-ueNoHud` (capturas de tienda) un comentario quedó en la misma línea que la creación del HUD: la candidata `ed7d493` **no mostraba el HUD**. Lo detectaron dos pruebas de interfaz; corregido en `04d5df4`. También: el aviso del desafío nunca aparecía (corregido) y la guía quedaba atrás cuando el jugador ya llevaba al tío (ahora salta a la camioneta).
+
 **Carrito en la puerta (investigado):** en las tandas que fallaban, el jugador del autopiloto quedaba 200 s empujando la hoja entreabierta de la puerta de salida; una persona la empuja o la rodea. Era el autopiloto abandonando una situación recuperable, no un atasco del juego: se agregó destrabe genérico (si camina y no avanza en 2,5 s, se corre de costado). Fallo anterior registrado en el historial de la sesión 14.
 
 #### Verificación (cada resultado con su build)
@@ -33,11 +35,13 @@
 | EditMode | `2b36fd4` (código) | 64/64, 1 ignorada |
 | PlayMode: desafíos, torre, parte, guía, entrada real | `2b36fd4` → `9fbdbe3` | Sin carrito: gana solo en 21,7 s; Ruta estrecha: gana solo en 40,4 s por el paso; torre: el carrito a 2,2 m/s la tira y el tío se distrae; se rearma al reiniciar; guía y entrada real verdes |
 | PlayMode: intentos completos solo (laboratorio, articulado) + desafíos | `9fbdbe3` (código) | **12/12** (incluye los intentos con carrito del laboratorio articulado) |
-| PlayMode completa | {PM} | {PMRES} |
+| PlayMode completa | `9a2d7cb` (código) | **164/165, 0 FAIL**, 1 omitida (sobre `ed7d493` había dado 162/165: 2 FAIL de interfaz que destaparon el HUD faltante, ver abajo) |
 | Red en localhost (17 escenarios, incluye 4 procesos y latencia simulada) | build `9fbdbe3` | **16/17 PASS**; `race` FAIL (rechazos=0). Repetido ×3: 1 PASS, 2 FAIL. Causa vista en el registro: el invitado tenía como candidato el antebrazo y no el cinturón, así que no hubo disputa simultánea que medir; la invariante (un solo ganador, nunca dos manos en el mismo punto) se cumplió en las 4 corridas. En las sesiones 13–14 había pasado 3/3: **abierto**, revisar la puntería del autopiloto en la carrera |
 | Cuatro procesos reales con capturas | build `S15` previa | Sala con selector de desafío, agarres simultáneos, carrito, cierre de la camioneta (`.local-setup/clips/cuatro_*.png`) |
 | Capturas comparables antes/después | builds `85998c0` y `S15` | `docs/capturas/sesion15/antes_despues.jpg` |
 | Clips de juego real | build `S15` | 3 verticales + 2 horizontales (WebP) en `docs/lanzamiento/clips/` |
+| Red en localhost (17 escenarios) | build `9a2d7cb` | **16/17 PASS**; `race` FAIL otra vez (rechazos=0): abierto |
+| Auditoría de interfaz ES/EN | build `9a2d7cb` | 4/15 por idioma: rótulo de la sala «DIFICULTAD · Desafío: …» y botón «Vista para captura» recortados con texto 125–150 % → corregido en el commit siguiente; reauditoría abajo |
 | Relay desde una PC / dos equipos / personas | — | **NOT_RUN** en esta sesión |
 
 **Material de lanzamiento (borradores, sin publicar):** `docs/lanzamiento/` — referencia de mercado, textos de tienda ES/EN, cápsulas desde capturas reales, lista de tomas del tráiler, clips verticales, plan de pruebas sin instrucciones y de difusión.
