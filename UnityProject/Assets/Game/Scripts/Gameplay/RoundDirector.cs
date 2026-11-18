@@ -138,7 +138,8 @@ namespace UncleExtraction
         {
             if (connected >= partySize || inLobby || State != RoundState.Running)
             {
-                if (dropSince >= 0f) { timeBonus -= dropTimeCredit; dropTimeCredit = 0f; Debug.Log("[Round] baja cancelada: el grupo volvio a estar completo"); }
+                if (dropSince >= 0f && connected >= partySize) { timeBonus -= dropTimeCredit; dropTimeCredit = 0f; Debug.Log("[Round] baja cancelada: el grupo volvio a estar completo"); }
+                else if (dropSince >= 0f) Debug.Log("[Round] la ronda termino durante la gracia: no hubo ajuste del tio");
                 partySize = connected; dropSince = -1f; return;
             }
             if (dropSince < 0f)

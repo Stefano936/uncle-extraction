@@ -17,6 +17,9 @@ namespace UncleExtraction
     public static class GrabIntent
     {
         public const float ArmWindow = 0.6f;
+        /// Apuntando a un punto valido, la mano armada espera la confirmacion del anfitrion hasta este tiempo (con 150 ms de
+        /// latencia la confirmacion tardo ~650 ms y la ventana de 0,6 s la desarmaba antes: sesion 14, guesttoggle_sim).
+        public const float ArmWindowAiming = 1.5f;
         static int frame = -1;
         static readonly bool[] held = new bool[2], latched = new bool[2], needRelease = new bool[2], prevRaw = new bool[2], wasHolding = new bool[2];
         static readonly float[] armedAt = new float[2];
@@ -51,8 +54,9 @@ namespace UncleExtraction
                         if (latched[h] || holding) latched[h] = false;
                         else { latched[h] = true; armedAt[h] = Time.unscaledTime; }
                     }
-                    if (latched[h] && !holding && Time.unscaledTime - armedAt[h] > ArmWindow)
-                    { latched[h] = false; Feedback = "hud.nothing_to_grab"; FeedbackUntil = Time.time + 1.6f; }
+                    bool aiming = hands && hands.Candidate;
+                    if (latched[h] && !holding && Time.unscaledTime - armedAt[h] > (aiming ? ArmWindowAiming : ArmWindow))
+                    { latched[h] = false; Feedback = aiming ? "hud.grab_not_confirmed" : "hud.nothing_to_grab"; FeedbackUntil = Time.time + 1.6f; }
                     held[h] = latched[h];
                 }
                 else

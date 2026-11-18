@@ -626,6 +626,11 @@
    "key": "round.party_adjusted",
    "en": "The uncle now resists like against {n} player(s).",
    "es_UY": "El tío ahora resiste como contra {n} jugador(es)."
+  },
+  {
+   "key": "hud.grab_not_confirmed",
+   "en": "Could not grab: try again",
+   "es_UY": "No se pudo agarrar: probá de nuevo"
   }
  ]
 }

@@ -271,7 +271,8 @@ for ($run = 1; $run -le $Runs; $run++) {
         # tiempo extra llega en el momento y el ajuste del tio una sola vez a los 10 s, con el transcurrido conservado.
         # graceend: ronda de 40 s y la desconexion cuando quedan menos de 10 s: no se pierde por reloj antes de la ayuda.
         $end = $sc -eq 'graceend'
-        $hx = @('-ueAutopilot','drag','-ueAutopilotDelay','2','-ueQuitOnEnd') + $(if ($end) { @('-ueRoundTime','40','-ueNoClose') } else { @() })
+        # -ueNoClose: el anfitrion nunca cierra la camioneta, asi la ronda dura mas que la gracia y termina por reloj
+        $hx = @('-ueAutopilot','drag','-ueAutopilotDelay','2','-ueQuitOnEnd','-ueNoClose','-ueRoundTime', $(if ($end) { '40' } else { '60' }))
         $hostG = Start-Game "${tag}_host" (HostArgs $hx); Start-Sleep 4
         $cliG = Start-Game "${tag}_client" (ClientArgs @('-ueAutopilot','drag','-ueAutopilotDelay','3'))
         $deadline = (Get-Date).AddSeconds(60); while ((Get-Date) -lt $deadline -and (Grep $hostG 'ronda iniciada con 2').Count -eq 0) { Start-Sleep -Milliseconds 300 }
@@ -280,8 +281,9 @@ for ($run = 1; $run -le $Runs; $run++) {
         if ((Crashed $hostG) -or (Crashed $cliG)) { Record $label 'BLOCKED' "crash; ver $Log\${tag}_*.log"; break }
         $drop = @(Grep $hostG '\[Round\] baja de jugador'); $adj = @(Grep $hostG '\[Round\] grupo 2 -> 1 tras la gracia')
         $left = (Grep $hostG 'Se fue el jugador').Count -gt 0
-        $tDrop = [double]::Parse(([regex]::Match("$($drop | Select-Object -First 1)", 'a los ([\d,\.]+)s').Groups[1].Value -replace ',', '.'), [Globalization.CultureInfo]::InvariantCulture)
-        $tAdj = [double]::Parse(([regex]::Match("$($adj | Select-Object -First 1)", 'transcurrido ([\d,\.]+)s').Groups[1].Value -replace ',', '.'), [Globalization.CultureInfo]::InvariantCulture)
+        function Num($s) { $v = 0.0; if ([double]::TryParse(($s -replace ',', '.'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$v)) { $v } else { -1.0 } }
+        $tDrop = Num ([regex]::Match("$($drop | Select-Object -First 1)", 'a los ([\d,\.]+)s').Groups[1].Value)
+        $tAdj = Num ([regex]::Match("$($adj | Select-Object -First 1)", 'transcurrido ([\d,\.]+)s').Groups[1].Value)
         $gap = [math]::Round($tAdj - $tDrop, 1)
         $tout = (Get-Content $hostG.log | Select-String '\[Round\] (TIMEOUT|SUCCESS)' | Select-Object -First 1).LineNumber
         $adjLine = (Get-Content $hostG.log | Select-String '\[Round\] grupo 2 -> 1' | Select-Object -First 1).LineNumber
