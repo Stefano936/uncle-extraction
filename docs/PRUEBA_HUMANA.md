@@ -26,7 +26,8 @@ Marcá cada tarea: **Sí** (sola), **Con ayuda** (qué frase), **No**. Anotá el
 | 8 | «Cambiá el idioma, el tamaño del texto y una tecla; cerrá el juego y volvé a abrirlo.» | ¿Se guardaron? ¿Algo quedó cortado o encimado con texto grande? |
 | 9 | Con amigos: «Uno crea la sala y los otros se unen; todos listos y empiecen.» | ¿Encuentran crear/unirse? ¿Entienden LISTO y quién inicia? ¿El motivo de «no se puede iniciar» se entiende? |
 | 10 | Con amigos: jugar una ronda completa. | ¿Se coordinan? ¿Usan el marcador (clic central) o hablan? ¿Reconocen a cada compañero (nombre y color) y ven el aviso «caído»? ¿Se nota la latencia? ¿Algún tirón, teletransporte o desincronización? |
-| 11 | Con amigos: uno cierra el juego a mitad de ronda. | ¿Los demás entienden qué pasó? ¿La ronda sigue sin cortes bruscos (el tiempo no salta)? |
+| 11 | Con amigos: uno cierra el juego a mitad de ronda. | ¿Los demás entienden el aviso? ¿El reloj suma tiempo y a los 10 s el tío se ajusta? ¿Se siente justo? |
+| 12 | Ganar una ronda con la guía activa (sin omitirla). | ¿La guía acompaña hasta la camioneta, también arrastrando sin carrito? ¿Desaparece al ganar? |
 
 ## Preguntas al final (1 = nada, 5 = mucho)
 

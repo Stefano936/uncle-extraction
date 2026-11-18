@@ -13,14 +13,16 @@ Marcá cada punto **OK**, **Raro** (anotá qué) o **Mal**.
 - [ ] Opciones → Gráficos: cambiá entre Alta y Baja. En Baja todo se sigue entendiendo. Probá también los volúmenes de efectos y de avisos.
 
 ## 2. Controles (3 min)
-- [ ] La guía de primeros pasos (izquierda) aparece en la primera partida, avanza cuando hacés lo que pide y se puede omitir o repetir desde la pausa.
+- [ ] La guía de primeros pasos (izquierda) aparece en la primera partida, avanza cuando hacés lo que pide y se puede omitir o repetir desde la pausa. **Ganá una ronda sin omitirla:** al ganar desaparece y no vuelve en la próxima partida. Si perdés, en el reintento sigue en el mismo paso. Abrir Opciones no la hace avanzar.
 - [ ] Moverse con WASD **y con las flechas**; mirar; agarrar con cada mano (clic izquierdo/derecho), soltar (Q), esfuerzo (Shift), interactuar (E). Las manos cierran los dedos al agarrar.
-- [ ] Opciones → Agarre: **Mantener** y **Alternar**. En los dos, Q suelta y el clic sostenido no vuelve a agarrar solo.
+- [ ] Opciones → Agarre: **Mantener** y **Alternar**. En los dos, Q suelta y el clic sostenido no vuelve a agarrar solo. Con **Alternar**: agarrá, dejá el botón apretado, abrí la pausa (Esc) y cerrala (Esc) sin soltarlo: la mano queda libre hasta un clic nuevo.
 - [ ] Con la pausa, Opciones o el nombre abiertos, ninguna tecla mueve ni agarra. Cambiar una tecla y Descartar la deja como estaba.
 - [ ] Clic central marca al tío / carrito / camioneta (6 s).
 - [ ] El anillo de la mira te dice si podés agarrar, si el punto está ocupado o si tenés que acercarte.
 - [ ] Ves venir los cuatro ataques: cara enojada y postura del tío, aviso en el piso, cartel del HUD. De cerca no te tapa el cartel 3D.
-- [ ] Con los dos brazos del tío sujetos no te da cachetadas ni empujones (sí puede patear o sacudirse).
+- [ ] Con los dos brazos del tío sujetos no te da cachetadas ni empujones (sí puede patear o sacudirse). Con un brazo sujeto, la cachetada sale con el otro (mirá qué brazo levanta). Si le agarrás el brazo que levantó mientras se prepara, el golpe se corta.
+- [ ] Desde delante, al costado y detrás: el tío gira la cara hacia vos, el arco del piso apunta a vos y el golpe sale hacia donde marca.
+- [ ] Con E: si mirás la mano aferrada a la barra, el aviso dice soltarla y eso hace; si mirás a otro lado a mitad de camino, el progreso empieza de cero.
 
 ## 3. Carrito (4 min)
 - [ ] Cargarlo y atarlo (E) es claro.
@@ -35,6 +37,7 @@ Marcá cada punto **OK**, **Raro** (anotá qué) o **Mal**.
 - [ ] Todos marcan LISTO, el anfitrión inicia y juegan una ronda completa. Anotá si se nota la latencia.
 - [ ] Se ve el nombre (con color) de cada compañero y «CAÍDO» cuando lo tiran; el marcador del otro aparece con su nombre.
 - [ ] Solo el anfitrión ve **Reintentar** en la pausa; el invitado pide reintentar desde los resultados.
+- [ ] Un jugador cierra el juego a mitad de ronda: todos ven el aviso, el reloj suma tiempo en el momento y a los 10 s el tío se ajusta al grupo. (No se puede volver a entrar a la misma ronda: limitación conocida.)
 
 ## Datos
 | Campo | Valor |

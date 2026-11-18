@@ -2,6 +2,50 @@
 
 Resultados de sesiones anteriores tal como quedaron, sin reescribir (incluye los FAIL y las repeticiones). El estado vigente y lo pendiente están en `PROGRESS.md`; las razones de diseño, en `docs/DECISIONES_IMPLEMENTACION.md`.
 
+## Sesión 13 (2026-11-17): controles, guía, cooperación, justicia del tío, presentación
+
+**Build de referencia: `ver VERSION.txt (última: commit de cierre de la sesión 13)`** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`, ZIP `Builds/UncleExtraction_s13.zip`). Respaldo anterior: `Builds/UncleExtraction_Candidate_69e9c6f/`. Matriz de requisitos con evidencia por nivel: `docs/MATRIZ_REQUISITOS.md`.
+
+**Hallazgos A–M (revisión del dueño), todos reproducidos antes de corregir salvo F (revisión de código):**
+
+| | Hallazgo | Corrección | Evidencia |
+| --- | --- | --- | --- |
+| A | Flechas no movían | `LabInput.RealMove`: asignadas + flechas, diagonal normalizada, sin sumar velocidad | E (`RealInputTests`, teclado simulado) |
+| B | Movimiento no reasignable | `InputBindings` con `MoveKey` | E |
+| C | Sin agarre alternado | `GrabIntent` (mantener / alternar, local y guardado) | E |
+| D | Q soltaba y el clic sostenido volvía a agarrar | rearmado al soltar el botón | E |
+| E | `Pressed` ignoraba menús y campos de texto | `PlayerControls.Pressed` con `BlockingInput` (+ escritura) | E |
+| F | Cualquiera reiniciaba con R | R solo diagnóstico en el anfitrión; el invitado pide al terminar | C, L (`repeat`, `lose`) |
+| G | Reasignar guardaba al instante | borrador con Aplicar / Descartar | E |
+| H | Tamaño de texto no cambiaba en partida | reconstrucción del HUD y paneles | E |
+| I | Preferencias dañadas | `GameSettings.Validate`, `InputBindings.Valid` | E |
+| J | El tío pegaba con un brazo sujeto | ataques según extremidades libres | E (`FairnessRulesTests`) |
+| K | Una desconexión recalculaba la ronda al instante | 10 s de gracia, tiempo conservado, mínimo 60 s | E |
+| L | Laboratorios en el menú | solo con `-ueDebug` / build de desarrollo | C |
+| M | README desactualizado | reescrito | — |
+
+**Nuevo:** primeros pasos (9 indicaciones, omitibles y repetibles desde la pausa, locales en cooperativo); marcador contextual (clic central) y nombres de compañeros con aviso de caído; validación de intenciones del invitado; descarte de respuestas tardías de Relay tras cancelar; manos con forma (palma, dedos que se cierran, puño con color de estado); expresión del tío (cejas y boca por estado) y **corrección de orientación: la cara del kit miraba hacia atrás de la raíz, así que el tío preparaba los golpes de espaldas al jugador y escapaba caminando de espaldas** (`NpcBody.FaceSign`; captura `docs/capturas/sesion13/tio_expresiones.jpg`); volúmenes de efectos y de avisos; suavizado visual independiente de los FPS; rescates técnicos por ronda en el registro.
+
+### Verificación (cada resultado con su build)
+
+| Prueba | Código / build | Resultado |
+| --- | --- | --- |
+| EditMode | `40d17af` | **58/58**, 1 ignorada (+21 nuevas: extremidades, gracia, intenciones, marcador, suavizado, volúmenes) |
+| PlayMode completa | `aac5b90` (código) | **97/99**: 1 omitida, 1 FAIL conocido `lab_fail_m28` (carrito torcido del laboratorio sin límite de FPS; pasa a 30/60/120 fps) |
+| PlayMode completa con la regla de extremidades | `83e55c7` (código) | 97/98, 1 omitida (esta vez también pasó `lab_fail_m28`) |
+| Señales de ataque + orientación de la cara | `aac5b90` | **15/15**; la cara queda a 4–9° del jugador al final de la preparación |
+| Entrada real, interfaz, flujo, marcador | `40d17af` | **29/29** |
+| Red en localhost (12 escenarios) | build `07dbc8f` | 11 PASS + `race` FAIL (rechazos=0); repetido ×3: 3/3 PASS → intermitencia de tiempos del escenario |
+| Red en localhost (12 escenarios) | build `83e55c7` | **12/12 PASS** |
+| Red en localhost tras la corrección de orientación | build `439900f` | **12/12 PASS** (coop 33 s y netsim 53 s: el tío ahora gira hacia quien ataca; más lento que en `83e55c7`, sigue ganando) |
+| Auditoría de interfaz | build `07dbc8f` | EN 15/15; ES 11/15 (texto «Reducir inclinación de cámara» recortado en Opciones → acortado) |
+| Auditoría de interfaz (Opciones con volúmenes y Marcar) | build `439900f` | **ES 15/15, EN 15/15** (5 aspectos × texto 100/125/150 %); después se acortó el rótulo «Volumen de avisos», que se achicaba a 720p/150 % |
+| Capturas de la build | `aac5b90` | cara del tío normal / enojado (gira hacia el jugador) / recuperándose; manos nuevas (`docs/capturas/sesion13/`) |
+
+**No verificado en esta sesión:** LAN real, dos equipos por internet (Relay solo desde una PC en sesiones anteriores), revisión humana. La gracia de desconexión no se ejercita en `clientdrop` (el anfitrión termina enseguida): evidencia E, no L. En `latejoin` el bot del anfitrión quedó trabado con la cabeza del tío afuera de la camioneta (no es criterio del escenario; inestabilidad conocida del autopiloto).
+
+
+
 ## Sesión 12 (2026-11-17): versión candidata 69e9c6f (rendimiento, calidad Baja, verificación)
 
 **Build candidata: `69e9c6f`** (release `Builds/UncleExtraction/`, desarrollo `Builds/UncleExtraction_Dev/`; `VERSION.txt` sin cambios sin commitear). Respaldo: `Builds/UncleExtraction_Backup_2fc2d5d/`. Guion de revisión humana: `REVISION_CANDIDATA.txt` junto al ejecutable (`docs/REVISION_CANDIDATA.md`). Capturas actuales: `docs/capturas/candidata_69e9c6f/`.

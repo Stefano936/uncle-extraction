@@ -1,6 +1,6 @@
 # Matriz de requisitos — alcance inicial (alcohol, un bar, camioneta fija, 1 a 4 jugadores)
 
-Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 13) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 13 (2026-11-17).
+Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones vigentes del dueño (sesiones 9 a 14) y `CLAUDE.md`. Se actualiza en cada bloque. Última revisión: sesión 14 (2026-11-17). Cada evidencia nombra su build o commit cuando no es la candidata vigente.
 
 **Niveles de evidencia:** **C** = existe en código y compila · **E** = probado en el editor (PlayMode/EditMode) · **B** = probado en la build · **L** = procesos en localhost · **R1** = Relay desde una PC · **R2** = dos equipos y redes distintas · **H** = revisado por una persona.
 **Estados:** completo · parcial · faltante · pospuesto (justificado) · bloqueado.
@@ -12,9 +12,9 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Moverse con WASD **y flechas**, diagonal normalizada, alternativas sin sumar velocidad | Alta | `LabInput.RealMove` (sesión 13) | completo | C, E (`RealInputTests`, teclado simulado) | B en la build final; H |
 | Movimiento remapeable | Alta | `InputBindings` (`MoveKey`) + Opciones | completo | C, E (reasignar avanzar a I) | H |
 | Dos manos independientes (clic izq./der.) | Alta | `PlayerHands`, `GrabIntent` | completo | C, E (`RealInputTests`), L | H |
-| Agarre **mantener / alternar** (local, persistente, igual en anfitrión y cliente) | Alta | `GrabIntent`, Opciones → Agarre | completo | C, E (alternar: agarra, suelta, se desarma sin objetivo) | L con cliente en alternar; H |
-| Q suelta de forma fiable; el clic sostenido no reagarra | Alta | `GrabIntent` (rearmado al soltar el clic) | completo | C, E | H |
-| Menús, pausa, campos de texto, reasignación y ventana sin foco no disparan acciones | Alta | `GameFlowUI.BlockingInput` (+ `Ui.Typing`), `PlayerControls.Pressed` | completo | C, E (escribir R/E/Espacio/W; pausa con agarres) | Perder/recuperar foco en la build (H) |
+| Agarre **mantener / alternar** (local, persistente, igual en anfitrión y cliente) | Alta | `GrabIntent`, Opciones → Agarre. Sesión 14: Alternar también exige soltar el botón tras un bloqueo; con un punto válido a la vista espera la confirmación hasta 1,5 s | completo | C, E (20 combinaciones mano × modo × bloqueo; el código de `4509f5b` fallaba 4), L (`guesttoggle` 6/6; `guesttoggle_sim` 150 ms ±30: 6/6, confirmación a los 653 ms) | H |
+| Q suelta de forma fiable; el clic sostenido no reagarra | Alta | `GrabIntent` (rearmado al soltar el clic, en los dos modos) | completo | C, E, L (invitado: Q con el botón sostenido) | H |
+| Menús, pausa, campos de texto, reasignación y ventana sin foco no disparan acciones | Alta | `GameFlowUI.BlockingInput` (+ `Ui.Typing`), `PlayerControls.Pressed`; Esc que cancela una reasignación ya no abre/cierra la pausa (`InputBindings.JustListened`) | completo | C, E (pausa cerrada con Esc, Opciones, reasignación, foco perdido, reinicio de ronda), L (invitado en pausa) | Foco real de Windows (H) |
 | Reinicio: lo controla el anfitrión; el invitado lo pide al terminar la ronda; R solo diagnóstico | Alta | `RoundDirector` (sesión 13) | completo | C | L: `repeat`/`lose` en la regresión de red |
 | Opciones: Aplicar/Descartar incluye controles; captura cancelable; reservadas (Esc, Tab, flechas) | Alta | `OptionsView` + borrador de `InputBindings` | completo | C, E | H con mando |
 | Preferencias validadas (dificultad, rangos, finitos, idioma, rutas) | Alta | `GameSettings.Validate`, `InputBindings.Valid` | completo | C, E (`DamagedPreferences_AreValidatedBeforeUse`) | — |
@@ -26,12 +26,12 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 
 | Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
 | --- | --- | --- | --- | --- | --- |
-| Primera partida guiada, omisible, repetible desde pausa, local en cooperativo | Alta | `FirstSteps` (9 pasos que avanzan con la acción real) | parcial | C | E de avance de pasos; B capturas; **H: primer agarre en el primer minuto** |
+| Primera partida guiada, omisible, repetible desde pausa, local en cooperativo | Alta | `FirstSteps`: 9 pasos. Ganar la completa; omitir la cierra; perder guarda el paso y se retoma al reintentar o en otra partida; oculta no avanza ni corre tiempos; arrastrar o carrito valen para el traslado | completo (implementación) / verificación parcial | E (`GuideLifecycleTests`: ganar arrastrando recorre los 9 pasos y la completa; perder retoma; oculta no avanza), B (auditoría `hud_guide`, ES/EN) | **H: primer agarre en el primer minuto** |
 | «Cómo jugar» breve y fiel (teclas reales, modo de agarre) | Media | `FrontendMenu` HowTo | completo | C | H |
 | Feedback de mira: válido / ocupado / fuera de alcance | Alta | `GrabFeedback` | completo | E, B (capturas) | Sonido distinto por estado (faltante) |
-| Agarre pendiente vs confirmado (autoridad del anfitrión) | Media | `GameHud.HandState.Pending` («pendiente» con el botón apretado sobre un punto válido hasta que el anfitrión confirma) | completo | C, B (ya existía; la fila figuraba mal como faltante) | L con latencia simulada (`netsim`) y H |
+| Agarre pendiente vs confirmado (autoridad del anfitrión) | Media | `GameHud.HandState.Pending` + dedos a medio cerrar (`HandRig`); aviso «No se pudo agarrar» si el anfitrión no confirma en 1,5 s | completo | C, B, L (`guesttoggle_sim`: pendiente 653 ms y confirmado) | H |
 | Motivo de cierre bloqueado con orientación | Alta | `VanDoors` + rombo | completo | E (`StuckRecoveryTests`), B | H |
-| Prioridad de E con compañero caído, carrito, mano anclada y camioneta | Media | `PlayerHands.HandleInteract` | parcial | C | Prueba dirigida con los cuatro casos juntos |
+| Prioridad de E con compañero caído, carrito, mano anclada y camioneta | Media | `PlayerHands.ChooseInteract` (regla pura): compañero caído que se mira > mano anclada que se mira > camioneta > carrito; objetivo fijo mientras se mantiene E; línea de visión; cambiar de objetivo reinicia el progreso | completo (implementación) / verificación parcial | E (los cuatro a la vez y retención con E; mano anclada en el bar: aviso = acción, mirar a otro lado corta el progreso, mantener suelta) | Compañero caído real en 2 procesos (L) |
 
 ## Cooperación y tío
 
@@ -39,13 +39,13 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | --- | --- | --- | --- | --- | --- |
 | 1–4 jugadores × 3 dificultades | Alta | `RoundDirector`, `LabBalance` | completo (automático) | L: 12 combinaciones con autopiloto (sesión 9) + coop/party4 en cada candidata | R2 y H con 4 personas |
 | Ventajas de cooperar (tirones, anclaje, carrito, levantar, cierre) | Alta | Física de agarres, `HandleInteract` | parcial | E/L automáticos | H: medir si se siente la ventaja |
-| Marcador contextual (tío/carrito/camioneta/punto) con emisor y límite | Media | `CoopMarkers` + `PlayerControls.MarkRpc` (botón central / cruceta arriba, remapeable; ayuda de puntería 0,6 m; uno por jugador, 6 s, 0,75 s entre marcas, alcance 30 m validado por el anfitrión; en el borde si queda fuera de pantalla) | completo | C, E (`Mark_MiddleClickOnUncle…`, `Mark_IsAccepted…`) | L con 2+ procesos; H |
-| Identificación de compañeros (nombre, color, caída) | Media | `CoopMarkers`: nombre con color por jugador sobre cada compañero; «CAÍDO: ayudalo» en rojo | parcial | C | Captura con 2+ procesos; manos con color propio (bloque E) |
-| Ataques legibles: preparación, zona real, un impacto por jugador, recuperación | Alta | `NpcBrain`, `AttackTelegraph`, `UncleAttackPose` | completo | E (`AttackSignalTests`), B, L | H |
-| Disponibilidad de extremidades y espacio para atacar (GDD) | Media | `NpcBrain.AvailableAttacks` + `HeldLimbs` (los dos brazos sujetos = sin manotazo; uno = sin empujón; los dos tobillos = sin patada; la sacudida sigue) | completo | C, E (`FairnessRulesTests`, 6 casos) | L/H: notar que sujetar brazos protege |
-| Transición tras desconexión (no recalcular el grupo al instante) | Media | `RoundDirector.UpdatePartySize`: baja aplicada tras 10 s de gracia, reconexión la cancela, transcurrido conservado, mínimo 60 s restantes | completo | C, E (`FairnessRulesTests`, 3 casos) | L: `clientdrop` en la regresión de red |
+| Marcador contextual (tío/carrito/camioneta/punto) con emisor y límite | Media | `CoopMarkers` + `PlayerControls.MarkRpc` (botón central / cruceta arriba, remapeable; ayuda de puntería 0,6 m; uno por jugador, 6 s, 0,75 s entre marcas, alcance 30 m validado por el anfitrión; en el borde si queda fuera de pantalla; se limpian al reiniciar) | completo | C, E, L (`marks` 4/4: lo reciben anfitrión e invitado con el mismo nombre y color, rechazos por frecuencia y alcance en el anfitrión, caduca, el reinicio limpia), B (auditoría `hud_mark`) | H |
+| Identificación de compañeros (nombre, color, caída) | Media | `CoopMarkers`: nombre con color por jugador sobre cada compañero; «CAÍDO: ayudalo» en rojo | parcial | C, L (color por dueño igual en anfitrión e invitado, `marks`) | Captura con 2+ procesos de la etiqueta de un compañero caído |
+| Ataques legibles: preparación, zona real, un impacto por jugador, recuperación | Alta | `NpcBrain`, `AttackTelegraph`, `UncleAttackPose`. Sesión 14: las poses se generaban hacia el frente viejo (la nuca); el arco seguía al cuerpo y el impacto se medía desde el pecho; las propias partes del tío tapaban su golpe. Ahora arco e impacto usan la misma dirección y el mismo punto | completo | E (`AttackSignalTests` 51/51 en laboratorio, articulado y bar; jugador delante, a los lados y detrás), B, L | H |
+| Disponibilidad de extremidades y miembro elegido (GDD) | Media | `NpcBrain.ChooseSide`: el anfitrión elige un brazo/pierna LIBRE del lado del objetivo (lado anatómico medido en reposo), lo replica con la dirección; poses izquierda y derecha; si le sujetan ese miembro durante la preparación, el golpe se corta («lo frenaron») sin cambiar de miembro | completo | C, E (6 casos de sujeción con la selección normal; el miembro elegido avanza 0,33–0,69 m hacia la zona anunciada y el otro ≤ 0,11 m; el jugador dentro del arco recibe el golpe) | L/H: notar que sujetar brazos protege |
+| Transición tras desconexión | Media | `RoundDirector.UpdatePartySize`: el tiempo extra del grupo más chico llega en el acto; resistencia y ataques una vez a los 10 s; transcurrido conservado; mínimo 60 s restantes; aviso localizado para todos. **Limitación:** la gracia no es reconexión (la admisión rechaza entrar con la ronda empezada) | completo | E (5 casos), L (`grace`: gracia 10 s, anfitrión sigue jugando, agarres liberados, un solo ajuste; `graceend`: baja con 6,9 s restantes, +25 s ya, termina después del ajuste) | R2 |
 | Suavizado visual independiente de los FPS (manos, pose del tío, barra de energía) | Media | `Smooth.Factor` (igual a 60 fps que antes) | completo | C | — |
-| Rescates técnicos registrados | Media | `PhysicsWatchdog.RoundRescues` en `[Round] SUCCESS/TIMEOUT … rescates=N` | completo | C | Revisar los registros de la regresión |
+| Rescates técnicos registrados | Media | `PhysicsWatchdog.RoundRescues` en `[Round] SUCCESS/TIMEOUT … rescates=N` | completo | C, L (rescates=0 en `grace`/`graceend`) | — |
 
 ## Red y ciclo
 
@@ -53,7 +53,7 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | --- | --- | --- | --- | --- | --- |
 | Anfitrión autoritativo, sala, LISTO, dificultad del anfitrión, rechazo con motivo | Alta | NGO + `RoundDirector` + `NetSession` | completo | E, L (12 escenarios), R1 | R2 |
 | Relay con código; cancelar | Alta | `RelayConnector`; `NetSession.CancelledWhileWaiting` descarta una respuesta tardía tras cancelar (y el coroutine muere con la escena) | completo | E, R1 (`MQRGGG`, `69e9c6f`); cancelación tardía: C (revisión de código, sin prueba automática: requiere el servicio) | R2 |
-| Pérdida del anfitrión, desconexiones con manos ocupadas | Alta | `NetSession`, `PlayerControls.ReleaseTimeout` | completo | L (`hostkill` 10,1 s, `clientdrop`) | R2 |
+| Pérdida del anfitrión, desconexiones con manos ocupadas | Alta | `NetSession`, `PlayerControls.ReleaseTimeout` | completo | L (`hostkill` 10,1 s, `clientdrop`, `grace`) | R2 |
 | Validación de intenciones del invitado (finitos, movimiento ≤ 1, ángulos acotados, solo botones de juego) | Alta | `PlayerIntent.Sanitize` en `SubmitIntentRpc` | completo | C, E (`NetIntentTests`) | L (regresión de red) |
 | Compatibilidad de versión en la admisión | Media | `VersionTag` (Application.version/ProtocolVersion) | completo | E (`AdmissionTests`) | — |
 
@@ -62,9 +62,9 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Requisito | Prio. | Implementación | Estado | Evidencia | Próxima acción |
 | --- | --- | --- | --- | --- | --- |
 | Bar nocturno, tío con ropa y gorro, carrito y camioneta propios | Alta | `BarDressing`, `Finishing` | completo | B (capturas) | **H** |
-| Manos del jugador con forma y estados | Alta | `HandRig`: palma, dedos y pulgar con piel, puño de manga con color de estado; dedos abiertos / a medias (pendiente) / cerrados (agarrando) | completo | C, B (capturas) | H |
+| Manos del jugador con forma y estados | Alta | `HandRig`: palma, dedos y pulgar, puño de manga con color de estado; dedos abiertos / a medias (pendiente) / cerrados (agarrando); con esfuerzo el puño tiembla y se tiñe; caído o levantándose, bajan abiertas | completo | C, B (capturas) | H |
 | Malla y expresión del tío | Alta | Malla del kit (facetada) + `UncleFace`: cejas y boca por estado (enojado al preparar/golpear, cejas arriba al recuperarse o caer). **Corregido:** la cara del kit miraba hacia atrás de la raíz, así que el tío preparaba los golpes y escapaba de espaldas (`NpcBody.FaceSign`) | parcial | B (capturas `cara_*.png`: gira la cara hacia el jugador y frunce el ceño), E (`Windup_TurnsTheFaceTowardsThePlayer`) | Malla con más detalle (fuera de alcance de esta pasada); H |
-| Interfaz 720p–21:9, texto 100–150 %, ES/EN | Alta | `Ui`, `UiAudit` | completo | B (`07dbc8f`: EN 15/15; ES 11/15 por «Reducir inclinación de cámara» recortado en Opciones → texto acortado, a reauditar) | H de legibilidad |
+| Interfaz 720p–21:9, texto 100–150 %, ES/EN; guía, marcador y cambio de tamaño en partida; el subtítulo no tapa la cara del tío | Alta | `Ui`, `UiAudit` (estados nuevos `hud_guide`, `hud_mark`, `hud_textsize_live`), `GameHud.PlaceSubtitle` | completo | B (`8417620`: ES 15/15, EN 15/15; rótulo acortado «Volumen de avisos» incluido) | H de legibilidad |
 | Audio por categorías con volumen separado | Media | `GameAudio.CategoryVolume`: general × efectos (agarres, golpes, puertas) o × avisos (señales de ataque, marcas, fin de ronda); Opciones con dos controles nuevos | completo | C, E (persistencia) | Voz y música cuando existan fuentes |
 | Voz y música | Baja | — | pospuesto | sin fuentes con licencia | Requiere grabaciones o compra (dueño) |
 | Calidad Alta/Baja, detección de integrada | Media | `GraphicsQuality` | completo | B (banco RTX/Iris) | Banco a batería (H/dueño) |
