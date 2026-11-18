@@ -12,7 +12,7 @@
 
 ### Sesión 15: producción — lo que se ve, se oye y se siente; rejugabilidad; material de lanzamiento
 
-**Rama:** `s15-produccion` (sin fusionar a `main`). **Candidata:** ver `Builds/UncleExtraction/VERSION.txt` (rama `s15-produccion`); ZIP de demo `Builds/UncleExtraction_Demo_s15.zip`. **Referencia de la sesión 14 conservada:** `Builds/UncleExtraction_Ref_s14/` y `Builds/UncleExtraction_Ref_s14.zip` (`85998c0`). Comparativa: `docs/capturas/sesion15/antes_despues.jpg` (mismas vistas fijas con `tools/windows/compare_shots.sh`).
+**Rama:** `s15-produccion` (sin fusionar a `main`). **Candidata: `fd0bce5`** (`Builds/UncleExtraction/VERSION.txt`, rama `s15-produccion`; código de juego igual a `9a2d7cb` salvo dos rótulos de interfaz); ZIP de demo `Builds/UncleExtraction_Demo_s15.zip`. **Referencia de la sesión 14 conservada:** `Builds/UncleExtraction_Ref_s14/` y `Builds/UncleExtraction_Ref_s14.zip` (`85998c0`). Comparativa: `docs/capturas/sesion15/antes_despues.jpg` (mismas vistas fijas con `tools/windows/compare_shots.sh`).
 
 **Qué cambia al jugar**
 - **Manos:** antebrazos mate que salen hacia las esquinas inferiores (antes: cilindros con tapas a la vista); cada clic aprieta y empuja la mano al instante con un roce de tela, antes de la confirmación del anfitrión.
@@ -41,7 +41,9 @@
 | Capturas comparables antes/después | builds `85998c0` y `S15` | `docs/capturas/sesion15/antes_despues.jpg` |
 | Clips de juego real | build `S15` | 3 verticales + 2 horizontales (WebP) en `docs/lanzamiento/clips/` |
 | Red en localhost (17 escenarios) | build `9a2d7cb` | **16/17 PASS**; `race` FAIL otra vez (rechazos=0): abierto |
-| Auditoría de interfaz ES/EN | build `9a2d7cb` | 4/15 por idioma: rótulo de la sala «DIFICULTAD · Desafío: …» y botón «Vista para captura» recortados con texto 125–150 % → corregido en el commit siguiente; reauditoría abajo |
+| Auditoría de interfaz ES/EN | build `9a2d7cb` | 4/15 por idioma: rótulo de la sala «DIFICULTAD · Desafío: …» y botón «Vista para captura» recortados con texto 125–150 % → corregido |
+| Auditoría de interfaz ES/EN (reauditoría) | build `fd0bce5` | **15/15 por idioma** |
+| Partida completa de humo con la build final | build `fd0bce5` | Gana sola con el autopiloto, sin excepciones |
 | Relay desde una PC / dos equipos / personas | — | **NOT_RUN** en esta sesión |
 
 **Material de lanzamiento (borradores, sin publicar):** `docs/lanzamiento/` — referencia de mercado, textos de tienda ES/EN, cápsulas desde capturas reales, lista de tomas del tráiler, clips verticales, plan de pruebas sin instrucciones y de difusión.
