@@ -43,6 +43,7 @@ namespace UncleExtraction
         public float BudgetMax => LabBalance.NpcBudget * Resistance;
         public float Resistance => RoundDirector.Instance ? RoundDirector.Instance.Resistance : 1f;
         public bool IsAnchored => Mirror ? nAnchorHand.Value.Length > 0 : anchorJoint != null;
+        internal Vector3 AnchorPoint => anchorJoint.connectedAnchor; // el punto fijo de la unión en el mundo, solo anfitrión
         GrabSocket anchorHand;
         public GrabSocket AnchorHandSocket { get => Mirror ? GrabSocket.ById(nAnchorHand.Value.ToString()) : anchorHand; private set => anchorHand = value; }
         public bool Strapped => TransportCart.Instance && TransportCart.Instance.IsStrapped;

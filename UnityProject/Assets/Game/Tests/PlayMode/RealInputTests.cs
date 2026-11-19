@@ -91,6 +91,68 @@ namespace UncleExtraction.Tests
         }
 
         [UnityTest]
+        public IEnumerator AnchorRelease_ShowsBoundKeyInBothHudProfiles_AndToleratesImpreciseAim()
+        {
+            Assert.IsTrue(npc.AnchorForTest());
+            var hand = npc.AnchorHandSocket;
+            Vector3 side = Vector3.ProjectOnPlane(hand.Position - npc.transform.position, Vector3.up).normalized;
+            Vector3 at = hand.Position + side * 0.9f;
+            at.y = 0f;
+            player.Body.position = at;
+            player.transform.position = at;
+            player.Body.linearVelocity = Vector3.zero;
+            yield return new WaitForSeconds(0.3f);
+            InputBindings.Set(InputBindings.Id(Act.Interact), "<Keyboard>/f");
+            yield return Keys();
+
+            IEnumerator AimNearHand(float pitchOffset, float yawOffset = 0f)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    Vector3 to = hand.Position - player.EyePosition;
+                    float horizontal = Vector3.ProjectOnPlane(to, Vector3.up).magnitude;
+                    player.SetYawPitch(Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg + yawOffset,
+                        -Mathf.Atan2(to.y, horizontal) * Mathf.Rad2Deg + pitchOffset);
+                    yield return new WaitForFixedUpdate();
+                    yield return null;
+                }
+            }
+
+            var hud = GameHud.Instance;
+            string key = InputBindings.Display(Act.Interact);
+            yield return AimNearHand(0f, 110f);
+            foreach (var profile in new[] { HudProfile.Contextual, HudProfile.Detailed })
+            {
+                GameSettings.Hud = profile;
+                yield return Frames(2);
+                Assert.AreEqual(PlayerHands.InteractKind.None, hands.InteractTarget);
+                Assert.AreEqual(Loc.T("interact.unanchor_hint", ("key", key)), hud.PromptText);
+            }
+            yield return Keys(Key.F);
+            yield return new WaitForSeconds(LabBalance.AnchorReleaseHold);
+            Assert.IsTrue(npc.IsAnchored, "el aviso solo orienta; mantener sin mirar no suelta al tío");
+            yield return Keys();
+
+            yield return AimNearHand(-38f);
+            Assert.Greater(Vector3.Angle(Camera.main.transform.forward, hand.Position - Camera.main.transform.position), 30f);
+            Assert.AreEqual(PlayerHands.InteractKind.Unanchor, hands.InteractTarget);
+            Assert.AreEqual(Loc.T("interact.unanchor", ("key", key)), hud.PromptText);
+            yield return Keys(Key.F);
+            yield return new WaitForSeconds(LabBalance.AnchorReleaseHold * 0.35f);
+            Assert.Greater(hands.InteractProgress01, 0f);
+            yield return Keys();
+            Assert.AreEqual(0f, hands.InteractProgress01);
+            Assert.IsTrue(npc.IsAnchored, "soltar la tecla antes de completar cancela el intento");
+
+            yield return Keys(Key.F);
+            yield return AimNearHand(-51f);
+            Assert.Greater(hands.InteractProgress01, 0f, "el progreso tolera un pequeño movimiento de cámara");
+            yield return new WaitForSeconds(LabBalance.AnchorReleaseHold);
+            yield return Keys();
+            Assert.IsFalse(npc.IsAnchored, "el tío suelta la baranda al completar la acción indicada");
+        }
+
+        [UnityTest]
         public IEnumerator Move_WasdAndArrows_DiagonalNormalized_NoDoubleSpeed()
         {
             yield return Keys(Key.W); Assert.AreEqual(new Vector2(0, 1), LabInput.Move(), "W");

@@ -1,5 +1,13 @@
 # Estado del proyecto
 
+## Desenganche de la baranda · revisión de la candidata
+
+Stefano probó la copia local y reportó que costaba descubrir cómo desenganchar al tío. Cerca y con línea de visión hacia la mano o su punto de apoyo, ambos perfiles del HUD ahora indican hacia dónde mirar y qué tecla mantener. La acción alcanza hasta 2,1 m desde la cámara. El cono pasa de 30° a 46° y llega a 56° mientras se mantiene la tecla sobre el objetivo. La duración base sigue en 0,9 s.
+
+- **FAIL antes del cambio.** Sin apuntar con precisión a la mano, el HUD quedaba vacío a pesar de estar cerca. `tests_PlayMode_demo_anchor_red_cleanport.xml`.
+- **38 PASS en PlayMode** con `RealInputTests|InteractPriorityTests|GuideLifecycleTests`. La regresión comprueba los dos HUD, la tecla reasignada, el progreso al mantener, la cancelación al soltar y el desenganche con un leve movimiento de cámara. El caso previo comprueba que mirar claramente hacia otro lado cancela el progreso. `tests_PlayMode_demo_anchor_targeted.xml`.
+- **Próxima prueba humana.** En solitario, elegí **Arranca en el karaoke** y comprobá si podés liberar al tío a partir de las indicaciones del juego. Después probá la secuencia de soltar y volver a agarrar en la ronda estándar.
+
 ## Candidata de demo de Windows · corte del HUD
 
 Rama `codex/demo-candidate` desde el `main` de GitHub `863888be7d82edf3307586197624858b28976178`. El PR #1 está fusionado con cabeza `82c28e123adde35455ba0a6d8064a75e6823c3c7`. Stefano confirmó que esa build del HUD funciona. El PR #2 de S19 sigue en borrador en `5a478cb21be923b07d19c8a96c774cb6c319a6d7` y se revisa aparte. Las ramas de selección, frenado y cámara siguen disponibles para comparaciones.
