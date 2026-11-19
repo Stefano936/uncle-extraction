@@ -10,7 +10,8 @@ Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb
 | PlayMode completo | **173 PASS**, 1 omitida. La variante de cápsula central del laboratorio no tiene pie independiente. Los assets versionados quedaron intactos tras ambas tandas. |
 | Copia extraída de jugadores | **PASS** de arranque, menú, Opciones y persistencia del perfil. Los argumentos de laboratorio, auditoría, cámara, rendimiento, sonda, autopiloto y capturas no activaron herramientas de QA. |
 | Extracción desde la copia extraída | **PASS** en ronda estándar Normal de dos procesos. Abrí la sala e inicié la ronda en el ejecutable de jugadores. Un cliente de QA del mismo SHA hizo el recorrido por localhost. El anfitrión de jugadores registró el primer agarre, desenganche, tío dentro de la camioneta y cierre completo en **39,2 s**, con victoria en pantalla. |
-| Auditoría de interfaz y regresión localhost/Relay | En ejecución sobre builds del mismo SHA. |
+| Auditoría de interfaz | **30/30 PASS** de disposición, 15 por idioma. Dos perfiles, cinco formatos de pantalla y texto al 100 %, 125 % y 150 %. En las capturas a 720p y 150 %, el aviso de Contextual se lee y el rótulo 3D de Detallado pierde contraste sobre la ropa iluminada. Las tarjetas de mano se leen. |
+| Regresión localhost y Relay en una PC | En ejecución sobre las builds QA y desarrollo del mismo SHA. |
 | PC sin Unity, LAN y Relay entre equipos, mando físico y grupos nuevos | Pendientes de equipo o participantes. |
 
 ZIP `UncleExtraction_Demo_54b5246_Windows_x64.zip`. SHA-256 `9167da7fa203beaa3dcbd216b4fbfe4b349c116bae35dfcf4a717b63f39f5bbe`. La copia extraída está en `UncleExtraction_Demo_54b5246_Jugar`. El ZIP anterior sigue disponible como referencia. XML, logs de builds, arranque y extracción en `.local-setup/qa/main_54b5246/`.
