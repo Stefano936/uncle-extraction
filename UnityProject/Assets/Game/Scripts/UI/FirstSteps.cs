@@ -40,7 +40,7 @@ namespace UncleExtraction
         void Build()
         {
             if (box) Destroy(box.gameObject);
-            if (!canvas) { canvas = Ui.Canvas("FirstSteps", 15); if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) canvas.enabled = false; }
+            if (!canvas) { canvas = Ui.Canvas("FirstSteps", 15); if (QaArgs.Has("-ueNoHud")) canvas.enabled = false; }
             builtScale = Ui.TextScale;
             box = Ui.PanelBox("Guide", canvas.transform, new Vector2(0f, 0.5f), new Vector2(Ui.Margin, 60), new Vector2(Ui.K(470), Ui.K(150))); box.pivot = new Vector2(0f, 0.5f);
             title = Ui.Label(box, "Title", "", Ui.FontHud, Ui.Focus, TextAnchor.UpperLeft, true);
@@ -53,7 +53,7 @@ namespace UncleExtraction
         void Start()
         {
             Build();
-            if (!Completed && System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueAutopilot") < 0) Go(SavedStep);
+            if (!Completed && !QaArgs.Has("-ueAutopilot")) Go(SavedStep);
         }
 
         public void Begin() { Go(Step.Move); }

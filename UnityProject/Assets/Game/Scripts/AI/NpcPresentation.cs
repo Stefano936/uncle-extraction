@@ -79,7 +79,7 @@ namespace UncleExtraction
             Pose(armL, armL0, aL); Pose(armR, armR0, aR); Pose(legL, legL0, lL); Pose(legR, legR0, lR);
             if (indicator)
             {
-                if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) showInd = false; // material de tienda
+                if (QaArgs.Has("-ueNoHud")) showInd = false; // material de tienda
                 indicator.gameObject.SetActive(showInd);
                 if (showInd)
                 {

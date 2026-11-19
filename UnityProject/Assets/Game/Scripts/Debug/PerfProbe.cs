@@ -25,7 +25,7 @@ namespace UncleExtraction
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Init()
         {
-            var a = Environment.GetCommandLineArgs();
+            var a = QaArgs.All;
             for (int i = 0; i < a.Length; i++)
                 if (a[i] == "-uePerf")
                 {

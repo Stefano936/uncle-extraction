@@ -1,6 +1,6 @@
 # Revisión de la versión candidata (15–20 min)
 
-Build: `Builds\UncleExtraction\UncleExtraction.exe`. Antes de empezar, anotá el commit de `VERSION.txt`. Si podés, probala enchufada y también a batería.
+Build `UncleExtraction_Demo_42dcfcd_Windows_x64.zip`, SHA `42dcfcd0d7b8861b89cdc374d9a1eee81a449bc5`. Descomprimila en una carpeta nueva y abrí `UncleExtraction.exe`. Antes de empezar, verificá `VERSION.txt`. Si podés, probala enchufada y también a batería. Para una primera pasada, usá el [guion breve](VOLVER_A_PROBAR_CANDIDATA.md). [Resultado técnico](../PROGRESS.md)
 
 Marcá cada punto **OK**, **Raro** (anotá qué) o **Mal**.
 
@@ -13,6 +13,7 @@ Marcá cada punto **OK**, **Raro** (anotá qué) o **Mal**.
 - [ ] Opciones → Gráficos: cambiá entre Alta y Baja. En Baja todo se sigue entendiendo. Probá también los volúmenes de efectos y de avisos.
 
 ## 2. Controles (3 min)
+- [ ] En Pausa → Opciones alterná Contextual y Detallado. Con cada perfil, apuntá al mismo agarre, confirmalo y soltalo. Probá texto al 150 % y compará teclado con mando. Cerrá y reabrí para comprobar qué perfil quedó guardado.
 - [ ] La guía de primeros pasos (izquierda) aparece en la primera partida, avanza cuando hacés lo que pide y se puede omitir o repetir desde la pausa. **Ganá una ronda sin omitirla:** al ganar desaparece y no vuelve en la próxima partida. Si perdés, en el reintento sigue en el mismo paso. Abrir Opciones no la hace avanzar.
 - [ ] Moverse con WASD **y con las flechas**; mirar; agarrar con cada mano (clic izquierdo/derecho), soltar (Q), esfuerzo (Shift), interactuar (E). Las manos cierran los dedos al agarrar.
 - [ ] Opciones → Agarre: **Mantener** y **Alternar**. En los dos, Q suelta y el clic sostenido no vuelve a agarrar solo. Con **Alternar**: agarrá, dejá el botón apretado, abrí la pausa (Esc) y cerrala (Esc) sin soltarlo: la mano queda libre hasta un clic nuevo.

@@ -134,8 +134,13 @@
   },
   {
    "key": "interact.unanchor",
-   "en": "Hold {key}: pry his hand off",
-   "es_UY": "Mantené {key}: soltarle la mano"
+   "en": "Hold {key} to free his hand",
+   "es_UY": "Mantené {key} para soltarle la mano"
+  },
+  {
+   "key": "interact.unanchor_hint",
+   "en": "Look where he's holding on, then hold {key}",
+   "es_UY": "Mirá donde se aferra y mantené {key}"
   },
   {
    "key": "grab.lost_distance",
@@ -589,8 +594,8 @@
   },
   {
    "key": "tut.recover",
-   "en": "After an attack he needs to recover: pull now. If he clings to the bar, hold {key} on his hand to unhook it.",
-   "es_UY": "Después de atacar se tiene que recuperar: tirá ahora. Si se aferra a la barra, mantené {key} sobre su mano para soltarla."
+   "en": "Pull while he recovers from an attack. If he's holding on, get close, look where he's gripping and hold {key} until the bar fills.",
+   "es_UY": "Tirá mientras se recupera del ataque. Si se aferra, acercate, mirá donde se agarra y mantené {key} hasta llenar la barra."
   },
   {
    "key": "tut.cart",
