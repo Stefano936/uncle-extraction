@@ -2,7 +2,7 @@
 
 Juego cooperativo de comedia física en primera persona, de 1 a 4 jugadores: sacar de un bar a un tío controlado por el juego, que se resiste, se aferra, escapa, golpea y empuja, y meterlo en una camioneta. Unity 6.3 LTS, C#, Windows; Steam más adelante.
 
-**Candidata de Windows para playtest** `42dcfcd0d7b8861b89cdc374d9a1eee81a449bc5`, versión **0.17.0**, protocolo **2**. La build de jugadores está en `UncleExtraction_Demo_42dcfcd_Windows_x64.zip` (local, con su `.sha256`). El ZIP de la sesión 17 permanece disponible como referencia. Consultá [PROGRESS.md](PROGRESS.md) para el resultado y las comprobaciones pendientes. [PR #3](https://github.com/Stefano936/uncle-extraction/pull/3)
+**Candidata de Windows para playtest** `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`, versión **0.17.0**, protocolo **2**. La build de jugadores está en `UncleExtraction_Demo_54b5246_Windows_x64.zip` con su `.sha256`. Incluye los dos perfiles del HUD, el ajuste de desenganche y los materiales del bar. [Resultados y comprobaciones pendientes](PROGRESS.md)
 
 El proyecto Unity (`UnityProject/`) genera builds de Windows que incluyen:
 - Escenario **The Last Round** (`Bar_LastRound`): bar nocturno con techo, luces cálidas, neones, vereda y calle; tío articulado de 11 cuerpos con ropa y gorro de fiesta; carrito y camioneta con modelos propios sobre la geometría funcional.

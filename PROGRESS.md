@@ -1,5 +1,22 @@
 # Estado del proyecto
 
+## Candidata integrada de Windows · 54b5246
+
+Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.
+
+| Comprobación de este corte | Resultado |
+| --- | --- |
+| EditMode completo | **75 PASS**, 1 omitida. El proyecto ya está vinculado a Relay. |
+| PlayMode completo | **173 PASS**, 1 omitida. La variante de cápsula central del laboratorio no tiene pie independiente. Los assets versionados quedaron intactos tras ambas tandas. |
+| Copia extraída de jugadores | **PASS** de arranque, menú, Opciones y persistencia del perfil. Los argumentos de laboratorio, auditoría, cámara, rendimiento, sonda, autopiloto y capturas no activaron herramientas de QA. |
+| Extracción desde la copia extraída | **PASS** en ronda estándar Normal de dos procesos. Abrí la sala e inicié la ronda en el ejecutable de jugadores. Un cliente de QA del mismo SHA hizo el recorrido por localhost. El anfitrión de jugadores registró el primer agarre, desenganche, tío dentro de la camioneta y cierre completo en **39,2 s**, con victoria en pantalla. |
+| Auditoría de interfaz y regresión localhost/Relay | En ejecución sobre builds del mismo SHA. |
+| PC sin Unity, LAN y Relay entre equipos, mando físico y grupos nuevos | Pendientes de equipo o participantes. |
+
+ZIP `UncleExtraction_Demo_54b5246_Windows_x64.zip`. SHA-256 `9167da7fa203beaa3dcbd216b4fbfe4b349c116bae35dfcf4a717b63f39f5bbe`. La copia extraída está en `UncleExtraction_Demo_54b5246_Jugar`. El ZIP anterior sigue disponible como referencia. XML, logs de builds, arranque y extracción en `.local-setup/qa/main_54b5246/`.
+
+**Próxima prueba humana.** Abrí este ZIP en una PC de Windows sin Unity y completá una ronda estándar con input físico. Anotá el tiempo al primer agarre y cualquier ayuda necesaria. Después alterná los dos HUD desde pausa, comprobá español e inglés con texto al 150 % y probá un mando físico. Hacé una ronda de LAN por IP y otra por Relay en redes independientes con la segunda PC. [Guion de la candidata](docs/VOLVER_A_PROBAR_CANDIDATA.md)
+
 Última actualización: 2026-11-19, integración de la candidata y sesión 19 (materiales del bar), sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Sesión 19 · materiales del bar
