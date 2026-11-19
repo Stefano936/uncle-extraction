@@ -2,7 +2,9 @@
 
 Juego cooperativo de comedia física en primera persona, de 1 a 4 jugadores: sacar de un bar a un tío controlado por el juego, que se resiste, se aferra, escapa, golpea y empuja, y meterlo en una camioneta. Unity 6.3 LTS, C#, Windows; Steam más adelante.
 
-**Estado: versión candidata jugable** (ver [PROGRESS.md](PROGRESS.md) para el commit y la evidencia). Versión **0.17.0**, protocolo de red **2** (rama `s17-demo`); demo para compartir: `Builds/UncleExtraction_Demo_s17.zip` (local, con su `.sha256`). Hay proyecto Unity (`UnityProject/`) y builds de Windows que se generan localmente:
+**Candidata de Windows para playtest** `42dcfcd0d7b8861b89cdc374d9a1eee81a449bc5`, versión **0.17.0**, protocolo **2**. La build de jugadores está en `UncleExtraction_Demo_42dcfcd_Windows_x64.zip` (local, con su `.sha256`). El ZIP de la sesión 17 permanece disponible como referencia. Consultá [PROGRESS.md](PROGRESS.md) para el resultado y las comprobaciones pendientes. [PR #3](https://github.com/Stefano936/uncle-extraction/pull/3)
+
+El proyecto Unity (`UnityProject/`) genera builds de Windows que incluyen:
 - Escenario **The Last Round** (`Bar_LastRound`): bar nocturno con techo, luces cálidas, neones, vereda y calle; tío articulado de 11 cuerpos con ropa y gorro de fiesta; carrito y camioneta con modelos propios sobre la geometría funcional.
 - Solo o cooperativo de 2 a 4: anfitrión autoritativo (Netcode for GameObjects), sala con LISTO, **internet por Relay con código de sala** y red local por IP.
 - Extracción real con cierre de puertas, carrito, cuatro ataques anunciados, vaso señuelo, ayuda para levantarse y primera partida guiada.
@@ -14,7 +16,7 @@ Pendiente: voz y música, revisión humana, prueba entre dos equipos y Steam. Ma
 
 ## Probar
 
-[docs/COMO_PROBAR.md](docs/COMO_PROBAR.md): abrir la build, controles y qué anotar.
+Descomprimí el ZIP en una carpeta nueva. La [guía de juego](docs/COMO_PROBAR.md) explica controles y objetivo. Usá el [guion de la candidata](docs/VOLVER_A_PROBAR_CANDIDATA.md) para revisar ambos HUD y hacer una extracción completa.
 
 ## Desarrollar
 

@@ -11,7 +11,21 @@ Rama `codex/demo-candidate` desde el `main` de GitHub `863888be7d82edf3307586197
 
 La candidata rearma ambas manos cuando cambia la identidad del jugador local o el número de ronda. Los argumentos de diagnóstico toman una lista vacía en jugadores. La prueba de arranque del ZIP incluye auditoría, recorrido de cámara, rendimiento, sonda, autopiloto y captura de menú. `VERSION.txt` incluye el SHA completo.
 
-**Próxima acción exacta:** fijar el commit de esta rama, ejecutar el guion de [QA de Unity](docs/PRUEBA_HUD_S18.md), construir jugadores/QA/desarrollo con el editor 6000.3.28f1 y ejecutar red, auditoría bilingüe y prueba del ZIP. Para la revisión con personas, usar [el guion de la candidata](docs/VOLVER_A_PROBAR_CANDIDATA.md). El ZIP s17 queda como referencia.
+**SHA de jugadores, QA y desarrollo** `42dcfcd0d7b8861b89cdc374d9a1eee81a449bc5`, Unity **6000.3.28f1**, Windows x64 Mono. ZIP `UncleExtraction_Demo_42dcfcd_Windows_x64.zip`, SHA-256 `8ab1916922116067d4a2770aaa251e8d604beafb3f2bb65a5878160281612547`. El ZIP de s17 queda como referencia. [PR #3](https://github.com/Stefano936/uncle-extraction/pull/3)
+
+| Verificación de la candidata | Estado |
+| --- | --- |
+| EditMode completo | **75 PASS, 1 omitida.** El caso sin proyecto Relay vinculado no aplica al proyecto configurado. |
+| PlayMode completo | **172 PASS, 1 omitida.** El laboratorio de cápsula central no tiene un pie independiente. Assets versionados iguales antes y después de ambas tandas. |
+| Copia extraída de jugadores | **PASS** de arranque, opciones, persistencia de HUD y exclusión de herramientas de QA. Entró al bar con ambos perfiles. Falta completar la extracción con input físico. |
+| Extracción individual automática | **PASS** por arrastre, 26,9 s. Usó la build QA de este SHA. |
+| Auditoría de UI | **30/30 PASS**, 15 por idioma. Cinco resoluciones o aspectos y texto al 100 %, 125 % y 150 %. La inspección visual encontró contraste bajo en el rótulo 3D de Detallado sobre ropa muy iluminada. |
+| Localhost y Relay en una PC | En ejecución con las builds QA y desarrollo de este SHA. |
+| LAN y Relay entre equipos | **NOT_RUN.** Requieren una segunda PC. Para Relay entre redes, usar dos redes distintas y guardar los dos logs. |
+
+**S19** `5a478cb` pasó la revisión técnica aparte. Comparé tres pares a 1600 × 900 en Baja con luces, posiciones y ángulos iguales. Veta, juntas y puerta se distinguen. Los roces alrededor de la manija se leen de cerca. Los 55 archivos de arte y `.meta` coinciden tras regenerar, junto con las referencias de 6 materiales y 9 mallas. La cámara, luces, colisiones, bisagra y posiciones de juego coinciden con `863888b`. La extracción con carrito pasó en ambos cortes. Está listo para revisión visual en el PR #2. [PR #2](https://github.com/Stefano936/uncle-extraction/pull/2)
+
+**Próxima acción exacta:** cerrar `tools/windows/net_smoke.ps1 -Scenario all` y `relay`, guardar los CSV y comprobar la disputa por el cinturón en ambos logs. Reproducir cualquier fallo antes de decidir distribución. En la copia extraída, usar [el guion de la candidata](docs/VOLVER_A_PROBAR_CANDIDATA.md) para completar una partida con input físico y revisar la pausa. El tablero de Trello pide iniciar sesión. Los resultados pendientes de copiar quedaron en `actualizaciones_Trello.md` junto a la evidencia local.
 
 Última actualización: 2026-11-18, sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
@@ -41,7 +55,7 @@ El [guion A/B y las hipótesis de la sesión 18](docs/PRUEBA_HUD_S18.md) reúnen
 
 **Qué se puede jugar:** Bar_LastRound solo o en cooperativo de 2 a 4 (internet por Relay con código de sala; red local por IP). Tío articulado de 11 cuerpos con poses de ataque; bar de noche con techo, luces cálidas, neones y calle; camioneta con carrocería propia; carrito con modelo propio; tío con ropa, materiales y gorro de fiesta; vaso señuelo, ayuda para levantarse, extracción con puertas. Interfaz del kit (menú, sala, HUD, pausa, opciones, resultados, errores), EN/es_UY, controles reasignables, opciones guardadas, mando en menús y juego. Sonido sintetizado y subtítulos del tío; sin voz ni música.
 
-**Niveles de evidencia:** PM = PlayMode en el editor; EM = EditMode; AUTO = partida completa con entradas de jugador simuladas; NET = procesos de la build en **localhost** (no LAN ni internet); VIS = auditoría y capturas reales de la build. **Ninguna fila tiene prueba humana.**
+**Niveles de evidencia:** PM = PlayMode en el editor; EM = EditMode; AUTO = partida completa con entradas de jugador simuladas; NET = procesos de la build en **localhost**; VIS = auditoría y capturas reales de la build. Las pruebas humanas históricas tienen su propio [registro](docs/OBSERVACIONES_PRUEBAS.md).
 
 ### Sesión 17: correcciones de la auditoría, demo para compartir con resultados asociados
 
