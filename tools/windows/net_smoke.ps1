@@ -204,14 +204,23 @@ for ($run = 1; $run -le $Runs; $run++) {
       }
       'long4' {
         # sesion 17: 4 jugadores (4 procesos en UNA PC) y 10 rondas seguidas (-ueRepeat 9), memoria por ventana en cada proceso.
-        $g = Party $tag 4 1500 @('-ueRepeat','9') @('-uePerf','15')
+        $g = Party $tag 4 1500 @() @('-ueRepeat','9','-uePerf','15')
         if ($null -eq $g) { Record $label 'BLOCKED' 'crash al arrancar algun proceso'; break }
-        $fs = @(Finals $g[0]); $wins = @($fs | Where-Object { (Field $_ 'ronda') -eq 'Success' }).Count
+        $hostFinals = @(Finals $g[0])
+        $wins = foreach ($x in $g) { @(Finals $x | Where-Object { (Field $_ 'ronda') -eq 'Success' }).Count }
+        $aligned = $hostFinals.Count -eq 10
+        foreach ($guest in $g[1..3]) {
+          $guestFinals = @(Finals $guest)
+          if ($guestFinals.Count -ne $hostFinals.Count) { $aligned = $false; continue }
+          for ($round = 0; $round -lt $hostFinals.Count; $round++) {
+            if (-not (SameFinal $hostFinals[$round] $guestFinals[$round])) { $aligned = $false }
+          }
+        }
         $exc = 0; foreach ($x in $g) { $exc += (Grep $x 'Exception').Count }
         $growths = foreach ($x in $g) { $m = @(Grep $x '\[Perf\] ventana' | ForEach-Object { [int]([regex]::Match($_, 'mem_unity=(\d+)MB').Groups[1].Value) }); if ($m.Count -ge 4) { $m[-1] - $m[2] } else { 0 } }
         $maxG = ($growths | Measure-Object -Maximum).Maximum
-        $ok = $fs.Count -ge 10 -and $wins -eq $fs.Count -and $exc -eq 0 -and $maxG -lt 64
-        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ("rondas_anfitrion=$($fs.Count) victorias=$wins excepciones=$exc crecimiento_mem_por_proceso=$($growths -join ',') MB | " + ((0..3 | ForEach-Object { "p$($_): " + (PerfLine $g[$_]) }) -join ' | '))
+        $ok = $aligned -and @($wins | Where-Object { $_ -ne 10 }).Count -eq 0 -and $exc -eq 0 -and $maxG -lt 64
+        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ("rondas_anfitrion=$($hostFinals.Count) victorias_por_proceso=$($wins -join ',') convergencia=$aligned excepciones=$exc crecimiento_mem_por_proceso=$($growths -join ',') MB | " + ((0..3 | ForEach-Object { "p$($_): " + (PerfLine $g[$_]) }) -join ' | '))
       }
       'perf1' {
         $g = Solo $tag @('-uePerf','10') 330
