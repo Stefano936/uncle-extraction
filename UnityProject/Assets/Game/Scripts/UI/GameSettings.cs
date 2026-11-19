@@ -54,7 +54,7 @@ namespace UncleExtraction
             catch { /* preferencias corruptas: valores por defecto */ }
             Validate();
             // pruebas de interfaz: -ueTextScale 1.5 fuerza el tamaño de texto sin guardarlo
-            var a = System.Environment.GetCommandLineArgs();
+            var a = QaArgs.All;
             for (int i = 0; i < a.Length - 1; i++)
             {
                 if (a[i] == "-ueQuality") LowQuality = a[i + 1] == "low";

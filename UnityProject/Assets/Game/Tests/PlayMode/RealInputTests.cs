@@ -261,6 +261,30 @@ namespace UncleExtraction.Tests
             Assert.IsEmpty(hands.HeldSocketId(0));
         }
 
+        [UnityTest]
+        public IEnumerator PendingToggle_IsCancelledByRoundRestartBeforeConfirmation()
+        {
+            GameSettings.GrabToggle = true;
+            player.SetYawPitch(player.Yaw, -80f);
+            yield return Frames(3);
+            Assert.IsNull(hands.Candidate);
+            yield return Buttons(true, false);
+            Assert.IsTrue(GrabIntent.Armed(0));
+
+            RoundDirector.Instance.Restart();
+            yield return null;
+            yield return null;
+            Assert.IsFalse(GrabIntent.Armed(0), "el intento anterior no pertenece a la nueva ronda");
+
+            yield return FaceUncle();
+            Assert.IsFalse(hands.IsGrabPending(0));
+            Assert.IsEmpty(hands.HeldSocketId(0));
+            yield return Buttons(false, false);
+            yield return Buttons(true, false);
+            yield return Frames(4);
+            Assert.IsNotEmpty(hands.HeldSocketId(0), "una pulsacion nueva sigue agarrando");
+        }
+
         public enum Blocker { PauseClosedWithEscape, OptionsFromPause, Rebinding, FocusLost, RoundRestart }
 
         /// Hallazgo B (sesion 14): con el boton sostenido durante un bloqueo, al volver la mano queda libre hasta una

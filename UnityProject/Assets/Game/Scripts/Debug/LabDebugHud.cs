@@ -39,10 +39,10 @@ namespace UncleExtraction
             box = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, fontSize = 13 };
         }
 
-        static readonly bool DebugArg = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueDebug") >= 0;
+        static readonly bool DebugArg = QaArgs.Has("-ueDebug");
 
         /// -ueCleanCapture: material de tienda/clips sin textos de depuracion (sesion 15).
-        public static readonly bool CleanCapture = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueCleanCapture") >= 0;
+        public static readonly bool CleanCapture = QaArgs.Has("-ueCleanCapture");
         void OnGUI()
         {
             Styles();

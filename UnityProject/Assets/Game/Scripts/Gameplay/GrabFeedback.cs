@@ -13,7 +13,7 @@ namespace UncleExtraction
         public AimState State { get; private set; }
         public GrabSocket Aimed { get; private set; }
 
-        static readonly bool NoHud = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0; // material de tienda
+        static readonly bool NoHud = QaArgs.Has("-ueNoHud"); // material de tienda
         Transform ring; Mesh ringMesh; Material ringMat; TextMesh label; LineRenderer[] lines = new LineRenderer[2];
         Transform warn; TextMesh warnLabel; Material warnMat; Mesh warnMesh;
         /// Texto del bloqueo marcado en el mundo ("" = nada que marcar). Para pruebas.
@@ -33,7 +33,7 @@ namespace UncleExtraction
             label.characterSize = 0.011f; label.fontSize = 64;
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font) { label.font = font; lgo.GetComponent<MeshRenderer>().sharedMaterial = font.material; }
-            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueNoHud") >= 0) lgo.GetComponent<MeshRenderer>().enabled = false; // material de tienda
+            if (NoHud) lgo.GetComponent<MeshRenderer>().enabled = false; // material de tienda
             for (int h = 0; h < 2; h++)
             {
                 var go = new GameObject(h == 0 ? "Tension_L" : "Tension_R"); go.transform.SetParent(null, false);

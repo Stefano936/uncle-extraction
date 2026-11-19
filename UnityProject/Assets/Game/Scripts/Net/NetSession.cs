@@ -75,11 +75,13 @@ namespace UncleExtraction
                 else if (a[i] == "-ueRelay") Online = true;
                 else if (a[i] == "-ueDifficulty" && i + 1 < a.Length && Enum.TryParse<Difficulty>(a[i + 1], true, out var dif)) RoundDirector.RequestedDifficulty = dif;
                 else if (a[i] == "-ueJoinCode" && i + 1 < a.Length) { Online = true; Mode = NetMode.Client; JoinCode = a[i + 1]; }
-                else if (a[i] == "-ueProfile" && i + 1 < a.Length) RelayConnector.Profile = a[i + 1];
                 else if (a[i] == "-uePort" && i + 1 < a.Length && ushort.TryParse(a[i + 1], out var p)) Port = p;
                 else if (a[i] == "-ueListen" && i + 1 < a.Length) ListenAddress = a[i + 1];
+#if !UE_PLAYER_BUILD
+                else if (a[i] == "-ueProfile" && i + 1 < a.Length) RelayConnector.Profile = a[i + 1];
                 else if (a[i] == "-ueNetSim" && i + 3 < a.Length)
                 { int.TryParse(a[i + 1], out SimDelayMs); int.TryParse(a[i + 2], out SimJitterMs); int.TryParse(a[i + 3], out SimLossPct); }
+#endif
             }
         }
 

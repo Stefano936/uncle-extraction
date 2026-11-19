@@ -1,5 +1,18 @@
 # Estado del proyecto
 
+## Candidata de demo de Windows · corte del HUD
+
+Rama `codex/demo-candidate` desde el `main` de GitHub `863888be7d82edf3307586197624858b28976178`. El PR #1 está fusionado con cabeza `82c28e123adde35455ba0a6d8064a75e6823c3c7`. Stefano confirmó que esa build del HUD funciona. El PR #2 de S19 sigue en borrador en `5a478cb21be923b07d19c8a96c774cb6c319a6d7` y se revisa aparte. Las ramas de selección, frenado y cámara siguen disponibles para comparaciones.
+
+| Comprobación sobre el corte de `main` | Resultado original y reproducción |
+| --- | --- |
+| Intento pendiente en Alternar durante un reinicio | **FAIL.** Mirar hacia arriba sin candidato, pulsar la mano izquierda con Alternar, reiniciar mientras el intento sigue armado. `PendingToggle_IsCancelledByRoundRestartBeforeConfirmation` confirma que la intención de la ronda anterior seguía activa. XML y log `tests_PlayMode_demo_red_pending.*`. |
+| Argumentos de auditoría en la build de jugadores | **FAIL.** Abrir jugadores `863888b` con `-ueUiAudit <carpeta>` ejecuta la auditoría, entra al bar y genera capturas. Registro `player_qa_argument_FAIL.log`. |
+
+La candidata rearma ambas manos cuando cambia la identidad del jugador local o el número de ronda. Los argumentos de diagnóstico toman una lista vacía en jugadores. La prueba de arranque del ZIP incluye auditoría, recorrido de cámara, rendimiento, sonda, autopiloto y captura de menú. `VERSION.txt` incluye el SHA completo.
+
+**Próxima acción exacta:** fijar el commit de esta rama, ejecutar el guion de [QA de Unity](docs/PRUEBA_HUD_S18.md), construir jugadores/QA/desarrollo con el editor 6000.3.28f1 y ejecutar red, auditoría bilingüe y prueba del ZIP. Para la revisión con personas, usar [el guion de la candidata](docs/VOLVER_A_PROBAR_CANDIDATA.md). El ZIP s17 queda como referencia.
+
 Última actualización: 2026-11-18, sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Sesión 18 · variante de HUD y feedback de agarre

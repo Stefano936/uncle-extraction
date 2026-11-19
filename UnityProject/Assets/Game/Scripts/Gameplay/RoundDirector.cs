@@ -19,7 +19,7 @@ namespace UncleExtraction
         public static Difficulty? RequestedDifficulty;
         /// Desafio elegido en el menu/sala (sesion 15); lo aplica el anfitrion. -ueChallenge NoCart|Narrow para pruebas.
         public static ChallengeMode? RequestedChallenge = ParseChallenge();
-        static ChallengeMode? ParseChallenge() { var a = System.Environment.GetCommandLineArgs(); for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueChallenge" && System.Enum.TryParse(a[i + 1], true, out ChallengeMode m)) return m; return null; }
+        static ChallengeMode? ParseChallenge() { var a = QaArgs.All; for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueChallenge" && System.Enum.TryParse(a[i + 1], true, out ChallengeMode m)) return m; return null; }
         public ChallengeMode challenge = ChallengeMode.Standard;
         readonly NetworkVariable<ChallengeMode> nChallenge = new NetworkVariable<ChallengeMode>(ChallengeMode.Standard);
         public ChallengeMode CurrentChallenge => Mirror ? nChallenge.Value : challenge;
@@ -64,7 +64,7 @@ namespace UncleExtraction
         public static float TimeLimitOverride = ParseRoundTime();
         static float ParseRoundTime()
         {
-            var a = System.Environment.GetCommandLineArgs();
+            var a = QaArgs.All;
             for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-ueRoundTime" && float.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var t)) return t;
             return -1f;
         }
@@ -201,7 +201,7 @@ namespace UncleExtraction
 #if UE_PLAYER_BUILD
         public static bool DiagnosticKeys => false; // build de jugadores: sin atajos ni laboratorios
 #else
-        public static bool DiagnosticKeys => Application.isEditor || Debug.isDebugBuild || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueDebug") >= 0;
+        public static bool DiagnosticKeys => Application.isEditor || Debug.isDebugBuild || System.Array.IndexOf(QaArgs.All, "-ueDebug") >= 0;
 #endif
 
         public void Restart()
