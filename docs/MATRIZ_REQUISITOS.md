@@ -10,10 +10,10 @@ Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), ins
 | Requisito | Estado del corte | Evidencia | Siguiente validación |
 | --- | --- | --- | --- |
 | Contextual por defecto, Detallado seleccionable y persistente | completo | E: persistencia y cambio desde pausa. B: ambos perfiles en el bar y persistencia de Detallado tras reiniciar la copia extraída | Teclado y mando físicos, pausa durante el recorrido real |
-| Confirmación, soltada y pérdida de agarre; cancelación al reiniciar | completo en solitario | E: audio de intento y confirmación una vez, soltada, pérdida y caso de intento armado antes de reiniciar | Invitado en localhost y prueba con una persona |
+| Confirmación, soltada y pérdida de agarre; cancelación al reiniciar | completo en pruebas automáticas | E: intento, confirmación, soltada, pérdida y cancelación al reiniciar. L: sonda del invitado 9/9 con y sin latencia, un solo sonido de contacto y soltadas voluntarias | Confirmar claridad de las señales con una persona y mando físico |
 | Build Windows x64 reproducible y distribución de jugadores | parcial | B: `VERSION.txt` y SHA-256, prueba desde ZIP y herramientas de QA inactivas. AUTO: victoria en la build QA del mismo SHA | Victoria con input físico en la copia extraída |
 | Interfaz en ES/EN al 150 % | completo para disposición | B: 15 configuraciones por idioma sin recortes, superposiciones o elementos fuera de pantalla | Verificar el contraste de los rótulos 3D durante el recorrido con input físico |
-| Ciclo, disputa y desconexión en red | en verificación | [Tanda del corte](../PROGRESS.md) | Archivar localhost y Relay desde una PC. LAN y Relay entre equipos requieren dos PC |
+| Ciclo, disputa y desconexión en red | completo en localhost y Relay desde una PC | L: 20/20, dos candidatos `belt` y un solo titular, ciclo 9/9, limpieza de agarres tras desconexión. R1: dos procesos ganaron por Relay, RTT 84–101 ms | LAN y Relay entre equipos requieren dos PC |
 
 ## Controles y entrada
 

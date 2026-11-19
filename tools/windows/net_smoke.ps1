@@ -51,7 +51,11 @@ function Crashed($g) { (Grep $g 'Crash!!!').Count -gt 0 }
 function BuildVer($exe) { $v = Join-Path (Split-Path -Parent $exe) 'VERSION.txt'; if (Test-Path $v) { ((Get-Content $v -Raw) -replace '\s+', ' ').Trim() } else { 'sin VERSION.txt' } }
 $BuildTag = BuildVer $Exe; $BuildTagDev = BuildVer $ExeDev; $Stamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
 Write-Host "build: $BuildTag | dev: $BuildTagDev"
-function Record($name, $state, $detail) { $script:results += [pscustomobject]@{ Fecha = $Stamp; Escenario = $name; Escena = $Scene; Resultado = $state; Build = $(if ($name -like 'netsim*') { $BuildTagDev } else { $BuildTag }); Detalle = $detail }; Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail) }
+function Record($name, $state, $detail) {
+  $buildTagForScenario = if ($name -match '^(netsim|guesttoggle_sim|race_natural) ') { $BuildTagDev } else { $BuildTag }
+  $script:results += [pscustomobject]@{ Fecha = $Stamp; Escenario = $name; Escena = $Scene; Resultado = $state; Build = $buildTagForScenario; Detalle = $detail }
+  Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail)
+}
 function Finals($g) { @(Grep $g '\[NetDiag\] final:') }
 function Field($line, $k) { [regex]::Match("$line", "$k=(\S+)").Groups[1].Value }
 function Last($g, $pat) { (Grep $g $pat) | Select-Object -Last 1 }
@@ -299,10 +303,12 @@ for ($run = 1; $run -le $Runs; $run++) {
         # Invitado con agarre ALTERNADO y mouse/teclado virtuales (mismo camino que la entrada real): un clic agarra, otro
         # suelta, Q con el boton sostenido, pausa con el boton sostenido, pedido sin objetivo que se desarma. El anfitrion
         # acomoda al invitado frente al tio (-ueProbeStage). _sim: build de desarrollo con 150 ms +-30 de latencia.
-        $sim = $sc -eq 'guesttoggle_sim'; $exe = if ($sim) { $ExeDev } else { $Exe }
+        $sim = $sc -eq 'guesttoggle_sim'
+        # PowerShell no distingue mayusculas de minusculas. $exe pisaria el $Exe usado por los casos siguientes.
+        $probeExe = if ($sim) { $ExeDev } else { $Exe }
         if ($sim -and -not (Test-Path $ExeDev)) { Record $label 'NOT_RUN' "falta la build de desarrollo $ExeDev"; break }
         $simArgs = if ($sim) { @('-ueNetSim','150','30','0') } else { @() }
-        $r = PairRetry $label $tag (@('-ueProbeStage') + $simArgs) (@('-ueProbe','toggle') + $simArgs) 90 $exe
+        $r = PairRetry $label $tag (@('-ueProbeStage') + $simArgs) (@('-ueProbe','toggle') + $simArgs) 90 $probeExe
         if ($r) { $fin = Last $r.c '\[Probe\] fin toggle'; $steps = @(Grep $r.c '\[Probe\] paso=')
           $okN = ([regex]::Match("$fin", 'ok=(\d+)/(\d+)')); $pend = [regex]::Match("$((Grep $r.c 'paso=alternar_un_clic_agarra') | Select-Object -First 1)", 'pendiente_ms=(\d+)').Groups[1].Value
           $pass = $okN.Success -and $okN.Groups[1].Value -eq $okN.Groups[2].Value -and [int]$okN.Groups[2].Value -ge 5
