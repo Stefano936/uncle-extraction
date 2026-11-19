@@ -1,16 +1,26 @@
 # Estado del proyecto
 
+Última actualización: 2026-11-19, integración de la candidata y sesión 19 (materiales del bar), sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
+
+## Sesión 19 · materiales del bar
+
+**Rama de evaluación** `codex/s19-materiales-bar`, desde `main` en `863888b`. Madera barnizada y desgastada en el canto, baldosas con juntas y marcas de paso, revoque mate y roces alrededor de la manija y el marco. Los PNG originales y sus metadatos están versionados e integrados en Bar_LastRound.
+
+**Verificación:** recorrido de arrastre desde la barra hasta asegurar la camioneta en 21,8 s, PlayMode dirigido 6/6 y comparación de escena con los colliders, cuerpos rígidos, bisagra y luces idénticos a la referencia. [Capturas comparables, origen y pasos de reproducción](docs/MATERIALES_BAR_S19.md).
+
+**Integración con la candidata:** 42/42 en PlayMode sobre `9abd55e827e4c9996031b457328d5a5dd45b45b3`. Se comprobó la geometría del bar, el cambio de HUD en pausa, el desenganche y el ciclo de la guía. Unity no modificó archivos versionados. `tests_PlayMode_main_integracion_9abd55e.xml`.
+
 ## Desenganche de la baranda · revisión de la candidata
 
 Stefano probó la copia local y reportó que costaba descubrir cómo desenganchar al tío. Cerca y con línea de visión hacia la mano o su punto de apoyo, ambos perfiles del HUD ahora indican hacia dónde mirar y qué tecla mantener. La acción alcanza hasta 2,1 m desde la cámara. El cono pasa de 30° a 46° y llega a 56° mientras se mantiene la tecla sobre el objetivo. La duración base sigue en 0,9 s.
 
 - **FAIL antes del cambio.** Sin apuntar con precisión a la mano, el HUD quedaba vacío a pesar de estar cerca. `tests_PlayMode_demo_anchor_red_cleanport.xml`.
 - **38 PASS en PlayMode** con `RealInputTests|InteractPriorityTests|GuideLifecycleTests`. La regresión comprueba los dos HUD, la tecla reasignada, el progreso al mantener, la cancelación al soltar y el desenganche con un leve movimiento de cámara. El caso previo comprueba que mirar claramente hacia otro lado cancela el progreso. `tests_PlayMode_demo_anchor_targeted.xml`.
-- **Próxima prueba humana.** En solitario, elegí **Arranca en el karaoke** y comprobá si podés liberar al tío a partir de las indicaciones del juego. Después probá la secuencia de soltar y volver a agarrar en la ronda estándar.
+- **Prueba humana.** Stefano confirmó que pudo resolver el desenganche. El desafío **Arranca en el karaoke** permite repetir ese paso desde el inicio. El recorrido completo de la ronda estándar sigue en el guion de prueba.
 
 ## Candidata de demo de Windows · corte del HUD
 
-Rama `codex/demo-candidate` desde el `main` de GitHub `863888be7d82edf3307586197624858b28976178`. El PR #1 está fusionado con cabeza `82c28e123adde35455ba0a6d8064a75e6823c3c7`. Stefano confirmó que esa build del HUD funciona. El PR #2 de S19 sigue en borrador en `5a478cb21be923b07d19c8a96c774cb6c319a6d7` y se revisa aparte. Las ramas de selección, frenado y cámara siguen disponibles para comparaciones.
+Rama `codex/demo-candidate` desde el `main` de GitHub `863888be7d82edf3307586197624858b28976178`. El PR #1 está fusionado con cabeza `82c28e123adde35455ba0a6d8064a75e6823c3c7`. Stefano confirmó que esa build del HUD funciona. El PR #3 se fusionó con cabeza `4565749348de4e9d410703145fae7014abbd22a2`. S19 se verificó en el PR #2 sobre `5a478cb21be923b07d19c8a96c774cb6c319a6d7` antes de integrar ambos cambios. Las ramas de selección, frenado y cámara siguen disponibles para comparaciones.
 
 | Comprobación sobre el corte de `main` | Resultado original y reproducción |
 | --- | --- |
@@ -34,15 +44,13 @@ La candidata rearma ambas manos cuando cambia la identidad del jugador local o e
 | Relay en una PC | **PASS** en dos procesos. Ambos registraron victoria con el tío asegurado y las puertas cerradas. Anfitrión 40,2 s, invitado 40,1 s. RTT 84–101 ms. |
 | LAN y Relay entre equipos | **NOT_RUN.** Requieren una segunda PC. Para Relay entre redes, usar dos redes distintas y guardar los dos logs. |
 
-**S19** `5a478cb` pasó la revisión técnica aparte. Comparé tres pares a 1600 × 900 en Baja con luces, posiciones y ángulos iguales. Veta, juntas y puerta se distinguen. Los roces alrededor de la manija se leen de cerca. Los 55 archivos de arte y `.meta` coinciden tras regenerar, junto con las referencias de 6 materiales y 9 mallas. La cámara, luces, colisiones, bisagra y posiciones de juego coinciden con `863888b`. La extracción con carrito pasó en ambos cortes. Está listo para revisión visual en el PR #2. [PR #2](https://github.com/Stefano936/uncle-extraction/pull/2)
+**S19** `5a478cb` pasó la revisión técnica aparte. Comparé tres pares a 1600 × 900 en Baja con luces, posiciones y ángulos iguales. Veta, juntas y puerta se distinguen. Los roces alrededor de la manija se leen de cerca. Los 55 archivos de arte y `.meta` coinciden tras regenerar, junto con las referencias de 6 materiales y 9 mallas. La cámara, luces, colisiones, bisagra y posiciones de juego coinciden con `863888b`. La extracción con carrito pasó en ambos cortes. [PR #2](https://github.com/Stefano936/uncle-extraction/pull/2)
 
 El script de localhost usaba `$exe` para elegir el binario de la sonda. En PowerShell ese nombre sobrescribía `$Exe` y los casos siguientes usaban desarrollo bajo la etiqueta QA. Se cambió la variable y la etiqueta de los escenarios con latencia. La primera tanda quedó archivada. Se repitieron y pasaron los siete casos afectados. El CSV consolidado local `localhost_20_escenarios_verificados.csv` identifica el binario usado y la carpeta del registro por escenario. El árbol de Unity sigue siendo el del SHA compilado.
 
 La primera corrida de `long4` informó aprobado con diez victorias del anfitrión y una por invitado. El script ahora pasa la repetición a los cuatro procesos y compara sus resultados por ronda. Se preservó la primera corrida. Los logs corregidos confirman los intentos 1–10, cierre completo y tío asegurado en cada proceso. El cambio se limita al script de QA. Las dos corridas usaron la build QA `42dcfcd`.
 
 **Próxima acción exacta:** abrir la build extraída en **Jugar solo → Iniciar extracción**, alternar los dos HUD desde pausa con input físico y completar el recorrido hasta la victoria. Guardar el log con el resultado. La candidata está lista para playtest dirigido. La distribución requiere ese recorrido, el humo en otra PC sin Unity, dos PC para LAN y Relay, y grupos nuevos. Usar [el guion de la candidata](docs/VOLVER_A_PROBAR_CANDIDATA.md). En Trello quedaron completas UE-00 y UE-04. UE-02 tiene resultado publicado y 3/4 comprobaciones. Los adjuntos de UE-01 y UE-02 están preparados en la evidencia local. [UE-02](https://trello.com/c/a7HoL8uf)
-
-Última actualización: 2026-11-18, sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Sesión 18 · variante de HUD y feedback de agarre
 
