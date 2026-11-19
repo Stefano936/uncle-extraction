@@ -10,6 +10,7 @@
    - Primero se abre la **sala**: cada jugador pulsa **LISTO** y el anfitrión, que elige la dificultad, pulsa **INICIAR EXTRACCIÓN**. No se puede entrar con la ronda ya empezada; al reintentar se vuelve a la sala. El nombre de jugador se elige en Opciones.
 4. **Opciones** (en el menú o en la pausa):
    - idioma (español rioplatense o inglés), volumen general, de efectos y de avisos (ataques y marcas), sensibilidad del mouse, campo de visión, eje Y invertido, subtítulos de ataques, tamaño del texto, reducir inclinación de cámara, modo de agarre (mantener o alternar) y **gráficos** (Alta o Baja; con GPU integrada empieza en Baja);
+   - **HUD**: **Contextual** es el perfil inicial. Muestra la pista en el centro cuando apuntás a un agarre o hay una interacción prioritaria. **Detallado** muestra las tarjetas de las manos, la tensión y los rótulos en el mundo. Para comparar en la misma ronda, abrí **Pausa → Opciones → HUD**, elegí un perfil y aplicá;
    - **controles**: elegir una acción y pulsar la tecla nueva. Esc cancela. Si la tecla ya estaba en uso, las dos acciones se intercambian;
    - **Aplicar cambios** guarda; **Volver** con cambios pregunta si aplicar o descartar.
 
@@ -32,7 +33,7 @@ Controles por defecto (teclado y mouse se cambian en Opciones → Controles; el 
 | Marcar para el equipo (tío, carrito, camioneta o un punto; 6 s) | clic central | cruceta arriba |
 | Pausa, opciones, volver al menú | Esc | Start / Options |
 | Reintentar | botón de resultados o de la pausa (en red decide el anfitrión) | — |
-| Panel de depuración (mostrar el cursor) | Tab | — |
+| Panel de depuración (solo QA) | Tab | — |
 
 En los menús, el mando navega con la cruceta o el stick, acepta con A/cruz y vuelve con B/círculo. El código de sala se escribe con teclado (no hay teclado en pantalla). Se reasignan el movimiento y las acciones principales de teclado y mouse (las flechas quedan siempre como alternativa; Esc y Tab están reservadas). Los cambios se guardan con **Aplicar**; **Volver** sin aplicar los descarta.
 
@@ -56,7 +57,7 @@ En los menús, el mando navega con la cruceta o el stick, acepta con A/cruz y vu
 
 ## Prueba guiada
 
-`PRUEBA_HUMANA.txt` (junto al ejecutable) tiene un guion de 25–35 minutos con las tareas y una planilla.
+`PRUEBA_HUMANA.txt` (junto al ejecutable) tiene un guion de 25–35 minutos con las tareas y una planilla. `VOLVER_A_PROBAR.txt` incluye la lista breve para esta candidata.
 
 ## Qué anotar
 

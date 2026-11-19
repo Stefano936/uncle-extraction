@@ -30,7 +30,7 @@ namespace UncleExtraction
             browL = Part(PrimitiveType.Cube, "Brow_L", new Vector3(0.15f, 0.042f, 0.03f), dark);
             browR = Part(PrimitiveType.Cube, "Brow_R", new Vector3(0.15f, 0.042f, 0.03f), dark);
             mouth = Part(PrimitiveType.Sphere, "Mouth_Open", new Vector3(0.1f, 0.06f, 0.03f), dark);
-            if (RoundDirector.DiagnosticKeys || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-ueFaceUncle") >= 0)
+            if (RoundDirector.DiagnosticKeys || QaArgs.Has("-ueFaceUncle"))
             {
                 Transform nose = null; foreach (var t in GetComponentsInChildren<Transform>()) if (t.name.ToLowerInvariant().Contains("nose")) nose = t;
                 Debug.Log($"[Face] raiz={transform.position} adelante={transform.forward} ancla={anchor.name}@{anchor.position} ceja_der={browR.parent.TransformPoint(browRPos)} hijos_cabeza={anchor.childCount}");

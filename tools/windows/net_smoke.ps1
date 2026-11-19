@@ -51,7 +51,11 @@ function Crashed($g) { (Grep $g 'Crash!!!').Count -gt 0 }
 function BuildVer($exe) { $v = Join-Path (Split-Path -Parent $exe) 'VERSION.txt'; if (Test-Path $v) { ((Get-Content $v -Raw) -replace '\s+', ' ').Trim() } else { 'sin VERSION.txt' } }
 $BuildTag = BuildVer $Exe; $BuildTagDev = BuildVer $ExeDev; $Stamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
 Write-Host "build: $BuildTag | dev: $BuildTagDev"
-function Record($name, $state, $detail) { $script:results += [pscustomobject]@{ Fecha = $Stamp; Escenario = $name; Escena = $Scene; Resultado = $state; Build = $(if ($name -like 'netsim*') { $BuildTagDev } else { $BuildTag }); Detalle = $detail }; Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail) }
+function Record($name, $state, $detail) {
+  $buildTagForScenario = if ($name -match '^(netsim|guesttoggle_sim|race_natural) ') { $BuildTagDev } else { $BuildTag }
+  $script:results += [pscustomobject]@{ Fecha = $Stamp; Escenario = $name; Escena = $Scene; Resultado = $state; Build = $buildTagForScenario; Detalle = $detail }
+  Write-Host ("{0,-16} {1,-8} {2}" -f $name, $state, $detail)
+}
 function Finals($g) { @(Grep $g '\[NetDiag\] final:') }
 function Field($line, $k) { [regex]::Match("$line", "$k=(\S+)").Groups[1].Value }
 function Last($g, $pat) { (Grep $g $pat) | Select-Object -Last 1 }
@@ -200,14 +204,23 @@ for ($run = 1; $run -le $Runs; $run++) {
       }
       'long4' {
         # sesion 17: 4 jugadores (4 procesos en UNA PC) y 10 rondas seguidas (-ueRepeat 9), memoria por ventana en cada proceso.
-        $g = Party $tag 4 1500 @('-ueRepeat','9') @('-uePerf','15')
+        $g = Party $tag 4 1500 @() @('-ueRepeat','9','-uePerf','15')
         if ($null -eq $g) { Record $label 'BLOCKED' 'crash al arrancar algun proceso'; break }
-        $fs = @(Finals $g[0]); $wins = @($fs | Where-Object { (Field $_ 'ronda') -eq 'Success' }).Count
+        $hostFinals = @(Finals $g[0])
+        $wins = foreach ($x in $g) { @(Finals $x | Where-Object { (Field $_ 'ronda') -eq 'Success' }).Count }
+        $aligned = $hostFinals.Count -eq 10
+        foreach ($guest in $g[1..3]) {
+          $guestFinals = @(Finals $guest)
+          if ($guestFinals.Count -ne $hostFinals.Count) { $aligned = $false; continue }
+          for ($round = 0; $round -lt $hostFinals.Count; $round++) {
+            if (-not (SameFinal $hostFinals[$round] $guestFinals[$round])) { $aligned = $false }
+          }
+        }
         $exc = 0; foreach ($x in $g) { $exc += (Grep $x 'Exception').Count }
         $growths = foreach ($x in $g) { $m = @(Grep $x '\[Perf\] ventana' | ForEach-Object { [int]([regex]::Match($_, 'mem_unity=(\d+)MB').Groups[1].Value) }); if ($m.Count -ge 4) { $m[-1] - $m[2] } else { 0 } }
         $maxG = ($growths | Measure-Object -Maximum).Maximum
-        $ok = $fs.Count -ge 10 -and $wins -eq $fs.Count -and $exc -eq 0 -and $maxG -lt 64
-        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ("rondas_anfitrion=$($fs.Count) victorias=$wins excepciones=$exc crecimiento_mem_por_proceso=$($growths -join ',') MB | " + ((0..3 | ForEach-Object { "p$($_): " + (PerfLine $g[$_]) }) -join ' | '))
+        $ok = $aligned -and @($wins | Where-Object { $_ -ne 10 }).Count -eq 0 -and $exc -eq 0 -and $maxG -lt 64
+        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) ("rondas_anfitrion=$($hostFinals.Count) victorias_por_proceso=$($wins -join ',') convergencia=$aligned excepciones=$exc crecimiento_mem_por_proceso=$($growths -join ',') MB | " + ((0..3 | ForEach-Object { "p$($_): " + (PerfLine $g[$_]) }) -join ' | '))
       }
       'perf1' {
         $g = Solo $tag @('-uePerf','10') 330
@@ -299,10 +312,12 @@ for ($run = 1; $run -le $Runs; $run++) {
         # Invitado con agarre ALTERNADO y mouse/teclado virtuales (mismo camino que la entrada real): un clic agarra, otro
         # suelta, Q con el boton sostenido, pausa con el boton sostenido, pedido sin objetivo que se desarma. El anfitrion
         # acomoda al invitado frente al tio (-ueProbeStage). _sim: build de desarrollo con 150 ms +-30 de latencia.
-        $sim = $sc -eq 'guesttoggle_sim'; $exe = if ($sim) { $ExeDev } else { $Exe }
+        $sim = $sc -eq 'guesttoggle_sim'
+        # PowerShell no distingue mayusculas de minusculas. $exe pisaria el $Exe usado por los casos siguientes.
+        $probeExe = if ($sim) { $ExeDev } else { $Exe }
         if ($sim -and -not (Test-Path $ExeDev)) { Record $label 'NOT_RUN' "falta la build de desarrollo $ExeDev"; break }
         $simArgs = if ($sim) { @('-ueNetSim','150','30','0') } else { @() }
-        $r = PairRetry $label $tag (@('-ueProbeStage') + $simArgs) (@('-ueProbe','toggle') + $simArgs) 90 $exe
+        $r = PairRetry $label $tag (@('-ueProbeStage') + $simArgs) (@('-ueProbe','toggle') + $simArgs) 90 $probeExe
         if ($r) { $fin = Last $r.c '\[Probe\] fin toggle'; $steps = @(Grep $r.c '\[Probe\] paso=')
           $okN = ([regex]::Match("$fin", 'ok=(\d+)/(\d+)')); $pend = [regex]::Match("$((Grep $r.c 'paso=alternar_un_clic_agarra') | Select-Object -First 1)", 'pendiente_ms=(\d+)').Groups[1].Value
           $pass = $okN.Success -and $okN.Groups[1].Value -eq $okN.Groups[2].Value -and [int]$okN.Groups[2].Value -ge 5

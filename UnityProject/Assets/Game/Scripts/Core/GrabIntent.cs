@@ -44,13 +44,19 @@ namespace UncleExtraction
 
         public static void Reset()
         {
+            ResetHands();
+            frame = -1;
+        }
+
+        static void ResetHands()
+        {
             for (int h = 0; h < 2; h++)
             {
                 held[h] = latched[h] = prevRaw[h] = wasHolding[h] = releaseRequested[h] = false;
                 needRelease[h] = true;
+                armedAt[h] = 0f;
             }
             ClearFeedback();
-            frame = -1;
         }
 
         static void Step()
@@ -60,8 +66,7 @@ namespace UncleExtraction
             int round = RoundDirector.Instance ? RoundDirector.Instance.Restarts : -1;
             if (intentOwner != hands || intentRound != round)
             {
-                ClearFeedback();
-                System.Array.Clear(releaseRequested, 0, releaseRequested.Length);
+                ResetHands();
                 intentOwner = hands;
                 intentRound = round;
             }

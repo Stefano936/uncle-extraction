@@ -51,7 +51,7 @@ namespace UncleExtraction.EditorTools
                 var test = Path.Combine(Directory.GetParent(Application.dataPath).Parent.FullName, "docs", "PRUEBA_HUMANA.md");
                 if (File.Exists(test)) File.Copy(test, Path.Combine(outDir, "PRUEBA_HUMANA.txt"), true);
                 // version de origen: commit, si habia cambios sin commitear y cuando se genero (cada resultado se asocia a esto)
-                string head = Git("rev-parse --short HEAD"), dirty = Git("status --porcelain --untracked-files=no");
+                string head = Git("rev-parse HEAD"), dirty = Git("status --porcelain --untracked-files=no");
                 File.WriteAllText(Path.Combine(outDir, "VERSION.txt"),
                     $"Commit de origen: {head}{(dirty != "" ? " + cambios sin commitear" : "")}\nGenerada: {DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}\nTipo: {(dev ? "desarrollo" : player ? "jugadores" : "release QA")} {impl}\n" +
                     $"Version: {GameVersion.Number}\nProtocolo de red: {GameVersion.Protocol}\nEditor: {Application.unityVersion}\nRama: {Git("rev-parse --abbrev-ref HEAD")}\n");

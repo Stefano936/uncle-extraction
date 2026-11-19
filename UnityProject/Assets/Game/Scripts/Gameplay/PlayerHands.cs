@@ -280,7 +280,7 @@ namespace UncleExtraction
 
         /// Regla de prioridad de E (sesion 14; probada en EditMode). Orden: compañero caido que se mira > mano anclada que
         /// se mira > camioneta (tio adentro, desde afuera) > carrito cercano. Mientras se MANTIENE E sobre un objetivo que sigue
-        /// valido, no se cambia a otro aunque aparezca uno de mas prioridad: el progreso no se corta por mirar a otro lado.
+        /// valido, no se cambia a otro aunque aparezca uno de mas prioridad.
         public static InteractKind ChooseInteract(bool helpUp, bool unanchor, bool van, bool cart, InteractKind held, bool holdingE)
         {
             if (holdingE && held != InteractKind.None)
@@ -314,6 +314,15 @@ namespace UncleExtraction
             return true;
         }
 
+        bool CheckAnchorPoint(Vector3 point, Rigidbody handBody, float aimLimit, ref bool nearby)
+        {
+            const float reach = 2.1f;
+            Vector3 to = point - cam.transform.position;
+            if (to.sqrMagnitude > reach * reach || !Visible(point, handBody)) return false;
+            nearby = true;
+            return Vector3.Angle(cam.transform.forward, to) <= aimLimit;
+        }
+
         void HandleInteract()
         {
             interactLabel = "";
@@ -330,11 +339,14 @@ namespace UncleExtraction
                 if (!Visible(other.transform.position + Vector3.up * 0.4f, other.Body)) continue;
                 if (mate == null || (sticky == InteractKind.HelpUp && other == stickyMate)) mate = other;
             }
-            bool unanchor = false;
-            if (npc && npc.IsAnchored && npc.AnchorHandSocket)
+            bool unanchor = false, anchorNearby = false;
+            var hand = npc ? npc.AnchorHandSocket : null;
+            if (hand && npc.IsAnchored)
             {
-                Vector3 to = npc.AnchorHandSocket.Position - cam.transform.position;
-                unanchor = to.magnitude <= LabBalance.GrabReach + 0.3f && Vector3.Angle(cam.transform.forward, to) < 30f && Visible(npc.AnchorHandSocket.Position, npc.AnchorHandSocket.body);
+                // Un poco de margen extra durante el intento evita cortarlo por movimientos chicos de cámara.
+                float aimLimit = sticky == InteractKind.Unanchor && holdingE ? 56f : 46f;
+                unanchor = CheckAnchorPoint(hand.Position, hand.body, aimLimit, ref anchorNearby)
+                    || CheckAnchorPoint(npc.AnchorPoint, hand.body, aimLimit, ref anchorNearby);
             }
             bool vanOk = van && zone && !zone.Secured && zone.AllPointsInside && van.InRange(transform.position);
             bool cartOk = cart && Vector3.Distance(transform.position, cart.transform.position) < 2.2f && (cart.IsStrapped || cart.CanStrap);
@@ -380,7 +392,10 @@ namespace UncleExtraction
                         if (wait == "" && CtrlPressed(Act.Interact)) props.RingBell(this);
                     }
                     break;
-                default: interactProgress = 0f; break;
+                default:
+                    if (anchorNearby) interactLabel = "interact.unanchor_hint";
+                    interactProgress = 0f;
+                    break;
             }
         }
 
