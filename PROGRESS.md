@@ -8,13 +8,15 @@
 
 **Verificación:** recorrido de arrastre desde la barra hasta asegurar la camioneta en 21,8 s, PlayMode dirigido 6/6 y comparación de escena con los colliders, cuerpos rígidos, bisagra y luces idénticos a la referencia. [Capturas comparables, origen y pasos de reproducción](docs/MATERIALES_BAR_S19.md).
 
+**Integración con la candidata:** 42/42 en PlayMode sobre `9abd55e827e4c9996031b457328d5a5dd45b45b3`. Se comprobó la geometría del bar, el cambio de HUD en pausa, el desenganche y el ciclo de la guía. Unity no modificó archivos versionados. `tests_PlayMode_main_integracion_9abd55e.xml`.
+
 ## Desenganche de la baranda · revisión de la candidata
 
 Stefano probó la copia local y reportó que costaba descubrir cómo desenganchar al tío. Cerca y con línea de visión hacia la mano o su punto de apoyo, ambos perfiles del HUD ahora indican hacia dónde mirar y qué tecla mantener. La acción alcanza hasta 2,1 m desde la cámara. El cono pasa de 30° a 46° y llega a 56° mientras se mantiene la tecla sobre el objetivo. La duración base sigue en 0,9 s.
 
 - **FAIL antes del cambio.** Sin apuntar con precisión a la mano, el HUD quedaba vacío a pesar de estar cerca. `tests_PlayMode_demo_anchor_red_cleanport.xml`.
 - **38 PASS en PlayMode** con `RealInputTests|InteractPriorityTests|GuideLifecycleTests`. La regresión comprueba los dos HUD, la tecla reasignada, el progreso al mantener, la cancelación al soltar y el desenganche con un leve movimiento de cámara. El caso previo comprueba que mirar claramente hacia otro lado cancela el progreso. `tests_PlayMode_demo_anchor_targeted.xml`.
-- **Próxima prueba humana.** En solitario, elegí **Arranca en el karaoke** y comprobá si podés liberar al tío a partir de las indicaciones del juego. Después probá la secuencia de soltar y volver a agarrar en la ronda estándar.
+- **Prueba humana.** Stefano confirmó que pudo resolver el desenganche. El desafío **Arranca en el karaoke** permite repetir ese paso desde el inicio. El recorrido completo de la ronda estándar sigue en el guion de prueba.
 
 ## Candidata de demo de Windows · corte del HUD
 
