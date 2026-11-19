@@ -1,5 +1,32 @@
 # Estado del proyecto
 
+## Candidata integrada de Windows · 54b5246
+
+Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.
+
+| Comprobación de este corte | Resultado |
+| --- | --- |
+| EditMode completo | **75 PASS**, 1 omitida. El proyecto ya está vinculado a Relay. |
+| PlayMode completo | **173 PASS**, 1 omitida. La variante de cápsula central del laboratorio no tiene pie independiente. Los assets versionados quedaron intactos tras ambas tandas. |
+| Copia extraída de jugadores | **PASS** de arranque, menú, Opciones y persistencia del perfil. Los argumentos de laboratorio, auditoría, cámara, rendimiento, sonda, autopiloto y capturas no activaron herramientas de QA. |
+| Extracción desde la copia extraída | **PASS** en ronda estándar Normal de dos procesos. Abrí la sala e inicié la ronda en el ejecutable de jugadores. Un cliente de QA del mismo SHA hizo el recorrido por localhost. El anfitrión de jugadores registró el primer agarre, desenganche, tío dentro de la camioneta y cierre completo en **39,2 s**, con victoria en pantalla. |
+| Auditoría de interfaz | **30/30 PASS** de disposición, 15 por idioma. Dos perfiles, cinco formatos de pantalla y texto al 100 %, 125 % y 150 %. En las capturas a 720p y 150 %, el aviso de Contextual se lee y el rótulo 3D de Detallado pierde contraste sobre la ropa iluminada. Las tarjetas de mano se leen. |
+| Regresión localhost | **20/20 escenarios verificados** con las builds QA y desarrollo del mismo SHA. En la primera tanda hubo 18 PASS, un FAIL de compatibilidad y un BLOCKED de ingreso tardío. Las dos repeticiones de cada uno pasaron. En la disputa ambos apuntaron al cinturón y el anfitrión registró un titular y un rechazo `SocketBusy`. |
+| Regresión ampliada localhost | **16/16 PASS**. Combinadas con la tanda base cubren 1–4 jugadores en tres dificultades. Se verificaron caída del anfitrión en 10,1 s, ocho victorias consecutivas en solitario y diez victorias concordantes en cada uno de cuatro procesos, sin excepciones. |
+| Relay en una PC | **PASS** en dos procesos. Ambos terminaron con el tío asegurado y las puertas cerradas. Anfitrión 67,2 s e invitado 67,1 s. RTT 77–85 ms. |
+| PC sin Unity, LAN y Relay entre equipos, mando físico y grupos nuevos | Pendientes de equipo o participantes. |
+
+ZIP `UncleExtraction_Demo_54b5246_Windows_x64.zip`. SHA-256 `9167da7fa203beaa3dcbd216b4fbfe4b349c116bae35dfcf4a717b63f39f5bbe`. La copia extraída está en `UncleExtraction_Demo_54b5246_Jugar`. El ZIP anterior sigue disponible como referencia. XML, logs de builds, arranque y extracción en `.local-setup/qa/main_54b5246/`.
+
+El registro de red conserva la tanda inicial en `localhost_all_first.csv`, las repeticiones en `localhost_rerun.csv` y la verificación por escenario en `localhost_20_verificados.csv`. Los archivos `localhost_qa.csv` y `relay_una_pc.csv` registran la tanda ampliada y Relay por separado. Los logs están en `red/`, `compat_first/` y `latejoin_first/`. Los CSV y capturas de interfaz están en `ui_es_UY/` y `ui_en/`.
+
+- **Compatibilidad.** El cliente antiguo recibió el rechazo de versión, pero el script lo cerró antes de observar el regreso al menú. La espera ahora termina al observar el rechazo y el regreso o al vencer el límite. Dos repeticiones con los mismos binarios, en ambos sentidos, confirmaron los tres pasos.
+- **Ingreso tardío.** El anfitrión rechazó correctamente al invitado y ganó en 21,6 s. En el cierre automático posterior hubo una excepción nativa `0xc0000005` en `UnityPlayer.dll`. La causa queda sin confirmar. Dos repeticiones de la misma prueba pasaron sin reproducir el cierre anómalo.
+
+**Decisión de entrega.** Candidata apta para playtest. La aprobación para distribución queda pendiente de una ronda con input físico en una PC sin Unity, LAN, Relay entre redes independientes y dos grupos nuevos. La [prueba S18 de HUD](docs/PRUEBA_HUD_S18.md) orienta la comprobación con mando físico.
+
+**Próxima prueba humana.** Abrí este ZIP en una PC de Windows sin Unity y completá una ronda estándar con input físico. Anotá el tiempo al primer agarre y cualquier ayuda necesaria. Después alterná los dos HUD desde pausa, comprobá español e inglés con texto al 150 % y probá un mando físico. Hacé una ronda de LAN por IP y otra por Relay en redes independientes con la segunda PC. [Guion de la candidata](docs/VOLVER_A_PROBAR_CANDIDATA.md)
+
 Última actualización: 2026-11-19, integración de la candidata y sesión 19 (materiales del bar), sesión 18 (variante HUD y agarre), sesión 17 (correcciones de la auditoría, campana, desafío karaoke, demo `UncleExtraction_Demo_s17.zip`). Sesión 16 (malla del tío, materiales de barra/puerta/carrito, race). Sesión 15 (producción: manos, sonido, tío, camioneta, bar que reacciona, desafíos, parte de extracción, material de lanzamiento). Detalle de sesiones anteriores (sin reescribir, con todos los FAIL): `docs/HISTORIAL.md`.
 
 ## Sesión 19 · materiales del bar

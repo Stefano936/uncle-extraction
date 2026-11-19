@@ -1,6 +1,6 @@
 # Matriz de requisitos — alcance inicial (alcohol, un bar, camioneta fija, 1 a 4 jugadores)
 
-Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones del dueño y `CLAUDE.md`. Corte de la candidata de Windows `42dcfcd0d7b8861b89cdc374d9a1eee81a449bc5`. La matriz conserva la evidencia histórica de la demo s17 (`b44386d`, QA `1bc221d`). [Estado y resultados de la candidata](../PROGRESS.md)
+Fuentes: GDD y especificación técnica (`preproduction/uncle_extraction/`), instrucciones del dueño y `CLAUDE.md`. El corte integrado para Windows es `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Las comprobaciones de ese corte están en [PROGRESS.md](../PROGRESS.md). La matriz conserva la evidencia histórica de la candidata `42dcfcd` y de la demo s17 (`b44386d`, QA `1bc221d`).
 
 **Niveles de evidencia:** **C** = existe en código y compila · **E** = probado en el editor (PlayMode/EditMode) · **B** = probado en la build · **L** = procesos en localhost · **R1** = Relay desde una PC · **R2** = dos equipos y redes distintas · **H** = revisado por una persona.
 **Estados:** completo · parcial · faltante · pospuesto (justificado) · bloqueado.

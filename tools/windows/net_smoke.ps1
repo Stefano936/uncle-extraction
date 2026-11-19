@@ -423,7 +423,13 @@ for ($run = 1; $run -le $Runs; $run++) {
         foreach ($pair in @(@{ h = $Exe; c = $RefExe; n = 'nuevo<-viejo' }, @{ h = $RefExe; c = $Exe; n = 'viejo<-nuevo' }))
         {
           $hostG = Start-Game "${tag}_$($pair.n -replace '[<-]','')_host" (HostArgs @() 2) $pair.h; Start-Sleep 5
-          $cliG = Start-Game "${tag}_$($pair.n -replace '[<-]','')_client" (ClientArgs @()) $pair.c; Start-Sleep 14
+          $cliG = Start-Game "${tag}_$($pair.n -replace '[<-]','')_client" (ClientArgs @()) $pair.c
+          # Una carga en frío puede tardar más que la pausa fija anterior.
+          $deadline = (Get-Date).AddSeconds(45)
+          while ((Get-Date) -lt $deadline -and -not $cliG.p.HasExited) {
+            if ((Last $cliG 'error.version') -and @(Grep $cliG '\[Menu\] en el menu').Count -ge 2) { break }
+            Start-Sleep -Milliseconds 250
+          }
           Stop-Game $cliG; Stop-Game $hostG
           $rej = (Grep $hostG 'rechazo de conexion .*error.version').Count -gt 0
           $saw = (Grep $cliG 'error.version').Count -gt 0
