@@ -65,6 +65,15 @@ namespace UncleExtraction.Tests
             Assert.AreNotEqual("LT", InputBindings.Display(Act.GrabLeft), "con teclado y raton vuelve a la asignacion");
         }
 
+        /// Sesion 20: regenerar escenas (UiKitImporter) pisaba los catalogos con la fuente del kit y borraba textos del juego.
+        [Test] public void Catalogs_KeepGameOwnedLines()
+        {
+            var dlg = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Localization/dialogue_en_es");
+            StringAssert.Contains("last_call", dlg.text, "la linea de la campana sigue en el catalogo de dialogos");
+            var ui = UnityEngine.Resources.Load<UnityEngine.TextAsset>("Localization/ui_strings");
+            StringAssert.Contains("actualizá y volvé a intentar desde la sala", ui.text, "el mensaje de version completo sigue");
+        }
+
         [Test] public void Version_HasASingleSource()
         {
             Assert.AreEqual(GameVersion.Tag, NetSession.VersionTag);
