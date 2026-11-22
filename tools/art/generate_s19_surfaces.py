@@ -127,8 +127,10 @@ def floor_tiles(u, v):
     face = ramp(d, 0.010, 0.041)
     rim = ramp(d, 0.034, 0.055) - ramp(d, 0.055, 0.091)
     cloudy = 0.36 + 0.15 * coarse + 0.11 * fine + 0.18 * cell + rim * 0.24
-    cream = pigment(cloudy, (136, 112, 80), (204, 185, 146))
-    green = pigment(cloudy, (36, 59, 54), (74, 107, 96))
+    # S20: menos contraste entre baldosas (antes 136-204 crema / 36-107 verde): el damero sigue, pero ya no compite con
+    # el tio ni parpadea al moverse; el desgaste y las juntas pasan a ser lo que guia la lectura del piso.
+    cream = pigment(cloudy, (124, 106, 80), (176, 160, 128))
+    green = pigment(cloudy, (66, 80, 70), (108, 122, 106))
     tile = np.where((((ix + iz) % 2) == 0)[..., None], cream, green)
 
     x, z = u * 18 - 9, v * 12 - 2
@@ -153,7 +155,8 @@ def plaster(u, v):
     patch = ramp(spread, 0.48, 0.82) * ramp(trowel, 0.42, 0.73)
     brush = 0.26 + mottle * 0.30 + spread * 0.15 + fine * 0.14 - patch * 0.17
     h = (fine - 0.5) * 0.0010 + (trowel - 0.5) * 0.00135 - pocks * 0.0011
-    return pigment(brush, (123, 114, 91), (170, 157, 128)), h, 0.09 + fine * 0.12 - patch * 0.035
+    # S20: revoque algo mas claro (antes 123-170): las paredes se perdian a distancia
+    return pigment(brush, (138, 126, 101), (186, 171, 139)), h, 0.09 + fine * 0.12 - patch * 0.035
 
 
 def exit_door(u, v):
