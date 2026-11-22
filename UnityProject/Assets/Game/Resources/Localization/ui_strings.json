@@ -66,6 +66,33 @@
       "max_lines": 1
     },
     {
+      "key": "menu.edit_code",
+      "en": "ENTER ROOM CODE",
+      "es_UY": "INGRESAR CÓDIGO DE SALA",
+      "scope": "menu",
+      "max_width_reference_px": 515,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "menu.code_delete",
+      "en": "DELETE",
+      "es_UY": "BORRAR",
+      "scope": "menu",
+      "max_width_reference_px": 196,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
+      "key": "menu.code_confirm",
+      "en": "CONFIRM",
+      "es_UY": "CONFIRMAR",
+      "scope": "menu",
+      "max_width_reference_px": 196,
+      "font_reference_px": 27,
+      "max_lines": 1
+    },
+    {
       "key": "button.cancel",
       "en": "CANCEL",
       "es_UY": "CANCELAR",

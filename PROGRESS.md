@@ -1,5 +1,11 @@
 # Estado del proyecto
 
+## Controles de mando · UE-10 y UE-11
+
+Sobre `main` en `456a4fc`, la página de amigos tiene un teclado en pantalla para editar y confirmar el código Relay con el mando. El campo de texto sigue disponible para escribir y pegar. En resultados, A o B cierra la vista para captura y devuelve el foco a su botón.
+
+Las dos regresiones de mando virtual están en `MenuNavigationTests`. **NOT_RUN** en este equipo, donde no se encontró el editor Unity 6000.3.28f1. Quedan pendientes las pruebas de mando físico, la unión por Relay y la revisión visual en español e inglés con texto al 150 %.
+
 ## Candidata integrada de Windows · 54b5246
 
 Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.

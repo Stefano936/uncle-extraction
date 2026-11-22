@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace UncleExtraction
@@ -15,7 +16,8 @@ namespace UncleExtraction
         bool paused;
         float resultsSince = -1f;
         Canvas canvas; RectTransform pauseRoot, resultsRoot, confirmRoot; OptionsView options;
-        Text resTitle, resDetail, resStats; Button resRetry, resMenu; Text pauseTitle, pauseInfo;
+        Text resTitle, resDetail, resStats; Button resRetry, resMenu, resSnapshot; Text pauseTitle, pauseInfo;
+        int cleanViewOpenedFrame;
 
         public bool Paused => paused;
         public static GameFlowUI Instance { get; private set; }
@@ -93,8 +95,8 @@ namespace UncleExtraction
             resRetry = Btn(resultsRoot, "Retry", "button.retry_same", retryY, () => { if (NetSession.Mode == NetMode.Solo) round.Restart(); else round.BackToLobby(); }); // en red: vuelve a la sala con confirmacion limpia
             resMenu = Btn(resultsRoot, "Menu", "button.back_menu", retryY - 90, () => NetSession.LeaveToMenu());
             // vista limpia para capturas: solo el parte, sin botones ni HUD; cualquier tecla o clic vuelve
-            var shot = Ui.Button(resultsRoot, "Snapshot", "", new Vector2(1f, 0f), new Vector2(-16, 16), new Vector2(Ui.K(210), Ui.K(48)), () => CleanView(true)); // abajo a la derecha: no pisa el titulo
-            shot.GetComponent<RectTransform>().pivot = new Vector2(1f, 0f); var st = shot.GetComponentInChildren<Text>(); st.fontSize = Ui.FontHud; st.gameObject.AddComponent<LocText>().key = "report.snapshot";
+            resSnapshot = Ui.Button(resultsRoot, "Snapshot", "", new Vector2(1f, 0f), new Vector2(-16, 16), new Vector2(Ui.K(210), Ui.K(48)), () => CleanView(true)); // abajo a la derecha: no pisa el titulo
+            resSnapshot.GetComponent<RectTransform>().pivot = new Vector2(1f, 0f); var st = resSnapshot.GetComponentInChildren<Text>(); st.fontSize = Ui.FontHud; st.gameObject.AddComponent<LocText>().key = "report.snapshot";
             resultsRoot.gameObject.SetActive(false);
         }
 
@@ -182,13 +184,32 @@ namespace UncleExtraction
         void CleanView(bool on)
         {
             CleanViewOn = on;
+            if (on)
+            {
+                cleanViewOpenedFrame = Time.frameCount;
+                EventSystem.current?.SetSelectedGameObject(null);
+            }
             foreach (var name in new[] { "HUD", "FirstSteps", "CoopMarkers" }) { var go = GameObject.Find(name); if (go) { var c = go.GetComponent<Canvas>(); if (c) c.enabled = !on; } }
-            foreach (var b in new[] { "Retry", "Menu", "Snapshot" }) { var t = resultsRoot.Find(b); if (t) t.gameObject.SetActive(!on); }
+            foreach (var button in new[] { resRetry, resMenu, resSnapshot }) button.gameObject.SetActive(!on);
+        }
+
+        bool CaptureDismissed()
+        {
+            var pad = Gamepad.current;
+            return Keyboard.current?.anyKey.wasPressedThisFrame == true
+                || Mouse.current?.leftButton.wasPressedThisFrame == true
+                || pad?.buttonEast.wasPressedThisFrame == true
+                || pad?.buttonSouth.wasPressedThisFrame == true;
         }
 
         void UpdateResults(bool ended)
         {
-            if (CleanViewOn && (!ended || UnityEngine.InputSystem.Keyboard.current?.anyKey.wasPressedThisFrame == true || UnityEngine.InputSystem.Mouse.current?.leftButton.wasPressedThisFrame == true)) CleanView(false);
+            if (CleanViewOn && (!ended || (Time.frameCount != cleanViewOpenedFrame && CaptureDismissed())))
+            {
+                CleanView(false);
+                // Esperar a que el EventSystem procese la pulsación que cerró la captura.
+                if (ended) StartCoroutine(RestoreResultsFocus());
+            }
             bool show = ended && Time.unscaledTime - resultsSince > 0.4f;
             if (resultsRoot.gameObject.activeSelf != show)
             {
@@ -212,6 +233,13 @@ namespace UncleExtraction
             bool host = NetAuth.IsServer;
             resRetry.interactable = host;
             resRetry.GetComponentInChildren<Text>().text = Loc.T(host ? "button.retry_same" : "button.wait_host");
+        }
+
+        System.Collections.IEnumerator RestoreResultsFocus()
+        {
+            yield return null;
+            if (ResultsVisible && !CleanViewOn && EventSystem.current && !EventSystem.current.currentSelectedGameObject)
+                EventSystem.current.SetSelectedGameObject(resSnapshot.gameObject);
         }
     }
 

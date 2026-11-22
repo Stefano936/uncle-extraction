@@ -23,6 +23,10 @@ namespace UncleExtraction
         /// Error de red que se esta mostrando en el dialogo (clave), o "" si no hay.
         public string ErrorShown => errorBox && errorBox.gameObject.activeSelf ? shownError : "";
         InputField ipField, portField, codeField;
+        RectTransform codeKeyboard;
+        string codeDraft;
+        Text codePreview, codeError;
+        Button editCode, joinOnline;
 
         void Start()
         {
@@ -79,6 +83,11 @@ namespace UncleExtraction
 
         void Update()
         {
+            if (codeKeyboard)
+            {
+                if (LabInput.Pressed(Act.Pause) || GamepadBack()) CloseCodeKeyboard(editCode);
+                return;
+            }
             bool live = Time.unscaledTime < NetSession.StatusUntil && NetSession.StatusMessage != "";
             bool isError = live && KeyOf(NetSession.StatusMessage).StartsWith("error.");
             if (isError && errorBox && (NetSession.StatusMessage != shownError || NetSession.StatusUntil != shownUntil))
@@ -102,8 +111,14 @@ namespace UncleExtraction
 
         public void Show(Page p)
         {
+            string previousCode = p == Page.Friends && Current == p && codeField ? codeField.text : "";
+            if (codeKeyboard) CloseCodeKeyboard(editCode);
             Current = p;
-            if (pageRoot) Destroy(pageRoot.gameObject);
+            if (pageRoot)
+            {
+                pageRoot.gameObject.SetActive(false);
+                Destroy(pageRoot.gameObject);
+            }
             var openOptions = options; options = null; openOptions?.Close(); // sin volver a entrar en Show desde el cierre
             // con texto grande la pagina empieza mas arriba (debajo del lema) y llega mas abajo: ~720 de alto en vez de 600
             bool big = Ui.TextScale > 1.01f;
@@ -156,8 +171,9 @@ namespace UncleExtraction
                     {   // internet (Relay): sala con codigo; la red local por IP queda en su propia pagina
                         if (!RelayConnector.ProjectLinked) Note(Loc.T("menu.online_pending"), 64);
                         B("menu.host_online", () => { SelectedScene = GameScene; Play(NetMode.Host, true); });
-                        codeField = Field("Code", Loc.T("lobby.code"), "", ref y); codeField.characterLimit = 12;
-                        B("button.join", () => Play(NetMode.Client, true));
+                        editCode = B("menu.edit_code", OpenCodeKeyboard, 60);
+                        codeField = Field("Code", Loc.T("lobby.code"), previousCode, ref y); codeField.characterLimit = 12;
+                        joinOnline = B("button.join", () => Play(NetMode.Client, true));
                         B("menu.lan", () => Show(Page.Lan), 60);
                     }
                     else
@@ -187,6 +203,76 @@ namespace UncleExtraction
             // si el contenido no entra (21:9 con texto al 150 %), la pagina se reduce lo justo; el pivote arriba la mantiene en su lugar
             if (p != Page.Options) { Vector2 omin = pageRoot.offsetMin, omax = pageRoot.offsetMax; pageRoot.pivot = new Vector2(0f, 1f); pageRoot.offsetMin = omin; pageRoot.offsetMax = omax; pageRoot.gameObject.AddComponent<FitContent>().contentHeight = -y; }
             if (first) EventSystem.current?.SetSelectedGameObject(first);
+        }
+
+        void OpenCodeKeyboard()
+        {
+            codeDraft = codeField.text;
+            pageRoot.gameObject.SetActive(false);
+            codeKeyboard = Ui.PanelBox("CodeKeyboard", canvas.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(780, 700));
+            Ui.FitInCanvas(codeKeyboard);
+            var top = new Vector2(0.5f, 1);
+            var header = Ui.Rect("Preview", codeKeyboard, top, top, new Vector2(0.5f, 0.5f), new Vector2(0, -55), new Vector2(720, 64));
+            codePreview = Ui.Label(header, "Draft", "", Ui.FontSection, Ui.Text, TextAnchor.MiddleCenter);
+            codePreview.supportRichText = false;
+            var message = Ui.Rect("Message", codeKeyboard, top, top, new Vector2(0.5f, 0.5f), new Vector2(0, -110), new Vector2(720, 44));
+            codeError = Ui.Label(message, "Error", "", Ui.FontHud, Ui.Danger, TextAnchor.MiddleCenter);
+            RefreshCodePreview();
+
+            const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            Button first = null;
+            for (int i = 0; i < alphabet.Length; i++)
+            {
+                char letter = alphabet[i];
+                var key = Ui.Button(codeKeyboard, "CodeKey_" + letter, letter.ToString(), top,
+                    new Vector2((i % 6 - 2.5f) * 116, -170 - i / 6 * 72), new Vector2(102, 60), () =>
+                    {
+                        if (codeDraft.Length < codeField.characterLimit) codeDraft += letter;
+                        RefreshCodePreview();
+                    });
+                if (i == 0) first = key;
+            }
+            ActionButton("menu.code_delete", -244, () =>
+            {
+                if (codeDraft.Length > 0) codeDraft = codeDraft.Substring(0, codeDraft.Length - 1);
+                RefreshCodePreview();
+            });
+            ActionButton("menu.code_confirm", 0, ConfirmCode);
+            ActionButton("button.cancel", 244, () => CloseCodeKeyboard(editCode));
+            EventSystem.current?.SetSelectedGameObject(first.gameObject);
+
+            void ActionButton(string key, float x, Action action)
+            {
+                var button = Ui.Button(codeKeyboard, key, "", top, new Vector2(x, -618), new Vector2(228, 64), action);
+                button.gameObject.AddComponent<LocText>().key = key;
+            }
+        }
+
+        void RefreshCodePreview()
+        {
+            codePreview.text = Loc.T("lobby.code") + "  " + codeDraft;
+            codeError.text = "";
+        }
+
+        void ConfirmCode()
+        {
+            string code = RelayConnector.NormalizeCode(codeDraft);
+            if (code == "")
+            {
+                codeError.text = Loc.T("error.invalid");
+                return;
+            }
+            codeField.text = code;
+            CloseCodeKeyboard(joinOnline);
+        }
+
+        void CloseCodeKeyboard(Button focus)
+        {
+            codeKeyboard.gameObject.SetActive(false);
+            Destroy(codeKeyboard.gameObject);
+            codeKeyboard = null;
+            pageRoot.gameObject.SetActive(true);
+            EventSystem.current?.SetSelectedGameObject(focus.gameObject);
         }
 
         /// Boton B / circulo del mando: volver (navegacion de UI; con teclado es Esc).

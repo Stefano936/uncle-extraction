@@ -52,6 +52,70 @@ namespace UncleExtraction.Tests
         }
 
         [UnityTest]
+        public IEnumerator Gamepad_EntersRelayCode_AndCancelsWithoutLeavingFriends()
+        {
+            yield return OpenMenu();
+            var menu = Object.FindAnyObjectByType<FrontendMenu>();
+            menu.Show(FrontendMenu.Page.Friends);
+            for (int i = 0; i < 3; i++) yield return Tap(GamepadButton.DpadDown);
+            Assert.AreEqual("menu.edit_code", Selected());
+            yield return Tap(GamepadButton.South);
+            Assert.AreEqual("CodeKey_A", Selected());
+
+            EventSystem.current.SetSelectedGameObject(GameObject.Find("menu.code_confirm"));
+            yield return Tap(GamepadButton.South);
+            Assert.AreEqual(Loc.T("error.invalid"), GameObject.Find("CodeKeyboard/Message/Error").GetComponent<Text>().text);
+            Assert.AreEqual("", menu.ErrorShown);
+
+            EventSystem.current.SetSelectedGameObject(GameObject.Find("CodeKey_A"));
+            for (int i = 0; i < 6; i++) yield return Tap(GamepadButton.South);
+            EventSystem.current.SetSelectedGameObject(GameObject.Find("menu.code_confirm"));
+            yield return Tap(GamepadButton.South);
+            Assert.AreEqual("button.join", Selected());
+            var input = GameObject.Find("Code/Box").GetComponent<InputField>();
+            Assert.AreEqual("AAAAAA", input.text);
+
+            EventSystem.current.SetSelectedGameObject(GameObject.Find("menu.edit_code"));
+            yield return Tap(GamepadButton.South);
+            EventSystem.current.SetSelectedGameObject(GameObject.Find("menu.code_delete"));
+            yield return Tap(GamepadButton.South);
+            yield return Tap(GamepadButton.East);
+            Assert.AreEqual(FrontendMenu.Page.Friends, menu.Current);
+            Assert.AreEqual("menu.edit_code", Selected());
+            Assert.AreEqual("AAAAAA", input.text);
+        }
+
+        [UnityTest]
+        public IEnumerator Gamepad_TogglesCaptureView_AndRestoresResultsFocus()
+        {
+            yield return OpenMenu();
+            var menu = Object.FindAnyObjectByType<FrontendMenu>();
+            menu.Show(FrontendMenu.Page.Solo);
+            GameObject.Find("button.start").GetComponent<Button>().onClick.Invoke();
+            for (float t = 0; t < 5f && PlayerControls.Local == null; t += Time.unscaledDeltaTime) yield return null;
+            Assert.IsNotNull(PlayerControls.Local);
+            var round = Object.FindAnyObjectByType<RoundDirector>();
+            typeof(RoundDirector).GetField("elapsed", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(round, round.TimeLimit - 0.2f);
+            var flow = Object.FindAnyObjectByType<GameFlowUI>();
+            for (float t = 0; t < 3f && !flow.ResultsVisible; t += Time.unscaledDeltaTime) yield return null;
+            Assert.IsTrue(flow.ResultsVisible);
+            EventSystem.current.SetSelectedGameObject(GameObject.Find("Snapshot"));
+            foreach (var dismiss in new[] { GamepadButton.East, GamepadButton.South })
+            {
+                yield return Tap(GamepadButton.South);
+                Assert.IsTrue(flow.CleanViewOn);
+                Assert.AreEqual("(nada)", Selected());
+                yield return Tap(dismiss);
+                Assert.IsFalse(flow.CleanViewOn);
+                Assert.AreEqual("Snapshot", Selected());
+            }
+            NetSession.LeaveToMenu();
+            for (float t = 0; t < 5f && SceneManager.GetActiveScene().name != "Frontend"; t += Time.unscaledDeltaTime) yield return null;
+            Assert.AreEqual("Frontend", SceneManager.GetActiveScene().name);
+        }
+
+        [UnityTest]
         public IEnumerator FriendsPage_OnlineAndLan_AreSeparate_AndBadCodeExplains()
         {
             yield return OpenMenu();
