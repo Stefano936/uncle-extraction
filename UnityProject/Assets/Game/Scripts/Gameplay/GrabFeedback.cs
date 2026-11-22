@@ -14,7 +14,7 @@ namespace UncleExtraction
         public GrabSocket Aimed { get; private set; }
 
         static readonly bool NoHud = QaArgs.Has("-ueNoHud"); // material de tienda
-        Transform ring; Mesh ringMesh; Material ringMat; TextMesh label; LineRenderer[] lines = new LineRenderer[2];
+        Transform ring, labelPlate; Material plateMat; Mesh ringMesh; Material ringMat; TextMesh label; LineRenderer[] lines = new LineRenderer[2];
         Transform warn; TextMesh warnLabel; Material warnMat; Mesh warnMesh;
         /// Texto del bloqueo marcado en el mundo ("" = nada que marcar). Para pruebas.
         public string BlockShown { get; private set; } = "";
@@ -34,6 +34,14 @@ namespace UncleExtraction
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font) { label.font = font; lgo.GetComponent<MeshRenderer>().sharedMaterial = font.material; }
             if (NoHud) lgo.GetComponent<MeshRenderer>().enabled = false; // material de tienda
+            // sesion 20 (auditoria 54b5246): placa oscura detras del rotulo. En Detallado el texto claro se perdia sobre la ropa
+            // iluminada a 720p y texto al 150 %; con contraste local se lee con o sin bloom.
+            labelPlate = GameObject.CreatePrimitive(PrimitiveType.Quad).transform; labelPlate.name = "Grab_Aim_Label_Plate";
+            var pc = labelPlate.GetComponent<Collider>(); if (pc) { pc.enabled = false; Destroy(pc); }
+            labelPlate.SetParent(lgo.transform, false);
+            var pr = labelPlate.GetComponent<MeshRenderer>(); pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; pr.receiveShadows = false;
+            if (material) { plateMat = new Material(material) { color = new Color(0.04f, 0.045f, 0.05f, 0.78f) }; pr.sharedMaterial = plateMat; }
+            if (NoHud) pr.enabled = false;
             for (int h = 0; h < 2; h++)
             {
                 var go = new GameObject(h == 0 ? "Tension_L" : "Tension_R"); go.transform.SetParent(null, false);
@@ -78,6 +86,20 @@ namespace UncleExtraction
             }
             m.Clear(); m.SetVertices(v); m.SetTriangles(tri, 0); m.RecalculateBounds();
         }
+
+        /// Placa a la medida del texto (espacio local del rotulo; queda apenas detras, del lado opuesto a la camara).
+        void FitPlate()
+        {
+            if (!labelPlate) return;
+            var lr = label.GetComponent<MeshRenderer>();
+            bool show = lr.enabled && !string.IsNullOrEmpty(label.text);
+            labelPlate.gameObject.SetActive(show); if (!show) return;
+            var b = lr.localBounds; float padX = 0.25f * b.size.y + 0.004f, padY = 0.18f * b.size.y + 0.003f;
+            labelPlate.localPosition = new Vector3(b.center.x, b.center.y, 0.004f);
+            labelPlate.localRotation = Quaternion.identity;
+            labelPlate.localScale = new Vector3(b.size.x + padX * 2f, b.size.y + padY * 2f, 1f);
+        }
+        public bool LabelHasPlate => labelPlate && labelPlate.gameObject.activeSelf;
 
         public static string SocketName(GrabSocket s) => s == null ? "" : Loc.Has("grab.socket." + s.socketId) ? Loc.T("grab.socket." + s.socketId) : s.label;
 
@@ -140,6 +162,7 @@ namespace UncleExtraction
                     : State == AimState.Busy ? (holder != "" ? Loc.T("grab.aim_busy_by", ("socket", n), ("player", holder)) : Loc.T("grab.aim_busy", ("socket", n)))
                     : Loc.T("grab.aim_far", ("socket", n));
                 label.color = col; label.transform.localPosition = new Vector3(0f, 0.11f, 0f);
+                FitPlate();
             }
             // que bloquea el cierre de la camioneta (con el tio adentro y el jugador a menos de 7 m de la abertura)
             BlockShown = "";
