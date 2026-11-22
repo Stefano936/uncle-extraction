@@ -120,6 +120,8 @@ namespace UncleExtraction.EditorTools
                 var anim = kit.GetComponent<Animator>(); if (anim) Object.DestroyImmediate(anim); // la pose la da la fisica
                 Finishing.Uncle(kit, map["head"]); // materiales (tela con trama, piel, cuero) y gorro de fiesta
                 pres.bodyRenderers = kit.GetComponentsInChildren<Renderer>().Where(r => r is SkinnedMeshRenderer).ToArray();
+                // sesion 20: cabeza de produccion ajustada a la cabeza del kit (la malla solo se lee en el editor)
+                var head = go.AddComponent<UncleHead>(); head.Fit(kit.GetComponentInChildren<SkinnedMeshRenderer>(), t, -1f);
             }
             else
             {

@@ -28,6 +28,7 @@ namespace UncleExtraction
             ("techo",            new Vector3(0f, 1.6f, 4.0f),    new Vector3(1f, 4.5f, 9.5f)),
             ("general",          new Vector3(9f, 7f, -10f),      new Vector3(1f, 0f, 1f)),
             ("menu_fondo",       new Vector3(0.6f, 1.45f, 4.4f), new Vector3(3.2f, 1.35f, 8.4f)), // fondo del menu (Art/UI/Backgrounds/bar_night.png)
+            ("menu_tio",         new Vector3(5.9f, 1.95f, 9.45f), new Vector3(4.2f, 1.45f, 7.0f)), // sesion 20: el tio de frente desde atras de la barra, el salon detras (fondo del menu)
         };
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]

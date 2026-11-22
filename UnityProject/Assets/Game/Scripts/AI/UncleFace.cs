@@ -21,6 +21,8 @@ namespace UncleExtraction
             brain = GetComponent<NpcBrain>(); body = GetComponent<NpcBody>();
             anchor = body && body.head ? body.head.parent : null; // parte de la cabeza (o el cuerpo si es el tio central)
             if (!anchor) { enabled = false; return; }
+            // sesion 20: con la malla del kit, la cabeza de produccion (UncleHead) reemplaza cejas y boca superpuestas
+            if (body.Articulated && UncleHead.UseNewHead) { var h = GetComponent<UncleHead>(); if (!h) h = gameObject.AddComponent<UncleHead>(); h.enabled = true; enabled = false; return; }
             var dark = FaceMaterial();
             // offsets calculados en reposo respecto de la cabeza: despues siguen al hueso
             float fs = body.FaceSign; // la cara mira hacia -z de la raiz en el tio articulado (ver NpcBody.Forward)
