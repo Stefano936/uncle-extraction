@@ -1,5 +1,11 @@
 # Estado del proyecto
 
+## Cierre de la camioneta · UE-13
+
+La entrada al cierre reproduce el crujido de las hojas. El portazo y el pestillo siguen ligados al cierre confirmado. El remate de victoria usa el volumen de avisos y el parte conserva sus controles y la reducción de movimiento. Las pruebas de cierre correcto y cierre abortado en `PhysicsLabPlayTests` comprueban las señales de cada recorrido.
+
+**NOT_RUN:** pruebas de Unity, grabación en anfitrión e invitado y calibración auditiva en el bar.
+
 ## Candidata integrada de Windows · 54b5246
 
 Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.

@@ -140,6 +140,11 @@ namespace UncleExtraction.Tests
             Assert.AreEqual(0, GrabRegistry.Count);
             yield return new WaitForSeconds(0.7f);
             Assert.Greater(Object.FindAnyObjectByType<VanDoors>().Closed01, 0.95f, "las hojas se cierran");
+            var audio = GameAudio.Instance;
+            Assert.AreEqual(1, audio.Played["door_creak"]);
+            Assert.AreEqual(1, audio.Played["van_close"]);
+            Assert.AreEqual(1, audio.Played["latch"]);
+            Assert.AreEqual(1, audio.Played["win_sting"]);
         }
 
         [UnityTest]
@@ -230,6 +235,11 @@ namespace UncleExtraction.Tests
             Assert.IsFalse(zone.Secured);
             yield return new WaitForSeconds(0.6f);
             Assert.Less(van.Closed01, 0.05f, "las hojas se reabren");
+            var audio = GameAudio.Instance;
+            Assert.AreEqual(1, audio.Played["door_creak"]);
+            Assert.IsFalse(audio.Played.ContainsKey("van_close"));
+            Assert.IsFalse(audio.Played.ContainsKey("latch"));
+            Assert.IsFalse(audio.Played.ContainsKey("win_sting"));
         }
 
         [UnityTest]

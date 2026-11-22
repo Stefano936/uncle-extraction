@@ -135,7 +135,7 @@ namespace UncleExtraction
         }
 
         /// Categoria de cada sonido: avisos (deben oirse siempre que el jugador no los baje a proposito) o efectos.
-        public static bool IsAlert(string id) => id.StartsWith("cue_") || id == "ping" || id == "success" || id == "timeout" || id == "ui";
+        public static bool IsAlert(string id) => id.StartsWith("cue_") || id == "ping" || id == "success" || id == "win_sting" || id == "timeout" || id == "ui";
         public static float CategoryVolume(string id) => IsAlert(id) ? GameSettings.AlertsVolume : GameSettings.EffectsVolume;
         public void Play2D(string id, float vol = 1f) { Count(id); if (ui) ui.PlayOneShot(SfxSynth.Get(id), vol * CategoryVolume(id)); }
         public void Play3D(string id, Vector3 at, float vol = 1f, bool cue = false)
@@ -187,7 +187,15 @@ namespace UncleExtraction
             if (van)
             {
                 var ph = van.CurrentPhase;
-                if (ph == VanDoors.Phase.Closed && lastVan != VanDoors.Phase.Closed) { Play3D("van_close", van.closePoint, 1f); Play3D("latch", van.closePoint, 0.9f); }
+                if (ph != lastVan)
+                {
+                    if (ph == VanDoors.Phase.Closing) Play3D("door_creak", van.closePoint, 0.8f);
+                    if (ph == VanDoors.Phase.Closed)
+                    {
+                        Play3D("van_close", van.closePoint, 1f);
+                        Play3D("latch", van.closePoint, 0.9f);
+                    }
+                }
                 lastVan = ph;
             }
             if (round)
