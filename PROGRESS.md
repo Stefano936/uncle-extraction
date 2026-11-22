@@ -1,5 +1,13 @@
 # Estado del proyecto
 
+## Verificación antes de fusionar · UE-52
+
+El workflow `Verificación del proyecto` revisa el diff, la versión fijada de Unity, GameVersion, las dependencias directas del manifiesto y las escenas habilitadas. Registra el SHA en el log de GitHub Actions. También se puede ejecutar localmente con PowerShell 7 mediante `./tools/windows/check_project.ps1`.
+
+`run_tests.ps1` conserva el guard de assets y usa el editor fijado en `ProjectVersion.txt`. En un Windows con licencia autorizada, ejecutar EditMode y PlayMode con `-Tag <sha>` y guardar los XML y logs de `.local-setup/logs/unity/`, incluido el recuento de omitidas. Ejecutar luego `BuildTools.BuildWindows` en el mismo checkout y guardar el log y VERSION.txt. Los pasos deben correr en serie. Si se reutiliza la caché de Unity, su clave debe incluir la versión del editor y el hash de `packages-lock.json`.
+
+**PASS local:** verificación estática de la configuración. **NOT_RUN:** ejecución remota desde un PR, pruebas y build de Unity con licencia.
+
 ## Candidata integrada de Windows · 54b5246
 
 Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.

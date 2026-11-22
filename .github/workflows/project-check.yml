@@ -1,0 +1,25 @@
+name: Verificación del proyecto
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  configuration:
+    name: Configuración Unity y archivos versionados
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verificar archivos del cambio
+        run: git diff --check HEAD^ HEAD
+      - name: Verificar proyecto
+        run: ./tools/windows/check_project.ps1
