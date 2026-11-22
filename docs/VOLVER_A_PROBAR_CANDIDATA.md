@@ -2,6 +2,8 @@
 
 Descomprimí el ZIP en una carpeta nueva. Anotá el commit de `VERSION.txt` y el SHA-256 del ZIP. Usá la misma copia en todas las PC de una sesión.
 
+Para comprobar una copia recibida en Windows, guardá el ZIP y su archivo `.sha256` juntos y ejecutá `powershell -File tools/windows/make_demo_zip.ps1 -VerifyExisting -Zip "C:\ruta\UncleExtraction_Demo_54b5246_Windows_x64.zip"` desde el repositorio. El comando coteja el checksum, extrae en una carpeta nueva y verifica arranque y exclusión de herramientas de QA. Hacé también la ronda manual y guardá su resultado.
+
 1. **Primer minuto.** Iniciá la ronda estándar en solitario con Contextual. Cronometrá el primer agarre. Si el tío se aferra, seguí el aviso del HUD. Acercate, mirá hacia su mano o hacia donde se agarra de la baranda y mantené **Interactuar** (E por defecto) hasta llenar la barra. **Soltar todo** (Q por defecto) abre tus propias manos. Para repetir el desenganche desde el arranque, elegí el desafío **Arranca en el karaoke**. En la ronda estándar, llevalo por la salida, subilo a la camioneta y cerrá desde afuera manteniendo E. Anotá qué paso necesitó ayuda. Guardá `Player.log` al aparecer el parte de victoria.
 2. **HUD desde pausa.** En la misma ronda cambiá entre Contextual y Detallado, aplicá y volvé a jugar. Probá español e inglés al 150 %, sobre todo a 720p. Cerrá y volvé a abrir el juego para comprobar qué perfil quedó guardado.
 3. **Controles.** Probá teclado y ratón y un mando físico. Apuntá a un agarre válido y a uno ocupado. En Mantener y en Alternar, distinguí el intento, la confirmación, la soltada y la pérdida. Reintentá con un gatillo o clic sostenido y comprobá que se necesita una pulsación nueva.

@@ -5,31 +5,53 @@
 #   2) arranque con herramientas de QA pedidas por argumento: debe quedarse en el menu sin activar ninguna.
 # El ZIP anterior no se toca (cada demo tiene su nombre).
 # Uso: powershell -ExecutionPolicy Bypass -File tools\windows\make_demo_zip.ps1 -Build Builds\UncleExtraction_Player -Zip Builds\UncleExtraction_Demo_s17.zip
-param([string]$Build = 'Builds\UncleExtraction_Player', [string]$Zip = 'Builds\UncleExtraction_Demo_s17.zip', [string]$Guide = 'docs\VOLVER_A_PROBAR_S17.md', [string]$ExtractTo = '')
+param([string]$Build = 'Builds\UncleExtraction_Player', [string]$Zip = 'Builds\UncleExtraction_Demo_s17.zip', [string]$Guide = 'docs\VOLVER_A_PROBAR_S17.md', [string]$ExtractTo = '', [switch]$VerifyExisting)
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Guard.psm1') -Force
 $Repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$B = Join-Path $Repo $Build; $Z = Join-Path $Repo $Zip
-$ver = Join-Path $B 'VERSION.txt'
-if (-not (Test-Path (Join-Path $B 'UncleExtraction.exe')) -or -not (Test-Path $ver)) { Write-Host "Falta la build de jugadores en $B"; exit 2 }
-$vt = Get-Content $ver -Raw
-if ($vt -notmatch 'Tipo: jugadores') { Write-Host "La build de $B no es de jugadores:`n$vt"; exit 2 }
-if ($vt -match 'cambios sin commitear') { Write-Host "La build se genero con cambios sin commitear"; exit 2 }
-if (Test-Path $Z) { Write-Host "Ya existe $Z (no se sobrescribe una demo entregada)"; exit 2 }
+$B = Join-Path $Repo $Build
+$Z = if ([IO.Path]::IsPathRooted($Zip)) { $Zip } else { Join-Path $Repo $Zip }
+function Test-PlayerBuild([string]$Folder) {
+  $version = Join-Path $Folder 'VERSION.txt'
+  if (!(Test-Path -LiteralPath (Join-Path $Folder 'UncleExtraction.exe') -PathType Leaf) -or !(Test-Path -LiteralPath $version -PathType Leaf)) {
+    throw "Falta ejecutable o VERSION.txt en $Folder"
+  }
+  $identity = Get-Content -LiteralPath $version -Raw
+  if ($identity -notmatch 'Tipo: jugadores' -or $identity -match 'cambios sin commitear') {
+    throw "VERSION.txt no identifica una build limpia de jugadores en $Folder"
+  }
+}
+if ($VerifyExisting) {
+  if (!(Test-Path -LiteralPath $Z -PathType Leaf) -or !(Test-Path -LiteralPath "$Z.sha256" -PathType Leaf)) {
+    Write-Host 'BLOCKED: se necesitan el ZIP y su archivo .sha256'; exit 2
+  }
+  $sidecar = Get-Content -LiteralPath "$Z.sha256" -Raw
+  $hashLine = [regex]::Match($sidecar, '\A([a-fA-F0-9]{64})\s+([^\r\n]+)\s*\z')
+  if (!$hashLine.Success -or $hashLine.Groups[2].Value -cne (Split-Path -Leaf $Z) -or
+      $hashLine.Groups[1].Value -ne (Get-FileHash -LiteralPath $Z -Algorithm SHA256).Hash) {
+    Write-Host "FAIL: el ZIP no coincide con $Z.sha256"; exit 1
+  }
+} else {
+  try { Test-PlayerBuild $B } catch { Write-Host "BLOCKED: $_"; exit 2 }
+  if (Test-Path -LiteralPath $Z) { Write-Host "Ya existe $Z (no se sobrescribe una demo entregada)"; exit 2 }
+}
 $dst = if ($ExtractTo) { $ExtractTo } else { Join-Path $env:TEMP ('ue_demo_check_' + (Get-Date -Format 'yyyyMMdd_HHmmss')) }
 if (Test-Path -LiteralPath $dst) { Write-Host "La carpeta de verificacion debe ser nueva: $dst"; exit 2 }
 $results = @(); $exit = 0
 try {
   Enter-BatchLock 'make_demo_zip'
-  if (Test-Path (Join-Path $Repo $Guide)) { Copy-Item (Join-Path $Repo $Guide) (Join-Path $B 'VOLVER_A_PROBAR.txt') -Force }
-  $files = @(Get-ChildItem -LiteralPath $B | Where-Object Name -notlike '*_BurstDebugInformation_DoNotShip')
-  Compress-Archive -LiteralPath $files.FullName -DestinationPath $Z -CompressionLevel Optimal
-  $sha = (Get-FileHash $Z -Algorithm SHA256).Hash.ToLowerInvariant()
-  "$sha  $(Split-Path -Leaf $Z)" | Set-Content "$Z.sha256" -Encoding ascii
-  $size = [math]::Round((Get-Item $Z).Length / 1MB, 1)
+  if (!$VerifyExisting) {
+    if (Test-Path (Join-Path $Repo $Guide)) { Copy-Item (Join-Path $Repo $Guide) (Join-Path $B 'VOLVER_A_PROBAR.txt') -Force }
+    $files = @(Get-ChildItem -LiteralPath $B | Where-Object Name -notlike '*_BurstDebugInformation_DoNotShip')
+    Compress-Archive -LiteralPath $files.FullName -DestinationPath $Z -CompressionLevel Optimal
+  }
+  $sha = (Get-FileHash -LiteralPath $Z -Algorithm SHA256).Hash.ToLowerInvariant()
+  if (!$VerifyExisting) { "$sha  $(Split-Path -Leaf $Z)" | Set-Content -LiteralPath "$Z.sha256" -Encoding ascii }
+  $size = [math]::Round((Get-Item -LiteralPath $Z).Length / 1MB, 1)
   Write-Host "ZIP: $Z ($size MB)`nSHA-256: $sha"
   # descomprimir en otro lugar y probar la copia
   Expand-Archive -LiteralPath $Z -DestinationPath $dst
+  Test-PlayerBuild $dst
   $exe = Join-Path $dst 'UncleExtraction.exe'
   $win = @('-screen-fullscreen', '0', '-screen-width', '800', '-screen-height', '450')
   # 1) arranque normal
