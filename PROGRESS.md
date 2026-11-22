@@ -1,5 +1,11 @@
 # Estado del proyecto
 
+## Cancelación y reintento de Relay · UE-19
+
+Sobre `main` en `456a4fc`, la operación asíncrona de Relay devuelve los datos de conexión y NetSession los aplica solo si sigue activo el mismo intento y transporte. Un reintento durante la autenticación reutiliza el inicio de sesión en curso. El registro de intentos conserva tiempos y resultados sin códigos de sala. El código que usa el smoke automático queda en el log local del anfitrión QA y se omite del CSV y de la build de jugadores.
+
+`RelayProviderTests` controla dos respuestas diferidas para comprobar el descarte al reintentar como anfitrión o invitado. **NOT_RUN** en Unity 6000.3.28f1. Queda pendiente ejecutar EditMode y probar con el servicio real la cancelación, el reintento y los mensajes de error.
+
 ## Candidata integrada de Windows · 54b5246
 
 Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.

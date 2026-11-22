@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
@@ -37,6 +38,7 @@ namespace UncleExtraction
         public static NetSession Instance { get; private set; }
 
         static bool argsParsed;
+        static int sessionAttempt;
         /// Red degradada para pruebas (-ueNetSim latencia_ms jitter_ms perdida_%). Solo tiene efecto en editor y builds de desarrollo.
         public static int SimDelayMs, SimJitterMs, SimLossPct;
         const ushort SoloPortBase = 7790;
@@ -85,7 +87,12 @@ namespace UncleExtraction
             }
         }
 
-        public static void Say(string msg, float seconds = 5f) { StatusMessage = msg; StatusUntil = Time.unscaledTime + seconds; Debug.Log("[Net] " + msg); }
+        public static void Say(string msg, float seconds = 5f)
+        {
+            StatusMessage = msg;
+            StatusUntil = Time.unscaledTime + seconds;
+            Debug.Log(msg?.StartsWith("relay.hosting|", StringComparison.Ordinal) == true ? "[Net] relay.hosting" : "[Net] " + msg);
+        }
 
         NetworkManager EnsureManager()
         {
@@ -174,6 +181,7 @@ namespace UncleExtraction
         /// Cierra la sesion y vuelve al menu (sin menu en la build, por ejemplo en pruebas, vuelve a jugar solo).
         public static void LeaveToMenu()
         {
+            ++sessionAttempt;
             var nm = NetworkManager.Singleton;
             if (nm != null && (nm.IsListening || nm.IsClient)) nm.Shutdown();
             Time.timeScale = 1f;
@@ -215,13 +223,25 @@ namespace UncleExtraction
             Say(reason, 10f);
         }
 
-        /// Relay responde de forma asincronica: si mientras tanto el jugador cancelo (Mode volvio a Solo o se pidio otra sesion),
-        /// la respuesta tardia se descarta y no inicia ninguna conexion. (Ademas el coroutine muere con la escena al cancelar.)
-        bool CancelledWhileWaiting(NetMode mode)
+        bool IsCurrentAttempt(int attempt, NetMode mode)
         {
-            if (this && Mode == mode && Online) return false;
-            Debug.Log($"[Net] respuesta de Relay descartada: la sesion {mode} se cancelo mientras se esperaba");
-            return true;
+            return this && isActiveAndEnabled && Instance == this
+                && sessionAttempt == attempt && Mode == mode && Online;
+        }
+
+        IEnumerator WaitForRelay(Task<RelayConnector.Result> request, int attempt, NetMode mode, Action<RelayConnector.Result> accept)
+        {
+            float started = Time.realtimeSinceStartup;
+            Debug.Log($"[Relay] intento={attempt} modo={mode} inicio");
+            while (!request.IsCompleted && IsCurrentAttempt(attempt, mode)) yield return null;
+            if (!IsCurrentAttempt(attempt, mode))
+            {
+                Debug.Log($"[Relay] intento={attempt} descartado tras {Time.realtimeSinceStartup - started:F2}s");
+                yield break;
+            }
+            var result = request.Result;
+            Debug.Log($"[Relay] intento={attempt} respuesta tras {Time.realtimeSinceStartup - started:F2}s estado={(result.ok ? "ok" : result.error)}");
+            accept(result);
         }
 
         public IEnumerator Begin(NetMode mode)
@@ -232,16 +252,36 @@ namespace UncleExtraction
                 Debug.Log("[Net] escena sincronizada por el anfitrion; se mantiene la conexion");
                 yield break;
             }
+            int attempt = ++sessionAttempt;
             if (nm.IsListening || nm.ShutdownInProgress)
             {   // escena recargada (reinicio de prueba o volver a solo): cerrar la sesion anterior antes de abrir otra
                 nm.Shutdown();
                 while (nm.ShutdownInProgress) yield return null;
                 yield return null;
             }
+            if (sessionAttempt != attempt || !this || Instance != this) yield break;
             var utp = nm.GetComponent<UnityTransport>();
             Mode = mode; NetAuth.Frozen = false;
             bool ok = false;
-            switch (mode)
+            if (Online && mode != NetMode.Solo)
+            {
+                bool host = mode == NetMode.Host;
+                if (host) Say("lobby.creating", 20f);
+                else nm.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(VersionTag);
+                var request = host ? RelayConnector.Host(MaxPlayers - 1) : RelayConnector.Join(JoinCode);
+                yield return WaitForRelay(request, attempt, mode, result =>
+                {
+                    if (!nm || !utp || NetworkManager.Singleton != nm) return;
+                    if (!result.ok) { OnlineFailed(result.error); return; }
+                    utp.SetRelayServerData(result.serverData);
+                    JoinCode = result.code;
+                    RelayRegion = result.region ?? "";
+                    ok = host ? nm.StartHost() : nm.StartClient();
+                    if (ok && host) Say("relay.hosting|code=" + JoinCode);
+                });
+                if (!IsCurrentAttempt(attempt, mode) || !nm || !utp || NetworkManager.Singleton != nm) yield break;
+            }
+            else switch (mode)
             {
                 case NetMode.Solo:
                     for (ushort k = 0; k < 10 && !ok; k++)
@@ -252,40 +292,23 @@ namespace UncleExtraction
                     }
                     break;
                 case NetMode.Host:
-                    if (Online)
-                    {   // internet: el codigo de sala sale de la asignacion Relay
-                        Say("lobby.creating", 20f);
-                        var t = RelayConnector.Host(utp, MaxPlayers - 1);
-                        while (!t.IsCompleted) yield return null;
-                        if (CancelledWhileWaiting(mode)) yield break;
-                        if (!t.Result.ok) { OnlineFailed(t.Result.error); yield break; }
-                        JoinCode = t.Result.code; RelayRegion = t.Result.region ?? "";
-                        ok = nm.StartHost();
-                        if (ok) Say("relay.hosting|code=" + JoinCode);
-                        break;
-                    }
                     utp.SetConnectionData(ListenAddress, Port, ListenAddress);
                     ok = nm.StartHost();
                     if (ok) Say($"Anfitrion en el puerto {Port} (conexion directa LAN/localhost)");
                     break;
                 case NetMode.Client:
                     nm.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(VersionTag);
-                    if (Online)
-                    {
-                        var t = RelayConnector.Join(utp, JoinCode);
-                        while (!t.IsCompleted) yield return null;
-                        if (CancelledWhileWaiting(mode)) yield break;
-                        if (!t.Result.ok) { OnlineFailed(t.Result.error); yield break; }
-                        JoinCode = t.Result.code; RelayRegion = t.Result.region ?? "";
-                        ok = nm.StartClient();
-                        break;
-                    }
                     utp.SetConnectionData(Address, Port);
                     ok = nm.StartClient();
                     if (ok) Say($"Conectando a {Address}:{Port}...");
                     break;
             }
-            Debug.Log($"[Net] begin {mode} ok={ok} protocol={ProtocolVersion} transporte={(Online ? "relay codigo=" + JoinCode + " region=" + RelayRegion : "directo")}");
+            string transport = Online ? "relay region=" + RelayRegion : "directo";
+#if !UE_PLAYER_BUILD
+            // El smoke local obtiene el codigo del anfitrion QA para arrancar el invitado.
+            if (ok && Online && mode == NetMode.Host) transport = "relay codigo=" + JoinCode + " region=" + RelayRegion;
+#endif
+            Debug.Log($"[Net] begin {mode} ok={ok} protocol={ProtocolVersion} transporte={transport}");
             if (ok && (SimDelayMs > 0 || SimLossPct > 0) && mode != NetMode.Solo) ApplyNetSim(nm);
             if (!ok && Online) { OnlineFailed("error.service"); yield break; }
             if (!ok)

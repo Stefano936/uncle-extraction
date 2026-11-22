@@ -156,7 +156,7 @@ for ($run = 1; $run -le $Runs; $run++) {
         $fh = @(Finals $hostG)[0]; $fc = @(Finals $cliG)[0]
         $viaRelay = (Grep $cliG 'transporte=relay').Count -gt 0
         $ok = $viaRelay -and (SameFinal $fh $fc) -and (Field $fh 'ronda') -eq 'Success'
-        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "codigo=$code relay_cliente=$viaRelay anfitrion[$(Brief $fh)] cliente[$(Brief $fc)] rtt $(RttRange $hostG 'c1=(\d+)ms') (una PC: no prueba dos equipos ni dos redes)"
+        Record $label $(if ($ok) { 'PASS' } else { 'FAIL' }) "relay_cliente=$viaRelay anfitrion[$(Brief $fh)] cliente[$(Brief $fc)] rtt $(RttRange $hostG 'c1=(\d+)ms') (una PC: no prueba dos equipos ni dos redes)"
       }
       'hostkill' {
         # Perdida BRUSCA del anfitrion (proceso terminado, sin aviso) con el cliente agarrando: el cliente detecta la

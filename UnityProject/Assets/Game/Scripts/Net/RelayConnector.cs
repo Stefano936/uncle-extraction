@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Unity.Netcode.Transports.UTP;
+using Unity.Networking.Transport.Relay;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Relay;
@@ -20,6 +20,7 @@ namespace UncleExtraction
         public const string Protocol = "dtls";
         const int TimeoutMs = 15000;
         static Task initTask;
+        static Task signInTask;
 
         /// Perfil de autenticacion: separa la identidad anonima de varias instancias en la misma PC (-ueProfile nombre).
         public static string Profile = "";
@@ -72,13 +73,16 @@ namespace UncleExtraction
                 initTask = UnityServices.InitializeAsync(opt);
             }
             await WithTimeout(initTask);
-            if (!AuthenticationService.Instance.IsSignedIn) await WithTimeout(AuthenticationService.Instance.SignInAnonymouslyAsync());
+            var auth = AuthenticationService.Instance;
+            if (auth.IsSignedIn) return;
+            if (signInTask == null || signInTask.IsCompleted) signInTask = auth.SignInAnonymouslyAsync();
+            await WithTimeout(signInTask);
         }
 
-        public struct Result { public bool ok; public string code; public string error; public string region; }
+        public struct Result { public bool ok; public string code; public string error; public string region; internal RelayServerData serverData; }
 
-        /// Anfitrion: crea la asignacion y deja el transporte listo para StartHost.
-        public static async Task<Result> Host(UnityTransport utp, int maxGuests)
+        /// Anfitrion: prepara los datos de la asignacion para el intento activo.
+        public static async Task<Result> Host(int maxGuests)
         {
             if (!ProjectLinked) return new Result { error = "error.online_unlinked" };
             try
@@ -86,15 +90,13 @@ namespace UncleExtraction
                 await EnsureSignedIn();
                 Allocation a = await WithTimeout(RelayService.Instance.CreateAllocationAsync(maxGuests));
                 string code = await WithTimeout(RelayService.Instance.GetJoinCodeAsync(a.AllocationId));
-                utp.SetRelayServerData(a.ToRelayServerData(Protocol));
-                Debug.Log($"[Relay] asignacion creada region={a.Region} codigo={code} invitados={maxGuests}");
-                return new Result { ok = true, code = code, region = a.Region };
+                return new Result { ok = true, code = code, region = a.Region, serverData = a.ToRelayServerData(Protocol) };
             }
-            catch (Exception e) { Debug.LogWarning($"[Relay] fallo al crear la sala: {e.GetType().Name}: {e.Message}"); return new Result { error = MapError(e) }; }
+            catch (Exception e) { Debug.LogWarning($"[Relay] fallo al crear la sala: {e.GetType().Name}"); return new Result { error = MapError(e) }; }
         }
 
-        /// Invitado: se une con el codigo y deja el transporte listo para StartClient.
-        public static async Task<Result> Join(UnityTransport utp, string rawCode)
+        /// Invitado: prepara los datos de conexion para el intento activo.
+        public static async Task<Result> Join(string rawCode)
         {
             string code = NormalizeCode(rawCode);
             if (code == "") return new Result { error = "error.invalid" };
@@ -103,11 +105,9 @@ namespace UncleExtraction
             {
                 await EnsureSignedIn();
                 JoinAllocation j = await WithTimeout(RelayService.Instance.JoinAllocationAsync(code));
-                utp.SetRelayServerData(j.ToRelayServerData(Protocol));
-                Debug.Log($"[Relay] unido con codigo={code} region={j.Region}");
-                return new Result { ok = true, code = code, region = j.Region };
+                return new Result { ok = true, code = code, region = j.Region, serverData = j.ToRelayServerData(Protocol) };
             }
-            catch (Exception e) { Debug.LogWarning($"[Relay] fallo al unirse: {e.GetType().Name}: {e.Message}"); return new Result { error = MapError(e) }; }
+            catch (Exception e) { Debug.LogWarning($"[Relay] fallo al unirse: {e.GetType().Name}"); return new Result { error = MapError(e) }; }
         }
     }
 }
