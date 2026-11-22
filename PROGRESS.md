@@ -1,5 +1,17 @@
 # Estado del proyecto
 
+## Revisión de integración · UE-05, UE-31, UE-32 y UE-33
+
+**UE-05.** Mantener `54b5246` como candidata interna de Windows. El corte contiene el bar, partidas solo y de 2 a 4, opciones de LAN y Relay, interfaz ES/EN y tres desafíos. El registro siguiente cubre localhost y Relay desde una PC. Falta el humo en otro equipo sin Unity, una ronda completa con input físico, LAN entre equipos, Relay entre redes y grupos nuevos. **Decisión de distribución: pendiente** hasta registrar esas pruebas sobre el mismo ZIP.
+
+| Tarjeta y rama | Resultado de la sonda previa | Revisión del cambio y condición de integración |
+| --- | --- | --- |
+| [UE-31](https://trello.com/c/HbNoSkWz) · `40a78b0` | Reducción de 4,2 a 2,8 m/s en unos 183 ms frente a ~100 ms en la referencia, sin fuerza del resorte. | La rampa se reinicia al soltar y al restablecer al jugador. Mantener aislada hasta medir arrastre de cinturón, brazo y carrito, con agarre doble y reagarre bajo carga. |
+| [UE-32](https://trello.com/c/fh62Gdwi) · `07db593` | De 11 cambios de candidato a 0 en 12 muestras cerca del empate entre dos puntos libres. | La retención depende de alcance, visibilidad y disponibilidad de ambos puntos. Mantener aislada hasta comprobar que al ocupar u ocultar el punto previo cambia la selección y que el anfitrión confirma el punto esperado con latencia. |
+| [UE-33](https://trello.com/c/duX022W2) · `bfa4f8d` | Inclinación normal de 40° frente a 65°. Reducción de movimiento conserva 12°. | El cambio afecta la inclinación de cámara. Mantener aislada hasta revisar orientación, legibilidad del aviso y comodidad al levantarse, con y sin asistencia. |
+
+Las tres sondas usan la referencia `82c28e1` y los casos de prueba de `8f7f33c`. Los resultados históricos son **PASS** en los casos aislados. Las comparaciones con carga real, latencia y personas quedan **NOT_RUN**. [Método y evidencia histórica](https://github.com/Stefano936/uncle-extraction/blob/f573ab2b0c7a50ba6f5732ed10b49ec3b9936dda/docs/INVESTIGACION_AGARRE_S18.md)
+
 ## Candidata integrada de Windows · 54b5246
 
 Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.

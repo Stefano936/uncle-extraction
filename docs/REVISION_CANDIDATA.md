@@ -1,6 +1,6 @@
 # Revisión de la versión candidata (15–20 min)
 
-Build `UncleExtraction_Demo_42dcfcd_Windows_x64.zip`, SHA `42dcfcd0d7b8861b89cdc374d9a1eee81a449bc5`. Descomprimila en una carpeta nueva y abrí `UncleExtraction.exe`. Antes de empezar, verificá `VERSION.txt`. Si podés, probala enchufada y también a batería. Para una primera pasada, usá el [guion breve](VOLVER_A_PROBAR_CANDIDATA.md). [Resultado técnico](../PROGRESS.md)
+Build `UncleExtraction_Demo_54b5246_Windows_x64.zip`, commit `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`, SHA-256 `9167da7fa203beaa3dcbd216b4fbfe4b349c116bae35dfcf4a717b63f39f5bbe`. Descomprimila en una carpeta nueva y abrí `UncleExtraction.exe`. Antes de empezar, verificá `VERSION.txt`. Si podés, probala enchufada y también a batería. Para una primera pasada, usá el [guion breve](VOLVER_A_PROBAR_CANDIDATA.md). [Resultado técnico](../PROGRESS.md)
 
 Marcá cada punto **OK**, **Raro** (anotá qué) o **Mal**.
 
@@ -37,12 +37,12 @@ Marcá cada punto **OK**, **Raro** (anotá qué) o **Mal**.
 - [ ] Jugar con amigos → Crear sala por internet. La otra PC se une con el código. Mejor si están en redes distintas (por ejemplo, datos del celular).
 - [ ] Todos marcan LISTO, el anfitrión inicia y juegan una ronda completa. Anotá si se nota la latencia.
 - [ ] Se ve el nombre (con color) de cada compañero y «CAÍDO» cuando lo tiran; el marcador del otro aparece con su nombre.
-- [ ] Solo el anfitrión ve **Reintentar** en la pausa; el invitado pide reintentar desde los resultados.
+- [ ] Solo el anfitrión puede reintentar desde pausa y volver a la sala desde resultados. El invitado espera al anfitrión o vuelve al menú.
 - [ ] Un jugador cierra el juego a mitad de ronda: todos ven el aviso, el reloj suma tiempo en el momento y a los 10 s el tío se ajusta al grupo. (No se puede volver a entrar a la misma ronda: limitación conocida.)
 
 ## 6. Sesión 15 (5 min)
 - [ ] Cada clic se nota en la mano al instante; resbalar suena distinto que soltar.
-- [ ] Probar el desafío **Ruta estrecha** y **Sin carrito** (menú Jugar solo → Desafío). ¿Se entiende por dónde pasar?
+- [ ] Probar **Ruta estrecha**, **Sin carrito** y **Arranca en el karaoke** (menú Jugar solo → Desafío). ¿Se entiende por dónde pasar?
 - [ ] Empujar el carrito rápido contra la torre de vasos junto a la salida: ¿se rompen y el tío se distrae?
 - [ ] El parte de extracción al final: ¿cuenta lo que pasó? Botón «Vista para captura».
 
