@@ -40,7 +40,11 @@ namespace UncleExtraction
             var pc = labelPlate.GetComponent<Collider>(); if (pc) { pc.enabled = false; Destroy(pc); }
             labelPlate.SetParent(lgo.transform, false);
             var pr = labelPlate.GetComponent<MeshRenderer>(); pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; pr.receiveShadows = false;
-            if (material) { plateMat = new Material(material) { color = new Color(0.04f, 0.045f, 0.05f, 0.78f) }; pr.sharedMaterial = plateMat; }
+            // mismo sombreador que el texto (ignora la profundidad): con el material del anillo el cuerpo del tio tapaba la placa,
+            // porque el punto de agarre esta sobre su superficie. Se dibuja justo antes que el texto.
+            var fontMat = lgo.GetComponent<MeshRenderer>().sharedMaterial;
+            var sh = fontMat ? fontMat.shader : Shader.Find("GUI/Text Shader");
+            if (sh) { plateMat = new Material(sh) { name = "Grab_Label_Plate", mainTexture = Texture2D.whiteTexture, color = new Color(0.04f, 0.045f, 0.05f, 0.8f) }; plateMat.renderQueue = (fontMat ? fontMat.renderQueue : 3000) - 1; pr.sharedMaterial = plateMat; }
             if (NoHud) pr.enabled = false;
             for (int h = 0; h < 2; h++)
             {
