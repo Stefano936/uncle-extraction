@@ -229,7 +229,11 @@ for v in me.vertices:
     if (p - gc).length < 0.215 and p.z > 1.47:       # esfera guia de la cabeza
         groups["head"].add([v.index], 1.0, "REPLACE"); continue
     s = "L" if p.x > 0 else "R"; ax = abs(p.x)
-    if ax > 0.40 and p.z > 0.70:
+    # brazo: cerca del antebrazo o del brazo de ese lado (a cualquier altura: las manos cuelgan por debajo de 0,70 m y antes
+    # caian en la region de las piernas; al bajar los brazos los dedos se estiraban hacia el muslo)
+    fa0, fa1 = B["forearm." + s]; hand_end = fa1 + (fa1 - fa0).normalized() * 0.24   # el antebrazo sigue por la mano y los dedos
+    near_arm = seg_dist(p, fa0, hand_end) < 0.15 or seg_dist(p, *B["upper_arm." + s]) < 0.17
+    if near_arm or (ax > 0.40 and p.z > 0.70):
         cands = ["chest", "upper_arm." + s, "forearm." + s]
     elif p.z < 0.84 and ax > 0.03:
         cands = ["pelvis", "thigh." + s, "calf." + s]
@@ -240,6 +244,7 @@ for v in me.vertices:
         a, b = B[n]
         if n == "chest": a, b = B["chest"][0], Vector((0, 0, 1.47))
         if n == "pelvis": a, b = Vector((0, 0, 0.82)), Vector((0, 0, 1.0))
+        if n.startswith("forearm"): b = b + (b - a).normalized() * 0.24   # mano y dedos van con el antebrazo
         d = seg_dist(p, a, b); ws.append((n, 1.0 / (d ** 4 + 1e-5)))
     ws.sort(key=lambda x: -x[1]); ws = ws[:2]; tot = sum(w for _, w in ws)
     for n, w in ws:
