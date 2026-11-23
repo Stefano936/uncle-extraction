@@ -125,7 +125,7 @@ namespace UncleExtraction.EditorTools
             // pintura lisa: la textura de pintura gastada se leia como vetas y manchas a la escala de la carroceria
             M("RS_VanBody", new Color(0.78f, 0.71f, 0.57f), 0.42f, 0.1f);
             M("RS_VanStripe", new Color(0.68f, 0.27f, 0.12f), 0.4f, 0.05f);
-            M("RS_VanInner", new Color(0.5f, 0.43f, 0.35f), 0.2f, 0f, wood, woodN, 0.35f, 0.7f);
+            M("RS_VanInner", new Color(0.42f, 0.39f, 0.35f), 0.2f, 0f, wood, woodN, 0.35f, 0.7f); // gris calido: con la luz del techo el terciado viraba a rojo
             M("RS_Black", new Color(0.045f, 0.045f, 0.05f), 0.3f, 0f);
             M("RS_Chrome", new Color(0.85f, 0.86f, 0.88f), 0.85f, 1f);
             M("RS_Glass", new Color(0.05f, 0.07f, 0.09f), 0.93f, 0.4f);
