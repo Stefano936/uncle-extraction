@@ -45,11 +45,11 @@ def chain(points):
 
 F = -1.0  # frente = -Y
 # tronco: entrepierna -> cadera -> panza -> pecho -> cuello
-crotch = V((0, 0.0, 0.80), 0.17, 0.15)
-hips   = V((0, 0.0, 0.92), 0.31, 0.22)
-belly  = V((0, 0.06 * F, 1.06), 0.34, 0.31)
-chest  = V((0, 0.02 * F, 1.24), 0.33, 0.25)
-upch   = V((0, 0.0, 1.35), 0.30, 0.21)
+crotch = V((0, 0.0, 0.80), 0.20, 0.17)
+hips   = V((0, 0.0, 0.92), 0.37, 0.27)
+belly  = V((0, 0.07 * F, 1.07), 0.41, 0.38)
+chest  = V((0, 0.02 * F, 1.24), 0.38, 0.29)
+upch   = V((0, 0.0, 1.35), 0.33, 0.23)
 neck0  = V((0, 0.01, 1.45), 0.105, 0.10)
 neck1  = V((0, 0.02, 1.54), 0.095, 0.09)
 for a, b in [(crotch, hips), (hips, belly), (belly, chest), (chest, upch), (upch, neck0), (neck0, neck1)]: E(a, b)
@@ -59,9 +59,9 @@ def side(sx):
     sh_in  = V((0.25 * sx, 0.0, 1.385), 0.135, 0.125); E(upch, sh_in); E(trap, sh_in)
     sh     = V((0.355 * sx, 0.0, 1.355), 0.12, 0.115); E(sh_in, sh)
     ua, fa = B["upper_arm." + ("L" if sx > 0 else "R")], B["forearm." + ("L" if sx > 0 else "R")]
-    mid_u  = V(tuple((ua[0] + ua[1]) * 0.5), 0.118, 0.11); E(sh, mid_u)
-    elbow  = V(tuple(ua[1]), 0.092, 0.086); E(mid_u, elbow)
-    mid_f  = V(tuple(fa[0] * 0.5 + fa[1] * 0.5), 0.084, 0.075); E(elbow, mid_f)
+    mid_u  = V(tuple((ua[0] + ua[1]) * 0.5), 0.135, 0.125); E(sh, mid_u)
+    elbow  = V(tuple(ua[1]), 0.10, 0.095); E(mid_u, elbow)
+    mid_f  = V(tuple(fa[0] * 0.5 + fa[1] * 0.5), 0.092, 0.082); E(elbow, mid_f)
     d = (fa[1] - fa[0]).normalized()
     wrist  = V(tuple(fa[0] + (fa[1] - fa[0]) * 0.93), 0.058, 0.046); E(mid_f, wrist)
     # mano: palma ancha y plana; dedos en abanico apuntando hacia abajo, levemente curvados hacia el cuerpo
@@ -81,10 +81,10 @@ def side(sx):
     E(palm, t_ids[0])
     # pierna
     th, cf = B["thigh." + ("L" if sx > 0 else "R")], B["calf." + ("L" if sx > 0 else "R")]
-    hip   = V((th[0].x, 0.0, 0.86), 0.17, 0.16); E(hips, hip)
-    mid_t = V(tuple((th[0] + th[1]) * 0.5), 0.145, 0.14); E(hip, mid_t)
-    knee  = V(tuple(th[1]), 0.105, 0.105); E(mid_t, knee)
-    calf  = V(tuple(cf[0] * 0.55 + cf[1] * 0.45 + Vector((0, 0.015, 0))), 0.095, 0.095); E(knee, calf)
+    hip   = V((th[0].x, 0.0, 0.86), 0.20, 0.19); E(hips, hip)
+    mid_t = V(tuple((th[0] + th[1]) * 0.5), 0.17, 0.165); E(hip, mid_t)
+    knee  = V(tuple(th[1]), 0.12, 0.12); E(mid_t, knee)
+    calf  = V(tuple(cf[0] * 0.55 + cf[1] * 0.45 + Vector((0, 0.015, 0))), 0.11, 0.11); E(knee, calf)
     ankle = V((cf[1].x, 0.01, 0.13), 0.062, 0.062); E(calf, ankle)
     heel  = V((cf[1].x, 0.045, 0.055), 0.058, 0.055); E(ankle, heel)
     ball  = V((cf[1].x + 0.008 * sx, -0.10, 0.045), 0.065, 0.045); E(heel, ball)
@@ -168,7 +168,7 @@ band("Belt", Vector((0, 0, 0.935)), up, fwd, 0.052, 0.012, "belt")
 band("Shirt_Hem", Vector((0, 0, 0.975)), up, fwd, 0.026, 0.016, "wine", flare=0.008)
 # cuello de la camisa: anillo fijo alrededor del cuello (los rayos se escapaban entre trapecio y cabeza)
 bm = bmesh.new(); rings = []
-for h, rad in ((1.415, 0.125), (1.47, 0.15)):
+for h, rad in ((1.415, 0.158), (1.47, 0.18)):
     rings.append([bm.verts.new((math.cos(2 * math.pi * i / 32) * rad, 0.01 + math.sin(2 * math.pi * i / 32) * rad * 0.92, h)) for i in range(32)])
 for i in range(32):
     j = (i + 1) % 32
