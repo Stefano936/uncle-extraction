@@ -217,6 +217,8 @@ namespace UncleExtraction.EditorTools
                 if (map.TryGetValue(n, out var m)) mats[i] = m; else Debug.LogWarning($"[Finishing] material S21 sin pareja: {n}");
             }
             smr.sharedMaterials = mats;
+        }
+
         /// Sesion 21: manga del jugador en primera persona (siempre a la vista): campera de jean gastada con trama y relieve.
         /// Va a Resources para que HandRig la cargue en ejecucion.
         public static void PlayerSleeve()
