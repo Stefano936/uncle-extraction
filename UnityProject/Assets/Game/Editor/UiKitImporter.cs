@@ -45,8 +45,10 @@ namespace UncleExtraction.EditorTools
             }
             foreach (var f in new[] { "DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "FONT_LICENSE.txt" })
                 CopyIfChanged(Path.Combine(Kit, "assets/fonts", f), $"{UiDir}/Fonts/{f}");
-            CopyIfChanged(Path.Combine(Kit, "data/localization_en_es.json"), $"{LocDir}/ui_strings.json");
-            CopyIfChanged("../preproduction/uncle_extraction/data/dialogue_en_es.csv", $"{LocDir}/dialogue_en_es.csv"); // catalogo de dialogos original (subtitulos)
+            // sesion 20: los catalogos de idioma son del JUEGO una vez copiados (se les agregan textos y lineas: version, campana).
+            // Antes cada regeneracion de escenas los pisaba con la fuente del kit y borraba esos cambios. Solo se copian si faltan.
+            CopyIfMissing(Path.Combine(Kit, "data/localization_en_es.json"), $"{LocDir}/ui_strings.json");
+            CopyIfMissing("../preproduction/uncle_extraction/data/dialogue_en_es.csv", $"{LocDir}/dialogue_en_es.csv"); // catalogo de dialogos (subtitulos)
             Directory.CreateDirectory(UiDir + "/Backgrounds");
             CopyIfChanged(Path.Combine(Kit, "assets/backgrounds/bar_idle.png"), $"{UiDir}/Backgrounds/bar_idle.png");
             ConfigureSprite($"{UiDir}/Backgrounds/bar_idle.png", Vector4.zero, 100);
@@ -76,6 +78,8 @@ namespace UncleExtraction.EditorTools
             EditorUtility.SetDirty(skin);
             Debug.Log($"[UiKit] UiSkin: {skin.icons.Count} iconos, fuente {(skin.font ? skin.font.name : "FALTA")}, panel {(skin.panel ? "ok" : "FALTA")}");
         }
+
+        static void CopyIfMissing(string src, string dst) { if (!File.Exists(dst)) CopyIfChanged(src, dst); }
 
         static void CopyIfChanged(string src, string dst)
         {

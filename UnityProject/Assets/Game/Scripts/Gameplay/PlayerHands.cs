@@ -167,6 +167,9 @@ namespace UncleExtraction
         /// API directa (pruebas y depuracion en el anfitrion): agarra un socket concreto con una mano.
         public GrabResult ForceGrab(int hand, GrabSocket s) => GrabRegistry.TryCreate(this, hand, s, out _);
 
+        /// Sonidos de rechazo emitidos para el jugador local (pruebas).
+        public int RejectSounds { get; private set; }
+
         void Feedback(string msg)
         {
             RecordFeedback(msg);
@@ -182,7 +185,12 @@ namespace UncleExtraction
             FeedbackUntil = Time.time + 1.2f;
             handFeedbackRound = RoundDirector.Instance ? RoundDirector.Instance.Restarts : -1;
             if (msg == "hud.grip_busy" || msg == "hud.too_far" || msg == nameof(GrabResult.GlobalLimit) || msg == nameof(GrabResult.OwnerInactive))
+            {
                 lastRejectedAt = Time.unscaledTime;
+                // sesion 20 (UE-12): el rechazo del anfitrion tambien se oye (bajo y seco), una vez por respuesta, solo para quien
+                // lo intento. Con poco HUD el texto solo no alcanzaba y el intento parecia aceptado.
+                if (controls && controls.IsLocal && GameAudio.Instance) { GameAudio.Instance.Play2D("release_neutral", 0.35f); RejectSounds++; }
+            }
         }
 
         void UpdateGrabPresentation()
