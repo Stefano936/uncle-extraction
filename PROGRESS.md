@@ -1,5 +1,35 @@
 # Estado del proyecto
 
+## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `5da0616` (sin fusionar)
+
+**Corte integrado para probar:** rama `claude/s21-playtest`, código `5da0616a0590c34e0f8cdc83326122d91c1d26fa`. Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
+
+**PR para revisión:** personaje (`claude/s21-personaje`) y render (`claude/s21-render`). Detalle, defectos ordenados, método, pendientes y reproducción: [docs/S21_PRODUCCION.md](docs/S21_PRODUCCION.md).
+
+**Hecho:**
+- Tío de cuerpo completo modelado en Blender por script, fuente editable en `art_source/uncle_s21/`. Montado sobre el rig físico existente; colliders, joints, masas y puntos de agarre sin cambios.
+- SSAO y sombras de dos cascadas, suaves, con mapas de 4096.
+- Mangas de jean del jugador.
+
+**No hecho:** animación propia del tío, entorno (barra, puerta, calle, carrito, camioneta), manos por superficie, remate del cierre y ajuste de control.
+
+| Comprobación sobre `5da0616` | Resultado |
+| --- | --- |
+| EditMode | 76 PASS, 1 omitida |
+| PlayMode completo | 175 PASS, **2 FAIL**, 1 omitida. `Narrow…`: intermitente del bot (6/6 PASS aislada). `Van_FootInDoorway…`: **FAIL determinista** que aparece al regenerar las escenas (orden de creación de cuerpos en PhysX; física idéntica en valores). Ver docs/S21_PRODUCCION.md |
+| Red localhost 20 escenarios | 20/20 PASS |
+| Auditoría de interfaz ES/EN | 30/30 |
+| Rendimiento Alta 1080p | 131 fps sin vsync (referencia 185), +3,6 ms de GPU |
+
+**Comparativas:** [tío Alta](docs/capturas/sesion21/tio_alta.jpg) · [tío Baja](docs/capturas/sesion21/tio_baja.jpg) · [recorrido Alta](docs/capturas/sesion21/recorrido_alta.jpg) · [recorrido Baja](docs/capturas/sesion21/recorrido_baja.jpg) · [modelo en 4 ángulos](docs/capturas/sesion21/tio_blender_4_angulos.jpg) · clips [antes](docs/capturas/sesion21/clip_antes_a793e8c.webp) / [después](docs/capturas/sesion21/clip_despues_s21.webp).
+
+**Próxima acción exacta:**
+1. Stefano juega el ZIP S21 y decide los PR.
+2. Si se aprueban: piernas más gruesas de lejos y pose de reposo con los brazos más caídos (visual).
+3. Robustecer el rescate del pie en la camioneta (UE-18).
+4. Entorno de la ruta: puerta, carrito, camioneta y calle.
+
+
 ## `main` final de la sesión 20 · `a793e8c`
 
 `main` = `a793e8c936d166f36ef027c08858e9a08b6216b0`: PR #5 (mando para códigos Relay, Mateo), #6 (auditoría técnica), #7 (entorno) y #8 (cabeza del tío y menú). Stefano aprobó visualmente #7 y #8 tras probar la build S20.

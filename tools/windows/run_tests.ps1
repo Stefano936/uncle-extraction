@@ -3,7 +3,7 @@
 # - Saca una instantanea de los archivos versionados de UnityProject (Assets, ProjectSettings, Packages) antes y despues:
 #   si una prueba los modifica, la tanda FALLA y lista los archivos (no se restauran solos: hay que encontrar el origen).
 # Uso: powershell -ExecutionPolicy Bypass -File tools\windows\run_tests.ps1 [-Platform EditMode,PlayMode] [-Filter <regex>]
-param([string[]]$Platform = @('EditMode', 'PlayMode'), [string]$Filter = '', [string]$Tag = '')
+param([string[]]$Platform = @('EditMode', 'PlayMode'), [string]$Filter = '', [string]$Tag = '', [string[]]$Extra = @())
 $ErrorActionPreference = 'Continue'
 $Platform = @($Platform | ForEach-Object { $_ -split ',' } | Where-Object { $_ })  # -File pasa 'EditMode,PlayMode' como un solo texto
 Import-Module (Join-Path $PSScriptRoot 'Guard.psm1') -Force
@@ -22,6 +22,7 @@ try {
     $xml = Join-Path $LogDir "tests_${pl}_$Tag.xml"; $log = Join-Path $LogDir "tests_${pl}_$Tag.log"
     $a = @('-batchmode', '-nographics', '-projectPath', "`"$Project`"", '-logFile', "`"$log`"", '-runTests', '-testPlatform', $pl, '-testResults', "`"$xml`"")
     if ($Filter) { $a += @('-testFilter', "`"$Filter`"") }
+    if ($Extra.Count) { $a += $Extra }  # sesion 21: argumentos del juego para A/B (p. ej. -ueOldBody)
     $p = Start-Tracked $U.FullName $a
     if (-not $p.WaitForExit(90 * 60 * 1000)) { Stop-AllTracked; Write-Host "$pl TIMEOUT"; $exit = 1; continue }
     if (Test-Path $xml) {
