@@ -194,6 +194,19 @@ namespace UncleExtraction.EditorTools
             }
         }
 
+        /// Sesion 21: manga del jugador en primera persona (siempre a la vista): campera de jean gastada con trama y relieve.
+        /// Va a Resources para que HandRig la cargue en ejecucion.
+        public static void PlayerSleeve()
+        {
+            const string dir = "Assets/Game/Resources/Materials"; Directory.CreateDirectory(dir);
+            var src = Lit("Player_Sleeve_Src", new Color(0.25f, 0.33f, 0.46f), 0.12f, 0f, Tex("04_fabric_basecolor.png"),
+                NormalFrom($"{TexDir}/04_fabric_basecolor.png", "04_fabric_basecolor", 5f), 0.9f, new Vector2(3, 3), false);
+            string p = dir + "/Player_Sleeve.mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(p);
+            if (!m) { m = new Material(src); AssetDatabase.CreateAsset(m, p); } else m.CopyPropertiesFromMaterial(src);
+            m.EnableKeyword("_NORMALMAP"); EditorUtility.SetDirty(m);
+        }
+
         // ---------- tio
         public static void Uncle(GameObject kit, Transform head)
         {

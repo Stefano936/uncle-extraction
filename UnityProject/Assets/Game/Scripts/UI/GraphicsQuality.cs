@@ -40,6 +40,14 @@ namespace UncleExtraction
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Hook() { SceneManager.sceneLoaded += (_, __) => Apply(); Apply(); }
 
+        /// Activa o apaga una caracteristica del renderer por nombre (la lista de renderers del asset no es publica).
+        static void SetFeature(UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset asset, string name, bool on)
+        {
+            var fi = typeof(UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset).GetField("m_RendererDataList", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (!(fi?.GetValue(asset) is UnityEngine.Rendering.Universal.ScriptableRendererData[] list)) return;
+            foreach (var d in list) if (d) foreach (var f in d.rendererFeatures) if (f && f.name == name && f.isActive != on) f.SetActive(on);
+        }
+
         public static void Apply()
         {
             var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
@@ -49,6 +57,7 @@ namespace UncleExtraction
                 asset.renderScale = Low ? 0.75f : baseScale;
                 asset.shadowDistance = Low ? 20f : baseShadow;
                 asset.msaaSampleCount = Low ? 1 : baseMsaa;
+                SetFeature(asset, "SSAO", !Low); // sesion 21: oclusion ambiental solo en Alta
             }
             foreach (var l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
             {
