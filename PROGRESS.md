@@ -1,6 +1,13 @@
 # Estado del proyecto
 
-## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `5da0616` (sin fusionar)
+## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `78429d5` (sin fusionar)
+
+**Actualización (pedido de Stefano: «primero engrosar las piernas»):**
+- Piernas más gruesas (muslo y rodilla +17 %, pantorrilla +18 %, tobillo +20 %, cadera más ancha) y pies +15 %, en `e79bfbf` (PR #10). Corte integrado `78429d520c23010d1d416bda227f51b3092b1ba1`: contra `5da0616` solo cambia el FBX del cuerpo; no se regeneraron escenas.
+- PlayMode dirigido 130/130.
+- ZIP `Builds/S21/UncleExtraction_78429d5_Windows_x64.zip` (52,2 MB), SHA-256 `256acfedfb3a3adab7c6ecc366c58836e425fc011458708544dcbedb12a98844`: menú sin excepciones, QA aislado, invitado en la sala.
+- Comparativas: [de lejos](docs/capturas/sesion21/tio_piernas_lejos.jpg) · [zoom](docs/capturas/sesion21/piernas_zoom.jpg) · [Blender](docs/capturas/sesion21/piernas_blender_antes_despues.jpg).
+
 
 **Corte integrado para probar:** rama `claude/s21-playtest`, código `5da0616a0590c34e0f8cdc83326122d91c1d26fa`. Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
 
