@@ -1,5 +1,32 @@
 # Estado del proyecto
 
+## Sesión 20 · tío con cara, piso más calmo y auditoría · build de prueba `ac1934b`
+
+**Para jugar:** `Builds/UncleExtraction_S20_ac1934b_Windows_x64.zip` (51,1 MB). SHA-256 `c7edd57a2a1d650247fc6050653ae0509c298ad8e2d888126bd3516d37fee62e`. Copia extraída en `Builds/UncleExtraction_S20_ac1934b_Jugar/`. Código `ac1934be071b7ea9c1169b2a26f6d2b3f1bf2e45` (rama `claude/s20-playtest`). **Referencia:** candidata `54b5246` (ZIP `UncleExtraction_Demo_54b5246_Windows_x64.zip`, SHA-256 `9167da7f…bbe`); capturas de referencia desde una build QA de `456a4fc`, con el mismo `UnityProject`. El corte no incluye el PR #5 de Mateo (mando para códigos Relay), fusionado en `main` después.
+
+**PR:**
+- [#6 auditoría técnica](https://github.com/Stefano936/uncle-extraction/pull/6): catálogos protegidos al regenerar escenas, placa del rótulo 3D, rechazo audible. Se puede fusionar aparte.
+- [#7 entorno](https://github.com/Stefano936/uncle-extraction/pull/7): piso y revoque.
+- [#8 personaje](https://github.com/Stefano936/uncle-extraction/pull/8): cabeza nueva, expresiones, fondo del menú.
+
+#7 y #8 quedan para revisión visual de Stefano. Detalle, tabla de estados de agarre, auditoría y comparativas en [docs/ARTE_Y_AUDITORIA_S20.md](docs/ARTE_Y_AUDITORIA_S20.md); guion de prueba en [docs/PRUEBA_S20.md](docs/PRUEBA_S20.md).
+
+| Comprobación | SHA | Resultado |
+| --- | --- | --- |
+| EditMode completo | `b40897d` | 76 PASS, 1 omitida |
+| PlayMode completo | `b40897d` | 175 PASS, 1 omitida; assets sin cambios |
+| Red localhost (20 escenarios) | `b40897d` | 20/20 PASS |
+| Auditoría de interfaz | `b40897d` | disposición 30/30, **FAIL visual** de la placa del rótulo (tapada por el tío) |
+| PlayMode dirigido | `ac1934b` | 45/45 tras la corrección de la placa |
+| Auditoría de interfaz | `ac1934b` | 30/30. Un cierre del driver NVIDIA al arrancar en la primera corrida en inglés (NOT_RUN, repetido PASS) |
+| Red `coop`/`race`/`repeat`/`party4` | `ac1934b` | 4/4 PASS |
+| ZIP extraído | `ac1934b` | menú sin excepciones; herramientas de QA aisladas |
+| Ronda completa con el ejecutable de jugadores | `ac1934b` | **NOT_RUN**: requiere que una persona marque LISTO |
+| PC sin Unity, LAN, Relay entre redes, mando físico, grupos nuevos | — | NOT_RUN |
+
+**Próxima acción exacta:** Stefano juega el ZIP con [docs/PRUEBA_S20.md](docs/PRUEBA_S20.md) y decide #7 y #8 mirando [Alta](docs/capturas/sesion20/antes_despues_alta.jpg), [Baja](docs/capturas/sesion20/antes_despues_baja.jpg) y [menú](docs/capturas/sesion20/menu_antes_despues_alta.jpg). Fusionar #6. Después, por impacto: cuerpo y ropa del tío con volumen (UE-14), poses por tipo de ataque (UE-15) y el remate de la camioneta con el audio de Mateo (UE-13).
+
+
 ## Candidata integrada de Windows · 54b5246
 
 Fuente de las builds de jugadores, QA y desarrollo `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef`. Unity **6000.3.28f1**, Windows x64 Mono, juego 0.17.0 y protocolo 2. El historial de este corte contiene el HUD del PR #1, el desenganche y el reinicio de agarre del PR #3 y los materiales del PR #2.

@@ -1,7 +1,7 @@
 # Sesión 20 · arte del tío, materiales y auditoría de la candidata
 
 **Referencia:** código de `54b5246bc9e7f3d793ea6ec9faeb0a1c74840eef` (build de jugadores y ZIP `UncleExtraction_Demo_54b5246_Windows_x64.zip`, SHA-256 `9167da7f…bbe`, verificado en `Documents\Codex\…\outputs`). `main` estaba en `456a4fc1ea5127bc7cc6c71d02b0208ae624b68f`; entre ambos solo cambiaron documentación y un script (`git diff 54b5246 456a4fc -- UnityProject` vacío), así que las capturas de referencia salen de una build QA de `456a4fc` (`Builds/UncleExtraction_Ref_456a4fc`).
-**Build para jugar:** `b40897db130aac2b72213ca969358bd1dfccc4dc` (rama `claude/s20-playtest`, integra los tres PR de abajo).
+**Build para jugar:** `ac1934be071b7ea9c1169b2a26f6d2b3f1bf2e45` (rama `claude/s20-playtest`, integra los tres PR). La regresión completa corrió sobre `b40897d`; `ac1934b` solo agrega la corrección de la placa del rótulo (`GrabFeedback.cs`), con sus pruebas repetidas (ver abajo). No incluye el PR #5 de Mateo (mando para códigos Relay), fusionado en `main` después del corte.
 
 ## Qué vas a notar
 
@@ -57,7 +57,7 @@ Comparativas con las mismas posiciones de cámara, FOV, 1920 × 1080 y calidad (
 | Hallazgo | Severidad | Evidencia / reproducción | Estado |
 | --- | --- | --- | --- |
 | Regenerar escenas (`PhysicsLabBuilder.BuildFromCommandLine`) **pisa los catálogos de idioma** con la fuente del kit: borra la línea de la campana (DLG_061) y el mensaje completo de versión distinta | Alta (cualquier regeneración futura rompía textos del juego) | `UiKitImporter` copiaba `localization_en_es.json` y `dialogue_en_es.csv` si diferían. Reproducido al regenerar en esta sesión | **Corregido** en `claude/s20-auditoria` (copia solo si falta) + prueba `Catalogs_KeepGameOwnedLines` |
-| Rótulo 3D de Detallado con poco contraste sobre ropa iluminada (registrado en 54b5246) | Media | capturas de la auditoría 720p/150 % | **Corregido** (placa oscura a medida del texto) |
+| Rótulo 3D de Detallado con poco contraste sobre ropa iluminada (registrado en 54b5246) | Media | capturas de la auditoría 720p/150 % | Primer intento **FAIL** en `b40897d`: el cuerpo del tío tapaba la placa ([captura](capturas/sesion20/rotulo_detallado_FAIL_b40897d.png)). **Corregido** en `ac1934b` con el sombreador del texto ([captura](capturas/sesion20/rotulo_detallado_PASS_ac1934b.png)) |
 | El rechazo del anfitrión no se oía | Media (UE-12) | intento sobre un punto ocupado: solo texto | **Corregido** (sonido seco, una vez) |
 | Regenerar escenas reescribe `_MainTex`/`_Color` de 7 materiales `Finish` | Baja (ruido de diff, sin efecto visual) | diff de la regeneración | Aceptado (queda estable tras regenerar) |
 | PR #2 materiales S19: colliders, bisagra, luces | — | comparación estructural de escena | Sin cambios físicos |
@@ -71,7 +71,9 @@ Comparativas con las mismas posiciones de cámara, FOV, 1920 × 1080 y calidad (
 | `mateo/ue-19-relay` | Token de intento: una respuesta tardía de Relay de un intento cancelado se descarta antes de configurar el transporte; el código de sala ya no queda en el log. Correcto a lectura; falta probar cancelar → reintentar con Relay real. |
 | `mateo/trello-mando`, `ue-52-verificacion`, `demo-material-y-entrega`, `revision-s18` | Fuera del alcance de arte; sin conflicto de archivos con esta sesión. |
 
-## Pruebas (código `b40897d`, builds QA/desarrollo/jugadores del mismo SHA)
+## Pruebas
+
+Regresión completa sobre `b40897d`; repeticiones sobre `ac1934b` (corrección de la placa) en las últimas filas.
 
 | Prueba | Topología | Resultado |
 | --- | --- | --- |
@@ -81,7 +83,12 @@ Comparativas con las mismas posiciones de cámara, FOV, 1920 × 1080 y calidad (
 | Entrada real (manos independientes, Q, desenganche con progreso) | editor | 34/34 (`RealInputTests`) |
 | Red localhost, 20 escenarios | 2–4 procesos en una PC, build QA y dev `b40897d` | **20/20 PASS** (incluye disputa `race` con un titular y rechazo atado al intento, `race_natural`, `latejoin` sin cierre anómalo, `compat` contra la demo s16) |
 | Capturas comparables Alta/Baja | build QA `b40897d` vs QA `456a4fc` (= código 54b5246) | tiras en `capturas/sesion20/` |
-| Auditoría de interfaz ES/EN, dos perfiles de HUD | build QA `b40897d` | ver PROGRESS |
+| Auditoría de interfaz ES/EN, dos perfiles de HUD | build QA `b40897d` | 15/15 ES y 15/15 EN de disposición, pero **FAIL visual**: la placa del rótulo 3D no se veía (corregido en `ac1934b`) |
+| **`ac1934b`** · PlayMode dirigido (entrada real, HUD, guía, prioridades, cabeza, S17) | editor | **45/45**, assets sin cambios |
+| **`ac1934b`** · Auditoría de interfaz ES/EN (5 formatos × 100/125/150 %, dos perfiles de HUD) | build QA | **30/30**. Primera corrida en inglés: 14 PASS + 1 NOT_RUN (1080p 125 %): el proceso **se cerró al arrancar dentro del driver NVIDIA D3D11** (`nvwgf2umx`, `OpenAdapter10`) antes de cargar código del juego. Repetición 15/15, sin cierres. Log original en `.local-setup/qa/s20/` |
+| **`ac1934b`** · Red localhost `coop`, `race`, `repeat`, `party4` | 2–4 procesos en una PC, QA y dev `ac1934b` | **4/4 PASS** |
+| **`ac1934b`** · ZIP de jugadores extraído en otra carpeta | build de jugadores | **PASS**: menú en 19 s sin excepciones; con argumentos de QA queda en el menú sin herramientas |
+| **`ac1934b`** · Ronda con el ejecutable de jugadores | anfitrión QA (bot) + invitado de jugadores | Conexión y sala **PASS** sin excepciones; la ronda **no arranca sin una persona**: la sala espera LISTO y la build de jugadores no tiene autopiloto (por diseño). Ronda completa: **NOT_RUN** (la juega Stefano) |
 | LAN, Relay entre redes, PC sin Unity, mando físico, grupos nuevos | — | **NOT_RUN** (requieren otra PC o personas) |
 
 ## Cómo reproducir
