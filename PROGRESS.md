@@ -26,7 +26,7 @@
 - Comparativas: [de lejos](docs/capturas/sesion21/tio_piernas_lejos.jpg) · [zoom](docs/capturas/sesion21/piernas_zoom.jpg) · [Blender](docs/capturas/sesion21/piernas_blender_antes_despues.jpg).
 
 
-**Corte integrado para probar:** rama `claude/s21-playtest`, código `5da0616a0590c34e0f8cdc83326122d91c1d26fa`. Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
+**Corte integrado para probar:** rama `claude/s21-playtest`, código `7e85469ce3c900bc64098f213e15e6b2b5a6c6c8` (la tabla de abajo es de la base `5da0616`). Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
 
 **PR para revisión:** personaje (`claude/s21-personaje`) y render (`claude/s21-render`). Detalle, defectos ordenados, método, pendientes y reproducción: [docs/S21_PRODUCCION.md](docs/S21_PRODUCCION.md).
 
