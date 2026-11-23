@@ -1,5 +1,24 @@
 # Estado del proyecto
 
+## `main` final de la sesión 20 · `a793e8c`
+
+`main` = `a793e8c936d166f36ef027c08858e9a08b6216b0`: PR #5 (mando para códigos Relay, Mateo), #6 (auditoría técnica), #7 (entorno) y #8 (cabeza del tío y menú). Stefano aprobó visualmente #7 y #8 tras probar la build S20.
+
+**ZIP de jugadores:** `Builds/UncleExtraction_a793e8c_Windows_x64.zip` (51,1 MB), SHA-256 `f7b7d35e656eeba1c0864483cef2fe93bc1258446f7128ee7abd71f61a1fbc0a`. Copia extraída en `Builds/UncleExtraction_a793e8c_Jugar/`.
+
+| Comprobación sobre `a793e8c` | Resultado |
+| --- | --- |
+| EditMode completo | 76 PASS, 1 omitida |
+| PlayMode completo | 177 PASS, 1 omitida, assets sin cambios. Incluye: menú con mando virtual 5/5, entrada real y agarre 34/34, cabeza y expresiones 2/2, ataques 17/17, laboratorio y extracción 21/21 |
+| Red localhost (20 escenarios, 2–4 procesos) | 20/20 PASS. `netsim` tardó 213,6 s (antes ~30 s): pasó, queda anotado |
+| Red por la IP LAN de esta PC (10.0.0.30, una sola máquina) | extracción en 21,6 s, concordante, 0 excepciones. **No es LAN entre dos PC** |
+| ZIP extraído | menú en 20 s sin excepciones; herramientas de QA aisladas; invitado de jugadores se conecta y entra a la sala |
+| Ronda completa con el ejecutable de jugadores | requiere que una persona marque LISTO |
+| PC sin Unity, LAN entre dos PC, Relay entre redes, mando físico, grupos nuevos | NOT_RUN |
+
+**Pendiente del tío (UE-14):** cuerpo, torso y ropa con volumen, cuello, cinturón, calzado y manos, y deformación en las poses reales. La cabeza nueva ya está en `main`.
+
+
 ## Controles de mando · UE-10 y UE-11
 
 Sobre `main` en `456a4fc`, la página de amigos tiene un teclado en pantalla para editar y confirmar el código Relay con el mando. El campo de texto sigue disponible para escribir y pegar. En resultados, A o B cierra la vista para captura y devuelve el foco a su botón.
