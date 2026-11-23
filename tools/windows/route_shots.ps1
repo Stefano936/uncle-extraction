@@ -1,8 +1,10 @@
 # Capturas del entorno de la ruta (sesion 21, UE-16): mismas camaras para comparar antes/despues en la MISMA build
 # (-ueOldRoute = entorno anterior). Puerta por dentro y por fuera, carrito, vereda, rampa, carga, costado y frente de la
 # camioneta y cuadra de enfrente. Solo detiene los procesos que lanza (Guard.psm1).
-# Uso: powershell -ExecutionPolicy Bypass -File tools\windows\route_shots.ps1 -Build Builds\X -Out carpeta [-Old] [-Quality high|low]
-param([Parameter(Mandatory)][string]$Build, [Parameter(Mandatory)][string]$Out, [switch]$Old, [string]$Quality = 'high', [string[]]$Only = @())
+# Uso: powershell -ExecutionPolicy Bypass -File tools\windows\route_shots.ps1 -Build Builds\X -Out carpeta [-Old] [-Quality high|low] [-Set ruta|bar]
+# -Set bar: salon (vista general, frente y detalle de la barra, mesas, karaoke, silla y vaso senuelo).
+param([Parameter(Mandatory)][string]$Build, [Parameter(Mandatory)][string]$Out, [switch]$Old, [string]$Quality = 'high', [string[]]$Only = @(),
+      [ValidateSet('ruta', 'bar')][string]$Set = 'ruta')
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Guard.psm1') -Force
 $Repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -24,6 +26,16 @@ $shots = [ordered]@{
   'r7_costado'          = '4.2,0,-8.0,226,5'
   'r8_frente'           = '3.5,0,-16.5,298,4'
   'r9_cuadra_enfrente'  = '4.5,0,-8.0,180,-8'
+}
+if ($Set -eq 'bar') {
+  $shots = [ordered]@{
+    'b1_salon'          = '-4.5,0,0.5,50,4'
+    'b2_barra_frente'   = '4.5,0,5.4,0,8'
+    'b3_barra_detalle'  = '3.4,0,7.1,25,16'
+    'b4_mesas'          = '-1.5,0,3.0,297,15'
+    'b5_karaoke'        = '-4.5,0,6.5,306,10'
+    'b6_silla_vaso'     = '-2.0,0,4.3,311,28'
+  }
 }
 function Shot([string]$name, [int]$wait, [string[]]$extra) {
   $a = $base + @('-logFile', "`"$O\$name.log`"") + $extra

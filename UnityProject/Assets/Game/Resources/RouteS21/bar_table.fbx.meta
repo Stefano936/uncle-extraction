@@ -1,0 +1,351 @@
+fileFormatVersion: 2
+guid: 69fb99778e9acfd42a9c82752f6d677e
+ModelImporter:
+  serializedVersion: 24300
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Amber
+    second: {fileID: 2100000, guid: d3e6e4c4d88254a40904fede50cc0c48, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Awning
+    second: {fileID: 2100000, guid: 2446acf8025782643a149da0d79a9a35, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BarTop
+    second: {fileID: 2100000, guid: 4848b15d5e46d7649a93ac2d57fad6ef, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BarWood
+    second: {fileID: 2100000, guid: c20775ce2f9c1c643a33d895659aa511, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Beer
+    second: {fileID: 2100000, guid: 37bc1806966db8440b2c37951d94d615, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Black
+    second: {fileID: 2100000, guid: 4f8bf9d8d0253b444932778ed4f64515, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BottleAmber
+    second: {fileID: 2100000, guid: bd74c6f56a4da424589766e0b298f5d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BottleClear
+    second: {fileID: 2100000, guid: 13e092cfc1bc62b4091c0492e7a30665, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BottleGreen
+    second: {fileID: 2100000, guid: 7a11eb87666eb95409fe1508f8c8e30b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BottleRed
+    second: {fileID: 2100000, guid: ee91f5c7a7825b64b8c32c8371413726, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Brass
+    second: {fileID: 2100000, guid: 4571714ba5705514ea2ea1537eb8a695, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Brick
+    second: {fileID: 2100000, guid: cac18aff32f6a0b4d8dba28febc5b54d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Carpet
+    second: {fileID: 2100000, guid: 3a3d7285c8c32164ea3593a755682fca, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_CartPaint
+    second: {fileID: 2100000, guid: 2c5ea2c6df5091e418f6c3577d31337e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Chrome
+    second: {fileID: 2100000, guid: a62ec43cd8dfafd46b1376ecc3edb743, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Concrete
+    second: {fileID: 2100000, guid: 0add757036d069241abe08aa9fb4af5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_DoorGlass
+    second: {fileID: 2100000, guid: 6bced53c067604f4b96a86ae1d1ca7cf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_DoorPaint
+    second: {fileID: 2100000, guid: 3d570138b6cf2c34dbe4e1f6e243ddb9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Foam
+    second: {fileID: 2100000, guid: 0aa1b772f739a9e4c8f61deac6caf9a9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Glass
+    second: {fileID: 2100000, guid: 90e31d2e32a03444a973ba6f39e59859, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_GlassClear
+    second: {fileID: 2100000, guid: 672d90f8d55177945a1194ca0e17d523, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Grille
+    second: {fileID: 2100000, guid: 1a7321f9caf72fe4d9ecdc4272d0afd2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Head
+    second: {fileID: 2100000, guid: f10bc993f17361d4a8efc62fde96ae64, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Label
+    second: {fileID: 2100000, guid: fabcb6bef8448c140bd6d949901e4f80, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_LedMagenta
+    second: {fileID: 2100000, guid: 14100331b3515154b84594701d85bcd0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Mirror
+    second: {fileID: 2100000, guid: 327b46ffc06efb049b03dee4dfda7314, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Paper
+    second: {fileID: 2100000, guid: cbe3c63cc5cc261428e349dca1d606c1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Plate
+    second: {fileID: 2100000, guid: 12e082bb782c9a54caebea8859aa781b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Rubber
+    second: {fileID: 2100000, guid: d0430089fb2e65f478edf66c6255af0e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_ShelfGlass
+    second: {fileID: 2100000, guid: c0a11d6028706ef4e81a3c9b1db8ade6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_ShopGlow
+    second: {fileID: 2100000, guid: ca53b711820c0b54a82c10aca281dd1a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Shutter
+    second: {fileID: 2100000, guid: b0da70c9d18a6f440bae1b845da6cfa1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Sign
+    second: {fileID: 2100000, guid: deb84ce82e4c47047a7c278a383504de, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Speaker
+    second: {fileID: 2100000, guid: 81a4b0332c8112b49bd616def9ac6244, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Steel
+    second: {fileID: 2100000, guid: 35789ba37bf89f74cbb1aa8b03a4b880, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Stucco
+    second: {fileID: 2100000, guid: 9c859f4dd3d572346905036df02b03ac, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_StuccoWarm
+    second: {fileID: 2100000, guid: 332a5cb28c245a54d82550a1da13435c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_TableWood
+    second: {fileID: 2100000, guid: ac4467bc7d5e1cc45b8fd6592a5a0df8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Tail
+    second: {fileID: 2100000, guid: a44dc8d67073e4141a6b35e85bd290a4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Trim
+    second: {fileID: 2100000, guid: b246e0b2b2bfb5047b17b19160199dd1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_VanBody
+    second: {fileID: 2100000, guid: 1a18c57bc756e8649b95961acd8e57f4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_VanInner
+    second: {fileID: 2100000, guid: a81c19fa69c21ec4fbc7b5c91a56380b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_VanStripe
+    second: {fileID: 2100000, guid: 9ad8d1404223afd45b39094058a96272, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Vinyl
+    second: {fileID: 2100000, guid: 3ba080a31b6129b438aaec63c50a12e7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_WinCold
+    second: {fileID: 2100000, guid: 1be97b2f4685c7c47be1e44251f2fded, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_WinDark
+    second: {fileID: 2100000, guid: 7838ed666534139488f4fc797fecd6c1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_WinWarm
+    second: {fileID: 2100000, guid: 24b51f7a6bc08ac4db2e56265a6cee5e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Wood
+    second: {fileID: 2100000, guid: 7acf64e97cfa453418aa3fcbc9b2a8bc, type: 2}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+    searchTexturesGlobally: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 40
+    normalImportMode: 1
+    tangentImportMode: 3
+    normalCalculationMode: 3
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 0
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 0
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
