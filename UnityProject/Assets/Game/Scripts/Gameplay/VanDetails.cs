@@ -20,8 +20,11 @@ namespace UncleExtraction
             var chrome = Solid("Van_Handle", new Color(0.7f, 0.72f, 0.75f), 0.8f, 0.9f);
             var glass = Solid("Van_Window", new Color(0.08f, 0.1f, 0.13f), 0.92f, 0.2f);
             var paint = Solid("Floor_Paint", new Color(0.95f, 0.78f, 0.15f), 0.3f, 0f);
-            Leaf(doors.leftLeaf, 1f, rubber, chrome, glass);
-            Leaf(doors.rightLeaf, -1f, rubber, chrome, glass);
+            if (!RouteDressing.Enabled) // sesion 21: las hojas modeladas (RouteDressing) ya traen ventanilla, manija y bisagras
+            {
+                Leaf(doors.leftLeaf, 1f, rubber, chrome, glass);
+                Leaf(doors.rightLeaf, -1f, rubber, chrome, glass);
+            }
             // nervaduras del piso de carga
             for (int i = -3; i <= 3; i++) Box(null, "Floor_Rib", new Vector3(i * 0.3f, FloorY + 0.012f, (RearZ + CabZ) * 0.5f), new Vector3(0.05f, 0.024f, (RearZ - CabZ) - 0.2f), rubber);
             // donde acomodarlo: cono de luz al fondo de la caja

@@ -42,7 +42,8 @@ namespace UncleExtraction
         static void SetCartPresent(TransportCart cart, bool present)
         {
             // con el modelo propio (Cart_Visual) las primitivas funcionales estan ocultas a proposito: solo se tocan las del modelo
-            var visual = cart.transform.Find("Cart_Visual");
+            // sesion 21: con el entorno de la ruta, el modelo visible es Route_route_cart (RouteDressing)
+            var visual = cart.transform.Find("Route_route_cart"); if (!visual) visual = cart.transform.Find("Cart_Visual");
             foreach (var r in cart.GetComponentsInChildren<Renderer>(true))
             {
                 bool isVisual = visual ? r.transform.IsChildOf(visual) : r.gameObject.name != "Cart_Bed";
