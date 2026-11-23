@@ -1,8 +1,43 @@
 # Estado del proyecto
 
-## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `7e85469` (sin fusionar)
+## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `50a9f33` (sin fusionar)
 
-**Actualización (pedido de Stefano: «después bajar los brazos»):**
+**Actualización (pedido de Stefano: «entorno de la ruta»):**
+- Carrito, camioneta (carrocería, interior de carga y hojas traseras), puerta de salida y cuadra de enfrente, modelados en Blender por script (`tools/art/blender/build_route_s21.py`). PR #12 (`claude/s21-entorno`, sobre `main`).
+- Solo capa visual (`RouteDressing`): se monta al cargar la escena, sin colliders ni objetos de red.
+  - Colisiones, masas, sockets, piso, rampa, zona y bisagras sin cambios.
+  - No se regeneran escenas (ver UE-18).
+  - `-ueOldRoute` vuelve al entorno anterior.
+- Corte integrado `50a9f33362089f1f820c4058d6ed5f24c1b8dcba` (personaje + render + entorno).
+- EditMode: 76 PASS, 1 omitida.
+- PlayMode completo: 177 PASS, 1 FAIL (`Van_FootInDoorway`, UE-18, el ya conocido), 1 omitida. La nueva `RouteDressingTests` da PASS.
+  - En la rama sola, `Narrow` y `Cart_Normal` fallaron una vez. A/B aislado:
+
+    | Entorno | `Narrow` | `Cart_Normal` |
+    | --- | --- | --- |
+    | Nuevo | 3/3 | 8/9 |
+    | Anterior (`-ueOldRoute`) | 2/3 | 8/9 |
+
+    Son intermitencias del bot, no las causa el cambio.
+- Red localhost coop/race/repeat/party4: **4/4 PASS** (RTT 22 ms).
+  - Dos tandas previas dieron 4/4 FAIL con RTT de 600–1200 ms y saltos de cuadro de 0,33 s: carga de la máquina en ese momento.
+  - A/B del RTT en la misma build: 11–12 ms con y sin el entorno nuevo.
+- Rendimiento, Alta 1080p sin vsync (banco de vistas del bar, misma sesión):
+
+  | Build | fps | GPU |
+  | --- | --- | --- |
+  | `a793e8c` (referencia) | 161 | 1,70 ms |
+  | entorno solo | 159 | 1,83 ms |
+  | corte | 118 | 5,1 ms |
+
+  El entorno cuesta ~0,1 ms de GPU; el resto del costo del corte es el tío S21 y la luz.
+- ZIP `Builds/S21/UncleExtraction_50a9f33_Windows_x64.zip` (53,2 MB), SHA-256 `ce4c16dde15c3680ba5b28fc800f929ef3f200a3fb9fe3064036f5f60ba2b59f`.
+  - Copia recién extraída: menú en 14 s sin excepciones; QA aislado.
+  - El invitado (build de jugadores) entra a la sala con el entorno montado.
+- Comparativas (mismas cámaras, `tools/windows/route_shots.ps1`): [antes/después](docs/capturas/sesion21/ruta_antes_despues.jpg) · [de cerca](docs/capturas/sesion21/ruta_zoom.jpg) · [calidad Baja](docs/capturas/sesion21/ruta_baja.jpg).
+- Sin hacer todavía: barra y muebles del bar, vecinos pegados al bar y farol.
+
+**Actualización anterior (pedido de Stefano: «después bajar los brazos»):**
 - En reposo los brazos cuelgan bajos en lugar de la «A» del rig: brazo a ~18° de la vertical, antebrazo apenas adelante. Commit `0c1b97e` (PR #10).
 - Es una pose física: el anfitrión fija el objetivo de las articulaciones. Se calcula al empezar en `UncleAttackPose`, sin regenerar escenas.
   - Las poses de ataque no cambian.
@@ -26,7 +61,7 @@
 - Comparativas: [de lejos](docs/capturas/sesion21/tio_piernas_lejos.jpg) · [zoom](docs/capturas/sesion21/piernas_zoom.jpg) · [Blender](docs/capturas/sesion21/piernas_blender_antes_despues.jpg).
 
 
-**Corte integrado para probar:** rama `claude/s21-playtest`, código `7e85469ce3c900bc64098f213e15e6b2b5a6c6c8` (la tabla de abajo es de la base `5da0616`). Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
+**Corte integrado para probar:** rama `claude/s21-playtest`, código `50a9f33362089f1f820c4058d6ed5f24c1b8dcba` (la tabla de abajo es de la base `5da0616`). Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
 
 **PR para revisión:** personaje (`claude/s21-personaje`) y render (`claude/s21-render`). Detalle, defectos ordenados, método, pendientes y reproducción: [docs/S21_PRODUCCION.md](docs/S21_PRODUCCION.md).
 
@@ -35,7 +70,7 @@
 - SSAO y sombras de dos cascadas, suaves, con mapas de 4096.
 - Mangas de jean del jugador.
 
-**No hecho:** animación propia del tío, entorno (barra, puerta, calle, carrito, camioneta), manos por superficie, remate del cierre y ajuste de control.
+**No hecho:** animación propia del tío, barra y muebles del bar, manos por superficie, remate del cierre y ajuste de control.
 
 | Comprobación sobre `5da0616` | Resultado |
 | --- | --- |
@@ -50,7 +85,7 @@
 **Próxima acción exacta:**
 1. Stefano juega el ZIP S21 y decide los PR.
 2. Robustecer el rescate del pie en la camioneta (UE-18).
-3. Entorno de la ruta: puerta, carrito, camioneta y calle.
+3. Entorno del bar: barra y muebles.
 
 
 ## `main` final de la sesión 20 · `a793e8c`
