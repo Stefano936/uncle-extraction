@@ -45,7 +45,7 @@ def chain(points):
 
 F = -1.0  # frente = -Y
 # tronco: entrepierna -> cadera -> panza -> pecho -> cuello
-crotch = V((0, 0.0, 0.80), 0.20, 0.17)
+crotch = V((0, 0.0, 0.80), 0.22, 0.19)
 hips   = V((0, 0.0, 0.92), 0.37, 0.27)
 belly  = V((0, 0.07 * F, 1.07), 0.41, 0.38)
 chest  = V((0, 0.02 * F, 1.24), 0.38, 0.29)
@@ -81,14 +81,14 @@ def side(sx):
     E(palm, t_ids[0])
     # pierna
     th, cf = B["thigh." + ("L" if sx > 0 else "R")], B["calf." + ("L" if sx > 0 else "R")]
-    hip   = V((th[0].x, 0.0, 0.86), 0.20, 0.19); E(hips, hip)
-    mid_t = V(tuple((th[0] + th[1]) * 0.5), 0.17, 0.165); E(hip, mid_t)
-    knee  = V(tuple(th[1]), 0.12, 0.12); E(mid_t, knee)
-    calf  = V(tuple(cf[0] * 0.55 + cf[1] * 0.45 + Vector((0, 0.015, 0))), 0.11, 0.11); E(knee, calf)
-    ankle = V((cf[1].x, 0.01, 0.13), 0.062, 0.062); E(calf, ankle)
-    heel  = V((cf[1].x, 0.045, 0.055), 0.058, 0.055); E(ankle, heel)
-    ball  = V((cf[1].x + 0.008 * sx, -0.10, 0.045), 0.065, 0.045); E(heel, ball)
-    toe   = V((cf[1].x + 0.012 * sx, -0.19, 0.045), 0.055, 0.04); E(ball, toe)
+    hip   = V((th[0].x, 0.0, 0.86), 0.23, 0.22); E(hips, hip)
+    mid_t = V(tuple((th[0] + th[1]) * 0.5), 0.20, 0.195); E(hip, mid_t)
+    knee  = V(tuple(th[1]), 0.14, 0.14); E(mid_t, knee)
+    calf  = V(tuple(cf[0] * 0.55 + cf[1] * 0.45 + Vector((0, 0.015, 0))), 0.13, 0.13); E(knee, calf)
+    ankle = V((cf[1].x, 0.01, 0.13), 0.075, 0.075); E(calf, ankle)
+    heel  = V((cf[1].x, 0.045, 0.058), 0.068, 0.063); E(ankle, heel)
+    ball  = V((cf[1].x + 0.008 * sx, -0.10, 0.048), 0.076, 0.052); E(heel, ball)
+    toe   = V((cf[1].x + 0.012 * sx, -0.20, 0.046), 0.064, 0.046); E(ball, toe)
 
 side(1.0); side(-1.0)
 
