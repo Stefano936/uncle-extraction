@@ -1,8 +1,44 @@
 # Estado del proyecto
 
-## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `50a9f33` (sin fusionar)
+## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `dc1d7ba` (sin fusionar)
 
-**Actualización (pedido de Stefano: «entorno de la ruta»):**
+**Actualización (pedido de Stefano: «fusionar el PR y seguir con los muebles del bar»):**
+- PR #12 (entorno de la ruta) fusionado en `main` (`b6bc487`) con aprobación de Stefano.
+- Muebles del bar modelados en Blender por script (`tools/art/blender/build_bar_s21.py`); PR #13 (`claude/s21-bar`, sobre `main`):
+  - barra con frente de paneles, tapa de canto redondo, baranda de anclaje y apoyapiés de bronce, canillas, caja y vasos;
+  - mueble del fondo con espejo, estantes de vidrio y botellas;
+  - banquetas tapizadas y mesas torneadas;
+  - tarima de karaoke con luz, micrófono y parlantes;
+  - silla liviana y vaso señuelo (pinta con espuma).
+- Solo capa visual, montada sobre las colisiones existentes; no se regeneran escenas. `-ueOldRoute` vuelve a todo lo anterior.
+- Corte integrado `dc1d7bacb55ca2a3219e3dc4f6a9d4d945795623` (personaje + render + entorno + muebles).
+- EditMode: 76 PASS, 1 omitida.
+- PlayMode completo: 175 PASS, 3 FAIL, 1 omitida. `RouteDressingTests` (11 muebles, tamaños) da PASS.
+  - `Van_FootInDoorway`: el ya conocido (UE-18).
+  - `NoCart_StaysAway…` y `Cart_Normal` (Bar): el bot no termina la ronda con el carrito. A/B aislado:
+
+    | Entorno | `NoCart` | `Cart_Normal` |
+    | --- | --- | --- |
+    | Nuevo | 2/3 | 3/3 |
+    | Anterior (`-ueOldRoute`) | 1/3 | 3/3 |
+
+    Son intermitencias que ya existían, no las causa el cambio.
+- Red localhost coop/race/repeat/party4: 4/4 PASS.
+- Rendimiento, Alta 1080p sin vsync (misma sesión):
+
+  | Build | fps | GPU |
+  | --- | --- | --- |
+  | `a793e8c` (referencia) | 129,7 | 2,35 ms |
+  | rama de muebles | 129,5 | 2,45 ms |
+  | corte | 109 | 6,7 ms |
+
+  Los muebles cuestan ~0,1 ms de GPU; la máquina rindió menos que en la tanda anterior.
+- ZIP `Builds/S21/UncleExtraction_dc1d7ba_Windows_x64.zip` (53,7 MB), SHA-256 `5d283491c14d2a00e720db547dfaab0705bb67d8bc3d810703bb6f5798c47f14`.
+  - Copia recién extraída: menú sin excepciones; QA aislado.
+  - El invitado entra a la sala con los 11 muebles montados.
+- Comparativas (`route_shots.ps1 -Set bar`): [antes/después](docs/capturas/sesion21/bar_antes_despues.jpg) · [barra de cerca](docs/capturas/sesion21/bar_zoom.jpg) · [calidad Baja](docs/capturas/sesion21/bar_baja.jpg).
+
+**Actualización anterior (pedido de Stefano: «entorno de la ruta»):**
 - Carrito, camioneta (carrocería, interior de carga y hojas traseras), puerta de salida y cuadra de enfrente, modelados en Blender por script (`tools/art/blender/build_route_s21.py`). PR #12 (`claude/s21-entorno`, sobre `main`).
 - Solo capa visual (`RouteDressing`): se monta al cargar la escena, sin colliders ni objetos de red.
   - Colisiones, masas, sockets, piso, rampa, zona y bisagras sin cambios.
@@ -35,7 +71,7 @@
   - Copia recién extraída: menú en 14 s sin excepciones; QA aislado.
   - El invitado (build de jugadores) entra a la sala con el entorno montado.
 - Comparativas (mismas cámaras, `tools/windows/route_shots.ps1`): [antes/después](docs/capturas/sesion21/ruta_antes_despues.jpg) · [de cerca](docs/capturas/sesion21/ruta_zoom.jpg) · [calidad Baja](docs/capturas/sesion21/ruta_baja.jpg).
-- Sin hacer todavía: barra y muebles del bar, vecinos pegados al bar y farol.
+- Sin hacer todavía: vecinos pegados al bar y farol.
 
 **Actualización anterior (pedido de Stefano: «después bajar los brazos»):**
 - En reposo los brazos cuelgan bajos en lugar de la «A» del rig: brazo a ~18° de la vertical, antebrazo apenas adelante. Commit `0c1b97e` (PR #10).
@@ -61,7 +97,7 @@
 - Comparativas: [de lejos](docs/capturas/sesion21/tio_piernas_lejos.jpg) · [zoom](docs/capturas/sesion21/piernas_zoom.jpg) · [Blender](docs/capturas/sesion21/piernas_blender_antes_despues.jpg).
 
 
-**Corte integrado para probar:** rama `claude/s21-playtest`, código `50a9f33362089f1f820c4058d6ed5f24c1b8dcba` (la tabla de abajo es de la base `5da0616`). Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
+**Corte integrado para probar:** rama `claude/s21-playtest`, código `dc1d7bacb55ca2a3219e3dc4f6a9d4d945795623` (la tabla de abajo es de la base `5da0616`). Builds en `Builds/S21/` (la referencia `a793e8c` y su ZIP quedan intactos).
 
 **PR para revisión:** personaje (`claude/s21-personaje`) y render (`claude/s21-render`). Detalle, defectos ordenados, método, pendientes y reproducción: [docs/S21_PRODUCCION.md](docs/S21_PRODUCCION.md).
 
@@ -70,7 +106,7 @@
 - SSAO y sombras de dos cascadas, suaves, con mapas de 4096.
 - Mangas de jean del jugador.
 
-**No hecho:** animación propia del tío, barra y muebles del bar, manos por superficie, remate del cierre y ajuste de control.
+**No hecho:** animación propia del tío, fondo del menú, manos por superficie, remate del cierre y ajuste de control.
 
 | Comprobación sobre `5da0616` | Resultado |
 | --- | --- |
@@ -85,7 +121,7 @@
 **Próxima acción exacta:**
 1. Stefano juega el ZIP S21 y decide los PR.
 2. Robustecer el rescate del pie en la camioneta (UE-18).
-3. Entorno del bar: barra y muebles.
+3. Fondo del menú con la auditoría de interfaz (UE-16).
 
 
 ## `main` final de la sesión 20 · `a793e8c`
