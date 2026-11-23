@@ -149,6 +149,28 @@ namespace UncleExtraction.EditorTools
             M("RS_Shutter", new Color(0.42f, 0.43f, 0.45f), 0.45f, 0.7f);
             M("RS_ShopGlow", new Color(0.6f, 0.48f, 0.3f), 0.6f, 0f, glow: new Color(1f, 0.8f, 0.5f) * 0.6f);
             M("RS_Sign", new Color(0.08f, 0.3f, 0.25f), 0.4f, 0f, glow: new Color(0.15f, 0.6f, 0.45f) * 0.6f);
+            // muebles del bar (build_bar_s21.py): madera lustrada, bronce, tapizado, espejo, botellas y vidrio
+            var fabric = T("04_fabric_basecolor.png");
+            M("RS_BarWood", new Color(0.62f, 0.4f, 0.26f), 0.42f, 0f, wood, woodN, 0.45f, 1.2f);
+            M("RS_BarTop", new Color(0.36f, 0.2f, 0.11f), 0.72f, 0f, wood, woodN, 0.25f, 0.8f);
+            M("RS_TableWood", new Color(0.7f, 0.48f, 0.3f), 0.38f, 0f, wood, woodN, 0.4f, 1.5f);
+            M("RS_Brass", new Color(0.8f, 0.6f, 0.28f), 0.75f, 0.9f);
+            M("RS_Vinyl", new Color(0.5f, 0.07f, 0.06f), 0.58f, 0f);
+            M("RS_Mirror", new Color(0.16f, 0.18f, 0.2f), 0.96f, 0.85f);
+            M("RS_ShelfGlass", new Color(0.55f, 0.68f, 0.68f), 0.95f, 0.1f, alpha: 0.35f);
+            M("RS_BottleAmber", new Color(0.5f, 0.28f, 0.06f), 0.9f, 0f, glow: new Color(0.55f, 0.32f, 0.08f) * 0.35f);
+            M("RS_BottleGreen", new Color(0.1f, 0.3f, 0.12f), 0.9f, 0f, glow: new Color(0.12f, 0.35f, 0.15f) * 0.35f);
+            M("RS_BottleClear", new Color(0.65f, 0.68f, 0.64f), 0.9f, 0f, glow: new Color(0.75f, 0.78f, 0.72f) * 0.2f);
+            M("RS_BottleRed", new Color(0.4f, 0.06f, 0.08f), 0.9f, 0f, glow: new Color(0.45f, 0.08f, 0.1f) * 0.35f);
+            M("RS_Label", new Color(0.85f, 0.8f, 0.66f), 0.3f, 0f);
+            M("RS_Paper", new Color(0.9f, 0.88f, 0.84f), 0.2f, 0f);
+            M("RS_Carpet", new Color(0.32f, 0.12f, 0.36f), 0.05f, 0f, fabric, null, 0.5f, 2f);
+            M("RS_LedMagenta", new Color(0.6f, 0.2f, 0.65f), 0.5f, 0f, glow: new Color(0.95f, 0.3f, 1f) * 1.4f);
+            M("RS_Speaker", new Color(0.05f, 0.05f, 0.055f), 0.2f, 0f);
+            M("RS_Grille", new Color(0.12f, 0.12f, 0.13f), 0.35f, 0.4f);
+            M("RS_Beer", new Color(0.85f, 0.52f, 0.1f), 0.85f, 0f, glow: new Color(0.9f, 0.55f, 0.12f) * 0.35f);
+            M("RS_Foam", new Color(0.95f, 0.93f, 0.86f), 0.3f, 0f);
+            M("RS_GlassClear", new Color(0.8f, 0.9f, 0.95f), 0.95f, 0f, alpha: 0.25f);
             AssetDatabase.SaveAssets();
             return d;
         }

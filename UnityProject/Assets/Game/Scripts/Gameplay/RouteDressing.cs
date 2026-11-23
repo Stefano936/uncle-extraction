@@ -14,7 +14,8 @@ namespace UncleExtraction
     {
         public const string Folder = "RouteS21/";
         public static bool Enabled => !QaArgs.Has("-ueOldRoute");
-        public static int Applied { get; private set; }   // piezas montadas en la ultima escena (pruebas)
+        public static int Applied { get; private set; }   // piezas de la ruta montadas en la ultima escena (pruebas)
+        public static int BarApplied { get; private set; } // muebles del bar montados en la ultima escena (pruebas)
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Init() { SceneManager.sceneLoaded -= OnLoaded; SceneManager.sceneLoaded += OnLoaded; }
@@ -43,20 +44,92 @@ namespace UncleExtraction
             }
             Applied = n;
             if (n > 0) Debug.Log($"[Route] entorno S21 montado: {n} piezas (-ueOldRoute para el anterior)");
+            BarApplied = ApplyBar(scene);
+            if (BarApplied > 0) Debug.Log($"[Route] muebles del bar S21 montados: {BarApplied} piezas");
+            return n + BarApplied;
+        }
+
+        // ---------- muebles del bar (build_bar_s21.py): barra y mueble del fondo, banquetas, mesas, tarima, silla y vaso.
+        // Solo en la escena que tiene la barra (Bar_LastRound); las colisiones de cada mueble quedan como estaban.
+        static int ApplyBar(Scene scene)
+        {
+            Transform counter = null;
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                    if (t.name == "Bar_Counter" && t.GetComponent<BoxCollider>()) counter = t;
+            if (!counter) return 0;
+            int n = 0; var env = counter.parent;
+            bool hid = false;
+            foreach (var t in env.GetComponentsInChildren<Transform>(true))
+            {
+                string nm = t.name;
+                if (nm == "Kit_bar_counter" || nm == "Bar_Trims") hid |= HideAll(t);
+                else if (nm == "Anchor_Rail" || nm == "BackBar_Panel" || nm == "Shelf" || nm == "Bottle" || nm == "Neck") hid |= HideOwn(t);
+            }
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                    if (t.name == "Bar_Identity") foreach (var c in t.GetComponentsInChildren<Transform>(true))
+                            if (c.name == "BackBar_Panel" || c.name == "Shelf" || c.name == "Bottle" || c.name == "Neck") hid |= HideOwn(c);
+            if (MountAt(env, "bar_counter", Floor(counter.position), hid)) n++;
+            foreach (var t in env.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == "Kit_stool" && MountAt(env, "bar_stool", Floor(t.position), HideAll(t))) n++;
+                else if (t.name == "Kit_table" && MountAt(env, "bar_table", Floor(t.position), HideAll(t))) n++;
+                else if (t.name == "Karaoke_Stage")
+                {
+                    bool h = HideOwn(t); var mic = env.Find("Mic_Stand"); if (mic) h |= HideOwn(mic);
+                    if (MountAt(env, "bar_stage", Floor(t.position), h)) n++;
+                }
+            }
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name == "Chair_Light" && MountUnscaled(t, "bar_chair", HideOwn(t))) n++;
+                    else if (t.name == "Decoy_Glass" && MountUnscaled(t, "bar_pint", HideOwn(t))) n++;
+                }
             return n;
         }
 
-        /// Instancia el modelo (marco local = marco del padre; sin padre, mundo) si se ocultaron las piezas que reemplaza.
-        static bool Mount(Transform parent, string model, bool hidOld)
+        static Vector3 Floor(Vector3 p) => new Vector3(p.x, 0f, p.z);
+
+        /// Mueble fijo: hijo del entorno, en una posicion de mundo (giro de la raiz del modelo conservado).
+        static bool MountAt(Transform parent, string model, Vector3 worldPos, bool hidOld)
+        {
+            var go = Spawn(parent, model, hidOld); if (!go) return false;
+            go.position = worldPos; return true;
+        }
+
+        /// Objeto dinamico hecho con una primitiva escalada (silla, vaso): el modelo va de hijo y compensa la escala del padre,
+        /// asi se mueve con el cuerpo fisico sin deformarse.
+        static bool MountUnscaled(Transform parent, string model, bool hidOld)
         {
             if (!hidOld) return false;
+            // contenedor alineado con el padre que anula su escala; el modelo conserva su propio giro (conversion de ejes)
+            var holder = new GameObject("Route_" + model).transform; holder.SetParent(parent, false);
+            var ls = parent.lossyScale; holder.localScale = new Vector3(1f / ls.x, 1f / ls.y, 1f / ls.z);
+            var go = Spawn(holder, model, true); if (!go) { Object.Destroy(holder.gameObject); return false; }
+            go.name = "Model"; return true;
+        }
+
+        static bool HideOwn(Transform t)
+        {
+            var r = t.GetComponent<Renderer>(); if (!r || !r.enabled) return false;
+            r.enabled = false; return true;
+        }
+
+        /// Instancia el modelo (marco local = marco del padre; sin padre, mundo) si se ocultaron las piezas que reemplaza.
+        static bool Mount(Transform parent, string model, bool hidOld) => Spawn(parent, model, hidOld) != null;
+
+        static Transform Spawn(Transform parent, string model, bool hidOld)
+        {
+            if (!hidOld) return null;
             var prefab = Resources.Load<GameObject>(Folder + model);
-            if (!prefab) { Debug.LogWarning($"[Route] falta {Folder}{model}"); return false; }
+            if (!prefab) { Debug.LogWarning($"[Route] falta {Folder}{model}"); return null; }
             // se conserva la transformacion local del modelo importado (la raiz del FBX lleva la conversion de ejes)
             var go = Object.Instantiate(prefab, parent, false); go.name = "Route_" + model;
             if (!parent) SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
             foreach (var c in go.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
-            return true;
+            return go.transform;
         }
 
         static bool HideAll(Transform t)
