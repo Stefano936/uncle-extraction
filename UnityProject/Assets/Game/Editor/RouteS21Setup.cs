@@ -122,18 +122,19 @@ namespace UncleExtraction.EditorTools
             M("RS_Rubber", new Color(0.06f, 0.06f, 0.065f), 0.15f, 0f, rub, rubN, 0.4f, 3f);
             M("RS_Wood", new Color(0.85f, 0.7f, 0.55f), 0.3f, 0f, wood, woodN, 0.5f, 1f);
             // camioneta: crema gastada con franja oxido, interior de terciado
-            M("RS_VanBody", new Color(0.8f, 0.72f, 0.56f), 0.4f, 0.1f, paint, paintN, 0.2f, 0.8f);
-            M("RS_VanStripe", new Color(0.72f, 0.28f, 0.12f), 0.4f, 0.05f, paint, paintN, 0.2f, 0.8f);
-            M("RS_VanInner", new Color(0.62f, 0.5f, 0.36f), 0.2f, 0f, wood, woodN, 0.4f, 0.7f);
+            // pintura lisa: la textura de pintura gastada se leia como vetas y manchas a la escala de la carroceria
+            M("RS_VanBody", new Color(0.78f, 0.71f, 0.57f), 0.42f, 0.1f);
+            M("RS_VanStripe", new Color(0.68f, 0.27f, 0.12f), 0.4f, 0.05f);
+            M("RS_VanInner", new Color(0.5f, 0.43f, 0.35f), 0.2f, 0f, wood, woodN, 0.35f, 0.7f);
             M("RS_Black", new Color(0.045f, 0.045f, 0.05f), 0.3f, 0f);
             M("RS_Chrome", new Color(0.85f, 0.86f, 0.88f), 0.85f, 1f);
             M("RS_Glass", new Color(0.05f, 0.07f, 0.09f), 0.93f, 0.4f);
-            M("RS_Tail", new Color(0.6f, 0.05f, 0.03f), 0.7f, 0f, glow: new Color(1f, 0.08f, 0.05f) * 2.5f);
+            M("RS_Tail", new Color(0.5f, 0.05f, 0.03f), 0.7f, 0f, glow: new Color(1f, 0.08f, 0.05f) * 0.9f);
             M("RS_Head", new Color(0.9f, 0.88f, 0.8f), 0.8f, 0f, glow: new Color(1f, 0.95f, 0.8f) * 2.2f);
-            M("RS_Amber", new Color(0.8f, 0.45f, 0.08f), 0.7f, 0f, glow: new Color(1f, 0.55f, 0.1f) * 0.8f);
+            M("RS_Amber", new Color(0.8f, 0.45f, 0.08f), 0.7f, 0f, glow: new Color(1f, 0.55f, 0.1f) * 0.45f);
             M("RS_Plate", new Color(0.9f, 0.9f, 0.86f), 0.5f, 0.2f);
             // puerta de salida: chapa verde pintada y vidrio armado (semitransparente: se ve el otro lado)
-            M("RS_DoorPaint", new Color(0.13f, 0.3f, 0.24f), 0.38f, 0.2f, paint, paintN, 0.25f, 1.2f);
+            M("RS_DoorPaint", new Color(0.13f, 0.3f, 0.24f), 0.4f, 0.25f);
             M("RS_DoorGlass", new Color(0.25f, 0.33f, 0.35f), 0.95f, 0.1f, alpha: 0.38f);
             // cuadra de enfrente
             M("RS_Brick", new Color(0.86f, 0.74f, 0.7f), 0.12f, 0f, brick, brickN, 0.8f, 1f);
@@ -141,12 +142,12 @@ namespace UncleExtraction.EditorTools
             M("RS_StuccoWarm", new Color(0.62f, 0.5f, 0.38f), 0.1f, 0f, plaster, plasterN, 0.6f, 0.5f);
             M("RS_Concrete", new Color(0.55f, 0.55f, 0.55f), 0.15f, 0f, conc, concN, 0.5f, 0.5f);
             M("RS_Trim", new Color(0.12f, 0.11f, 0.1f), 0.35f, 0.1f);
-            M("RS_WinWarm", new Color(0.6f, 0.45f, 0.27f), 0.8f, 0f, glow: new Color(1f, 0.75f, 0.45f) * 1.6f);
-            M("RS_WinCold", new Color(0.3f, 0.42f, 0.6f), 0.8f, 0f, glow: new Color(0.5f, 0.7f, 1f) * 1.2f);
+            M("RS_WinWarm", new Color(0.6f, 0.45f, 0.27f), 0.8f, 0f, glow: new Color(1f, 0.75f, 0.45f) * 1.0f);
+            M("RS_WinCold", new Color(0.3f, 0.42f, 0.6f), 0.8f, 0f, glow: new Color(0.5f, 0.7f, 1f) * 0.8f);
             M("RS_WinDark", new Color(0.04f, 0.05f, 0.07f), 0.85f, 0.3f);
             M("RS_Awning", new Color(0.55f, 0.1f, 0.08f), 0.2f, 0f);
             M("RS_Shutter", new Color(0.42f, 0.43f, 0.45f), 0.45f, 0.7f);
-            M("RS_ShopGlow", new Color(0.6f, 0.48f, 0.3f), 0.6f, 0f, glow: new Color(1f, 0.8f, 0.5f) * 1.3f);
+            M("RS_ShopGlow", new Color(0.6f, 0.48f, 0.3f), 0.6f, 0f, glow: new Color(1f, 0.8f, 0.5f) * 0.6f);
             M("RS_Sign", new Color(0.08f, 0.3f, 0.25f), 0.4f, 0f, glow: new Color(0.15f, 0.6f, 0.45f) * 0.6f);
             AssetDatabase.SaveAssets();
             return d;

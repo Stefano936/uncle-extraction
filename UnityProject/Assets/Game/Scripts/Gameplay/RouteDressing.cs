@@ -52,8 +52,8 @@ namespace UncleExtraction
             if (!hidOld) return false;
             var prefab = Resources.Load<GameObject>(Folder + model);
             if (!prefab) { Debug.LogWarning($"[Route] falta {Folder}{model}"); return false; }
+            // se conserva la transformacion local del modelo importado (la raiz del FBX lleva la conversion de ejes)
             var go = Object.Instantiate(prefab, parent, false); go.name = "Route_" + model;
-            go.transform.localPosition = Vector3.zero; go.transform.localRotation = Quaternion.identity; go.transform.localScale = Vector3.one;
             if (!parent) SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
             foreach (var c in go.GetComponentsInChildren<Collider>(true)) Object.Destroy(c);
             return true;
