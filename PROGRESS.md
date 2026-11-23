@@ -1,8 +1,25 @@
 # Estado del proyecto
 
-## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `78429d5` (sin fusionar)
+## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `7e85469` (sin fusionar)
 
-**Actualización (pedido de Stefano: «primero engrosar las piernas»):**
+**Actualización (pedido de Stefano: «después bajar los brazos»):**
+- En reposo los brazos cuelgan bajos en lugar de la «A» del rig: brazo a ~18° de la vertical, antebrazo apenas adelante. Commit `0c1b97e` (PR #10).
+- Es una pose física: el anfitrión fija el objetivo de las articulaciones. Se calcula al empezar en `UncleAttackPose`, sin regenerar escenas.
+  - Las poses de ataque no cambian.
+  - Aferrado a la barra el brazo queda libre; en el piso el cuerpo sigue flojo.
+  - Los puntos de agarre del antebrazo se mueven con el brazo.
+  - `-ueArmsA` vuelve a la «A» para comparar.
+- Pesos de las manos corregidos. Las puntas de los dedos estaban pesadas a las piernas y se estiraban hacia el muslo al bajar el brazo. Control en Blender: 4584 vértices de manos y brazos, 0 fuera del brazo, 0 sin peso.
+- Corte integrado `7e85469ce3c900bc64098f213e15e6b2b5a6c6c8`.
+- PlayMode completo: 175 PASS, 2 FAIL, los mismos ya explicados abajo.
+  - Además, `SoloAttempt_Cart_Normal` falló una vez en la tanda completa. A/B aislado: 6/6 PASS con brazos bajos y 6/6 con `-ueArmsA`, así que es intermitente y no lo causa el cambio.
+- Red localhost coop/race/repeat/party4: 4/4 PASS.
+- ZIP `Builds/S21/UncleExtraction_7e85469_Windows_x64.zip` (52,2 MB), SHA-256 `bd7acb2fe3e75846055d67e9f3a3bc122ff6578b61d4b71c65ce938bcc551107`.
+  - Copia recién extraída: menú en 39 s sin excepciones; QA aislado.
+  - El invitado (build de jugadores) entra a la sala del anfitrión.
+- Comparativas: [antes/después](docs/capturas/sesion21/brazos_antes_despues.jpg) · [zoom](docs/capturas/sesion21/brazos_zoom3.jpg).
+
+**Actualización anterior (pedido de Stefano: «primero engrosar las piernas»):**
 - Piernas más gruesas (muslo y rodilla +17 %, pantorrilla +18 %, tobillo +20 %, cadera más ancha) y pies +15 %, en `e79bfbf` (PR #10). Corte integrado `78429d520c23010d1d416bda227f51b3092b1ba1`: contra `5da0616` solo cambia el FBX del cuerpo; no se regeneraron escenas.
 - PlayMode dirigido 130/130.
 - ZIP `Builds/S21/UncleExtraction_78429d5_Windows_x64.zip` (52,2 MB), SHA-256 `256acfedfb3a3adab7c6ecc366c58836e425fc011458708544dcbedb12a98844`: menú sin excepciones, QA aislado, invitado en la sala.
@@ -32,9 +49,8 @@
 
 **Próxima acción exacta:**
 1. Stefano juega el ZIP S21 y decide los PR.
-2. Si se aprueban: piernas más gruesas de lejos y pose de reposo con los brazos más caídos (visual).
-3. Robustecer el rescate del pie en la camioneta (UE-18).
-4. Entorno de la ruta: puerta, carrito, camioneta y calle.
+2. Robustecer el rescate del pie en la camioneta (UE-18).
+3. Entorno de la ruta: puerta, carrito, camioneta y calle.
 
 
 ## `main` final de la sesión 20 · `a793e8c`
