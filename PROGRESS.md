@@ -1,6 +1,33 @@
 # Estado del proyecto
 
-## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `4edc725` (parcialmente fusionado)
+## Sesión 21 · tío de cuerpo completo y luz con volumen · fusionada en `main` (`52bc0f8`)
+
+**UE-18, pie en la camioneta (pedido de Stefano, 2026-11-24):** PR #15 (`claude/s21-pie-camioneta`, sobre `main`).
+- Diagnóstico: `Van_FootInDoorway` falla siempre desde la regeneración de escenas de la S21.
+  - Al soltar el tobillo empujado, la rodilla floja del tío caído se vuelve a estirar y el pie regresa a la franja.
+  - El plan B de la prueba tomaba el hombro opuesto a 1,61 m (alcance 1,4 m) y quedaba con una sola mano. 420 N no vencen el roce del tío acostado (~480 N): la pelvis se movía 5 cm.
+- Cambio solo en la prueba: el plan B se para detrás de la cabeza, en el centro, y toma los dos hombros (1,29 m). Sin cambios en el juego ni en la condición final.
+- Resultados:
+
+  | Comprobación | Resultado |
+  | --- | --- |
+  | `Van_FootInDoorway` a 30/60/120 fps y 3 veces sin límite | 6/6 PASS (pelvis 26–29 cm más adentro, cierre en ~11 s) |
+  | `StuckRecoveryTests` | 13 PASS, 1 omitida |
+
+- Pendiente: ver en partida si el pie que vuelve a salir molesta a un jugador. En ese caso, revisar la rodilla floja dentro de la camioneta.
+
+**`main` con todo S21 (#10, #11 resuelto, #13, #14), `52bc0f8`:**
+
+| Comprobación | Resultado |
+| --- | --- |
+| Build QA | PASS |
+| EditMode | 76 PASS, 1 omitida |
+| PlayMode | 176 PASS, 3 FAIL, 1 omitida |
+| Red localhost coop/race/repeat/party4 | 4/4 PASS |
+
+Las 3 fallas de PlayMode: `Van_FootInDoorway`, que arregla #15, y `Narrow` y `Cart_Normal`, intermitencias del bot ya vistas en el A/B. El conflicto del #11 en `Finishing.cs` se resolvió con el mismo archivo del corte probado; `UnityProject/` en `main` es idéntico al corte `4edc725`.
+
+**Fusión anterior en `main` (2026-11-24): #10, #13 y #14 sin conflicto; #11 después de resolver el conflicto con autorización de Stefano.**
 
 **Fusión en `main` (pedido de Stefano, 2026-11-24: «mergeá todo lo que haya si no hay conflicto»):**
 - Fusionados sin conflicto: #10 personaje (`8e7c9fa`), #13 muebles (`1a0477c`), #14 menú (`47d97cb`).
@@ -154,7 +181,7 @@
 **Comparativas:** [tío Alta](docs/capturas/sesion21/tio_alta.jpg) · [tío Baja](docs/capturas/sesion21/tio_baja.jpg) · [recorrido Alta](docs/capturas/sesion21/recorrido_alta.jpg) · [recorrido Baja](docs/capturas/sesion21/recorrido_baja.jpg) · [modelo en 4 ángulos](docs/capturas/sesion21/tio_blender_4_angulos.jpg) · clips [antes](docs/capturas/sesion21/clip_antes_a793e8c.webp) / [después](docs/capturas/sesion21/clip_despues_s21.webp).
 
 **Próxima acción exacta:**
-1. Stefano decide si resolver el conflicto del #11 (render) y fusionarlo.
+1. Stefano revisa el PR #15 (UE-18) y juega `main`.
 2. Robustecer el rescate del pie en la camioneta (UE-18).
 3. Recorrido jugado por una persona para cerrar UE-16 (fondo del menú hecho en #14).
 
