@@ -84,6 +84,26 @@ namespace UncleExtraction.Tests
             menu.Show(FrontendMenu.Page.Main); yield return null;
         }
 
+        /// Fondo del menu (sesion 21): cubre la pantalla recortando (no se deforma en 21:9 ni 4:3) y el velo es mas oscuro
+        /// detras de los botones que sobre el tio.
+        [UnityTest]
+        public IEnumerator Menu_BackgroundCoversWithoutStretching_AndShadeIsDarkerBehindButtons()
+        {
+            SceneManager.LoadScene("Frontend");
+            yield return null; yield return null;
+            var bg = GameObject.Find("Background")?.GetComponent<Image>(); Assert.IsNotNull(bg, "fondo del menu");
+            Assert.IsNotNull(bg.sprite, "fondo con la captura del bar (UiSkin.background)");
+            var fit = bg.GetComponent<AspectRatioFitter>(); Assert.IsNotNull(fit, "el fondo recorta en lugar de estirarse");
+            Assert.AreEqual(AspectRatioFitter.AspectMode.EnvelopeParent, fit.aspectMode);
+            yield return null;
+            var parent = (RectTransform)bg.rectTransform.parent; var r = bg.rectTransform.rect;
+            Assert.AreEqual(bg.sprite.rect.width / bg.sprite.rect.height, r.width / r.height, 0.01f, "misma proporcion que la imagen");
+            Assert.GreaterOrEqual(r.width + 0.5f, parent.rect.width); Assert.GreaterOrEqual(r.height + 0.5f, parent.rect.height);
+            var shade = GameObject.Find("Shade")?.GetComponent<Image>(); Assert.IsNotNull(shade?.sprite, "velo con degradado");
+            var tex = shade.sprite.texture;
+            Assert.Greater(tex.GetPixel(0, 0).a, tex.GetPixel(tex.width - 1, 0).a + 0.3f, "velo oscuro a la izquierda, liviano a la derecha");
+        }
+
         [Test]
         public void Rebind_SwapsConflicts_AndResets()
         {
