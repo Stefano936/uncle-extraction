@@ -121,21 +121,22 @@ namespace UncleExtraction
             // cada rasgo se apoya en la superficie REAL del craneo esculpido (mofletes y papada incluidos)
             Vector3 F = Vector3.forward;
             // nariz bulbosa (de borracho) y su punta
-            Part("Nose", Ellipsoid(new Vector3(R * style.noseSize * 0.85f, R * style.noseSize * 0.75f, R * style.noseSize), 14, 10, (d) => 1f + 0.15f * Mathf.Max(0f, -d.y)), noseM, root, Surf(0f, -0.08f) + F * R * style.noseSize * 0.45f);
+            float nose = R * style.noseSize;
+            Part("Nose", Ellipsoid(new Vector3(nose * 0.78f, nose * 0.78f, nose * 0.83f), 18, 12, (d) => 1f + 0.15f * Mathf.Max(0f, -d.y)), noseM, root, Surf(0f, -0.08f) + F * nose * 0.27f);
             Part("Nose_Bridge", Ellipsoid(new Vector3(R * 0.11f, R * 0.22f, R * 0.12f), 10, 8), skinM, root, Surf(0f, 0.12f) + F * R * 0.02f);
             // orejas grandes
             for (int s = 0; s < 2; s++)
             {
                 float sx = s == 0 ? -1f : 1f;
-                var ear = Part("Ear", Ellipsoid(new Vector3(R * 0.08f, R * 0.3f, R * 0.2f), 12, 10, (d) => 1f - 0.35f * Mathf.Max(0f, -d.x * sx)), skinM, root, SurfDir(new Vector3(sx, 0.02f, -0.08f)) + new Vector3(sx * R * 0.02f, 0f, 0f));
+                var ear = Part("Ear", Ellipsoid(new Vector3(R * 0.11f, R * 0.25f, R * 0.17f), 16, 12, (d) => 1f - 0.35f * Mathf.Max(0f, -d.x * sx)), skinM, root, SurfDir(new Vector3(sx, 0.02f, -0.08f)) - new Vector3(sx * R * 0.035f, 0f, 0f));
                 ear.localRotation = Quaternion.Euler(0f, sx * 18f, sx * -8f);
             }
             // ojos: blanco, iris y pupila; parpados superior e inferior (cascaras que giran)
-            float er = R * style.eyeSize * 1.6f;
+            float er = R * style.eyeSize * 1.4f;
             for (int s = 0; s < 2; s++)
             {
                 float sx = s == 0 ? -1f : 1f;
-                Vector3 ep = Surf(sx * 0.34f, 0.2f) - F * er * 0.25f;
+                Vector3 ep = Surf(sx * 0.34f, 0.2f) - F * er * 0.42f;
                 eye[s] = new GameObject(s == 0 ? "Eye_L" : "Eye_R").transform; eye[s].SetParent(root, false); eye[s].localPosition = ep;
                 Part("Sclera", Ellipsoid(Vector3.one * er, 16, 12), whiteM, eye[s]);
                 iris[s] = new GameObject("Iris").transform; iris[s].SetParent(eye[s], false);
@@ -162,11 +163,14 @@ namespace UncleExtraction
             Part("Lip_Lo", Tube(Curve(new[] { new Vector3(-R * 0.2f, 0.01f, 0f), new Vector3(0f, -R * 0.05f, R * 0.04f), new Vector3(R * 0.2f, 0.01f, 0f) }, 10), new[] { R * 0.035f, R * 0.055f, R * 0.035f }, 6), lipM, jawT, new Vector3(0f, -R * 0.06f, R * 0.07f));
             // pelo: herradura canosa alrededor de la nuca y las sienes; arriba, tres mechones peinados (o boina)
             // herradura de pelo canoso: mechones mullidos alrededor de la nuca, de oreja a oreja (se lee como pelo, no como banda)
-            for (int i = 0; i < 9; i++)
+            const int hairLocks = 13;
+            for (int i = 0; i < hairLocks; i++)
             {
-                float t = Mathf.Lerp(-100f, 100f, i / 8f) * Mathf.Deg2Rad; var hd = new Vector3(Mathf.Sin(t), 0.12f + 0.06f * Mathf.Cos(t * 3f), -Mathf.Cos(t));
-                float big = 1f - 0.35f * Mathf.Abs(i - 4) / 4f;
-                var puff = Part("Hair_Puff", Ellipsoid(new Vector3(R * 0.32f, R * 0.32f * big, R * 0.22f), 10, 8, (d) => 1f + 0.12f * Mathf.Sin(d.x * 9f) * Mathf.Sin(d.y * 7f)), greyM, root, SurfDir(hd) + hd.normalized * R * 0.06f);
+                float across = i / (hairLocks - 1f);
+                float t = Mathf.Lerp(-100f, 100f, across) * Mathf.Deg2Rad;
+                var hd = new Vector3(Mathf.Sin(t), 0.12f + 0.06f * Mathf.Cos(t * 3f), -Mathf.Cos(t));
+                float height = Mathf.Lerp(0.20f, 0.27f, 1f - Mathf.Abs(2f * across - 1f));
+                var puff = Part("Hair_Puff", Ellipsoid(new Vector3(R * 0.25f, R * height, R * 0.13f), 12, 10, (d) => 1f + 0.12f * Mathf.Sin(d.x * 9f) * Mathf.Sin(d.y * 7f)), greyM, root, SurfDir(hd) - hd.normalized * R * 0.025f);
                 puff.localRotation = Quaternion.LookRotation(hd.normalized, Vector3.up);
             }
             if (style.variant == Variant.Boina)

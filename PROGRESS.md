@@ -1,5 +1,11 @@
 # Estado del proyecto
 
+## Modelo del tío · 24 de noviembre de 2026
+
+Se reconstruyó la unión de cuello y hombros, y se integraron las costuras de mangas, camisa y cinturón en la superficie deformable. La exportación pasó la comprobación de malla cerrada y pesos normalizados. Unity conserva el mismo identificador de malla, la jerarquía de huesos y los puntos de agarre. Se ajustó la proporción de ojos, orejas y nariz, y se volvió a capturar el fondo del menú.
+
+La revisión visual se hizo en la build QA de Windows, desde varios ángulos en el bar. Las dos pruebas PlayMode de la cabeza (anclaje visual y expresión al anticipar un golpe) pasaron durante la iteración.
+
 ## Acabados de superficie · 24 de noviembre de 2026
 
 Sobre `9cf7a28`, se refinó el color, el relieve y el brillo de las texturas del bar y los exteriores. También se restauró la trama de ropa del tío y de la manga en primera persona, y se añadió detalle a materiales del carrito, la camioneta, la piel y la utilería. El fondo del menú se capturó de nuevo con el encuadre S21. Los iconos y paneles conservan su arte.
