@@ -1,5 +1,13 @@
 # Estado del proyecto
 
+## Acabados de superficie · 24 de noviembre de 2026
+
+Sobre `9cf7a28`, se refinó el color, el relieve y el brillo de las texturas del bar y los exteriores. También se restauró la trama de ropa del tío y de la manga en primera persona, y se añadió detalle a materiales del carrito, la camioneta, la piel y la utilería. El fondo del menú se capturó de nuevo con el encuadre S21. Los iconos y paneles conservan su arte.
+
+La generación de mapas se reproduce con `python tools/art/refine_surfaces.py` (Pillow y NumPy). Unity asigna los mapas mediante `SurfaceFinishing.Apply`, también llamado al regenerar las escenas o los materiales de la ruta S21.
+
+La build QA en Unity 6000.3.28f1 recorrió 16 encuadres de `Bar_LastRound` a 1600 × 900 en calidad Alta. La extracción individual de prueba por arrastre terminó en victoria a los 20,0 s.
+
 ## `main` final de la sesión 20 · `a793e8c`
 
 `main` = `a793e8c936d166f36ef027c08858e9a08b6216b0`: PR #5 (mando para códigos Relay, Mateo), #6 (auditoría técnica), #7 (entorno) y #8 (cabeza del tío y menú). Stefano aprobó visualmente #7 y #8 tras probar la build S20.

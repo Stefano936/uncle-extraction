@@ -53,7 +53,7 @@ namespace UncleExtraction.EditorTools
                     Debug.Log($"[RouteS21] {Path.GetFileName(p)}: limites min {b.min:F3} max {b.max:F3} materiales sin asignar {missing} caras hacia afuera {outward:P0}");
                     if (missing > 0) code = 2;
                 }
-                AssetDatabase.SaveAssets();
+                SurfaceFinishing.Apply();
             }
             catch (System.Exception e) { Debug.LogException(e); code = 1; }
             if (Application.isBatchMode) EditorApplication.Exit(code);

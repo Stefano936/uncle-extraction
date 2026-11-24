@@ -49,6 +49,7 @@ namespace UncleExtraction.EditorTools
             BuildLevel(LevelSpecs.Bar());
             BuildLevel(LevelSpecs.LabArticulated());
             FrontendBuilder.Build();
+            SurfaceFinishing.Apply();
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(FrontendBuilder.ScenePath, true), new EditorBuildSettingsScene(BarScenePath, true), new EditorBuildSettingsScene(ScenePath, true), new EditorBuildSettingsScene(ArticulatedLabScenePath, true) };
             AssetDatabase.SaveAssets();
             Debug.Log("[LabBuilder] escenas: Frontend, Bar_LastRound, PhysicsLab, PhysicsLab_Articulated");
