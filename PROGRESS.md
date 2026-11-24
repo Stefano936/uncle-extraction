@@ -1,8 +1,29 @@
 # Estado del proyecto
 
-## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `dc1d7ba` (sin fusionar)
+## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `4edc725` (sin fusionar)
 
-**Actualización (pedido de Stefano: «fusionar el PR y seguir con los muebles del bar»):**
+**Actualización (pedido de Stefano: «fondo del menú»):**
+- PR #14 (`claude/s21-menu-pr`, sobre `main`; la imagen muestra lo de #10, #11 y #13, conviene fusionarlo después):
+  - fondo nuevo con encuadre propio (`CamTour` vista `menu_s21`): el tío de frente desde atrás de la barra, en el tercio derecho, bajo SALIDA, con el carrito entre él y los botones;
+  - el fondo recorta en lugar de estirarse (`AspectRatioFitter` EnvelopeParent); antes, a 21:9, el tío salía achatado;
+  - velo en degradado (0,7 detrás de los botones, 0,15 sobre el tío);
+  - `-ueCamViews` en `CamTour` para buscar encuadres sin recompilar; prueba PlayMode nueva del fondo.
+- Corte integrado `4edc7258b568861e0e283c632d709c04430181d6` (personaje + render + entorno + muebles + menú).
+
+  | Comprobación sobre `4edc725` | Resultado |
+  | --- | --- |
+  | Auditoría de interfaz es_UY (720p, 1080p, 21:9, 16:10, 4:3 × texto 100/125/150 %) | PASS 15/15, 0 problemas |
+  | Auditoría de interfaz en (mismas variantes) | PASS 15/15, 0 problemas |
+  | EditMode | 76 PASS, 1 omitida |
+  | PlayMode | 177 PASS, 2 FAIL (`Van_FootInDoorway`, UE-18; `NoCart…`, intermitencia previa), 1 omitida |
+  | Red localhost coop/race/repeat/party4 | 4/4 PASS |
+  | ZIP desde copia recién extraída | PASS: menú sin excepciones; el invitado entra a la sala |
+  | LAN entre dos PC, Relay, mando físico, lectura por una persona | NOT_RUN |
+
+- ZIP `Builds/S21/UncleExtraction_4edc725_Windows_x64.zip` (53,6 MB), SHA-256 `13c8e7b04e594ed6993b9263ce5fd17a8a3e07f452f2a9a4fd37b84aed645cdc`.
+- Capturas: [antes/después 16:9 y 21:9](docs/capturas/sesion21/menu_antes_despues.jpg) · [4:3](docs/capturas/sesion21/menu_4x3.jpg).
+
+**Actualización anterior (pedido de Stefano: «fusionar el PR y seguir con los muebles del bar»):**
 - PR #12 (entorno de la ruta) fusionado en `main` (`b6bc487`) con aprobación de Stefano.
 - Muebles del bar modelados en Blender por script (`tools/art/blender/build_bar_s21.py`); PR #13 (`claude/s21-bar`, sobre `main`):
   - barra con frente de paneles, tapa de canto redondo, baranda de anclaje y apoyapiés de bronce, canillas, caja y vasos;
@@ -106,7 +127,7 @@
 - SSAO y sombras de dos cascadas, suaves, con mapas de 4096.
 - Mangas de jean del jugador.
 
-**No hecho:** animación propia del tío, fondo del menú, manos por superficie, remate del cierre y ajuste de control.
+**No hecho:** animación propia del tío, manos por superficie, remate del cierre y ajuste de control.
 
 | Comprobación sobre `5da0616` | Resultado |
 | --- | --- |
@@ -121,7 +142,7 @@
 **Próxima acción exacta:**
 1. Stefano juega el ZIP S21 y decide los PR.
 2. Robustecer el rescate del pie en la camioneta (UE-18).
-3. Fondo del menú con la auditoría de interfaz (UE-16).
+3. Recorrido jugado por una persona para cerrar UE-16 (fondo del menú hecho en #14).
 
 
 ## `main` final de la sesión 20 · `a793e8c`
