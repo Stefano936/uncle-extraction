@@ -194,6 +194,31 @@ namespace UncleExtraction.EditorTools
             }
         }
 
+        // ---------- tio S21 (cuerpo completo): materiales propios con la trama a escala de la ropa (UV automaticas de Blender)
+        public static void UncleS21(SkinnedMeshRenderer smr)
+        {
+            var fabric = Tex("04_fabric_basecolor.png"); var fabricN = NormalFrom($"{TexDir}/04_fabric_basecolor.png", "04_fabric_basecolor", 5f);
+            var rubber = RubberGrain(); var dark = DarkGrain();
+            var map = new System.Collections.Generic.Dictionary<string, Material>
+            {
+                { "skin",    Lit("Uncle_S21_Skin", new Color(0.86f, 0.58f, 0.45f), 0.34f, 0f, null, null, 0f, null, true) },
+                { "wine",    Lit("Uncle_S21_Shirt", new Color(0.66f, 0.1f, 0.13f), 0.14f, 0f, fabric, fabricN, 0.6f, new Vector2(16, 16), true) },
+                { "cream",   Lit("Uncle_S21_Undershirt", new Color(0.82f, 0.79f, 0.7f), 0.1f, 0f, fabric, fabricN, 0.4f, new Vector2(22, 22), true) },
+                { "mustard", Lit("Uncle_S21_Shorts", new Color(0.78f, 0.53f, 0.15f), 0.12f, 0f, fabric, fabricN, 0.8f, new Vector2(20, 20), true) },
+                { "shoe",    Lit("Uncle_S21_Shoe", new Color(0.19f, 0.1f, 0.05f), 0.62f, 0f, dark, null, 0f, new Vector2(10, 10), true) },
+                { "sock",    Lit("Uncle_S21_Sock", new Color(0.86f, 0.85f, 0.82f), 0.08f, 0f, fabric, fabricN, 0.5f, new Vector2(30, 30), true) },
+                { "belt",    Lit("Uncle_S21_Leather", new Color(0.17f, 0.09f, 0.045f), 0.48f, 0f, rubber, null, 0f, new Vector2(12, 12), true) },
+                { "buckle",  Lit("Uncle_S21_Buckle", new Color(0.86f, 0.7f, 0.34f), 0.78f, 0.9f, null, null, 0f, null, true) },
+            };
+            var mats = smr.sharedMaterials;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                string n = mats[i] ? mats[i].name.Split(' ')[0] : "";
+                if (map.TryGetValue(n, out var m)) mats[i] = m; else Debug.LogWarning($"[Finishing] material S21 sin pareja: {n}");
+            }
+            smr.sharedMaterials = mats;
+        }
+
         // ---------- tio
         public static void Uncle(GameObject kit, Transform head)
         {

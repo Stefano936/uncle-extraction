@@ -27,6 +27,12 @@ $shots = @(
   @{ n = 'a4_rampa_camioneta';  x = @('-uePose', '0.0,0,-5.0,180,10@2', '-ueShot', "`"$O\a4_rampa_camioneta.png@4`"") },
   @{ n = 'b1_tio_frente';       x = @('-ueNoHud', '-ueFaceUncle', '2', '-ueShot', "`"$O\b1_tio_frente.png@3.6`"") },
   @{ n = 'b2_tio_tres_cuartos'; x = @('-ueNoHud', '-ueFaceUncle', '2', '-ueFaceAngle', '-30', '-ueShot', "`"$O\b2_tio_tres_cuartos.png@3.6`"") },
+  @{ n = 'c1_tio_espalda';      x = @('-ueNoHud', '-uePose', '4.5,0,4.6,0,9@2', '-ueShot', "`"$O\c1_tio_espalda.png@4`"") },
+  @{ n = 'c2_tio_costado';      x = @('-ueNoHud', '-uePose', '2.2,0,7.0,92,9@2', '-ueShot', "`"$O\c2_tio_costado.png@4`"") },
+  @{ n = 'c3_tio_frente_barra'; x = @('-ueNoHud', '-uePose', '5.3,0,9.0,205,12@2', '-ueShot', "`"$O\c3_tio_frente_barra.png@4`"") },
+  @{ n = 'd1_carrito';          x = @('-uePose', '2.5,0,-0.4,0,32@2', '-ueShot', "`"$O\d1_carrito.png@4`"") },
+  @{ n = 'd2_vereda_calle';     x = @('-uePose', '1.5,0,-3.6,215,3@2', '-ueShot', "`"$O\d2_vereda_calle.png@4`"") },
+  @{ n = 'd3_camioneta_carga';  x = @('-uePose', '0.0,0,-8.7,180,14@2', '-ueShot', "`"$O\d3_camioneta_carga.png@4`"") },
   @{ n = 'b4_tio_cara';         x = @('-ueNoHud', '-ueFaceUncle', '2', '-ueFaceAngle', '-60', '-ueShot', "`"$O\b4_tio_cara.png@3.6`"") },
   @{ n = 'b5_tio_anticipa';     x = @('-ueNoHud', '-ueFaceUncle', '2', '-ueFaceAngle', '-60', '-ueForceAttack', 'slap@3.2', '-ueShot', "`"$O\b5_tio_anticipa.png@3.5`"") },
   @{ n = 'b3_tio_perfil';       x = @('-ueNoHud', '-ueFaceUncle', '2', '-ueFaceAngle', '90', '-ueShot', "`"$O\b3_tio_perfil.png@3.6`"") }
