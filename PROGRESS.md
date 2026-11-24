@@ -2,7 +2,7 @@
 
 ## Sesión 21 · tío de cuerpo completo y luz con volumen · fusionada en `main` (`52bc0f8`)
 
-**UE-18, pie en la camioneta (pedido de Stefano, 2026-11-24):** PR #15 (`claude/s21-pie-camioneta`, sobre `main`).
+**UE-18, pie en la camioneta (pedido de Stefano, 2026-11-24):** PR #15 fusionado en `main` (`9cf7a28`) con aprobación de Stefano.
 - Diagnóstico: `Van_FootInDoorway` falla siempre desde la regeneración de escenas de la S21.
   - Al soltar el tobillo empujado, la rodilla floja del tío caído se vuelve a estirar y el pie regresa a la franja.
   - El plan B de la prueba tomaba el hombro opuesto a 1,61 m (alcance 1,4 m) y quedaba con una sola mano. 420 N no vencen el roce del tío acostado (~480 N): la pelvis se movía 5 cm.
@@ -181,7 +181,7 @@ Las 3 fallas de PlayMode: `Van_FootInDoorway`, que arregla #15, y `Narrow` y `Ca
 **Comparativas:** [tío Alta](docs/capturas/sesion21/tio_alta.jpg) · [tío Baja](docs/capturas/sesion21/tio_baja.jpg) · [recorrido Alta](docs/capturas/sesion21/recorrido_alta.jpg) · [recorrido Baja](docs/capturas/sesion21/recorrido_baja.jpg) · [modelo en 4 ángulos](docs/capturas/sesion21/tio_blender_4_angulos.jpg) · clips [antes](docs/capturas/sesion21/clip_antes_a793e8c.webp) / [después](docs/capturas/sesion21/clip_despues_s21.webp).
 
 **Próxima acción exacta:**
-1. Stefano revisa el PR #15 (UE-18) y juega `main`.
+1. Stefano juega `main` (`9cf7a28`): S21 completa más el arreglo de la prueba del pie.
 2. Robustecer el rescate del pie en la camioneta (UE-18).
 3. Recorrido jugado por una persona para cerrar UE-16 (fondo del menú hecho en #14).
 
