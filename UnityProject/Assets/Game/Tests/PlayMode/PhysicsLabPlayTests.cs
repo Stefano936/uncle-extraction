@@ -304,6 +304,8 @@ namespace UncleExtraction.Tests
                 }
                 yield return null;
             }
+            // sesion 21 (UE-18): registrar siempre el tiempo y la trayectoria, tambien al pasar, para medir el margen contra los 15 s
+            Debug.Log($"[Escape] {SceneManager.GetActiveScene().name}: {(body.transform.position.z > L.doorZ + 0.5f ? "entro" : "NO entro")} en {Time.time - t0:0.0} s de 15; trayectoria x,z:{trace}");
             Assert.Greater(body.transform.position.z, L.doorZ + 0.5f, $"el tio deberia volver a entrar por la puerta (quedo en {body.transform.position}; relativo a la puerta x,z:{trace})");
             Assert.Less(Mathf.Abs(body.transform.position.x - L.doorX), 1.5f, "entra por la abertura, no atraviesa el muro");
         }
