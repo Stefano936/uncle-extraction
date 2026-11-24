@@ -167,8 +167,8 @@ namespace UncleExtraction
             if (PlayerControls.Local) { player = PlayerControls.Local.GetComponent<PlayerMotor>(); hands = PlayerControls.Local.GetComponent<PlayerHands>(); }
             if (!player || !hands) { Debug.LogWarning("[Autopilot] sin jugador local todavia"); return; }
             Mode = mode; Running = true; Timeline.Clear();
-            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; cartTargetsSet = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
-            aimSince = Time.time; nextReport = Time.time + 10f;
+            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; cartTargetsSet = false; emptyAimFailSince = Time.time; emptyApproachUntil = -1f; cartClearing = false; recenterUntil = -1f; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
+            aimSince = Time.time; nextReport = Time.time + 10f; idleCheckAt = 0f;
             Log($"inicio modo {mode}: tio en {body.Body.position}, jugador en {player.transform.position}");
             routine = StartCoroutine(mode == AutopilotMode.Drag ? DragRun() : mode == AutopilotMode.Cart ? CartRun() : RaceRun());
         }
@@ -185,6 +185,15 @@ namespace UncleExtraction
         bool brainSaved, brainBefore, raceNatural;
 
         public void ResetState() => StopRun();
+
+        /// Pruebas: si la ronda sigue en curso al vencer el plazo, detener y volcar la linea de tiempo (sesion 21, UE-18).
+        public void DumpIfUnfinished(string what)
+        {
+            if (!Running) return;
+            Log($"sin terminar: {what}");
+            Debug.Log($"[Autopilot] TIMELINE (sin terminar: {what})\n" + string.Join("\n", Timeline));
+            StopRun();
+        }
         void OnDisable() => StopRun();
 
         void Log(string s) { string l = $"t={Time.time:0.0} {s}"; Timeline.Add(l); Debug.Log("[Autopilot] " + l); }
@@ -277,7 +286,7 @@ namespace UncleExtraction
                                  .FirstOrDefault();
         }
 
-        Vector3 lastMe; float lastMeAt;
+        Vector3 lastMe, idleMe, idlePel; float lastMeAt, idleCheckAt;
         void Observe()
         {
             // Diagnostico: salto de posicion del jugador (tunel fisico o recolocacion) o cruce de la pared del frente
@@ -287,11 +296,24 @@ namespace UncleExtraction
             lastMe = Me; lastMeAt = Time.time;
             if (npc.State != lastNpc) { Log($"tio {lastNpc}->{npc.State} '{npc.Intent}'"); lastNpc = npc.State; }
             if (player.FallCount > lastFalls) { Log($"jugador derribado (caidas={player.FallCount})"); lastFalls = player.FallCount; }
+            // sesion 21 (UE-18): diagnostico de quietud. Si en 15 s ni el jugador ni el tio se movieron 0,3 m, registrar en que
+            // estaba el autopiloto y que apuntaba (las fallas por tiempo eran 150-250 s quieto sin rastro de por que).
+            if (Time.time - idleCheckAt >= 15f)
+            {
+                if (idleCheckAt > 0f && Vector3.Distance(Me, idleMe) < 0.3f && Vector3.Distance(Flat(body.pelvis.position), idlePel) < 0.3f)
+                {
+                    var ha = GrabSocket.All.FirstOrDefault(s => s.socketId == "cart_handle");
+                    Log($"QUIETO 15 s: estado='{Status}' jugador {Me} pelvis {Flat(body.pelvis.position)} postura={body.Posture} tio={npc.State} " +
+                        $"manos={Held(0)?.socketId ?? "-"}/{Held(1)?.socketId ?? "-"} apunta={(hands.Candidate ? hands.Candidate.socketId : "nada")}" +
+                        (ha ? $" asa a {Vector3.Distance(Eye, ha.Position):0.00} m" : "") + $" mover={LabInput.SimulatedMove}");
+                }
+                idleCheckAt = Time.time; idleMe = Me; idlePel = Flat(body.pelvis.position);
+            }
             if (Time.time >= nextReport)
             {
                 nextReport = Time.time + 10f;
                 Log($"posicion: jugador {Me} pelvis {body.pelvis.position} postura={body.Posture} correa={cart.IsStrapped} dentro={zone.AllPointsInside} " +
-                    $"carrito {Flat(cart.transform.position)} yaw={cart.transform.eulerAngles.y:0} manos={Held(0)?.socketId ?? "-"}/{Held(1)?.socketId ?? "-"} puerta={(door ? door.angle : 0f):0}deg");
+                    $"carrito {Flat(cart.transform.position)} yaw={cart.transform.eulerAngles.y:0} manos={Held(0)?.socketId ?? "-"}/{Held(1)?.socketId ?? "-"} puerta={(door ? door.angle : 0f):0}deg estado='{Status}'");
             }
         }
 
@@ -519,7 +541,18 @@ namespace UncleExtraction
         // ---------- modo carrito ----------
         float unjamUntil;
         float handleBestDist = 99f, handleProgressAt, handleAroundUntil, handleLastSeen = -99f; Vector3 handleAround;
-        bool realignLogged; float cartBestDist = 99f, cartProgressAt; float handleAimFailSince, handleSidestepUntil, handlePhaseSeen = -99f, handleSide = 1f; bool handleOccludedLogged;
+        bool realignLogged; float cartBestDist = 99f, cartProgressAt; float handleAimFailSince, handleSidestepUntil, handlePhaseSeen = -99f, handleSide = 1f; bool handleOccludedLogged; float emptyAimFailSince, emptyApproachUntil = -1f, emptyPhaseSeen = -99f; float emptySide = 1f; Vector3 emptyGoal;
+        /// Punto libre a ~0,9 m del asa (a un costado del carrito o frente al asa), del mismo lado de la puerta del bar que el
+        /// carrito; prefiere el lado pedido y, si no esta libre, cualquiera de los otros.
+        Vector3 HandleSideSpot(GrabSocket h, float side)
+        {
+            Vector3 hf = Flat(h.Position), across = Flat(cart.transform.right).normalized, back = Flat(-cart.transform.forward).normalized;
+            bool cartIn = cart.transform.position.z > L.doorZ;
+            bool Ok(Vector3 q) => (q.z > L.doorZ + 0.3f) == cartIn && !Physics.CheckCapsule(q + Vector3.up * 0.4f, q + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
+            foreach (var q in new[] { hf + across * 0.9f * side, hf - across * 0.9f * side, hf + back * 0.9f, hf + across * 0.9f * side + back * 0.5f, hf - across * 0.9f * side + back * 0.5f })
+                if (Ok(q)) return q;
+            return hf + across * 0.9f * side;
+        }
 
         IEnumerator CartRun()
         {
@@ -529,6 +562,25 @@ namespace UncleExtraction
             while (!Finished)
             {
                 if (CommonStep()) { yield return null; continue; }
+                // Sesion 21 (UE-18): el tio se solto del carrito ya adentro y el carrito vacio quedo en la abertura ("objeto en
+                // la puerta"). Antes alternaba entre cerrar y llevar el carrito al bar sin sacarlo nunca (NoCart, 70+ s).
+                // Como una persona: tomar el asa, empujarlo hacia afuera hasta pasar la abertura, soltarlo y cerrar.
+                if (!cart.IsStrapped && CartBlocksDoorway())
+                {
+                    Status = "sacando el carrito de la abertura";
+                    if (!cartClearing) { cartClearing = true; Log($"el carrito vacio tapa la abertura en {Flat(cart.transform.position)}: lo saca hacia afuera"); }
+                    var hClear = GrabSocket.All.First(s => s.socketId == "cart_handle");
+                    if (!HoldingCart()) { if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; } ApproachHandle(hClear); yield return null; continue; }
+                    Vector3 cartC = Flat(cart.transform.position), cartOut = new Vector3(L.vanAxisX, 0f, L.vanRearZ + 2.6f);
+                    LookAt(hClear.Position); LabInput.Simulated[(int)Act.Effort] = true;
+                    MoveWorld(cartOut - cartC);
+                    yield return null; continue;
+                }
+                if (cartClearing)
+                {
+                    cartClearing = false; Log($"carrito fuera de la abertura en {Flat(cart.transform.position)}: lo suelta y vuelve a cerrar");
+                    if (HoldingCart()) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
+                }
                 if (zone.AllPointsInside && !zone.Secured && !NeedsPushingIn()) { yield return CloseStep(); continue; }
 
                 if (!cart.IsStrapped && cartNeedsSpace)
@@ -546,6 +598,20 @@ namespace UncleExtraction
                         if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
                         LookAt(h.Position);
                         bool reach = Vector3.Distance(Eye, h.Position) <= LabBalance.GrabReach - 0.2f;
+                        // sesion 21 (UE-18): al alcance pero sin poder apuntar al asa (el marco de la puerta la tapa) se quedaba
+                        // quieto para siempre. Pasado 1 s, usar 3 s el acercamiento del carrito cargado (rodear, correrse de costado).
+                        if (!reach || hands.Candidate == h || Time.time - emptyPhaseSeen > 0.25f) emptyAimFailSince = Time.time; // o recien entra en esta fase
+                        emptyPhaseSeen = Time.time;
+                        if (Time.time - emptyAimFailSince > 1f && Time.time >= emptyApproachUntil)
+                        {   // ir a un punto libre al costado del asa, del mismo lado de la puerta que el carrito (desde afuera, con el
+                            // asa en el marco, "detras del asa" quedaba afuera y se corria de costado en el umbral para siempre)
+                            emptyAimFailSince = Time.time; emptyApproachUntil = Time.time + 4f; emptySide = -emptySide;
+                            emptyGoal = HandleSideSpot(h, emptySide);
+                            Log($"asa del carrito vacio sin linea de vision desde {Me} (mira: {(hands.Candidate ? hands.Candidate.socketId : "nada")}): va al costado del asa {emptyGoal}");
+                        }
+                        if (Time.time < emptyApproachUntil && Vector3.Distance(Me, emptyGoal) > 0.3f)
+                        { LookAt(h.Position); MoveWorld(Via(emptyGoal) - player.transform.position); SetHold(0, false); SetHold(1, false); yield return null; continue; }
+                        if (Time.time < emptyApproachUntil) emptyApproachUntil = Time.time; // llego: volver a apuntar desde ahi
                         MoveWorld(reach ? Vector3.zero : Via(h.Position) - player.transform.position);
                         SetHold(0, reach && hands.Candidate == h); SetHold(1, reach && hands.Candidate == h);
                         yield return null; continue;
@@ -615,48 +681,7 @@ namespace UncleExtraction
                 {
                     if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; }
                     Status = "tomando el asa";
-                    Vector3 behind = cart.transform.TransformPoint(new Vector3(0, 0, -1.5f));
-                    if (Time.time < handleSidestepUntil)
-                    {
-                        Vector3 toH = Flat(handle.Position) - Me; Vector3 sideDir = Vector3.Cross(Vector3.up, toH.sqrMagnitude > 1e-4f ? toH.normalized : Vector3.forward) * handleSide;
-                        LookAt(handle.Position); MoveWorld(sideDir); SetHold(0, false); SetHold(1, false); yield return null; continue;
-                    }
-                    // Al alcance pero sin linea de vision al asa (el tio acostado la tapa desde adelante): rodear hasta atras.
-                    if (Time.time - handlePhaseSeen > 0.25f) handleAimFailSince = Time.time; // recien entra en esta fase
-                    handlePhaseSeen = Time.time;
-                    if (hands.Candidate == handle) handleAimFailSince = Time.time;              // la ve: no esta tapada
-                    bool occluded = Time.time - handleAimFailSince > 0.8f;
-                    // Sin acercarse al asa en 1,5 s (el carrito en el medio, con el asa contra una pared): rodear hasta un costado
-                    // libre del asa. Antes caminaba contra el carrito para siempre (pt_s8, 2026-11-16: 280 s quieto).
-                    float dH = Vector3.Distance(Me, Flat(handle.Position));
-                    if (dH < handleBestDist - 0.1f || Time.time - handleLastSeen > 0.5f) { handleBestDist = dH; handleProgressAt = Time.time; }
-                    handleLastSeen = Time.time;
-                    if (Time.time < handleAroundUntil) { LookAt(handle.Position); MoveWorld(handleAround - Me); SetHold(0, false); SetHold(1, false); yield return null; continue; }
-                    if (dH > LabBalance.GrabReach - 0.3f && Time.time - handleProgressAt > 1.5f)
-                    {
-                        Vector3 hf = Flat(handle.Position), across = Flat(cart.transform.right).normalized;
-                        Vector3 a = hf + across * 0.9f, b = hf - across * 0.9f;
-                        bool Free(Vector3 q) => !Physics.CheckCapsule(q + Vector3.up * 0.4f, q + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
-                        handleAround = Free(a) && (!Free(b) || Vector3.Distance(Me, a) <= Vector3.Distance(Me, b)) ? a : b;
-                        handleAroundUntil = Time.time + 2.5f; handleProgressAt = Time.time; handleBestDist = 99f;
-                        Log($"no se acerca al asa desde {Me}: rodea el carrito hasta {handleAround}");
-                    }
-                    if (Vector3.Distance(Eye, handle.Position) > LabBalance.GrabReach - 0.2f || occluded)
-                    {   // acercarse por detras del asa si ese lado esta libre; si no (pared), directo al asa
-                        bool behindFree = !Physics.CheckCapsule(behind + Vector3.up * 0.4f, behind + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
-                        Vector3 dest = behindFree && Vector3.Distance(Me, Flat(behind)) > 0.5f ? behind : handle.Position;
-                        if (!occluded) handleAimFailSince = Time.time; // todavia lejos: el plazo cuenta desde que llega al alcance
-                        else if (Vector3.Distance(Me, Flat(behind)) < 0.6f || !behindFree)
-                        {   // ya rodeo (o no se puede) y sigue sin verla: correrse de costado, alternando, y volver a apuntar
-                            handleAimFailSince = Time.time; handleSide = -handleSide; handleSidestepUntil = Time.time + 0.7f;
-                            Log($"asa sin linea de vision desde {Me} (mira: {(hands.Candidate ? hands.Candidate.socketId : "nada")}): se corre de costado");
-                        }
-                        else if (!handleOccludedLogged) { handleOccludedLogged = true; Log($"asa tapada desde {Me}: rodea hasta {Flat(dest)}"); }
-                        LookAt(handle.Position); MoveWorld(Via(dest) - player.transform.position); SetHold(0, false); SetHold(1, false); yield return null; continue; }
-                    LookAt(handle.Position); LabInput.SimulatedMove = Vector2.zero;
-                    bool aimed = hands.Candidate == handle;
-                    if (aimed) { handleAimFailSince = Time.time; handleOccludedLogged = false; }
-                    SetHold(0, aimed); SetHold(1, aimed);
+                    ApproachHandle(handle);
                     yield return null;
                     if (HoldingCart()) Log("toma el asa");
                     continue;
@@ -713,6 +738,16 @@ namespace UncleExtraction
                     Log($"carrito trabado en la puerta en {cc} (yaw {cart.transform.eulerAngles.y:0}): lo empuja hacia adentro y vuelve a tirar alineado");
                     yield return null; continue;
                 }
+                // Sesion 21 (UE-18): entrando en la camioneta corrido del eje, el carrito raspa la pared de la caja y avanza
+                // 1 cm por segundo; el zigzag lo trababa mas (NoCart, 150+ s). Recentrarlo: correrse hacia el eje tirando.
+                bool inVan = cc.z < L.vanRearZ + 0.6f && Mathf.Abs(cc.x - L.vanAxisX) > 0.3f;
+                if (inVan && (Time.time < recenterUntil || Time.time - stuckSince > 2f))
+                {
+                    if (Time.time >= recenterUntil) { recenterUntil = Time.time + 2f; stuckSince = Time.time; Log($"carrito rozando en la camioneta en {cc}: lo recentra hacia el eje"); }
+                    LabInput.Simulated[(int)Act.Effort] = true;
+                    MoveWorld(new Vector3(L.vanAxisX - (cc.x - L.vanAxisX) * 0.6f, 0f, Mathf.Max(Me.z - 0.4f, L.vanCabZ + 0.45f)) - Me);
+                    yield return null; continue;
+                }
                 // Junto a la puerta no zigzaguear: tirar recto por el eje la saca aun atravesada (StuckRecoveryTests, poses de
                 // 45 y 90 grados); el zigzag era lo que terminaba de girarla contra la pared.
                 if (Time.time - stuckSince > 2f && Mathf.Abs(cc.z - L.doorZ) > 1.6f)
@@ -729,6 +764,67 @@ namespace UncleExtraction
                 yield return null;
             }
             Finish();
+        }
+
+        /// Un frame de acercarse al asa del carrito y tomarla con las dos manos, como un jugador: por detras si esta libre,
+        /// rodeando si no se acerca, y corriendose de costado si al alcance no la puede apuntar (algo tapa la linea de vision).
+        /// Lo usan el traslado del carrito vacio y el tiro del carrito cargado.
+        void ApproachHandle(GrabSocket handle)
+        {
+            Vector3 behind = cart.transform.TransformPoint(new Vector3(0, 0, -1.5f));
+            if (Time.time < handleSidestepUntil)
+            {
+                Vector3 toH = Flat(handle.Position) - Me; Vector3 sideDir = Vector3.Cross(Vector3.up, toH.sqrMagnitude > 1e-4f ? toH.normalized : Vector3.forward) * handleSide;
+                LookAt(handle.Position); MoveWorld(sideDir); SetHold(0, false); SetHold(1, false); return;
+            }
+            // Al alcance pero sin linea de vision al asa (el tio acostado la tapa desde adelante): rodear hasta atras.
+            if (Time.time - handlePhaseSeen > 0.25f) handleAimFailSince = Time.time; // recien entra en esta fase
+            handlePhaseSeen = Time.time;
+            if (hands.Candidate == handle) handleAimFailSince = Time.time;              // la ve: no esta tapada
+            bool occluded = Time.time - handleAimFailSince > 0.8f;
+            // Sin acercarse al asa en 1,5 s (el carrito en el medio, con el asa contra una pared): rodear hasta un costado
+            // libre del asa. Antes caminaba contra el carrito para siempre (pt_s8, 2026-11-16: 280 s quieto).
+            float dH = Vector3.Distance(Me, Flat(handle.Position));
+            if (dH < handleBestDist - 0.1f || Time.time - handleLastSeen > 0.5f) { handleBestDist = dH; handleProgressAt = Time.time; }
+            handleLastSeen = Time.time;
+            if (Time.time < handleAroundUntil) { LookAt(handle.Position); MoveWorld(handleAround - Me); SetHold(0, false); SetHold(1, false); return; }
+            if (dH > LabBalance.GrabReach - 0.3f && Time.time - handleProgressAt > 1.5f)
+            {
+                Vector3 hf = Flat(handle.Position), across = Flat(cart.transform.right).normalized;
+                Vector3 a = hf + across * 0.9f, b = hf - across * 0.9f;
+                bool Free(Vector3 q) => !Physics.CheckCapsule(q + Vector3.up * 0.4f, q + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
+                handleAround = Free(a) && (!Free(b) || Vector3.Distance(Me, a) <= Vector3.Distance(Me, b)) ? a : b;
+                handleAroundUntil = Time.time + 2.5f; handleProgressAt = Time.time; handleBestDist = 99f;
+                Log($"no se acerca al asa desde {Me}: rodea el carrito hasta {handleAround}");
+            }
+            if (Vector3.Distance(Eye, handle.Position) > LabBalance.GrabReach - 0.2f || occluded)
+            {   // acercarse por detras del asa si ese lado esta libre; si no (pared), directo al asa
+                bool behindFree = !Physics.CheckCapsule(behind + Vector3.up * 0.4f, behind + Vector3.up * 1.4f, 0.3f, ~0, QueryTriggerInteraction.Ignore);
+                Vector3 dest = behindFree && Vector3.Distance(Me, Flat(behind)) > 0.5f ? behind : handle.Position;
+                if (!occluded) handleAimFailSince = Time.time; // todavia lejos: el plazo cuenta desde que llega al alcance
+                else if (Vector3.Distance(Me, Flat(behind)) < 0.6f || !behindFree)
+                {   // ya rodeo (o no se puede) y sigue sin verla: correrse de costado, alternando, y volver a apuntar
+                    handleAimFailSince = Time.time; handleSide = -handleSide; handleSidestepUntil = Time.time + 0.7f;
+                    Log($"asa sin linea de vision desde {Me} (mira: {(hands.Candidate ? hands.Candidate.socketId : "nada")}): se corre de costado");
+                }
+                else if (!handleOccludedLogged) { handleOccludedLogged = true; Log($"asa tapada desde {Me}: rodea hasta {Flat(dest)}"); }
+                LookAt(handle.Position); MoveWorld(Via(dest) - player.transform.position); SetHold(0, false); SetHold(1, false); return; }
+            LookAt(handle.Position); LabInput.SimulatedMove = Vector2.zero;
+            bool aimed = hands.Candidate == handle;
+            if (aimed) { handleAimFailSince = Time.time; handleOccludedLogged = false; }
+            SetHold(0, aimed); SetHold(1, aimed);
+        }
+
+        bool cartClearing; float recenterUntil = -1f;
+        /// El carrito vacio impide cerrar: la camioneta lo informa como objeto en la puerta; una vez empezado, seguir hasta que
+        /// el carrito pase 1,5 m de la abertura (si no, al soltarlo vuelve a rodar adentro).
+        bool CartBlocksDoorway()
+        {
+            var v = VanDoors.Instance; if (!v || !zone || zone.Secured) return false;
+            string why = v.BlockReason();
+            if (why.StartsWith("van.object_in_door") && why.Contains(cart.name)) return true;
+            Vector3 c = Flat(cart.transform.position);
+            return cartClearing && c.z < L.vanRearZ + 1.5f && Mathf.Abs(c.x - L.vanAxisX) < 1.6f;
         }
 
         bool HoldingCart() => Held(0)?.socketId == "cart_handle" || Held(1)?.socketId == "cart_handle";

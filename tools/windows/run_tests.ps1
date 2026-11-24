@@ -25,6 +25,14 @@ try {
     if ($Extra.Count) { $a += $Extra }  # sesion 21: argumentos del juego para A/B (p. ej. -ueOldBody)
     $p = Start-Tracked $U.FullName $a
     if (-not $p.WaitForExit(90 * 60 * 1000)) { Stop-AllTracked; Write-Host "$pl TIMEOUT"; $exit = 1; continue }
+    # Sesion 21 (UE-18): con errores de compilacion Unity puede correr las pruebas con los ensamblados ANTERIORES y escribir
+    # un XML en verde de codigo que no es el actual. Eso es FALLA, no PASS.
+    $cs = @(Select-String -Path $log -Pattern 'error CS\d+' -ErrorAction SilentlyContinue | ForEach-Object { $_.Line.Trim() } | Select-Object -Unique)
+    if ($cs.Count) {
+      $exit = 1; Write-Host "$pl ERRORES DE COMPILACION ($($cs.Count)): los resultados no corresponden al codigo actual"
+      $cs | Select-Object -First 5 | ForEach-Object { Write-Host "  $_" }
+      continue
+    }
     if (Test-Path $xml) {
       [xml]$t = Get-Content $xml; $r = $t.'test-run'
       $line = "$pl total=$($r.total) passed=$($r.passed) failed=$($r.failed) skipped=$($r.skipped) xml=$xml"
