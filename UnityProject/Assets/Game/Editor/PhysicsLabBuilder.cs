@@ -41,6 +41,7 @@ namespace UncleExtraction.EditorTools
         public static void Build()
         {
             UrpSetup.Ensure(); // pipeline de render antes de crear materiales y escenas
+            Finishing.PlayerSleeve(); // sesion 21: manga del jugador (Resources)
             UiKitImporter.Import(); // sprites, fuentes y catalogos EN/es_UY del kit de UI
             Directory.CreateDirectory("Assets/Game/Scenes"); Directory.CreateDirectory(MatDir); Directory.CreateDirectory("Assets/Game/Prefabs");
             builtPlayerPrefab = null;

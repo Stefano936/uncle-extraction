@@ -34,7 +34,9 @@ namespace UncleExtraction
             var sleeve = baseMat ? new Material(baseMat) : new Material(Shader.Find("Universal Render Pipeline/Lit")); sleeve.name = "HandCuff";
             var fabric = baseMat ? new Material(baseMat) : new Material(Shader.Find("Universal Render Pipeline/Lit")); fabric.name = "Sleeve"; fabric.color = new Color(0.16f, 0.2f, 0.27f);
             fabric.color = new Color(0.11f, 0.13f, 0.17f); // tela oscura mate (el material base del cubo era metalico: parecian caños)
-            foreach (var m in new[] { fabric, skin, sleeve }) { if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", 0f); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", m == skin ? 0.32f : 0.08f); }
+            // sesion 21: campera de jean gastada con trama y relieve (antes un cilindro casi negro, siempre a la vista)
+            var jean = Resources.Load<Material>("Materials/Player_Sleeve"); if (jean) { fabric = new Material(jean) { name = "Sleeve" }; }
+            foreach (var m in new[] { fabric, skin, sleeve }) { if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", 0f); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", m == skin ? 0.32f : m == fabric && jean ? 0.12f : 0.08f); }
             float inner = side == 0 ? 1f : -1f; // el pulgar va hacia el centro de la pantalla
 
             rig.root = go.transform;
@@ -46,6 +48,8 @@ namespace UncleExtraction
             var arm = new GameObject("ArmPivot").transform; arm.SetParent(pose, false); arm.localPosition = new Vector3(0, -0.004f, -0.085f);
             arm.localRotation = Quaternion.Euler(-28f, 18f * inner, 0f);
             Part(PrimitiveType.Capsule, "Sleeve", arm, new Vector3(0, 0, -0.15f), Quaternion.Euler(90, 0, 0), new Vector3(0.095f, 0.14f, 0.088f), fabric);
+            // manga arremangada: rollo de tela mas grueso donde termina, con el mismo jean
+            Part(PrimitiveType.Capsule, "Sleeve_Roll", arm, new Vector3(0, 0, -0.03f), Quaternion.Euler(90, 0, 0), new Vector3(0.112f, 0.028f, 0.104f), fabric);
             rig.cuff = Part(PrimitiveType.Capsule, "Cuff", pose, new Vector3(0, -0.002f, -0.088f), Quaternion.Euler(90, 0, 0), new Vector3(0.104f, 0.03f, 0.096f), sleeve);
             Part(PrimitiveType.Capsule, "Forearm", pose, new Vector3(0, 0f, -0.06f), Quaternion.Euler(90, 0, 0), new Vector3(0.066f, 0.03f, 0.056f), skin);
             Part(PrimitiveType.Sphere, "Palm", pose, new Vector3(0, 0, -0.005f), Quaternion.identity, new Vector3(0.088f, 0.034f, 0.1f), skin);
