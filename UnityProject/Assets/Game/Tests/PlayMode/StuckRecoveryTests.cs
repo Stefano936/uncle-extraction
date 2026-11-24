@@ -195,20 +195,27 @@ namespace UncleExtraction.Tests
             string afterFoot = van.BlockReason();
             Debug.Log($"[Stuck] tras empujar el pie: motivo '{afterFoot}', HUD '{hands.InteractLabel}'");
             if (afterFoot.StartsWith("van.part_outside"))
-            {   // La pierna vuelve a estirarse: el cuerpo entero esta demasiado cerca de la abertura. Entrar por el costado
-                // hasta la mampara, tomar un hombro y tirar del torso hacia la cabina; salir por el costado y cerrar.
+            {   // La pierna vuelve a estirarse: el cuerpo entero esta demasiado cerca de la abertura. Entrar por el costado,
+                // pasar la cabeza y pararse en el centro entre la cabeza y la mampara; tomar los dos hombros (una mano sola no
+                // vence el roce del tio acostado: 420 N contra ~480 N) y tirar del torso hacia la cabina; salir por el costado.
+                // Sesion 21 (UE-18): antes se quedaba en el carril lateral y el otro hombro quedaba a 1,6 m, fuera de alcance.
                 float side = body.pelvis.position.x > L.vanAxisX ? -0.8f : 0.8f, lane = L.vanAxisX + side;
                 yield return WalkTo(new Vector3(lane, 0f, L.vanRearZ + 1.0f), 3f);
                 var sh = GrabSocket.All.Where(s => body.Owns(s.body) && s.socketId.StartsWith("shoulder")).OrderBy(s => Mathf.Abs(s.Position.x - lane)).First();
-                yield return WalkTo(new Vector3(lane, 0f, Mathf.Max(L.vanCabZ + 0.45f, sh.Position.z - 0.35f)), 5f);
+                var second = GrabSocket.All.First(s => body.Owns(s.body) && s.socketId.StartsWith("shoulder") && s != sh); // el otro hombro
+                Vector3 mid = (sh.Position + second.Position) * 0.5f;
+                float headZ = body.head ? body.head.position.z : mid.z - 0.3f;
+                float standZ = Mathf.Max(L.vanCabZ + 0.45f, Mathf.Min(headZ, mid.z) - 0.55f);
+                yield return WalkTo(new Vector3(lane, 0f, standZ), 5f);
+                yield return WalkTo(new Vector3(mid.x, 0f, standZ), 3f, mid);
                 Hold(Act.Crouch, true);
                 yield return GrabWith(0, sh, 2f);
-                var second = GrabSocket.All.First(s => body.Owns(s.body) && s.socketId.StartsWith("shoulder") && s != sh); // el otro hombro
                 yield return GrabWith(1, second, 1.5f);
+                Debug.Log($"[Stuck] segunda mano: {second.socketId} a {Vector3.Distance(Eye, second.Position):0.00} m, apunta a {(hands.Candidate ? hands.Candidate.socketId : "nada")}, tapa: {Blocker(second)}; primero {sh.socketId} en {sh.Position}, segundo en {second.Position}");
                 Debug.Log($"[Stuck] adentro en {Me}: manos {hands.HeldSocketId(0)}/{hands.HeldSocketId(1)}; contactos del tio: {Contacts()}");
                 float pz0 = body.pelvis.position.z;
                 for (float t = 0; t < 5f && van.BlockReason().StartsWith("van.part_outside"); t += Time.deltaTime)
-                { LookAt(sh.Position); MoveWorld(Vector3.back); Hold(Act.Effort, true); yield return null; }
+                { LookAt((sh.Position + second.Position) * 0.5f); MoveWorld(Vector3.back); Hold(Act.Effort, true); yield return null; }
                 LabInput.SimulatedMove = Vector2.zero; Hold(Act.Effort, false); Hold(Act.GrabLeft, false); Hold(Act.GrabRight, false); Hold(Act.Crouch, false);
                 Debug.Log($"[Stuck] tiro del torso: pelvis {pz0:0.00} -> {body.pelvis.position.z:0.00}, jugador {Me}, manos {hands.HeldSocketId(0)}/{hands.HeldSocketId(1)}");
                 yield return Tap(Act.ReleaseAll);
