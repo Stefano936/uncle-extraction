@@ -46,6 +46,7 @@ namespace UncleExtraction.Tests
             // y se puede ganar con el carrito
             auto.StartRun(AutopilotMode.Cart);
             float t0 = Time.time; while (round.State == RoundState.Running && Time.time - t0 < 280f) yield return null;
+            auto.DumpIfUnfinished($"carrito tras Sin carrito en {round.Elapsed:0.0}s");
             Debug.Log($"[Test] estandar con carrito tras Sin carrito: {round.State} en {round.Elapsed:0.0}s");
             Assert.AreEqual(RoundState.Success, round.State);
         }
