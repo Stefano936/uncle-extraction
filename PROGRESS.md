@@ -1,6 +1,20 @@
 # Estado del proyecto
 
-## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `4edc725` (sin fusionar)
+## Sesión 21 · tío de cuerpo completo y luz con volumen · corte `4edc725` (parcialmente fusionado)
+
+**Fusión en `main` (pedido de Stefano, 2026-11-24: «mergeá todo lo que haya si no hay conflicto»):**
+- Fusionados sin conflicto: #10 personaje (`8e7c9fa`), #13 muebles (`1a0477c`), #14 menú (`47d97cb`).
+- **#11 render sin fusionar:** tras entrar #10 quedó en conflicto en `Editor/Finishing.cs`.
+  - #10 agrega `UncleS21` y #11 agrega la manga del jugador en el mismo lugar.
+  - La resolución (conservar ambas) ya está probada en `claude/s21-playtest`; falta que Stefano autorice resolverlo.
+- `main` en `47d97cb` (sin #11):
+
+  | Comprobación | Resultado |
+  | --- | --- |
+  | EditMode | 76 PASS, 1 omitida |
+  | PlayMode | 178 PASS, 1 FAIL (`Van_FootInDoorway`, UE-18), 1 omitida |
+
+  Sin build ni red sobre `main` todavía.
 
 **Actualización (pedido de Stefano: «fondo del menú»):**
 - PR #14 (`claude/s21-menu-pr`, sobre `main`; la imagen muestra lo de #10, #11 y #13, conviene fusionarlo después):
@@ -140,7 +154,7 @@
 **Comparativas:** [tío Alta](docs/capturas/sesion21/tio_alta.jpg) · [tío Baja](docs/capturas/sesion21/tio_baja.jpg) · [recorrido Alta](docs/capturas/sesion21/recorrido_alta.jpg) · [recorrido Baja](docs/capturas/sesion21/recorrido_baja.jpg) · [modelo en 4 ángulos](docs/capturas/sesion21/tio_blender_4_angulos.jpg) · clips [antes](docs/capturas/sesion21/clip_antes_a793e8c.webp) / [después](docs/capturas/sesion21/clip_despues_s21.webp).
 
 **Próxima acción exacta:**
-1. Stefano juega el ZIP S21 y decide los PR.
+1. Stefano decide si resolver el conflicto del #11 (render) y fusionarlo.
 2. Robustecer el rescate del pie en la camioneta (UE-18).
 3. Recorrido jugado por una persona para cerrar UE-16 (fondo del menú hecho en #14).
 
