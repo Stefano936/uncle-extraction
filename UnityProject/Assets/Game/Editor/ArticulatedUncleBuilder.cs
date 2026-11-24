@@ -119,9 +119,12 @@ namespace UncleExtraction.EditorTools
                 }
                 var anim = kit.GetComponent<Animator>(); if (anim) Object.DestroyImmediate(anim); // la pose la da la fisica
                 Finishing.Uncle(kit, map["head"]); // materiales (tela con trama, piel, cuero) y gorro de fiesta
-                pres.bodyRenderers = kit.GetComponentsInChildren<Renderer>().Where(r => r is SkinnedMeshRenderer).ToArray();
-                // sesion 20: cabeza de produccion ajustada a la cabeza del kit (la malla solo se lee en el editor)
-                var head = go.AddComponent<UncleHead>(); head.Fit(kit.GetComponentInChildren<SkinnedMeshRenderer>(), t, -1f);
+                // sesion 21: cuerpo completo nuevo sobre los mismos huesos del kit (el rig fisico, los clips y los puntos de
+                // agarre no cambian). La malla del kit queda apagada para comparar con -ueOldBody.
+                var s21 = AttachBodyS21(kit);
+                pres.bodyRenderers = kit.GetComponentsInChildren<Renderer>(true).Where(r => r is SkinnedMeshRenderer).ToArray();
+                // sesion 20: cabeza de produccion; en S21 se ajusta a la esfera guia de la cabeza del cuerpo nuevo
+                var head = go.AddComponent<UncleHead>(); head.Fit(s21 ? s21 : kit.GetComponentInChildren<SkinnedMeshRenderer>(), t, -1f);
             }
             else
             {
@@ -138,6 +141,33 @@ namespace UncleExtraction.EditorTools
             AttackPoseBuilder.Build(go, body, brain, visRef, kit, t);
             go.transform.rotation = Quaternion.Euler(0, 180, 0); // mirando a -z en el mundo, como el tio central
             return go;
+        }
+
+        /// Cuerpo S21 (Art/Kit3D/uncle_s21.fbx): se copia su SkinnedMeshRenderer bajo el kit y se lo liga a los huesos del kit
+        /// por nombre (mismo esqueleto exportado desde Blender). Devuelve el renderer nuevo o null si falta el modelo.
+        public static SkinnedMeshRenderer AttachBodyS21(GameObject kit)
+        {
+            var src = AssetDatabase.LoadAssetAtPath<GameObject>($"{Kit3DImporter.Folder}/uncle_s21.fbx");
+            if (!src) { Debug.LogWarning("[ArticulatedUncle] falta uncle_s21.fbx: queda la malla del kit"); return null; }
+            var bones = new Dictionary<string, Transform>();
+            foreach (var b in kit.GetComponentsInChildren<Transform>(true)) if (!bones.ContainsKey(b.name)) bones[b.name] = b;
+            var old = kit.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            var tmp = Object.Instantiate(src);
+            var smr = tmp.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            var mapped = new Transform[smr.bones.Length];
+            for (int i = 0; i < mapped.Length; i++)
+            {
+                if (!smr.bones[i] || !bones.TryGetValue(smr.bones[i].name, out mapped[i])) { Debug.LogError("[ArticulatedUncle] hueso sin pareja en el kit: " + (smr.bones[i] ? smr.bones[i].name : "null")); Object.DestroyImmediate(tmp); return null; }
+            }
+            var root = smr.rootBone && bones.TryGetValue(smr.rootBone.name, out var rb) ? rb : mapped[0];
+            var go = smr.gameObject; go.name = "Uncle_S21_Body";
+            go.transform.SetParent(old ? old.transform.parent : kit.transform, false);
+            if (old) { go.transform.localPosition = old.transform.localPosition; go.transform.localRotation = old.transform.localRotation; go.transform.localScale = old.transform.localScale; old.enabled = false; }
+            smr.bones = mapped; smr.rootBone = root; smr.updateWhenOffscreen = true;
+            Object.DestroyImmediate(tmp);
+            Finishing.UncleS21(smr);
+            Debug.Log($"[ArticulatedUncle] cuerpo S21: {smr.sharedMesh.vertexCount} vertices, {mapped.Length} huesos, materiales {smr.sharedMaterials.Length}");
+            return smr;
         }
     }
 }

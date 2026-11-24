@@ -16,6 +16,16 @@ namespace UncleExtraction
         void Start()
         {
             body = GetComponent<NpcBody>(); if (!body) { enabled = false; return; }
+            // sesion 21: con el cuerpo completo nuevo, las piezas sueltas de la ropa anterior sobran (ya estan modeladas).
+            // -ueOldBody vuelve a la malla del kit con sus piezas, para comparar.
+            SkinnedMeshRenderer s21 = null, kitSkin = null;
+            foreach (var r in GetComponentsInChildren<SkinnedMeshRenderer>(true)) { if (r.name == "Uncle_S21_Body") s21 = r; else kitSkin = r; }
+            if (s21)
+            {
+                bool old = QaArgs.Has("-ueOldBody");
+                s21.enabled = !old; if (kitSkin) kitSkin.enabled = old;
+                if (!old) { enabled = false; return; }
+            }
             fs = body.FaceSign;
             Material shirt = Find("Uncle_Shirt"), shorts = Find("Uncle_Shorts"), hair = Find("Uncle_Hair");
             var shirtDark = Tint(shirt, 0.62f, "Shirt_Seam"); var shirtLight = Tint(shirt, 1.25f, "Shirt_Light");

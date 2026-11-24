@@ -20,6 +20,15 @@ namespace UncleExtraction.EditorTools
             mi.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
             mi.isReadable = false;
             bool uncle = Path.GetFileNameWithoutExtension(assetPath) == "uncle_prototype";
+            // sesion 21: cuerpo completo del tio (tools/art/blender/build_uncle_s21.py) sobre el MISMO rig del kit: malla con
+            // piel y normales propias (suaves), sin clips (las poses se siguen muestreando del FBX del kit)
+            if (Path.GetFileNameWithoutExtension(assetPath) == "uncle_s21")
+            {
+                mi.animationType = ModelImporterAnimationType.Generic; mi.importAnimation = false; mi.optimizeGameObjects = false;
+                mi.importCameras = false; mi.importLights = false; mi.importNormals = ModelImporterNormals.Import;
+                mi.importTangents = ModelImporterTangents.CalculateMikk; mi.isReadable = false;
+                return;
+            }
             mi.animationType = uncle ? ModelImporterAnimationType.Generic : ModelImporterAnimationType.None;
             mi.importAnimation = uncle;
             mi.optimizeGameObjects = false;                      // conservar huesos y marcadores accesibles
