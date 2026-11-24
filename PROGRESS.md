@@ -2,6 +2,22 @@
 
 ## Sesión 21 · tío de cuerpo completo y luz con volumen · fusionada en `main` (`52bc0f8`)
 
+**UE-18, resto (pedido de Stefano, 2026-11-24):** PR #17 (`claude/s21-ue18-resto`, sobre `main` `a242d15`).
+- **Bot que ganaba sin correa** (Cart_Normal articulado, 2/25 en `main`): el carrito vacío quedaba lejos y el bot llevaba al tío a mano. Ahora vuelve a acercar el carrito.
+- **C3:** con el tío ya adentro, el carrito cargado asomaba por la abertura. Ahora el bot lo empuja más adentro.
+- **Bot por afuera de la camioneta:** el carrito terminó en la vereda y el bot caminaba al costado de la caja. Ahora vuelve detrás de la rampa.
+- **`lab_fail_m28`:** no se reproduce (12/12 a ~2700 fps).
+- **Escape por el umbral:** no se reproduce (12/12). Ahora registra su tiempo: cápsula 12,7 s de 15, articulado 9,5 s.
+- Resultados en la rama:
+
+  | Comprobación | Resultado |
+  | --- | --- |
+  | Tanda del bot (5 pruebas × 8) | 40/40 |
+  | EditMode | 76 PASS |
+  | PlayMode | 179 PASS, 0 FAIL |
+
+- Sin cambios en el juego.
+
 **UE-18, intermitencias del bot con el carrito (pedido de Stefano, 2026-11-24):** PR #16 fusionado en `main` (`a242d15`) con aprobación de Stefano.
 - Diagnóstico con los registros del bot (`Cart_Normal`, `NoCart`, `Narrow`). Ninguno era un atasco físico del juego.
   - **A:** asa del carrito vacío en el marco de la puerta, con el jugador afuera; quedaba quieto 150–250 s.
@@ -202,7 +218,7 @@ Las 3 fallas de PlayMode: `Van_FootInDoorway`, que arregla #15, y `Narrow` y `Ca
 **Comparativas:** [tío Alta](docs/capturas/sesion21/tio_alta.jpg) · [tío Baja](docs/capturas/sesion21/tio_baja.jpg) · [recorrido Alta](docs/capturas/sesion21/recorrido_alta.jpg) · [recorrido Baja](docs/capturas/sesion21/recorrido_baja.jpg) · [modelo en 4 ángulos](docs/capturas/sesion21/tio_blender_4_angulos.jpg) · clips [antes](docs/capturas/sesion21/clip_antes_a793e8c.webp) / [después](docs/capturas/sesion21/clip_despues_s21.webp).
 
 **Próxima acción exacta:**
-1. Stefano juega `main` (`a242d15`): S21 completa, prueba del pie y bot del carrito.
+1. Stefano revisa el PR #17 (resto de UE-18) y juega `main` (`a242d15`).
 2. Robustecer el rescate del pie en la camioneta (UE-18).
 3. Recorrido jugado por una persona para cerrar UE-16 (fondo del menú hecho en #14).
 
