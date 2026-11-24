@@ -17,13 +17,58 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: RS_BarTop
+    second: {fileID: 2100000, guid: 4848b15d5e46d7649a93ac2d57fad6ef, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BarWood
+    second: {fileID: 2100000, guid: c20775ce2f9c1c643a33d895659aa511, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Beer
+    second: {fileID: 2100000, guid: 37bc1806966db8440b2c37951d94d615, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: RS_Black
     second: {fileID: 2100000, guid: 4f8bf9d8d0253b444932778ed4f64515, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: RS_BottleAmber
+    second: {fileID: 2100000, guid: bd74c6f56a4da424589766e0b298f5d1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BottleClear
+    second: {fileID: 2100000, guid: 13e092cfc1bc62b4091c0492e7a30665, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BottleGreen
+    second: {fileID: 2100000, guid: 7a11eb87666eb95409fe1508f8c8e30b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_BottleRed
+    second: {fileID: 2100000, guid: ee91f5c7a7825b64b8c32c8371413726, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Brass
+    second: {fileID: 2100000, guid: 4571714ba5705514ea2ea1537eb8a695, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: RS_Brick
     second: {fileID: 2100000, guid: cac18aff32f6a0b4d8dba28febc5b54d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Carpet
+    second: {fileID: 2100000, guid: 3a3d7285c8c32164ea3593a755682fca, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -52,13 +97,48 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: RS_Foam
+    second: {fileID: 2100000, guid: 0aa1b772f739a9e4c8f61deac6caf9a9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: RS_Glass
     second: {fileID: 2100000, guid: 90e31d2e32a03444a973ba6f39e59859, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: RS_GlassClear
+    second: {fileID: 2100000, guid: 672d90f8d55177945a1194ca0e17d523, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Grille
+    second: {fileID: 2100000, guid: 1a7321f9caf72fe4d9ecdc4272d0afd2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: RS_Head
     second: {fileID: 2100000, guid: f10bc993f17361d4a8efc62fde96ae64, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Label
+    second: {fileID: 2100000, guid: fabcb6bef8448c140bd6d949901e4f80, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_LedMagenta
+    second: {fileID: 2100000, guid: 14100331b3515154b84594701d85bcd0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Mirror
+    second: {fileID: 2100000, guid: 327b46ffc06efb049b03dee4dfda7314, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Paper
+    second: {fileID: 2100000, guid: cbe3c63cc5cc261428e349dca1d606c1, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -69,6 +149,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: RS_Rubber
     second: {fileID: 2100000, guid: d0430089fb2e65f478edf66c6255af0e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_ShelfGlass
+    second: {fileID: 2100000, guid: c0a11d6028706ef4e81a3c9b1db8ade6, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -87,6 +172,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: RS_Speaker
+    second: {fileID: 2100000, guid: 81a4b0332c8112b49bd616def9ac6244, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: RS_Steel
     second: {fileID: 2100000, guid: 35789ba37bf89f74cbb1aa8b03a4b880, type: 2}
   - first:
@@ -99,6 +189,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: RS_StuccoWarm
     second: {fileID: 2100000, guid: 332a5cb28c245a54d82550a1da13435c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_TableWood
+    second: {fileID: 2100000, guid: ac4467bc7d5e1cc45b8fd6592a5a0df8, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -124,6 +219,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: RS_VanStripe
     second: {fileID: 2100000, guid: 9ad8d1404223afd45b39094058a96272, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RS_Vinyl
+    second: {fileID: 2100000, guid: 3ba080a31b6129b438aaec63c50a12e7, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
