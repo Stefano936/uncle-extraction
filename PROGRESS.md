@@ -2,6 +2,27 @@
 
 ## Sesión 21 · tío de cuerpo completo y luz con volumen · fusionada en `main` (`52bc0f8`)
 
+**UE-18, intermitencias del bot con el carrito (pedido de Stefano, 2026-11-24):** PR #16 (`claude/s21-bot-carrito`, sobre `main`).
+- Diagnóstico con los registros del bot (`Cart_Normal`, `NoCart`, `Narrow`). Ninguno era un atasco físico del juego.
+  - **A:** asa del carrito vacío en el marco de la puerta, con el jugador afuera; quedaba quieto 150–250 s.
+  - **C1:** carrito vacío tapando la abertura de la camioneta.
+  - **C2:** carrito cargado raspando la pared de la camioneta; el zigzag lo trababa más.
+- Correcciones del bot como haría una persona:
+  - A: ir al costado del asa del lado del carrito y volver a apuntar.
+  - C1: empujar el carrito fuera de la abertura, soltarlo y cerrar.
+  - C2: recentrar el carrito dentro de la camioneta.
+- Registros: línea QUIETO, estado en el reporte periódico y registro del bot en `Narrow`/`NoCart`.
+- `run_tests.ps1` ahora falla con errores de compilación. Antes Unity corría las pruebas con el código anterior y daba verde.
+- Sin cambios en el juego.
+
+  | Tanda (5 pruebas × 5 repeticiones) | Resultado |
+  | --- | --- |
+  | `main` `9cf7a28` | 22/25 |
+  | Rama, dos tandas | 50/50 |
+  | Rama, PlayMode completo | 179 PASS, 0 FAIL |
+
+- Pendiente: el bot todavía puede arrastrar al tío sin carrito si el carrito quedó lejos (la prueba lo detecta). 50 corridas no prueban que la intermitencia desapareció.
+
 **UE-18, pie en la camioneta (pedido de Stefano, 2026-11-24):** PR #15 fusionado en `main` (`9cf7a28`) con aprobación de Stefano.
 - Diagnóstico: `Van_FootInDoorway` falla siempre desde la regeneración de escenas de la S21.
   - Al soltar el tobillo empujado, la rodilla floja del tío caído se vuelve a estirar y el pie regresa a la franja.
@@ -181,7 +202,7 @@ Las 3 fallas de PlayMode: `Van_FootInDoorway`, que arregla #15, y `Narrow` y `Ca
 **Comparativas:** [tío Alta](docs/capturas/sesion21/tio_alta.jpg) · [tío Baja](docs/capturas/sesion21/tio_baja.jpg) · [recorrido Alta](docs/capturas/sesion21/recorrido_alta.jpg) · [recorrido Baja](docs/capturas/sesion21/recorrido_baja.jpg) · [modelo en 4 ángulos](docs/capturas/sesion21/tio_blender_4_angulos.jpg) · clips [antes](docs/capturas/sesion21/clip_antes_a793e8c.webp) / [después](docs/capturas/sesion21/clip_despues_s21.webp).
 
 **Próxima acción exacta:**
-1. Stefano juega `main` (`9cf7a28`): S21 completa más el arreglo de la prueba del pie.
+1. Stefano revisa el PR #16 (bot con carrito) y juega `main` (`9cf7a28`).
 2. Robustecer el rescate del pie en la camioneta (UE-18).
 3. Recorrido jugado por una persona para cerrar UE-16 (fondo del menú hecho en #14).
 
