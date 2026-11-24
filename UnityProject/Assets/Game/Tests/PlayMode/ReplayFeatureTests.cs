@@ -29,6 +29,7 @@ namespace UncleExtraction.Tests
             round.challenge = mode; round.Restart(); yield return null; yield return null; yield return new WaitForFixedUpdate();
             auto.StartRun(AutopilotMode.Drag);
             float t0 = Time.time; while (round.State == RoundState.Running && Time.time - t0 < 280f) yield return null;
+            auto.DumpIfUnfinished($"{mode} en {round.Elapsed:0.0}s");
             yield return null; yield return null;
         }
 
