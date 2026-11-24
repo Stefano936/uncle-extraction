@@ -51,7 +51,12 @@ namespace UncleExtraction
             var skin = UiSkin.Load();
             var bg = Ui.Image(canvas.transform, "Background", skin ? skin.background : null, skin && skin.background ? Color.white : Ui.Ink, false);
             bg.preserveAspect = false;
-            var shade = Ui.Image(canvas.transform, "Shade", null, new Color(0.06f, 0.09f, 0.11f, 0.4f), false); // el fondo nocturno ya es oscuro
+            if (bg.sprite)
+            {   // recortar en lugar de estirar: en 21:9, 16:10 o 4:3 el fondo cubre la pantalla sin deformar al tio (sesion 21)
+                var fit = bg.gameObject.AddComponent<AspectRatioFitter>();
+                fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; fit.aspectRatio = bg.sprite.rect.width / bg.sprite.rect.height;
+            }
+            var shade = Ui.Image(canvas.transform, "Shade", ShadeSprite(), new Color(0.06f, 0.09f, 0.11f, 1f), false); // velo: oscuro detras de los botones, liviano sobre el tio
             var title = Ui.Label(canvas.transform, "Title", "UNCLE EXTRACTION", 112, Ui.Text, TextAnchor.UpperLeft, true);
             title.fontSize = title.resizeTextMaxSize = 112; title.resizeTextMinSize = 72; // logo: no crece con el tamaño de texto
             title.rectTransform.offsetMin = new Vector2(Ui.Margin, 0); title.rectTransform.offsetMax = new Vector2(-Ui.Margin, -Ui.Margin);
@@ -70,6 +75,21 @@ namespace UncleExtraction
             ok.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0f); ok.gameObject.AddComponent<LocText>().key = "button.back";
             errorBox.gameObject.SetActive(false);
             Show(Page.Main);
+        }
+
+        static Sprite shadeSprite;
+        /// Degradado horizontal del velo (sesion 21): alfa 0,7 a la izquierda (titulo y botones) a 0,15 a la derecha (el tio).
+        static Sprite ShadeSprite()
+        {
+            if (shadeSprite) return shadeSprite;
+            var tex = new Texture2D(64, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            for (int x = 0; x < 64; x++)
+            {
+                float t = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(14f, 44f, x));
+                tex.SetPixel(x, 0, new Color(1f, 1f, 1f, Mathf.Lerp(0.7f, 0.15f, t)));
+            }
+            tex.Apply(false, false); // legible: la prueba del menu comprueba el degradado
+            return shadeSprite = Sprite.Create(tex, new Rect(0, 0, 64, 1), new Vector2(0.5f, 0.5f));
         }
 
         void CloseError()
