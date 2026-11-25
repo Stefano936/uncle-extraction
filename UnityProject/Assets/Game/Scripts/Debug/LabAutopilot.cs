@@ -167,7 +167,7 @@ namespace UncleExtraction
             if (PlayerControls.Local) { player = PlayerControls.Local.GetComponent<PlayerMotor>(); hands = PlayerControls.Local.GetComponent<PlayerHands>(); }
             if (!player || !hands) { Debug.LogWarning("[Autopilot] sin jugador local todavia"); return; }
             Mode = mode; Running = true; Timeline.Clear();
-            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; cartTargetsSet = false; emptyAimFailSince = Time.time; emptyApproachUntil = -1f; cartClearing = false; recenterUntil = -1f; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
+            lastNpc = npc.State; lastFalls = player.FallCount; handsOffUntil = -1f; switchedToAnkles = false; lastTarget = null; cartClearedDoor = false; cartNeedsSpace = false; cartTargetsSet = false; emptyAimFailSince = Time.time; emptyApproachUntil = -1f; cartClearing = false; recenterUntil = -1f; offLineLogged = false; zigLogged = false; stuckSince = Time.time; stuckRef = Vector3.zero;
             aimSince = Time.time; nextReport = Time.time + 10f; idleCheckAt = 0f;
             Log($"inicio modo {mode}: tio en {body.Body.position}, jugador en {player.transform.position}");
             routine = StartCoroutine(mode == AutopilotMode.Drag ? DragRun() : mode == AutopilotMode.Cart ? CartRun() : RaceRun());
@@ -565,13 +565,14 @@ namespace UncleExtraction
                 // Sesion 21 (UE-18): el tio se solto del carrito ya adentro y el carrito vacio quedo en la abertura ("objeto en
                 // la puerta"). Antes alternaba entre cerrar y llevar el carrito al bar sin sacarlo nunca (NoCart, 70+ s).
                 // Como una persona: tomar el asa, empujarlo hacia afuera hasta pasar la abertura, soltarlo y cerrar.
-                if (!cart.IsStrapped && CartBlocksDoorway())
-                {
-                    Status = "sacando el carrito de la abertura";
-                    if (!cartClearing) { cartClearing = true; Log($"el carrito vacio tapa la abertura en {Flat(cart.transform.position)}: lo saca hacia afuera"); }
+                if (CartBlocksDoorway())
+                {   // vacio: sacarlo hacia afuera; cargado con el tio ya adentro (C3): empujarlo mas adentro de la caja
+                    bool loaded = cart.IsStrapped;
+                    Status = loaded ? "metiendo el carrito cargado" : "sacando el carrito de la abertura";
+                    if (!cartClearing) { cartClearing = true; Log(loaded ? $"el carrito cargado asoma por la abertura en {Flat(cart.transform.position)}: lo empuja mas adentro" : $"el carrito vacio tapa la abertura en {Flat(cart.transform.position)}: lo saca hacia afuera"); }
                     var hClear = GrabSocket.All.First(s => s.socketId == "cart_handle");
                     if (!HoldingCart()) { if (Holding(0) || Holding(1)) { Idle(); yield return Tap(Act.ReleaseAll); continue; } ApproachHandle(hClear); yield return null; continue; }
-                    Vector3 cartC = Flat(cart.transform.position), cartOut = new Vector3(L.vanAxisX, 0f, L.vanRearZ + 2.6f);
+                    Vector3 cartC = Flat(cart.transform.position), cartOut = new Vector3(L.vanAxisX, 0f, loaded ? L.vanRearZ - 2.0f : L.vanRearZ + 2.6f);
                     LookAt(hClear.Position); LabInput.Simulated[(int)Act.Effort] = true;
                     MoveWorld(cartOut - cartC);
                     yield return null; continue;
@@ -627,6 +628,17 @@ namespace UncleExtraction
 
                 if (!cart.IsStrapped)
                 {
+                    // Sesion 21 (UE-18): si el tio (forcejeando) mando lejos el carrito vacio, la ruta de arrastre ya no pasa
+                    // junto a el y el bot terminaba llevando al tio a mano hasta la camioneta: ganaba sin la correa (la prueba
+                    // de modo carrito lo detecta). Como un jugador con plan de carrito: soltar, volver a poner el carrito en el
+                    // lugar abierto y retomar.
+                    if (!cartNeedsSpace && Vector3.Distance(Flat(cart.transform.position), OpenSpot) > 1.8f
+                        && Vector3.Distance(Flat(body.pelvis.position), Flat(cart.transform.position)) > 3.0f && Me.z > L.doorZ)
+                    {
+                        cartNeedsSpace = true; cartTargetsSet = false;
+                        Log($"el carrito quedo lejos del lugar abierto en {Flat(cart.transform.position)} (tio en {Flat(body.pelvis.position)}): lo vuelve a acercar");
+                        Idle(); yield return Tap(Act.ReleaseAll); continue;
+                    }
                     // 1) Llevar al tio junto al carrito y 2) asegurarlo con E.
                     if (cart.CanStrap && Vector3.Distance(Me, Flat(cart.transform.position)) < 2.0f)
                     {
@@ -697,6 +709,18 @@ namespace UncleExtraction
                 }
                 while (cartWp < CartPullPath.Length - 1 && (cartWp < L.cartPathDoorIndex || cartClearedDoor) && Vector3.Distance(Me, CartPullPath[cartWp]) < 0.6f) { cartWp++; Log($"jugador hacia el punto {cartWp}/{CartPullPath.Length - 1} con el carrito en {Flat(cart.transform.position)}"); }
                 Vector3 goal = CartPullPath[cartWp];
+                // Sesion 21 (UE-18): una sacudida mando el carrito cargado a la vereda y el bot fue derecho al ultimo punto (dentro
+                // de la camioneta): termino caminando por afuera, al costado de la caja, 120 s. Fuera de la linea de la camioneta,
+                // volver detras de ella y entrar por la rampa.
+                bool besideVan = Me.z < L.vanRearZ + 0.8f && Mathf.Abs(Me.x - L.vanAxisX) > 1.35f;
+                bool cartOffLine = cartWp == CartPullPath.Length - 1 && cc.z > L.vanRearZ - 0.3f && Mathf.Abs(cc.x - L.vanAxisX) > 0.9f;
+                if (besideVan || cartOffLine)
+                {
+                    if (!offLineLogged) { offLineLogged = true; Log($"fuera de la linea de la camioneta (jugador {Me}, carrito {cc}): vuelve detras de la rampa"); }
+                    cartWp = Mathf.Min(cartWp, CartPullPath.Length - 2);
+                    goal = besideVan ? new Vector3(Me.x, 0f, L.vanRearZ + 2.2f) : CartPullPath[cartWp];
+                }
+                else offLineLogged = false;
                 // Mientras el carrito no cruzo la puerta (z = -2), tirar recto por el centro: en diagonal se traba en el marco.
                 if (cc.z < L.doorZ - 2.0f) cartClearedDoor = true;          // carrito + tio que sobresale, del todo afuera
                 else if (cc.z > L.doorZ + 1.0f) cartClearedDoor = false;
@@ -740,7 +764,7 @@ namespace UncleExtraction
                 }
                 // Sesion 21 (UE-18): entrando en la camioneta corrido del eje, el carrito raspa la pared de la caja y avanza
                 // 1 cm por segundo; el zigzag lo trababa mas (NoCart, 150+ s). Recentrarlo: correrse hacia el eje tirando.
-                bool inVan = cc.z < L.vanRearZ + 0.6f && Mathf.Abs(cc.x - L.vanAxisX) > 0.3f;
+                bool inVan = cc.z < L.vanRearZ + 0.6f && Mathf.Abs(cc.x - L.vanAxisX) > 0.3f && Mathf.Abs(cc.x - L.vanAxisX) < 1.2f;
                 if (inVan && (Time.time < recenterUntil || Time.time - stuckSince > 2f))
                 {
                     if (Time.time >= recenterUntil) { recenterUntil = Time.time + 2f; stuckSince = Time.time; Log($"carrito rozando en la camioneta en {cc}: lo recentra hacia el eje"); }
@@ -815,7 +839,7 @@ namespace UncleExtraction
             SetHold(0, aimed); SetHold(1, aimed);
         }
 
-        bool cartClearing; float recenterUntil = -1f;
+        bool cartClearing, offLineLogged; float recenterUntil = -1f;
         /// El carrito vacio impide cerrar: la camioneta lo informa como objeto en la puerta; una vez empezado, seguir hasta que
         /// el carrito pase 1,5 m de la abertura (si no, al soltarlo vuelve a rodar adentro).
         bool CartBlocksDoorway()
@@ -824,7 +848,7 @@ namespace UncleExtraction
             string why = v.BlockReason();
             if (why.StartsWith("van.object_in_door") && why.Contains(cart.name)) return true;
             Vector3 c = Flat(cart.transform.position);
-            return cartClearing && c.z < L.vanRearZ + 1.5f && Mathf.Abs(c.x - L.vanAxisX) < 1.6f;
+            return cartClearing && !cart.IsStrapped && c.z < L.vanRearZ + 1.5f && Mathf.Abs(c.x - L.vanAxisX) < 1.6f;
         }
 
         bool HoldingCart() => Held(0)?.socketId == "cart_handle" || Held(1)?.socketId == "cart_handle";
